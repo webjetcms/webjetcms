@@ -82,6 +82,8 @@ Notice the definition of `output_format`, which defines the creation of 2 sectio
 
 ## AI in the browser
 
+Please verify [AI settings in browser](../settings/README.md#browser) before use. The instructions list the required APIs, experiments to leave on **Default**, and what to do if the model fails.
+
 Writing instructions for AI in the browser is specific to the [available API capabilities](https://developer.chrome.com/docs/ai/built-in-apis). The instruction is divided into the API name and subsequent configuration. See the `MDM` documentation for detailed information on configuration capabilities.
 
 Although the API supports language settings, it currently only supports English. You can add the `"translateOutputLanguage": "autodetect"` option to your configuration to perform the translation afterwards. The `autodetect` value detects the language of the original text and uses it. You can also specify a fixed value, e.g. `sk`, or the `userLng` value where the language is set according to the language of the currently logged in user.
@@ -202,7 +204,7 @@ The instructions have special markers replaced before use, you can use them to i
 
 ## Generating PageBuilder blocks
 
-The following instruction allows you to generate [PageBuilder blocks for the editor](../datatables/README.md#chat-mode), it must be set as a request type `Chat`, in which case `{inputText}` will also be correctly filled in when editing.
+The following instruction allows you to generate [PageBuilder blocks for the editor](../datatables/README.md#mode-chat), it must be set as the request type **Chat**, in which case `{inputText}` will also be correctly filled in when editing.
 
 For setup, we recommend the model `gemini-2.5-pro`, in the action set the entity `sk.iway.iwcm.doc.DocDetails`, set the source and target fields to `data`. In the advanced settings, you need to enable the Preserve HTML code and Require user input options.
 

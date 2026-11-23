@@ -72,7 +72,7 @@ Scenario('media-zakladne testy @baseTest', async ({I, DTE, DataTables}) => {
             //DTE.fillField("mediaSortOrder", 50);
             I.forceClickCss('#DTE_Field_editorFields-groups_0');
 
-            I.clickCss("#editorAppDTE_Field_editorFields-docDetails button.btn-vue-jstree-item-edit");
+            I.clickCss("#editorAppDTE_Field_editorFields-docDetails button.btn-webjet-jstree-item-edit");
             I.click(locate('.jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
             I.click('test_final');
         },
@@ -156,12 +156,12 @@ Scenario('media tabulka v NOVEJ stranke @singlethread', async ({I, DT, DTE}) => 
 
     //click to add media button and fill media name
     I.clickCss("#datatableFieldDTE_Field_editorFields-media_wrapper button.buttons-create");
-    DTE.waitForEditor();
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");
     DTE.fillField("mediaTitleSk", newMediaName);
 
     //click to save media button
     I.clickCss("#datatableFieldDTE_Field_editorFields-media_modal button.btn-primary");
-    DTE.waitForLoader();
+    DTE.waitForLoader("datatableFieldDTE_Field_editorFields-media");
 
     //click to save webPage button
     I.clickCss("#datatableInit_modal button.btn-primary");
@@ -340,6 +340,7 @@ Scenario('XSS zranitelnost', ({I, DT, DTE}) => {
     I.say("Overenie v audite");
 
     I.amOnPage("/admin/v9/apps/audit-search/");
+    I.waitForVisible("#datatableInit_wrapper div.dt-filter-logType button.btn-outline-secondary", 20);
     DT.filterSelect("logType", "MEDIA");
     DT.filterContains("description", "^CREATE:");
     DT.waitForLoader();
@@ -509,7 +510,7 @@ Scenario('media required docId tree selector', async ({I, DT, DTE}) => {
     DTE.save();
     I.see("Povinné pole. Vyberte stránku.");
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
     I.click('test_final');
     DTE.save();
@@ -639,7 +640,7 @@ Scenario('media tabulka v stranke-multigroup', async ({I, DataTables, DT, DTE, B
     I.say("edit master media to verify only one copy");
     DT.filterContains("mediaTitleSk", mediaTitleMaster);
     I.click(mediaTitleMaster, container);
-    DTE.waitForEditor();
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");
     DTE.fillField("mediaTitleSk", mediaTitleMaster+"-chan.ge");
     DTE.save("datatableFieldDTE_Field_editorFields-media");
 
@@ -675,11 +676,12 @@ Scenario('testovanie app - media app', async ({ I, DTE, Apps, Document }) => {
 
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Média').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-24008_anchor');
-    I.waitForElement('input[value="/Aplikácie/Média/Média"]', 10);
+    I.waitForElement('#editorAppDTE_Field_docid input.form-control', 10);
+    I.seeInField('#editorAppDTE_Field_docid input.form-control', '/Aplikácie/Média/Média');
     I.switchTo();
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');

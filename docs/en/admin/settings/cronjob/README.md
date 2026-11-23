@@ -26,6 +26,15 @@ In the record editor window, you can set:
 
 ![](editor.png)
 
+## Manual start
+
+After selecting one or more tasks, you can manually start them using the buttons in the toolbar:
+
+- the play button starts the task on the current node,
+- the server button will run the task according to the **Running on node** value. The value `all` will run it on all nodes, `all-admin` on administrative nodes, `all-public` on public nodes, and a specific name will run it only on the specified node.
+
+The remote execution request is transmitted through the cluster and is executed at the latest at the next check set by the configuration variable `clusterRefreshTimeout`. Outside of cluster mode, the task is executed locally.
+
 Changes to task timing are applied immediately, but tasks that have already started will continue to run until they finish.
 
 ## Standard tasks
@@ -102,6 +111,12 @@ SQL commands, separated by the `|` character.
 - No.
 
 [sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater](../../../../../src/main/java/sk/iway/iwcm/components/file_archiv/FileArchivatorInsertLater.java) - Publishes scheduled changes to the file archive.
+
+**Parameters:**
+
+- No.
+
+[sk.iway.iwcm.components.ai.rest.AiTokenUsageReset](../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiTokenUsageReset.java) - Resets the counter of used tokens of all AI assistants in all domains. It preserves the set limits and historical statistics. The update adds a daily reset at midnight on the administrator nodes. You can change the timing according to [AI assistant limit settings](../../../redactor/ai/settings/README.md#automatic-reset-tokens).
 
 **Parameters:**
 

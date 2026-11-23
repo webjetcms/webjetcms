@@ -1,0 +1,453 @@
+---
+name: wj-create-feature-video
+description: "Create WebJET CMS feature videos from a pull request or branch: a JavaScript shot plan with localized narration and browser steps, ElevenLabs audio, recordings, and a finished Tesseract edit with the standard WebJET outro. Use when preparing or revising a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
+---
+
+# Create a WebJET CMS Feature Video
+
+Prepare a customer-focused product story and repeatable browser footage. Keep
+shot metadata, localized narration, preparation and browser steps in one
+JavaScript object; derive the narration, shot plan and walkthrough from it.
+
+Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Also verify availability of ElevenLabs access and the Tesseract video tools before the steps that require them. If a prerequisite is absent, report it and keep the deliverable to the feasible story/shot plan; do not silently install plugins, copy the core harness or change CMS dependencies. Resolve project paths from the target checkout and references from this skill's own directory.
+
+Read [references/production-reference.md](references/production-reference.md)
+before implementing or changing a video scenario. It contains the exact schema,
+scenario template, recording defaults and validation commands. Use
+[308-pb-redesign.js](../../../src/test/webapp/video/308-pb-redesign.js) as the
+working example of the current architecture; adapt its application-specific
+selectors, fixture and lifecycle callbacks to the feature being demonstrated.
+
+## 1. Establish the Source and Name
+
+- Inspect the PR or branch diff, documentation, changelog, screenshots and
+  existing E2E coverage. Prefer visible behavior and customer value over commit
+  wording. Verify the feature-specific documentation URL in the target language.
+- Determine the PR ID and branch. Ask only when they cannot be discovered safely.
+- Remove a leading `feature/` or `hotfix/` and sanitize the rest to a lowercase
+  hyphenated slug. Name the JavaScript file and main scenario
+  `<PR-ID>-<branch-slug>`, e.g. `293-config-jstree-view.js`.
+- Use `Feature("video.<scenario-name>")` and store the file in
+  `src/test/webapp/video`. Preserve unrelated edits and never create a commit.
+- If there is no useful browser-visible change, keep a manual plan and narration
+  rather than forcing an automated walkthrough.
+
+## 2. Frame the Story and Write Shot Narration
+
+Default to nontechnical WebJET CMS customers, Slovak, 16:9 landscape, about
+80 to 90 seconds, and a closing invitation to the feature documentation. Follow
+explicit requests for other lengths or languages.
+
+Prefer a few substantial topic shots with a continuous user flow. When the user
+lists topics, use those as the shot boundaries unless a real filming constraint
+requires otherwise. Keep opening a control, changing values, applying them and
+showing the result together. Do not split each click or sentence into a short
+shot: repeated setup and returns to the same starting screen make editing slow
+and the finished video feel disconnected. Extend the duration when several
+complete workflows need room; do not force them into the default 80–90 seconds.
+
+Identify one main promise and up to three supporting benefits. Explain what
+becomes easier, faster, clearer or safer. Lead with the problem or benefit, show
+the improvement and close with the documentation call to action.
+
+Write the narration directly in each shot's `text-sk`. Use natural spoken
+Slovak, short sentences and one idea per sentence. Keep `WebJET CMS` spelled
+exactly this way. Do not include headings, SSML, pause tags, bracketed shot
+instructions or unsupported claims in spoken text. Keep production directions
+in `notes` and ElevenLabs settings outside the text.
+
+Address the customer consistently in the second person. In Slovak, use the
+second-person plural (polite address): `môžete`, `pridáte`, `otvoríte`, and
+imperatives such as `kliknite`, `vyberte`, `uložte` for instructions. Do not
+narrate the customer's actions as `klikneme`, `pridáme` or `otvoríme`.
+For example: `Kliknite na Upraviť prehľad` and `Pridáte si ďalšiu kartu a v jej
+menu otvoríte Nastavenia widgetu`. First-person wording may describe the WebJET
+team's response, such as `Budeme radi, keď nám napíšete`, but not the customer's
+on-screen actions.
+
+Start around 170 to 195 Slovak words for the default duration. Count words
+across all shots, including manual and head entries. Use measured voice duration
+when it is available; `durationSeconds` remains an editing estimate until adjusted.
+
+## 3. Keep One JavaScript Shot Plan
+
+- Declare a top-level `const videoPlan = { ... };` before the scenarios. Its
+  initializer is a JavaScript object literal, with `shot` and optional `prepare`
+  functions directly inside each automatic shot. Keep metadata literal and
+  static; comments, unquoted keys and trailing commas are allowed. In metadata,
+  do not use computed keys, spreads, getters, shorthand references or dynamic
+  expressions. Callback bodies contain ordinary JavaScript browser steps.
+  The audio preflight reads metadata from the syntax tree and skips callback
+  bodies without executing them. Function values belong only in `shot`/`prepare`.
+  This is not strict JSON: serializing it with `JSON.stringify` omits callbacks.
+- Use `language: "sk"` and a non-empty `shots` array. Each shot has a unique,
+  stable lowercase hyphenated `id` (e.g. `text-editing`), `type` (`"auto"`,
+  `"manual"` or `"head"`), positive integer `durationSeconds`, English `title`, localized
+  `text-sk`, and optional production `notes`.
+- `auto` means browser steps are automated; `manual` means footage/cards are
+  supplied during editing. A manual shot produces a warning slate in its plan
+  position instead of browser steps. Give each manual shot concise filming
+  instructions in `notes`; those instructions appear in full on the slate.
+  Old `AUTO 1`, `AUTO 2` labels were shot numbers, not
+  different execution types. Never encode position in the type or use an array
+  index as the action id.
+- Store one coherent topic or user workflow per shot. It can contain several
+  narration beats and clicks, in spoken order. Split only at meaningful topic,
+  location or filming boundaries, not merely because the next sentence describes
+  another action. Prefer one complete example over several partial examples.
+- The array order is authoritative for narration, shot-plan numbering, derived
+  time ranges and automatic execution. Move the entire shot object to reorder
+  it, including its inline callbacks. Do not maintain a separate narration block,
+  hard-coded timeline, ordered callback list or title strings.
+- Use `text-cs` for Czech and `text-en` for English. Select the default with
+  `videoPlan.language`; `I.generateAudio(videoPlan, { language: "en", languageCode: "en" })` can
+  override audio language for one run. Missing translations fail explicitly;
+  use `""` only for a deliberately silent shot. Translating narration alone does
+  not translate UI selectors, fixture content or the browser login language.
+- Put browser-external actions, unreliable third-party pages and final
+  feature-specific title/closing cards in manual shots. The standard brand outro
+  is appended during final editing as described in section 7. Documentation pages can be automatic shots
+  using `I.videoDocumentation(url)`. Use `head` only for a requested generated
+  presenter; do not silently convert existing manual cards to paid head clips.
+  Keep every manual shot in the plan so its audio and duration remain part of
+  the story. Avoid sensitive data in footage. For configuration screens, follow
+  293: mask password/secret/key cells in the browser after table draws, without
+  altering saved values, and inspect the recording.
+- Time ranges are derived cumulatively from `durationSeconds`. They describe
+  the edited film, excluding setup, cleanup, two-second editing slates and the
+  runner's three-second hold before and two-second hold after each automatic action.
+  Never use these durations as application waits. Use ASCII hyphens in ranges.
+
+## 4. Implement the Scenarios
+
+Keep these scenarios in order:
+
+1. `ElevenLabs`: inject only `I`, use a synchronous callback containing one
+   `I.generateAudio(videoPlan)` call and tag only `@audio`.
+2. For plans with head shots, `ElevenLabs Head`: inject only `I`, call
+   `I.generateHead(videoPlan)` once in a synchronous callback and tag only `@head`.
+3. `Shot plan`: format the same object with `formatShotPlan(videoPlan)` from
+   `helpers/feature_video_plan.js` and print it with `I.say`; leave it untagged.
+4. `YouTube thumbnail`: always create a standalone async scenario tagged only
+   `@title`, run by `npm run video:title video/<scenario-name>.js`. Prepare a
+   representative feature screen, wait for it to be ready, then call
+   `await I.videoTitle("<localized headline>", 50, "glow")`. Choose the headline
+   and size for the feature; the second argument is an optional fixed font size
+   in CSS pixels, and the third selects `glow`, `clean` or `bold`. Keep its login,
+   preparation and cleanup independent of the main walkthrough. See the
+   production reference's **YouTube Thumbnail** section for sizing and outputs.
+5. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
+
+For a quick readable overview, run `npm run video:plan video/<scenario-name>.js`
+from `src/test/webapp`. It statically reads the top-level `const videoPlan` and
+prints the complete narration, word/character counts, estimated duration and
+the ordered shot plan with types, titles, notes and narration. It uses
+`videoPlan.language` (default `sk`) and runs no CodeceptJS scenario, callbacks,
+browser or API calls. It needs no API key or `Scenario("Shot plan")` declaration
+and can inspect draft plans before their audio or browser actions are ready.
+
+Keep metadata callbacks free of browser actions. Do not add global login hooks.
+Require shared utilities inside the relevant callback; the audio runner permits
+only static declarations and direct Feature/Scenario calls at file scope.
+Existing plain-text and JSON audio plans remain supported, but use the unified
+JavaScript plan for new productions.
+
+Define `shot: async ({ I, ...dependencies }) => { ... }` next to each automatic
+shot's title, narration and notes. Add an inline `prepare` with the same context
+argument when that shot needs extra preparation. Manual and head shots need no callbacks.
+Keep shared selectors and helper functions in the main async scenario and pass
+them through `context`; the runner automatically includes all configured
+CodeceptJS `inject()` objects (such as `DT`, `DTE` and `Document`), `I` and the
+current resolved `shot`. Page objects do not need to be repeated in `context` or
+the main Scenario parameters unless that Scenario uses them itself. Explicit
+`context` values override injected objects, except for the runner-owned `I` and
+`shot`. To use a page object without a callback parameter, call
+`const { DTE } = inject();` inside `prepare` or `shot`. Keep injection inside
+callbacks; top-level `inject()` or page-object `require()` calls are rejected
+by the audio/head preflight and would load browser dependencies in those modes.
+Top-level callbacks cannot access variables declared inside the main scenario;
+destructure each required dependency from their context argument.
+For example, `shot: async ({ I, services }) => { await I.videoClick(services); }`
+uses `context: { services }` from the main scenario.
+
+Call `await recordVideoPlan(I, { plan: videoPlan, context, ... })` from
+`helpers/feature_video_plan.js`. Do not copy the recording loop into scenarios
+or maintain separate callback maps. Pass `I` first and one options object with
+`plan`, optional `context` and `language`, and the lifecycle callbacks needed:
+
+- `setup`: one-time login and shared setup, after automatic callbacks are validated.
+- `prepare`: optional readiness/baseline work before automatic shots; receives
+  the resolved shot. Reuse an already suitable scene instead of unconditionally
+  navigating or reconstructing it.
+- `cleanup`: cleanup after each successful automatic shot; receives the resolved shot.
+
+For automatic shots, the runner logs
+`Recording shot <index>/<total> <id> (<duration>s)` and displays
+a two-second `SETUP shot <index>/<total> <id> (<duration>s)` slate. The index and
+total use the full plan, including manual and head shots. It then
+awaits shared `prepare`, runs `shot.prepare(context)` if present, displays the
+normal two-second shot slate, waits three seconds on the prepared scene, runs
+`shot.shot(context)`, waits another two seconds on the result and awaits cleanup.
+These automatic lead-in/tail holds provide room for transitions during editing;
+do not duplicate them in every callback.
+The normal slate includes
+`Shot <index>/<total>: <id>` and first 200 Unicode characters of localized narration.
+SETUP, normal slates and warnings use the same full-plan numbering and total.
+The runner owns the editing slates: do not repeat
+`I.videoTitle` inside individual `shot` or `prepare` functions.
+Cut everything from the SETUP slate through the normal slate out of the final
+film, along with cleanup. Neither slate contributes to the edited timeline.
+
+For manual shots, the runner logs a warning and calls `I.videoTitle(shot)` at
+their position in the full plan. This shows `WARNING: manual steps | Shot N/total: id`
+and the complete `notes` for two seconds. Missing notes produce a reminder to
+add filming instructions. The shared `prepare`/`cleanup` and inline callbacks
+are skipped for manual shots; one-time `setup` still runs. Replace this warning
+slate with the required manual footage during editing. Manual narration and
+estimated duration remain in the edited plan and audio; the marker does not
+wait for a person to record the scene or contribute to the edited duration.
+
+Shared lifecycle callbacks may branch on the stable `shot.id`: skip editor
+preparation and cancellation for a documentation shot or a shot that opens its
+own route. Keep those decisions independent of array position. A preview can
+close its editor itself, so its shared cleanup must not close it again.
+
+For a single-shot retake, run
+`VIDEO_SHOT=outro npm run video video/<scenario-name>.js` with the exact shot ID.
+The shared runner validates the full plan and all automatic callbacks, runs
+one-time setup, then records only that shot with its normal lifecycle, slates
+and transition holds. It retains full-plan numbering and timing. Manual/head
+selections show only their warning slate after setup. Unknown IDs fail before
+setup and list the available IDs; malformed IDs fail when loading the video
+configuration. Surrounding whitespace is trimmed; unset or blank selects the
+full plan. The same selection works with `video:current`. A retake is saved as
+`<scenario-name>-<shot-id>.webm` or `<scenario-name>-<shot-id>.failed.webm`, replacing
+only the same shot and result status. Full recordings are retained. `VIDEO_SHOT`
+does not filter audio, head generation or `video:plan` output.
+
+Run `npm run video:shots video/<scenario-name>.js` to record every shot serially
+as an individual retake with the same suffixes and full-plan numbering. It reads
+metadata without executing the scenario, then invokes the existing video command
+with each shot ID. A failed shot does not prevent later shots; the command reports
+all failed IDs and exits nonzero. Process interruption stops the batch. Manual and
+head entries produce warning clips, without paid generation.
+
+Individual retakes start at the SHOT slate, including its full two-second display.
+The Chromium recording's actual frame positions are used to trim setup with the
+bundled FFmpeg and the existing high-quality VP8 profile. The full recording keeps
+SETUP. Failures before the SHOT slate retain setup for diagnosis; trim failures
+retain raw footage and do not replace existing outputs. The clean scene after
+the slate lasts three seconds before automatic actions, in both recording modes.
+
+A reordered shot must not depend on a prior shot's dialog, selection, search or
+mutation. Keep one-time login and common fixtures in `setup`. Use idempotent,
+shot-specific preparation only for prerequisites that are actually missing, so
+a full run continues naturally while an isolated retake or reordered run still
+works. Do not reset the whole application between steps of the same workflow.
+Reopen/reset an editor with isolated browser-only content only when necessary
+for a reliable baseline. Use `I.clickCss` for CSS selectors or ordinary
+`I.click` during preparation to avoid cursor animation and editing holds in
+footage that will be cut. Discard temporary changes during cleanup. When a shot
+uses an iframe, return to the top-level page before closing its editor. Handle
+native confirmation dialogs only if the actual flow displays one; do not add
+unconditional popup acceptance steps to the current Page Builder cleanup.
+For uploads or other persistent fixtures, use narrowly named demo records, seed
+what each shot needs and remove only those records afterward. Never run another
+shot's on-camera actions as preparation.
+
+Await actor steps inside async callbacks so recording order stays deterministic.
+`recordVideoPlan` is an ordinary async module function invoked from a Scenario,
+not an `I` helper step; wrapping actor callbacks inside a CodeceptJS helper step
+can interfere with its recorder queue. It stops on errors instead of continuing
+with another shot.
+
+Reuse selectors and waits from regression tests. Prefer read-only actions or
+isolated test data. Synchronize with `waitFor*`, URLs, application state and
+`DT.waitForLoader()`, not fixed delays. Presentation holds belong after readiness
+checks. Keep initial readiness waits in preparation and result assertions after
+the corresponding actions inside `shot`. Use `I.videoClick(locator, curveStrength)`
+for important on-camera clicks; the production reference documents cursor defaults
+and editing holds. Use `I.videoScroll()` to smoothly scroll the current page
+from top to bottom, or `I.videoDocumentation(url)` to open documentation, wait
+for `article h1` and scroll in the recording tab. Keep content in the original
+recording tab; for previews opened in a new tab, capture the URL, close that tab
+and reopen the URL in the original tab, as in 308.
+The video helper renders only one cursor in the top-level page and relays mouse
+events from iframes, including nested frames; never install a second visible
+cursor in the editor. Keep code comments and shot titles in English.
+
+## 5. Generate Audio and Validate
+
+The default ElevenLabs model is `eleven_v4`, voice Luki Zajo
+(`Zai7B4Aol2bJtneyq0L1`), `languageCode: "sk"` and
+`voiceSettings: { stability: 0.3, similarityBoost: 0.5 }`. Model/voice precedence is
+explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
+`ELEVENLABS_VOICE_ID`, repository default. The API key comes only from
+`ELEVENLABS_API_KEY`; never store it in code or command arguments.
+
+`I.generateAudio` accepts overrides for `languageCode` and individual
+`voiceSettings` fields; unspecified voice fields retain the defaults.
+Values use the 0–1 range. `language` selects the plan's localized text;
+`languageCode` controls ElevenLabs pronunciation separately. When generating
+another language, explicitly set its language code as well.
+Use `languageCode: null` for a model without language enforcement (such as
+Multilingual v2), or `voiceSettings: null` to use the voice's stored settings.
+
+`I.generateAudio(videoPlan)` packs the selected `text-<language>` fields,
+including manual and head shots, into numbered MP3 parts in array order. It
+starts a new part when the next complete shot, including its paragraph separator,
+would exceed the model's character limit (5,000 for `eleven_v3`, 10,000 for `eleven_v4`). Never split a
+shot between files. An oversized individual shot fails preflight and must be
+divided into smaller shots in the plan. Silent shots add no text or empty parts.
+It never invokes `shot` or `prepare` or forces speech to match estimated durations.
+Legacy string narration remains one part and must fit the model limit.
+The helper validates every part and reserves all outputs, then prints each
+part's shot IDs, character count, filename and complete text before any ElevenLabs
+request. Requests run sequentially, with a ten-minute timeout each and one credit
+summary for the run. Failure stops later parts without retrying; completed parts
+remain available. Run paid generation only when explicitly requested.
+
+Run proportionate checks:
+
+1. Parse changed JavaScript and run `npm run audio:test`, `npm run head:test` and
+   `npm run video:test` after infrastructure changes. Verify reordered plans,
+   translation errors, manual-shot narration and warning slates, callback
+   validation, and skipped automatic lifecycle callbacks for manual shots.
+   Verify the three-second lead-in and two-second tail holds for automatic shots and their absence
+   for manual/head entries. Verify that audio validation and generation do not
+   execute inline callbacks.
+2. Dry-run the audio-only, head-only, thumbnail and complete video configurations; none may call
+   ElevenLabs. Check legacy scenarios remain compatible when changing helpers.
+   Use `npm run video:title -- video/<scenario-name>.js --dry-run` to verify that
+   the required `@title` scenario is selected.
+   Run `npm run video:plan video/<scenario-name>.js` to inspect narration and timing.
+3. Run `npm run audio video/<scenario-name>.js` only on explicit request with
+   an available API key. Object plans produce `<scenario-name>-<language>-1.mp3`,
+   `-2.mp3`, etc.; legacy string narration produces `<scenario-name>-1.mp3`.
+   Always include the part number, even for one part. `I.generateAudio` returns
+   an array of paths in part order and registers `audio-1`, `audio-2`, etc.
+4. Run the tagged recording with `npm run video video/<scenario-name>.js`
+   when the configured instance and test credentials are available. Reordering
+   checks should include a shot that previously depended on its predecessor.
+5. Final MP3/MP4/WebM files live in gitignored `docs/feature-video`. Confirm and
+   inspect generated media before handing it off. The production reference
+   describes atomic output replacement and retention of failed raw recordings.
+
+When migrating an existing scenario, preserve its narration and intended edited
+duration while distributing text across shots. Check the joined localized text
+against the original after normalizing whitespace, and preflight every migrated
+file. Preserve manual gaps in `notes`; use `""` only for intentional silence.
+Run the migrated browser actions with a changed shot order to verify that their
+preparation is independent.
+
+For new productions, deliver the derived narration and shot plan, word count,
+estimated/measured duration, voice/model, documentation URL, scenario path,
+commands, output paths, validation and manual gaps. For workflow refactoring,
+explain the schema, reorder/language controls, changed files and verification;
+do not repeat the unchanged complete narration. State whether media was actually
+generated and any unverified browser behavior.
+
+## 6. Final Narration-to-Footage Check
+
+Before handing off a new or changed scenario, audit every shot against its
+actual `text-sk` (or the selected `text-<language>`). Start from the spoken
+sentences, not from `notes` or the title. Passing tests and plausible filming
+notes do not prove that the viewer sees what the voice describes.
+
+Write the spoken sequence first, implement its actions in that order, and derive
+`notes` last. For longer shots, keep a sentence-to-action mapping inside the
+callback (for example numbered narration lines and matching cues). Keep one
+canonical narration; do not copy its text into a second timing script. Leave
+readable time at each result before moving to the next narrated action, rather
+than doing every click immediately and holding only the final screen.
+
+- Map each sentence to the visible starting state, on-camera action and result.
+  Read the actual `shot` callback and any helpers it calls; inspect `prepare`
+  and lifecycle callbacks to establish the baseline. A narrated click, edit or
+  transition must happen inside `shot`, in the spoken order. Actions hidden in
+  preparation, cleanup or editing slates do not count as footage. A prepared
+  state can support narration describing that already-visible state.
+- Check the actual controls, labels, values, navigation direction and results.
+  Distinguish selecting or typing from applying or saving. Do not describe a
+  comparison of several instances when the shot shows only one. Opening
+  promises may introduce a later demonstration, but must be phrased as such,
+  not as actions already happening in the current shot. Verify that linked
+  documentation actually contains any instructions promised in the narration.
+- Resolve mismatches by implementing or reordering the narrated action,
+  or narrowing the narration to the useful behavior actually shown. Update
+  `notes` afterward; changing notes alone never resolves a mismatch. Split the
+  shot only when a meaningful topic or filming boundary requires it. Keep result
+  assertions and enough readable footage after the corresponding action.
+- Inspect available recordings against the sentences, including action order,
+  readable results and time available for the narration. When speech exists,
+  listen while viewing the relevant footage. `durationSeconds`, fixed waits and
+  a successful browser run do not establish synchronization. Without audio,
+  report semantic/visual verification separately and leave exact speech timing
+  explicitly unverified; do not trigger paid generation just for this check.
+- Report a concise per-shot mapping of narration to visible evidence, fixes and
+  any remaining gaps. Refresh the derived plan after edits, retake changed
+  browser actions when the environment is available, and identify older audio
+  or recordings that no longer match. Repeat this check after narration,
+  callbacks, preparation or shot order changes.
+
+## 7. Assemble the Finished Video
+
+When a finished edit or retiming is requested, use the installed Tesseract video
+skill and read [references/tesseract-editing.md](references/tesseract-editing.md).
+Keep the approved narration as the timing anchor, preserve continuous topic
+flows, and use purposeful zooms on the controls being explained. Omit numbered
+chapter-title overlays unless explicitly requested.
+
+Include the opening AI disclosure in every finished video, following the
+wording, placement, timing and readability checks in the reference's
+[AI Disclosure](references/tesseract-editing.md#ai-disclosure) section.
+
+Always finish the complete WebJET feature video with the supplied animation in
+`src/test/webapp/video/assets/outro.mp4`, unless the user requests a different
+ending. Append it once, at its original speed, after the final narration and
+the brief closing hold. Preserve the entire animation and any source audio.
+Include it in both the editable Tesseract project and the final MP4; merely
+linking the asset or documenting a manual editing step is not a finished result.
+Feature-only retakes remain standalone; do not append the outro to every shot.
+
+Store reusable editing knowledge in this skill's version-controlled references.
+`docs/feature-video/`, including project readmes and working scripts, is ignored
+and may disappear with the worktree. Keep generated media there, but do not use
+it as the only copy of instructions needed for the next production. Check new
+references and shared source assets with `git status`; leave commits to the user.
+
+## Talking Heads and Credits
+
+Use `type: "head"` for an explicitly requested generated presenter. It keeps
+its narration, numbering and estimated duration in the shared plan and numbered
+audio parts. In the browser recording it shows a two-second `WARNING: head video`
+slate with `Shot N/total: id`, full localized narration and notes. All per-shot
+preparation, actions and cleanup are skipped; replace the marker with the clip during editing.
+
+`npm run head video/<scenario-name>.js` runs only `@head` without a browser or
+login. It validates every head text, option, image and output before paid calls,
+then generates separate TTS and a lip-sync video for each head shot in order.
+Default reference: Jack / Home Vlog Style, framed for 16:9 in
+`video/assets/head/jack-home-vlog-style.png`. Default model/resolution:
+`creatify-aurora` / `720p`; leave other Aurora settings at their defaults.
+The `imagePath` option selects another reference (relative to the scenario file).
+`I.generateHead` also accepts `language`, `modelId`, `resolution` and
+`audio: { modelId, voiceId }`. Each shot's `head` object overrides the same
+settings except language, with individual audio fields merged. Head text must
+not be empty. Audio uses the existing TTS defaults and environment precedence.
+
+Run paid head generation only when explicitly requested. Each invocation
+regenerates all head clips; there is no cache or automatic paid retry. Files are
+`docs/feature-video/<scenario-name>-<shot-id>-<language>.mp3` and `.mp4`, replaced
+atomically on completion. Video duration follows audio, not `durationSeconds`.
+Failures stop later shots and include the generation ID when available. Inspect
+resolution, framing, sound and lip synchronization before handing off a real run.
+
+Keep the key only in `ELEVENLABS_API_KEY`. Head generation requires
+`text_to_speech` and `image_video_generation`; both audio and head credit
+summaries additionally need `user_read`. Audio reports `character-cost` from the
+TTS response, falling back to an explicitly approximate account delta. Head
+reports the whole run's account delta, including TTS and video. Both display
+credits remaining in the current limit; reporting is non-fatal, runs even after
+partial failure, and labels pending jobs provisional. Dry-runs call neither the
+generation nor credit APIs. See the production reference for API and failure details.

@@ -125,6 +125,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.user",
     "sk.iway.iwcm.components.users.groups_approve",
     "sk.iway.iwcm.components.users.permgroups",
+    "sk.iway.iwcm.components.users.sessions",
     "sk.iway.iwcm.components.users.userdetail",
     "sk.iway.iwcm.components.users.usergroups",
     "sk.iway.iwcm.components.welcome",
@@ -166,7 +167,9 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.rag.search",
     "sk.iway.iwcm.rag.service",
     "sk.iway.iwcm.rag.vectorstore",
-    "sk.iway.iwcm.components.customfields.rest"
+    "sk.iway.iwcm.system.datatable.settings.customfields.rest",
+    "sk.iway.iwcm.system.datatable.settings.fields.rest",
+    "sk.iway.iwcm.system.datatable.settings.tabs.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

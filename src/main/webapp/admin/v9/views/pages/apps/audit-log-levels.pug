@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script.
+        window.helpLink = "/sysadmin/audit/audit-log-levels";
         var logLevelsDataTable;
         let url = "/admin/rest/audit/log-levels";
         let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.LogLevelBean")})];

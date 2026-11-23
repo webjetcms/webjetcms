@@ -54,6 +54,29 @@ public class TranslationService {
         return translate(text, fromLanguage, toLanguage, this.translationEngine);
     }
 
+    /**
+     * Translates using the configured languages, reporting provider failures to the caller.
+     * Copying without a configured engine and same-language operations retain their existing behavior.
+     * @param text source text
+     * @return translated text, or source text when no translation is configured or required
+     * @throws TranslationException when the configured provider fails
+     */
+    public String translateOrThrow(String text) {
+        return translateOrThrow(text, fromLanguage, toLanguage);
+    }
+
+    /**
+     * Translates using explicit languages, reporting provider failures to the caller.
+     * @param text source text
+     * @param fromLanguage source language
+     * @param toLanguage target language
+     * @return translated text, or source text when no translation is configured or required
+     * @throws TranslationException when the configured provider fails
+     */
+    public String translateOrThrow(String text, String fromLanguage, String toLanguage) {
+        return translate(text, fromLanguage, toLanguage, this.translationEngine, true);
+    }
+
     private static TranslationEngine getEngineInstance() {
         String[] engineClasses = Constants.getArray("translationEngineClasses");
         if(engineClasses == null || engineClasses.length == 0) return null;
@@ -88,6 +111,10 @@ public class TranslationService {
     }
 
     private static String translate(String text, String fromLanguage, String toLanguage, TranslationEngine translationEngine) {
+        return translate(text, fromLanguage, toLanguage, translationEngine, false);
+    }
+
+    private static String translate(String text, String fromLanguage, String toLanguage, TranslationEngine translationEngine, boolean failOnError) {
         try {
             //Handle cz / cs language shortcut
             if ("cz".equalsIgnoreCase(toLanguage)) toLanguage = "cs";
@@ -120,29 +147,24 @@ public class TranslationService {
                 //Something went wrong, we will not doc data
                 Logger.debug(DocMirroringServiceV9.class, "Error while extracting !INLCUDE()! from doc data.", ex);
                 replacedIncludes.clear();
+                textToTranslate = text;
             }
 
-            if(replacedIncludes.isEmpty() == true) {
-                //Translate without include replenish, because there is nothing to replace
-                return translationEngine.translate(text, fromLanguage, toLanguage);
-            } else {
-                try {
-                    String translatedText = translationEngine.translate(textToTranslate, fromLanguage, toLanguage);
-                    for(Map.Entry<Integer, String> entry : replacedIncludes.entrySet()) {
-                        String replaceText = "__INCLUDE_PLACEHOLDER_" + entry.getKey() + "__";
-                        translatedText = translatedText.replace(replaceText, Matcher.quoteReplacement(entry.getValue()));
-                    }
-                    return translatedText;
-
-                } catch (Exception ex) {
-                    //Something went wrong, we will not doc data
-                    Logger.debug(DocMirroringServiceV9.class, "Error while returning !INLCUDE()! in doc data after translate. Use doc data translation without replacing.", ex);
-                    // Translate default text
-                    return translationEngine.translate(text, fromLanguage, toLanguage);
-                }
+            String translatedText;
+            if (failOnError) translatedText = translationEngine.translateOrThrow(textToTranslate, fromLanguage, toLanguage);
+            else translatedText = translationEngine.translate(textToTranslate, fromLanguage, toLanguage);
+            if (Tools.isEmpty(translatedText)) throw new TranslationException("Translation engine returned empty text");
+            for(Map.Entry<Integer, String> entry : replacedIncludes.entrySet()) {
+                String replaceText = "__INCLUDE_PLACEHOLDER_" + entry.getKey() + "__";
+                translatedText = translatedText.replace(replaceText, entry.getValue());
             }
+            return translatedText;
 
         } catch (Exception ex) {
+            if (failOnError) {
+                if (ex instanceof TranslationException translationException) throw translationException;
+                throw new TranslationException("Translation failed", ex);
+            }
             Logger.error(TranslationService.class, ex);
         }
 

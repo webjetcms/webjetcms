@@ -168,13 +168,14 @@ public class PdfTools {
                      data = data.replace(styleSheetMatcher.group(), "<!--" + styleSheetMatcher.group() + "-->");
                  }
              }
-             styleSheetMatcher = Pattern.compile("<style.*?/?>", Pattern.CASE_INSENSITIVE).matcher(data);
+             // Remove the entire excluded block so its CSS cannot become visible PDF text.
+             styleSheetMatcher = Pattern.compile("(<style\\b[^>]*>).*?</style\\s*>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(data);
              while (styleSheetMatcher.find())
              {
-                 if (!styleSheetMatcher.group().contains("media=\"print\"") && !styleSheetMatcher.group().contains("media=\"all\""))
+                 if (!styleSheetMatcher.group(1).contains("media=\"print\"") && !styleSheetMatcher.group(1).contains("media=\"all\""))
                  {
-                    Logger.debug(PdfTools.class, "HtmlToPdfConverter => replacing " + styleSheetMatcher.group());
-                     data = data.replace(styleSheetMatcher.group(), "<!--" + styleSheetMatcher.group() + "-->");
+                    Logger.debug(PdfTools.class, "HtmlToPdfConverter => removing " + styleSheetMatcher.group(1));
+                     data = data.replace(styleSheetMatcher.group(), "");
                  }
              }
              data = data.replaceAll("media=\"print\"", "media=\"screen\"");

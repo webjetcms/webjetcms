@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -76,8 +78,18 @@ public class JsonTools
 	    return flattened;
 	}
 
+	/**
+	 * Serializes an object to JSON with Java time support and millisecond timestamps for instants.
+	 *
+	 * @param object object to serialize
+	 * @return JSON representation
+	 * @throws JsonProcessingException if the object cannot be serialized
+	 */
 	public static String objectToJSON(Object object) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .enable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS);
         return mapper.writeValueAsString(object);
     }
 

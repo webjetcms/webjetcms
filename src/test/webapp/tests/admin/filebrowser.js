@@ -12,7 +12,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('dir properties', async ({I, DT}) => {
+Scenario('dir properties', async ({I, DT, DTE}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_1_");
 
     //Find our file in tree
@@ -33,7 +33,7 @@ Scenario('dir properties', async ({I, DT}) => {
 
         //Save
         I.switchTo();
-        I.click( locate("div.modal-footer").find("button.btn.btn-primary") );
+        DTE.save(null, true);
 
         // TODO - later when save return some message - do check
     //
@@ -328,8 +328,9 @@ function openUnusedFilesTab(I, parentPath, folderName, expectedFolderPath) {
 }
 
 function startUnusedFilesScan(I) {
+    I.wait(1);
     I.clickCss("#" + UNUSED_FILES_TABLE_ID + "_wrapper button.buttons-unused-files-analyze");
-    I.waitForElement("#unused-files-status.alert-info", 10);
+    I.wait(1);
 }
 
 function waitForUnusedFilesScanInUi(I, DT) {

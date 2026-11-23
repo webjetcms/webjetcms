@@ -78,17 +78,20 @@ Při volbě **Přepsat soubor** nebo **Přejmenovat soubor** se obrázek v poli 
 
 ### Vstup od uživatele
 
-Pokud asistent vyžaduje dodatečné pokyny, zobrazí se formulář. Doplňující pole jsou specifická pro konkrétního **poskytovatele**, proto se mohou měnit. U poskytovatele `OpenAI` jde například o:
+Pokud asistent vyžaduje dodatečné pokyny, zobrazí se formulář. Doplňující pole se určují podle možností konkrétního **poskytovatele, modelu a operace**, proto se mohou měnit. Zobrazit se mohou například:
 
-- Počet obrázků
-- Rozměr
-- Kvalita
+- **Počet obrázků**,
+- **Rozměr**,
+- **Kvalita**,
+- **Poměr stran**.
+
+CMS zobrazí pouze pole a hodnoty, které vybraný model podporuje. Pokud model pro danou operaci nepublikuje žádné doplňkové možnosti, formulář bude obsahovat pouze uživatelský pokyn.
 
 Asistenti, kteří potřebují vstup uživatele, mají při názvu ikonu<i class="ti ti-blockquote has-user-prompt"></i> .
 
 ![](image-prompt.png)
 
-Po potvrzení probíhá zpracování standardně s jednou výjimkou pro `OpenAI`: umožňuje najednou vygenerovat více obrázků (podle **Počet obrázků**). Na příkladu níže bylo nastaveno číslo 3.
+Pokud vybraný model podporuje pole **Počet obrázků**, může v jednom požadavku vygenerovat více výsledků. Na příkladu níže bylo nastaveno číslo 3.
 
 Vybrat a uložit můžete jen jeden výsledek – zvolíte jej kliknutím. Všechny náhledy lze otevřít přes<a target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a> .
 
@@ -152,29 +155,33 @@ Nemusíte upravovat celý obsah stránky. Asistent pracující s `PageBuilder` p
 
 ![](page_builder-selection.png)
 
-## Režim chat
+## Režim čet
 
-Pokud je asistent nastaven do režimu chat, aplikují se změny v PageBuilder na celou strukturu, nejen textový/editovatelný obsah. Asistent tak dokáže generovat nové bloky, upravovat stávající a podobně. Umíte mu zadávat požadavky na úpravu textů ve stránce a generování nových bloků. Režim aktivujete nastavením pole Typ požadavku na hodnotu `Chat` ve vlastnostech asistenta.
+V PageBuilderu můžete z podkladů vytvořit stránku a pak ji upravovat ve stejném rozhovoru. Chcete-li rozhovor později otevřít z historie, novou stránku nejprve uložte a znovu otevřete v editoru. U nové, ještě neuložené stránky je čet dočasný (neuloží se do historie). Doporučujeme vám tedy novou stránku nejprve uložit až poté upravovat její text pro zachování historie.
 
-Okno se zadáním požadavku obsahuje nová pole pro nastavení režimu:
+V panelu nástrojů klikněte na ikonu AI a vyberte asistenta **Webový designér (PageBuilder)**. Ikonou plus **Nahrát soubor** přiložte podklad. Může to být PDF s textovou vrstvou, dokument Word (DOCX) nebo prezentace PowerPoint (PPTX). Do zprávy napište například „Podle PDF vytvoř stránku kadeřnického salonu s úvodním blokem, službami a otevíracími hodinami.“ Odešlete zprávu.
 
-- **Přidat** - výstupní HTML kód z požadavku přidá na konec stránky. Neposílá asistentovi aktuální obsah stránky, provedení je tedy levnější (spotřebuje se méně tokenů).
-- **Upravit** - spolu s instrukcí a vaším požadavkem se pošle i aktuální HTML kód stránky, ve kterém umí asistent upravit texty, bloky, HTML kód. Spotřebuje se více tokenů k provedení požadavku.
-- **Nahradit** - podobně jako přidat, spolu s požadavkem se neposílá aktuální kód stránky. Výsledkem je nahrazená aktuální stránka. Vhodné, chcete-li začít od znovu a smazat celý aktuální obsah.
+![Zadání pro webového designéra s přiloženým PDF salonu](pb-chat-prompt.png)
 
-![](pb-chat-prompt.png)
+Po odeslání zprávy asistent připraví HTML bloky. Když odpověď dokončí, na kartě **Návrh obsahu** se automaticky otevře **Náhled**. Ikonami **Desktop**, **Tablet** a **Mobil** si zkontrolujte, jak se bloky zobrazí na různých obrazovkách. Tlačítkem **Maximalizovat okno** zvětšíte náhled na celou plochu četu. Klávesou **Esc** se vrátíte k odpovědi.
 
-Po provedení požadavku se zobrazí okno se stavem a počtem použitých tokenů. Navíc ale v tomto okně je možnost **Pokračovat**, která znovu zobrazí okno pro zadání požadavku.
+![Návrh stránky salonu s přepínači zařízení a tlačítky pro vložení bloků](pb-chat-preview.png)
 
-![](pb-chat-success.png)
+Když vám návrh vyhovuje, klikněte pod odpovědí na **Nahradit obsah**. Až tímto krokem vložíte navržené bloky do stránky. Chcete-li původní bloky ponechat a nové připojit na konec, použijte **Přidat**. Tlačítkem **Minimalizovat čet** (minus vpravo nahoře) minimalizujete okno četu do malé ikony vpravo dole a můžete pokračovat v práci přímo ve stránce.
 
-Můžete tedy pokračovat v úpravách na webové stránce a zadat požadavek na úpravu textu stránky. Zvolením možnosti **Upravit** se odešle spolu s vaším požadavkem i aktuální HTML kód stránky, asistent v něm tedy umí provést změny.
+![Stránka salonu vytvořená z PDF a ikona minimalizovaného četu](pb-chat-success.png)
 
-![](pb-chat-edit.png)
+Klepnutím na ikonu AI v pravém dolním rohu obnovíte tentýž čet. Přílohu už nemusíte posílat znovu. Napište například "Změň hlavní nadpis na Super Barber Bernolákovo a přidej blok s tipy pro péči o vlasy. Vrať celou upravenou stránku."
 
-Provedené úpravy se zobrazí ve webové stránce a znovu můžete kliknutím na Pokračovat zadat další požadavek, nebo kliknutím na **OK** asistenta ukončit. Všimněte si na fotce, že podle zadaného požadavku je upraven nadpis oproti předchozí verzi.
+![Pokračování v četě s požadavkem na úpravu stránky](pb-chat-edit.png)
 
-![](pb-chat-edit-success.png)
+Pod novou odpovědí klikněte na **Nahradit obsah** a zkontrolujte výsledek v PageBuilderu. Pokud jste obsah mezitím ručně neupravili, poslední krok můžete vrátit tlačítkem **Zrušit vložení**. Hotovou stránku uložte v editoru.
+
+![Upravená stránka s novým nadpisem po druhé zprávě](pb-chat-edit-success.png)
+
+Při uložené stránce a asistentovi OpenAI nebo Gemini s vypnutým dočasným četem najdete zprávy i přílohy přes **Historie četů** u téhož pole stránky. Rozhovor můžete otevřít i po zavření a opětovném otevření editoru. Když ho už nepotřebujete, klikněte u jeho názvu na ikonu koše a potvrďte vymazání.
+
+Stejný režim podporují i ​​textová pole a editor stránky podle nastavení asistenta. Práci s výběrem textu, přílohami a historií popisuje kapitola [Čet u pole av editoru stránky](../chat/README.md#čet-pri-poli-av-editore-stránky).
 
 ## Obrázky ve stránce
 

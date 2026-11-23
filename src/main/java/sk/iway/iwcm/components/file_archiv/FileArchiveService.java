@@ -26,6 +26,10 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Validates and executes file archive create, edit, version, replacement, rollback, and delete operations.
+ * The service coordinates domain-scoped persistence with the corresponding physical file changes.
+ */
 public class FileArchiveService extends FileArchivSupportMethodsService {
 
 	private static final String DELETE_WAITING_ERR = "components.file_archiv.waiting_file.delete_err";
@@ -36,6 +40,7 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	private static final String ACTION_NOT_SUPPORTED = "components.file_archiv.action_not_allowed";
 	private static final String RECORD_NOT_FOUND = "components.file_archiv.not_found_archiv_record";
 	private static final String DB_SAVE_FAILED = "components.file_archiv.upload.after_save_error";
+	private static final String DESTINATION_CHANGE_NOT_ALLOWED = "components.file_archiv.upload.destination_change_not_allowed";
 	private static final String LOGGER_USER_ID = "Pouzivatel id: ";
 
 	private static final String UPLOAD_NEW_FILE_VERSION = "uploadNewFileVersion";
@@ -43,6 +48,9 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 
 	private static final String PERMISSION_DENIED = "admin.operationPermissionDenied";
 
+	/**
+	 * File operation requested while an archive record is being saved.
+	 */
 	public enum UploadType {
 		NO_ACTION,
 		NEW_VERSION,
@@ -50,6 +58,12 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		HISTORY_VERSION
 	}
 
+	/**
+	 * Converts a request value to a supported archive upload operation.
+	 *
+	 * @param key upload operation key
+	 * @return matching upload type, or {@link UploadType#NO_ACTION} for empty or unknown values
+	 */
 	public UploadType getUploadType(String key) {
 		if(Tools.isEmpty(key)) return UploadType.NO_ACTION;
 
@@ -67,6 +81,12 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		}
 	}
 
+	/**
+	 * Builds the localized upload-operation options shown by the archive editor.
+	 *
+	 * @param prop localization provider
+	 * @return upload-operation labels and values in display order
+	 */
 	public static final List<LabelValue> getUploadTypeOptions(Prop prop) {
 		List<LabelValue> options = new ArrayList<>();
 
@@ -79,6 +99,12 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return options;
 	}
 
+	/**
+	 * Builds localized status filters for the archive table.
+	 *
+	 * @param prop localization provider
+	 * @return status filter labels and query values
+	 */
 	public static final List<LabelValue> getStatusIconOptions(Prop prop) {
 		List<LabelValue> statusIcons = new ArrayList<>();
 		statusIcons.add(new LabelValue(prop.getText("components.file_archiv.statusIcon.all_file"), "referenceId:gte:-1"));
@@ -92,6 +118,14 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return statusIcons;
 	}
 
+	/**
+	 * Creates a service for one archive entity and initializes its requested file operation.
+	 *
+	 * @param user user performing the operation
+	 * @param prop localization provider, or {@code null} to use the default provider
+	 * @param fab archive entity being processed
+	 * @param repository archive repository, or {@code null} to resolve the Spring bean
+	 */
 	public FileArchiveService(Identity user, Prop prop, FileArchivatorBean fab, FileArchiveRepository repository) {
 
 		if (prop == null) prop = Prop.getInstance();
@@ -131,11 +165,12 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	/**
-	 * Instance for old Java/JSP (non Spring) classes.
-	 * For Spring use standard FileArchiveService constructor.
-	 * @param user
-	 * @param fileArchivId
-	 * @return
+	 * Creates an archive service for legacy Java and JSP callers outside Spring dependency injection.
+	 * Spring-managed callers should use the regular constructor.
+	 *
+	 * @param user user performing the operation
+	 * @param fileArchivId identifier of the archive record
+	 * @return initialized service, or {@code null} when the record does not exist in the current domain
 	 */
 	public static FileArchiveService getInstance(Identity user, Long fileArchivId) {
 		Prop prop = Prop.getInstance();
@@ -158,11 +193,23 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	public void checkFileProperties(Errors errors) {
+		checkFileProperties(errors, true);
+	}
+
+	/**
+	 * Validates file properties while optionally enforcing the archive edit permission.
+	 * The bulk upload create flow historically requires only the archive upload permission,
+	 * while edits and the standard archive editor require the edit permission as well.
+	 *
+	 * @param errors validation errors
+	 * @param requireEditPermission whether the archive edit permission is required
+	 */
+	public void checkFileProperties(Errors errors, boolean requireEditPermission) {
 		boolean needCheckFile = false;
 		String tempFileKey = fab.getEditorFields().getFile();
 
 		//First check perms
-		if(currentUser.isEnabledItem("cmp_fileArchiv_edit_del_rollback") == false) {
+		if(requireEditPermission && currentUser.isEnabledItem("cmp_fileArchiv_edit_del_rollback") == false) {
 			errorList.add(PERMISSION_DENIED);
 			return;
 		}
@@ -265,15 +312,35 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
         }
 	}
 
+	/**
+	 * Validates the temporary file, destination, extension, size, concurrency state, and duplicate content.
+	 *
+	 * @param errors validation result receiving field-specific failures
+	 */
 	private void checkFilePropertiesDetails(Errors errors) {
-		//kontrola prav na zapis do suboru
-		if(currentUser.isFolderWritable( normalizePath(getFileDirPath()) ) == false) {
-			errorList.add( "components.elfinder.commands.upload.error");
-			Logger.debug(this, "User nema pravo na zapis do priecinku:  " + normalizePath(getFileDirPath()) );
+		String destinationDirPath = resolveFileDestinationDirPath();
+		if(destinationDirPath == null) return;
+
+		if(FileBrowserTools.hasForbiddenSymbol(destinationDirPath)) {
+			errorList.add(FILE_UPLOAD_ERR);
 			return;
 		}
 
-		if(getFileDirPath() == null || FileBrowserTools.hasForbiddenSymbol(getFileDirPath())) {
+		if(isUploadDestinationChangeNotAllowed(destinationDirPath)) {
+			errors.rejectValue(FILE_FIELD, "", prop.getText(DESTINATION_CHANGE_NOT_ALLOWED));
+			return;
+		}
+
+		//kontrola prav na zapis do suboru
+		if(currentUser.isFolderWritable(destinationDirPath) == false) {
+			errorList.add( "components.elfinder.commands.upload.error");
+			Logger.debug(this, "User nema pravo na zapis do priecinku:  " + destinationDirPath);
+			return;
+		}
+
+		String fileDirPath = resolveFileDirPath();
+		if(fileDirPath == null) return;
+		if(FileBrowserTools.hasForbiddenSymbol(fileDirPath)) {
 			errorList.add(FILE_UPLOAD_ERR);
 			return;
 		}
@@ -303,7 +370,7 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 
 		//ak uz existuje referencia v databaze k suboru ktory este len ideme nahrat, tak je to problem. Niekto zmazal subor rucne.
 		//subor nemozeme nahrat pretoze by mohol byt zmazany inym zaznamom v databaze - omylom
-		if(FileArchivatorKit.existsPathInDB(getFileDirPath() + fileToUploadName) && !FileTools.isFile(getFileDirPath() + fileToUploadName) ) {
+		if(FileArchivatorKit.existsPathInDB(fileDirPath + fileToUploadName) && !FileTools.isFile(fileDirPath + fileToUploadName) ) {
 			errors.rejectValue(FILE_FIELD, "", prop.getText("components.file_archiv.upload.db_enrty_exists"));
 			return;
 		}
@@ -318,7 +385,23 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		}
 	}
 
+	/**
+	 * Executes the selected archive record and file operation under the shared file-operation lock.
+	 *
+	 * @return an error key when the operation fails; otherwise {@code null}
+	 */
 	public String saveFile() {
+		synchronized(FileArchivatorKit.FILE_OPERATION_LOCK) {
+			return saveFileLocked();
+		}
+	}
+
+	/**
+	 * Dispatches the selected create, replacement, version, history, or metadata-only save operation.
+	 *
+	 * @return an error key when the operation fails; otherwise {@code null}
+	 */
+	private String saveFileLocked() {
 		if(fab.getId() == null || fab.getId() < 1) {
 			//CREATE action - can only upload file
 
@@ -358,14 +441,21 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		}
 	}
 
-	private synchronized String uploadFile(UploadType uploadType) {
+	/**
+	 * Creates a new main archive file from the temporary upload and persists its record.
+	 *
+	 * @param uploadType upload operation selected for the create flow
+	 * @return an error key when the operation fails; otherwise {@code null}
+	 */
+	private String uploadFile(UploadType uploadType) {
 		// Create requires perm to archive
 		if(currentUser.isEnabledItem("cmp_file_archiv") == false) return PERMISSION_DENIED;
 
 		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileToUploadName, getFileDirPath(), null);
+		String fileUrl = getFileDirPath() + uniqueFileName;
 
 		//Create file, write content into file AND check if file exists
-		String responseTxt = createWriteCheckFile( getFileDirPath() + uniqueFileName );
+		String responseTxt = createWriteCheckFile(fileUrl);
 		if(responseTxt != null) return responseTxt;
 
 		//
@@ -375,13 +465,19 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		fab.setEmails( fab.getEditorFields().getEmails() );
 
 		if(fab.saveWithDebugLog(getClass(), "uploadFile") == false) {
+			deleteCreatedFile(fileUrl);
 			return DB_SAVE_FAILED;
 		}
 
 		return null;
 	}
 
-	private synchronized String uploadNewFileVersion() {
+	/**
+	 * Publishes or schedules a new version while preserving the current file in archive history.
+	 *
+	 * @return an error key when the operation fails; otherwise {@code null}
+	 */
+	private String uploadNewFileVersion() {
 		if(checkPerms() == false) return PERMISSION_DENIED;
 
 		FileArchivatorBean fabOld = repository.findFirstByIdAndDomainId(Long.valueOf(referenceId), domainId).orElse(null);
@@ -391,9 +487,13 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		String dateStamp = FileArchivatorKit.getDateStampAsString(fabOld.getDateInsert());
 		//if we are updating existing file, we want to keep the original file name
 		fileToUploadName = fabOld.getFileName();
+		String destinationDirPath = resolveFileDestinationDirPath();
+		if(isUploadDestinationChangeNotAllowed(destinationDirPath, fabOld.getFilePath(), fabOld.getUploaded())) return DESTINATION_CHANGE_NOT_ALLOWED;
+		String targetDirPath = getFileDirPath();
+		if(targetDirPath == null) return FILE_UPLOAD_ERR;
 
-		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileToUploadName, getFileDirPath(), dateStamp);
-		String fileUrl = getFileDirPath() + uniqueFileName;
+		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileToUploadName, targetDirPath, dateStamp);
+		String fileUrl = targetDirPath + uniqueFileName;
 		IwcmFile realFile = new IwcmFile( Tools.getRealPath(fileUrl) );
 
 		try {
@@ -419,17 +519,20 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 
 		if(saveLater == true) {
 			//fab is working with new file
-			prepareFileArchivatorBean(getFileDirPath(), uniqueFileName, referenceId, true);
+			prepareFileArchivatorBean(targetDirPath, uniqueFileName, referenceId, true);
 			fab.setDateUploadLater( fab.getEditorFields().getDateUploadLater() );
 			fab.setEmails( fab.getEditorFields().getEmails() );
 			fab.setOrderId(-1);
 
 			//Its all, just save IT
-			fab.saveWithDebugLog(getClass(), UPLOAD_NEW_FILE_VERSION);
+			if(fab.saveWithDebugLog(getClass(), UPLOAD_NEW_FILE_VERSION) == false) {
+				deleteCreatedFile(fileUrl);
+				return DB_SAVE_FAILED;
+			}
 			return null;
 		} else {
 			//fab is working with OLD file where we copied new content
-			prepareFileArchivatorBean(getFileDirPath(), fabOld.getFileName(), null, true);
+			prepareFileArchivatorBean(targetDirPath, fabOld.getFileName(), null, true);
 
 			//pri nahravani neskor existenciu kontrolujeme skor kvoli multidomain
 			if(!FileTools.isFile(fab.getVirtualPath())) return FILE_UPLOAD_ERR;
@@ -463,12 +566,55 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return null;
 	}
 
+	/**
+	 * Checks whether the requested version or replacement would move an existing archive file.
+	 *
+	 * @param destinationDirPath requested final destination
+	 * @return {@code true} when the selected operation cannot use the requested destination
+	 */
+	private boolean isUploadDestinationChangeNotAllowed(String destinationDirPath) {
+		if(destinationDirPath == null || referenceId < 1) return false;
+		if(uploadType != UploadType.NEW_VERSION && uploadType != UploadType.REPLACEMENT) return false;
+
+		FileArchivatorBean persistedFab = repository.findFirstByIdAndDomainId(Long.valueOf(referenceId), domainId).orElse(null);
+		if(persistedFab != null) {
+			return isUploadDestinationChangeNotAllowed(destinationDirPath, persistedFab.getFilePath(), persistedFab.getUploaded());
+		}
+		return isUploadDestinationChangeNotAllowed(destinationDirPath, fab.getFilePath(), fab.getUploaded());
+	}
+
+	/**
+	 * Compares the effective upload destination with the persisted file location.
+	 * Scheduled replacements are compared using their staging destination.
+	 *
+	 * @param destinationDirPath requested final destination
+	 * @param currentFilePath persisted file location
+	 * @param uploaded current upload state
+	 * @return {@code true} when the effective destination differs from the persisted location
+	 */
+	private boolean isUploadDestinationChangeNotAllowed(String destinationDirPath, String currentFilePath, Integer uploaded) {
+		String requestedDirPath = destinationDirPath;
+		if(uploaded != null && uploaded == 0 && uploadType == UploadType.REPLACEMENT) {
+			requestedDirPath = resolveFileDirPath();
+		}
+		return requestedDirPath != null && requestedDirPath.equals(normalizePath(currentFilePath)) == false;
+	}
+
+	/**
+	 * Replaces the current archive file content without creating a history version.
+	 *
+	 * @return an error key when replacement fails; otherwise {@code null}
+	 */
 	private String replaceFile()
 	{
 		if(checkPerms() == false) return PERMISSION_DENIED;
 
 		FileArchivatorBean fabOld = repository.findFirstByIdAndDomainId(Long.valueOf(referenceId), domainId).orElse(null);
 		if(fabOld == null) return RECORD_NOT_FOUND;
+		String destinationDirPath = resolveFileDestinationDirPath();
+		if(isUploadDestinationChangeNotAllowed(destinationDirPath, fabOld.getFilePath(), fabOld.getUploaded())) return DESTINATION_CHANGE_NOT_ALLOWED;
+		String targetDirPath = getFileDirPath();
+		if(targetDirPath == null) return FILE_UPLOAD_ERR;
 
 		//vymazanie stareho suboru
 		IwcmFile iFile = new IwcmFile( fabOld.getRealPath() );
@@ -477,13 +623,13 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 			return  FILE_UPLOAD_ERR;
 		}
 
-		String fileUrl = getFileDirPath() + fabOld.getFileName();
+		String fileUrl = targetDirPath + fabOld.getFileName();
 
 		//Create file, write content into file AND check if file exists
 		String responseTxt = createWriteCheckFile(fileUrl);
 		if(responseTxt != null) return responseTxt;
 
-		prepareFileArchivatorBean(getFileDirPath(), fabOld.getFileName(), null, false);
+		prepareFileArchivatorBean(targetDirPath, fabOld.getFileName(), null, false);
 
 		if(fab.saveWithDebugLog(getClass(), "replaceFile") == false) {
 			return DB_SAVE_FAILED;
@@ -494,7 +640,9 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	/**
-	 * @return 1 if change was successful, 0 if not, -1 if change WAS NOT needed
+	 * Renames the current archive file when a new name was requested in the editor.
+	 *
+	 * @return {@code 1} when renamed, {@code 0} when renaming fails, or {@code -1} when no rename was requested
 	 */
 	public int checkAndRenameFile() {
 		if(renameFile) {
@@ -535,6 +683,14 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return -1;
 	}
 
+	/**
+	 * Renames a physical archive file inside a normalized destination directory.
+	 *
+	 * @param newDirPath target directory path
+	 * @param newfileName target file name
+	 * @param oldFileBean record describing the current file
+	 * @return {@code true} when the physical file was renamed
+	 */
 	private boolean renameFile(String newDirPath, String newfileName, FileArchivatorBean oldFileBean)
 	{
 		newDirPath = normalizePath(newDirPath);
@@ -552,8 +708,9 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	/**
-	 * vymazanie aktualneho suboru z vlakna a jeho nahradenie predchadzajucim suborom z vlakna
+	 * Removes the current file from its version thread and promotes the preceding version.
 	 *
+	 * @return {@code true} when the rollback and history updates complete successfully
 	 */
 	public boolean rollback()
 	{
@@ -619,6 +776,11 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return false;
 	}
 
+	/**
+	 * Deletes a main archive record together with its history versions, patterns, and physical files.
+	 *
+	 * @return an error key when deletion fails; otherwise {@code null}
+	 */
 	public String deleteStructure()
 	{
 		if(checkPerms() == false) return PERMISSION_DENIED;
@@ -661,8 +823,10 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return isSuccess ? null : DELETE_STRUCTURE_ERR;
 	}
 
-	/** Mazanie za podmienky ze na subor Neexistuje referencia
+	/**
+	 * Deletes the current waiting upload and its associated pattern files.
 	 *
+	 * @return an error key when deletion fails; otherwise {@code null}
 	 */
 	public String deleteWaitingFile() {
 		if(!currentUser.isFolderWritable( normalizePath(fab.getFilePath()) )) {
@@ -687,11 +851,13 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return DELETE_WAITING_ERR;
 	}
 
-	/** Vrati vsetky subory cakajuce na nahranie v buducnosti.
-	 * AK je zadana entita, vrati sa tie, co patria pod nu.
-	 * Do CACHE sa vsak ulozia vsetky subory.
+	/**
+	 * Returns scheduled uploads from the domain cache, optionally limited to one main file.
+	 * The cache always stores the complete domain-scoped waiting list.
 	 *
-	 * @return List<FileArchivatorBean>
+	 * @param mainId main-file identifier used to filter the cached list, or {@code null} for all records
+	 * @param repo archive repository used when the cache is empty
+	 * @return waiting archive records, possibly filtered by their main-file identifier
 	 */
 	@SuppressWarnings("unchecked")
 	public static List<FileArchivatorBean> getWaitingFileList(Long mainId, FileArchiveRepository repo)
@@ -727,6 +893,12 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		}
 	}
 
+	/**
+	 * Inserts the uploaded file into archive history immediately after a selected version.
+	 *
+	 * @param moveBelowFileId identifier of the version after which the upload is inserted
+	 * @return an error key when insertion fails; otherwise {@code null}
+	 */
 	public String moveBehind(int moveBelowFileId) {
 		if(checkPerms() == false) return PERMISSION_DENIED;
 
@@ -768,10 +940,10 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 	}
 
 	/**
-	 * Create file, write content into file AND check if file exists
+	 * Writes the temporary upload to a destination and verifies immediate publications.
 	 *
-	 * @param fileUrl
-	 * @return
+	 * @param fileUrl destination virtual path
+	 * @return an error key when writing or verification fails; otherwise {@code null}
 	 */
 	private String createWriteCheckFile(String fileUrl) {
 		IwcmFile realFile = new IwcmFile( Tools.getRealPath(fileUrl) );
@@ -793,14 +965,22 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		return null;
 	}
 
+	private void deleteCreatedFile(String fileUrl) {
+		IwcmFile createdFile = new IwcmFile(Tools.getRealPath(fileUrl));
+		if(createdFile.exists() && createdFile.delete() == false) {
+			Logger.debug(FileArchiveService.class, "Failed to delete file after database save error: " + fileUrl);
+		}
+	}
+
 	/**
 	 * Finds the ID of an existing archive file by its folder path and file name.
 	 * Performs a dual lookup: first using the legacy (old) path format for backward
 	 * compatibility, then using the normalized path format.
-	 * @param filePath - the folder path where the file resides
-	 * @param fileName - the file name to look up
-	 * @param far - file archive repository
-	 * @return the file archive entity ID, or -1 if not found
+	 *
+	 * @param filePath folder path where the file resides
+	 * @param fileName file name to look up
+	 * @param far file archive repository
+	 * @return archive record identifier, or {@code -1} when no record matches
 	 */
 	public static final Long getId(String filePath, String fileName, FileArchiveRepository far) {
 		if(Tools.isEmpty(filePath) || Tools.isEmpty(fileName)) return -1L;

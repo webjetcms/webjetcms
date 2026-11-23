@@ -11,6 +11,7 @@ Scenario('webpages', ({ I, DT, Document }) => {
     I.click('.dt-filter-id');
 
     //ikona
+    I.clickCss('#datatableInit_wrapper button.buttons-more-actions');
     I.moveCursorTo('button.buttons-abtest');
     Document.screenshot("/redactor/apps/abtesting/datatable.png");
     I.wjSetDefaultWindowSize();

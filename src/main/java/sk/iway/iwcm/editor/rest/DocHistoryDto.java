@@ -2,6 +2,8 @@ package sk.iway.iwcm.editor.rest;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
@@ -56,6 +58,8 @@ public class DocHistoryDto {
     private int syncStatus;
 
     private boolean historyActual;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private boolean deleteAllowed;
     private boolean disableAfterEnd;
     private BaseEditorFields editorFields;
 

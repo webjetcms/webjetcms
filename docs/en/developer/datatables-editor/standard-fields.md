@@ -61,6 +61,10 @@ Text field ```type="number"```, the browser typically displays arrows in the fie
 
 The difference between ```NUMBER``` and ```TEXT_NUMBER``` is in the display in the data table. ```TEXT_NUMBER``` displays a rounded number, for a higher number it is displayed in text form, e.g. ```10 tis.``` instead of ```10000```. In the editor the behavior is the same (the exact value is displayed).
 
+When editing an existing record, it is possible to delete the value of an object field of type `NUMBER`, for example `Integer`, `Long` or `Double`. The empty value is passed to the entity as `null` ; the primitive types `int`, `long` and `double` do not support the value `null`. Automatic zeroing does not apply to `TEXT_NUMBER` ; if necessary, enable it with the `alwaysCopyProperties = { true }` attribute.
+
+When importing, the original numeric value is retained if the `NUMBER` column is not in the Excel file. If the column is imported with the value `NULL`, the entity value is reset to zero.
+
 ## PASSWORD
 
 Text field ```type="password"``` for entering the password.
@@ -110,8 +114,11 @@ Multi-line text field. Long text does not wrap, if you want to wrap long text in
 
 Date selection, clicking in the field will display a date selection window.
 
+If the date is required, mark the field with the annotation `@NotNull`. The frontend sends the empty value as an empty string, which the server converts to `null` when deserialized. The editor displays the error message **Required field. Please enter a date.** The calendar picker will not open automatically after failed validation.
+
 ```java
     @Column(name = "date_from")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -124,8 +131,11 @@ Date selection, clicking in the field will display a date selection window.
 
 Similar field to ```DATE``` but also allows time selection.
 
+For a required value, use the annotation `@NotNull`. The editor will display an error message if the value is empty **Required field. Please enter a date and time.**
+
 ```java
     @Column(name = "date_to")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -414,6 +424,31 @@ Standard field for selecting one of the options.
     private Boolean sexMale;
 ```
 
+## BUTTON_GROUP
+
+The field allows you to select one option from a group of Bootstrap buttons. It is suitable for short lists, such as **Yes / No / No change**. All options are visible next to each other and the selected option has a blue background.
+
+Define the options in the same way as `RADIO`, via `editor.options` or the `getOptions()` REST controller method. The text of the selected option is displayed in the datatable.
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.BUTTON_GROUP,
+        title = "settings.fields-settings.visible",
+        defaultValue = "null",
+        alwaysCopyProperties = true,
+        editor = @DataTableColumnEditor(options = {
+            @DataTableColumnEditorAttr(key = "button.yes", value = "true"),
+            @DataTableColumnEditorAttr(key = "button.no", value = "false"),
+            @DataTableColumnEditorAttr(key = "settings.fields-settings.unchanged", value = "null")
+        })
+    )
+    private Boolean visible;
+```
+
+In the example, the third option has the value `"null"`. It is also selected when the value `null` is loaded. The `alwaysCopyProperties` attribute allows you to save a change from `true` or `false` back to `null`.
+
+You can also control the field with the keyboard: use the Tab key to move to a group and the arrow keys to change the selected option. The JavaScript editor type is `buttonGroup` and supports the standard methods `val()`, `update()`, `enable()` and `disable()`.
+
 ## BOOLEAN
 
 Represents a simplified notation of a field of type ```CHECKBOX``` for a binary yes/no choice.
@@ -464,6 +499,12 @@ Displays a text field whose value cannot be changed. Note in the example that fi
 ## QUILL
 
 Displays a simple HTML editor that allows basic text formatting such as bold/italic/underline, headings, lists, and links.
+
+In the event of a validation error, the toolbar and editing area are highlighted with a red border to visually mark the incorrect content, just like with other types of fields.
+
+When editing HTML code, the editor preserves nested wrapper elements `div` and empty paragraphs between content, such as `<p><br></p>`. A simple `div` without attributes and nested blocks will be converted to paragraphs `p` ; indenting the source code between blocks does not create additional empty lines.
+
+When retrieving a value to store, empty paragraphs at the end of the content are removed, even if they are nested in end wrapping `div` elements. Empty paragraphs between non-empty blocks are preserved.
 
 Note the use of the ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` converter, which will allow only [secure HTML code](../backend/security.md) to be sent (without embedded JavaScript elements and the like).
 
@@ -735,13 +776,13 @@ Field type allowing [file upload](field-file-upload.md).
 
 ## OPTIONS
 
-Field type for a dynamic list of values. In the editor, it appears as a list of input lines, where each line contains two text fields (e.g. key and value). Lines can be added, removed, and reordered using `drag & drop`.
+A field type for a dynamic list of values. It appears in the editor as a list of input lines, where each line contains two text fields — a label and a value. Lines can be added, removed, and reordered using `drag & drop`.
 
 The resulting value is stored as a string, where individual lines are separated by the `|` character and values ​​within a line are separated by the `:` character. For example: `key1:value1|key2:value2|key3:value3`.
 
-If you specify only one value (`key1` without `:`), the same value will be used for both `label` and `value`.
-
 The field does not support the AI ​​button (`btn-ai`).
+
+### Basic use
 
 ```java
     @DataTableColumn(
@@ -751,6 +792,60 @@ The field does not support the AI ​​button (`btn-ai`).
     )
     private String options = "";
 ```
+
+### Stored value format
+
+| Input in the editor | Stored value | Note |
+|---|---|---|
+| Name: `Slovakia`, Value: `sk` | `Slovakia:sk` | standard label:value pair |
+| Name: `Slovakia`, Value: (empty) | `Slovakia:Slovakia` | if the value is missing, the name is also used as the value |
+| Name: (empty), Value: `sk` | `sk:sk` | if name is missing, value is used as name |
+| More lines | `Slovakia:sk\|Czech Republic:cz\|Austria:at` | separated by `\|` |
+
+When loading a value, the editor also supports the comma `,` as a line separator (backwards compatibility), but when saving, `|` is always used.
+
+### Real-world example of use
+
+```java
+public class FormItemEntity {
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "multistep_form.value_as_options",
+        hidden = true,
+        tab = "advanced",
+        className = "allowEmptyOption"
+    )
+    private String valueAsOptions;
+
+}
+```
+
+### Empty option (allowEmptyOption)
+
+If you want to add an empty value to the list, set the field CSS class `allowEmptyOption`:
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPTIONS,
+        title = "components.myapp.options",
+        tab = "basic",
+        className = "allowEmptyOption"
+    )
+    private String options = "";
+```
+
+In this case, the editor will display next to the button <button class="btn btn-outline-secondary" type="button"><i class="ti ti-plus"></i>Add</button> a standard checkbox <span class="form-check"><input class="form-check-input options-empty-option-btn" type="checkbox"><label class="form-check-label">Add empty option</label></span> . Checking this will add an empty pair `:` to the beginning of the resulting value, for example `:|key1:value1|key2:value2`. When the editor is reopened, the checked state will be restored based on the presence of this value. The `allowEmptyOption` class only affects fields of type `OPTIONS`, not `OPTIONS_SIMPLE`.
+
+### Implementation
+
+The frontend implementation is in the files:
+
+- [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — field type definition with two inputs (name and value)
+- [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — common logic for both OPTIONS and OPTIONS_SIMPLE (drag & drop, adding/removing rows, allowEmptyOption)
+
+On the backend side, the type `DataTableColumnType.OPTIONS` is automatically set to `editor.type = "options"` with the format `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

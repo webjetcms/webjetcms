@@ -35,7 +35,7 @@ Na této kartě můžete upravovat základní informace o složce a to:
 
 Karta nabízí možnosti, které se aplikují na obrázky galerie:
 
-- **Způsob změny velikosti**
+- **Způsob změny velikosti** - nastavuje způsob generování malého obrázku. Pokud není nastaven samostatný způsob pro velký obrázek, stejný způsob se použije i pro velký obrázek.
   - **Zobrazení na míru** - velikost obrázku je nastavena tak, aby rozměr nepřekračoval nastavenou velikost
   - **Oříznout na míru** - obrázek je oříznut tak, aby vyplňoval zadané rozměry, přičemž pokud se neshoduje poměr stran je oříznut.
   - **Přesný rozměr** - velikost obrázku je nastavena přesně podle složky, přičemž pokud je poměr stran rozdílný dojde k deformaci obrázku.
@@ -43,8 +43,9 @@ Karta nabízí možnosti, které se aplikují na obrázky galerie:
   - **Přesná výška** - velikost obrázku použije zadanou výšku a šířku vypočítá podle poměru stran. Šířka ale může být větší než zadaný rozměr.
   - **Negenerovat zmenšeniny** - galerie použije jen originální obrázek a nebude generovat náhledové obrázky. Náhledové obrázky je následně možné generovat podle potřeby s využitím `/thumb` prefixu.
 - **Přegenerovat obrázky** - pokud je možnost zvolena, nově vygeneruje velikosti všech obrázků v galerii podle aktuálních nastavení
-- **Aplikovat na všechny podsložky** - pokud je možnost zvolena, nastavení se použije i na všechny podřazené složky
+- **Aplikovat na všechny podsložky** - pokud je možnost zvolena, nastavení se použije i na všechny podřazené složky včetně způsobu změny velikosti velkého obrázku
 - **Velikost malého obrázku** - šířka a výška obrázku
+- **Způsob změny velikosti velkého obrázku** - umožňuje nastavit jiný způsob generování velkého obrázku než pro malý obrázek. Výchozí hodnota **Stejně jako malý obrázek** zachovává původní chování a pro velký obrázek použije hodnotu pole **Způsob změny velikosti**. Samostatně lze zvolit možnosti **Zobrazení na míru**, **Oříznout na míru**, **Přesný rozměr**, **Přesná šířka** nebo **Přesná výška**. Možnost **Negenerovat zmenšeniny** se pro velký obrázek samostatně nenastavuje; pokud je zvolena v poli **Způsob změny velikosti**, galerie použije původní chování bez generování zmenšenin.
 - **Maximální velikost velkého obrázku** - šířka a výška obrázku, pokud zadáte do obou polí hodnotu 0 zachová se originální velikost nahraného obrázku
 
 ![](dir-sizes-tab.png)
@@ -76,7 +77,7 @@ Následky přemístění složky:
 V případě potřeby můžete ve stromové struktuře klepnutím na ikonu<i class="ti ti-adjustments-horizontal"></i> Nastavení zobrazit dialogové okno nastavení:
 
 - **Jméno složky na disku** - zobrazí jméno složky na disku, které může být odlišné od Názvu galerie zadané v nastavení galerie.
-- **Poměr šířky sloupců strom:tabulka** - Nastaví poměr šířky sloupců zobrazené stromové struktury a datatabulky pro lepší využití šířky monitoru. Standardní poměr je 4:8. Upozornění: u některých poměrů a nevhodné velikosti monitoru může dojít k nesprávnému zobrazení nástrojové lišty/tlačítek.
+- **Šířka stromu** - Vyberte poměr šířky stromu a tabulky (standardně 4:8) nebo pevnou šířku stromu 120px, 150px, 200px, 250px, 300px, 400px nebo 500px. Při pevné šířce se strom při zvětšení okna nerozšiřuje a tabulka využije zbývající prostor. Upozornění: u některých šířek a nevhodné velikosti monitoru může dojít k nesprávnému zobrazení nástrojové lišty/tlačítek.
 - **Seřadit strom podle** - Výběr parametru adresáře, podle kterého se má strom složek uspořádat. Výběrové pole podporuje následující parametry
   - **Název**
   - **Datum vytvoření**

@@ -64,7 +64,7 @@ public class ElfinderListener {
         model.addAttribute("callback", Tools.getStringValue(Tools.getRequestParameter(request, "callback"), ""));
         model.addAttribute("volumes", Tools.getStringValue(Tools.getRequestParameter(request, "volumes"), "link"));
 
-        // file, directory, fileDirectory, files, directories, filesDirectories
+        // Supported selection modes: file, directory, fileDirectory.
         String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "selectMode"), "file");
         model.addAttribute("selectMode", selectMode);
 
@@ -129,6 +129,7 @@ public class ElfinderListener {
         model.addAttribute("uploadIcon",  "wjIconBig-uploadImage");
         model.addAttribute("elfinderMetadataEnabled", Constants.getBoolean("elfinderMetadataEnabled"));
         model.addAttribute("elfinderMetadataAutopopup", Constants.getBoolean("elfinderMetadataAutopopup"));
+        model.addAttribute("archivPath", FileArchivatorKit.getArchivPath());
 
         //
         model.addAttribute("currentTimeMillis", new Date().getTime());

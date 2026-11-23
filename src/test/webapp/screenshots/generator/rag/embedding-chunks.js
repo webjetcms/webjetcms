@@ -4,7 +4,7 @@ Before(({ I, login }) =>{
     login('admin');
 });
 
-Scenario('Allow rag semantic search', ({ I, DT, DTE, Document }) => {
+Scenario('Allow rag semantic search', ({ I, DT, Document }) => {
     I.amOnPage("/admin/v9/settings/embedding-chunks/?rootDir=25");
     DT.waitForLoader();
 

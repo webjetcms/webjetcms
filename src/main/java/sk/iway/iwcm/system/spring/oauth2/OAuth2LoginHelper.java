@@ -4,9 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.users.UsersDB;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -134,6 +136,13 @@ public class OAuth2LoginHelper {
      */
     public static Map<String, String> getLogonUrls(boolean isAdmin, HttpServletRequest request) {
         if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
+
+            Identity user = UsersDB.getCurrentUser(request);
+            if (user != null) {
+                Logger.debug(OAuth2LoginHelper.class, "User is already logged in, skipping OAuth2 logon URLs");
+                return null;
+            }
+
             // Označ že ide o user sekciu (nie admin)
             HttpSession session = request.getSession();
             String[] includeClients;
@@ -142,9 +151,17 @@ public class OAuth2LoginHelper {
                 includeClients = Constants.getArray("oauth2_clientsIncludeAdmin");
             } else {
                 //save session redirect
-                session.setAttribute("afterLogonRedirect", PathFilter.getOrigPath(request));
+                String origPath = PathFilter.getOrigPath(request);
+                if ("/usrlogon.do".equals(origPath) == false) {
+                    session.setAttribute("afterLogonRedirect", PathFilter.getOrigPath(request));
+                }
                 session.removeAttribute("oauth2_is_admin_section");
                 includeClients = Constants.getArray("oauth2_clientsIncludeUser");
+            }
+
+            //authorize.jsp flow - remove current URL from session because it is authorize confirm URL not real page
+            if (request.getAttribute("authorizeOK") != null) {
+                request.getSession().removeAttribute("afterLogonRedirect");
             }
 
             if (includeClients.length == 0 || (includeClients.length == 1 && "*".equals(includeClients[0]))) {

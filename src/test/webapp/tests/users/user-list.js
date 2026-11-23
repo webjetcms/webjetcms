@@ -1,5 +1,7 @@
 Feature('users.user-list');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var randomText = null;
 var url = "/admin/v9/users/user-list/";
 var permEditAdminUser = "users.edit_admins";
@@ -35,6 +37,66 @@ Scenario('user-list-zakladne testy @baseTest', async ({ I, DataTables, DTE }) =>
            },
           skipSwitchDomain: true
      });
+});
+
+/** Verifies the global query searches each identity field through the real users endpoint. */
+Scenario('Quick search matches name, surname, email and login with OR semantics', async ({ I, DT }) => {
+     DT.waitForLoader();
+     const originalCount = await I.executeScript(() => window.usersDatatable.page.info().recordsDisplay);
+     const searches = await I.executeScript(async () => {
+          const user = window.currentUser;
+          const queries = ['firstName', 'lastName', 'email', 'login'].map(field => ({ field, value: user[field] }));
+          if (queries.some(query => !query.value)) throw new Error('The administrator fixture must have all four identity fields.');
+          queries.push({ field: 'fullName', value: user.firstName + ' ' + user.lastName });
+          const results = [];
+          for (const query of queries) {
+               const params = new URLSearchParams({ searchText: query.value, size: 100, page: 0, sort: 'id,asc' });
+               const response = await fetch('/admin/rest/users/all?' + params, { headers: { 'X-CSRF-Token': window.csrfToken } });
+               if (!response.ok) throw new Error('User search failed: ' + response.status);
+               const json = await response.json();
+               results.push({ field: query.field, total: json.totalElements, found: json.content.some(row => Number(row.id) === user.userId) });
+          }
+          const params = new URLSearchParams({ searchText: user.login, searchLogin: '^missing-login-autotest-quick-search$', size: 100, page: 0 });
+          const response = await fetch('/admin/rest/users/all?' + params, { headers: { 'X-CSRF-Token': window.csrfToken } });
+          if (!response.ok) throw new Error('Combined user search failed: ' + response.status);
+          return { results, login: user.login, combinedTotal: (await response.json()).totalElements };
+     });
+     for (const search of searches.results) I.assertTrue(search.found, 'The OR query must match the current administrator by ' + search.field + '.');
+     I.assertEqual(searches.combinedTotal, 0, 'Global search must remain ANDed with column filters.');
+     I.clickCss('button.js-search-toggler');
+     I.waitForVisible('#admin-quick-search', 10);
+     I.clickCss('.md-quick-search__scopes [data-scope="users"]');
+     I.fillField('#admin-quick-search-input', searches.login);
+     I.waitForVisible('.md-quick-search__handoff', 10);
+     I.clickCss('.md-quick-search__handoff');
+     I.seeInCurrentUrl('searchText=' + encodeURIComponent(searches.login));
+     I.seeInField('#usersQuickSearchText', searches.login);
+     const filteredCount = searches.results.find(search => search.field === 'login').total;
+     I.waitForFunction(([expected]) => window.usersDatatable?.page.info().recordsDisplay === expected, [filteredCount], 10);
+     I.see(searches.login, '#datatableInit tbody');
+     I.assertTrue(filteredCount < originalCount, 'The user-list handoff must apply its visible search filter.');
+     I.clickCss('#usersQuickSearchClear');
+     I.seeInField('#usersQuickSearchText', '');
+     I.dontSeeInCurrentUrl('searchText=');
+     I.waitForFunction(([expected]) => window.usersDatatable?.page.info().recordsDisplay === expected, [originalCount], 10);
+});
+
+/** The optional query must remain inside the existing administrator visibility restriction. */
+Scenario('Quick search cannot reveal administrators without administrator-edit permission', async ({ I, DT }) => {
+     I.amOnPage(url + '?removePerm=' + permEditAdminUser);
+     DT.waitForLoader();
+     const visible = await I.executeScript(async () => {
+          const params = new URLSearchParams({ searchText: window.currentUser.login, size: 100, page: 0 });
+          const response = await fetch('/admin/rest/users/all?' + params, { headers: { 'X-CSRF-Token': window.csrfToken } });
+          if (!response.ok) throw new Error('User search failed: ' + response.status);
+          const json = await response.json();
+          return json.content.some(row => Number(row.id) === window.currentUser.userId);
+     });
+     I.assertFalse(visible, 'The search query must not bypass administrator visibility.');
+});
+
+Scenario('Restore administrator permissions after quick-search checks', ({ I }) => {
+     I.logout();
 });
 
 Scenario('user-list-email-validacia', ({ I, DTE }) => {
@@ -253,7 +315,7 @@ function userEditDialog(I, login, isSelf) {
      if ("tester"!==login) I.relogin(login);
 
      I.clickCss("button.js-profile-toggler");
-     I.click("Profil", "a.dropdown-item");
+     I.click(locate("button.dropdown-item").withText("Profil"));
      I.waitForElement("#modalIframe");
 
      I.switchTo("#modalIframeIframeElement");
@@ -313,7 +375,7 @@ function userEditDialog(I, login, isSelf) {
      I.say("Check data");
 
      I.clickCss("button.js-profile-toggler");
-     I.click("Profil", "a.dropdown-item");
+     I.click(locate("button.dropdown-item").withText("Profil"));
      I.waitForElement("#modalIframe");
 
      I.switchTo("#modalIframeIframeElement");
@@ -514,16 +576,22 @@ Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
      I.amOnPage("/admin/v9/users/user-list/?id=19");
      DTE.waitForEditor();
      I.click("#pills-dt-datatableInit-rightsTab-tab");
-     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-vue-jstree-add");
-     I.waitForElement("#custom-modal-id", 10);
-     I.waitForText("Koreňový priečinok", 10, "#custom-modal-id a.jstree-anchor");
-     I.waitForText("WEB-INF", 10, "#custom-modal-id a.jstree-anchor");
-     I.waitForText("components", 10, "#custom-modal-id a.jstree-anchor");
+     I.executeScript(() => {
+          window.jstreeSelectionErrors = [];
+          window.addEventListener("error", event => window.jstreeSelectionErrors.push(event.message));
+     });
+     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-webjet-jstree-add");
+     I.waitForElement(WebjetDteJsTree.modal, 10);
+     I.waitForText("Koreňový priečinok", 10, WebjetDteJsTree.anchors);
+     I.waitForText("WEB-INF", 10, WebjetDteJsTree.anchors);
+     I.waitForText("components", 10, WebjetDteJsTree.anchors);
 
-     I.click("Koreňový priečinok", "#custom-modal-id a.jstree-anchor");
-     I.waitForInvisible("#custom-modal-id", 10);
+     I.click("Koreňový priečinok", WebjetDteJsTree.anchors);
+     I.waitForInvisible(WebjetDteJsTree.modal, 10);
      let value = await I.grabValueFrom(".DTE_Field_Name_editorFields\\.writableFolders input.form-control");
      I.assertEqual(value, "/");
+     const errors = await I.executeScript(() => window.jstreeSelectionErrors);
+     I.assertFalse(errors.some(message => message.includes("triggerHandler")), errors.join("\n"));
      DTE.cancel();
 });
 
@@ -540,11 +608,11 @@ Scenario("Check editableGroups rights", async ({I, DTE}) => {
      I.waitForVisible("#editorAppDTE_Field_editorFields-editableGroups");
 
      I.say("Check I cans ee all domain fodlers");
-     I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-vue-jstree-add");
-     I.waitForVisible("#jsTree");
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("demo.webjetcms.sk") );
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("test23.tau27.iway.sk") );
-     I.seeElement( locate("#jsTree a.jstree-anchor").withText("mirroring.tau27.iway.sk") );
+     I.clickCss("#editorAppDTE_Field_editorFields-editableGroups button.btn-webjet-jstree-add");
+     I.waitForVisible(WebjetDteJsTree.tree);
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("demo.webjetcms.sk") );
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("test23.tau27.iway.sk") );
+     I.seeElement( locate(WebjetDteJsTree.anchors).withText("mirroring.tau27.iway.sk") );
 
      I.say("Check I can see sub-folders in diff domain");
      I.click(locate('.jstree-node.jstree-closed').withText('test23.tau27.iway.sk').find('.jstree-icon.jstree-ocl'));

@@ -4,7 +4,7 @@ Pre správne fungovanie je potrebné dodržať nasledovné požiadavky:
 
 - [Nastavenie šablón](../../frontend/setup/README.md) pre správu viacerých domén
 - Prvá doméne je tzv. riadiaca, nemala by obsahovať reálnu web stránku, slúži na nastavovanie globálnych parametrov.
-- Pre každú doménu odporúčame vytvoriť doménový alias. Vytvoríte ho v konfigurácii ako kľúč `multiDomainAlias:DOMAIN-NAME` s vhodnou hodnotou doménového mena bez medzier, www a prípony, napr. `interway`. Doménový alias vám umožní pripraviť web na pracovnej doméne a následne ho presunúť na produkčnú doménu. Zadaný doménový alias sa použije na hľadanie súborov šablón a upravených súborov aplikácií.
+- Pre každú doménu odporúčame vytvoriť doménový alias. Vytvoríte ho v konfigurácii ako kľúč `multiDomainAlias:DOMAIN-NAME` s vhodnou hodnotou doménového mena bez medzier, www a prípony, napr. `interway`, teda vytvoríte premennú s názvom `multiDomainAlias:new-web.interway.sk` a hodnotou `interway`. Doménový alias vám umožní pripraviť web na pracovnej doméne a následne ho presunúť na produkčnú doménu. Zadaný doménový alias sa použije na hľadanie súborov šablón a upravených súborov aplikácií.
 
 ## Zriadenie novej domény
 

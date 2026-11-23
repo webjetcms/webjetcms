@@ -16,6 +16,14 @@ In the form editor, you can change the note field (in which you can record the p
 
 ![](detail-editnote.png)
 
+Deleting all submitted records in a form detail does not delete its definition, settings, or items.
+
+The **Delete** button in the form list will delete submitted records. If the form is used by a web page with display enabled or contains data in the archive, its settings, steps, items, and conditions will be preserved.
+
+If the form is not used by any displayed page and has no data in the archive, it will be deleted in its entirety, including settings, steps, items, and conditions. A notification will confirm the complete deletion.
+
+Deleting a form from the archive list only removes its archive records. Settings and items are preserved if the form remains in the active list or is used by a displayed page.
+
 ## Create a form
 
 The easiest way to create a form is to click the Add icon and set its basic parameters in the Basic tab. This will create a new form of type [Multistep form](../multistep-form/README.md). You can then add individual form items (text fields, checkboxes, selection fields, etc.) to the form by clicking on the name of the created form in the table and going to the [Form items](../multistep-form/README.md) tab.
@@ -23,6 +31,10 @@ The easiest way to create a form is to click the Add icon and set its basic para
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+### Duplicating a form
+
+You can duplicate a selected multi-step form in the forms list. When duplicating, enter a new, unique name for the form. Its settings, all steps, and form items are copied to the new form; the original submitted records are not copied.
 
 ### Basic tab
 
@@ -41,16 +53,17 @@ It is possible to set additional optional parameters for the form that will affe
 
 - **Redirect after filling** - url address to which the redirect should be performed after saving the form. If not specified, it will redirect to the original page.
 - **Redirect after error** - url address to redirect to if the form fails to submit. If not specified, the same value as ```forward``` will be used.
+- **Show content without redirection** - for a multi-step form, after successful submission, it displays the content of the website from the **Redirect after completion** or **Redirect after error** field instead of the default message. The visitor remains on the same URL address. If they do not have permission to view this website, the form is submitted and the default message about successful submission is displayed. It is disabled by default. When enabled, the **Redirect after completion** field is mandatory.
 - **Save copy as PDF** - if set to `true`, then after saving the form, the system will also generate its PDF version in the ```/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf``` directory, where the value of ```ID_FORMULARU``` is the ```id``` form in the database.
 - **Allow only one submission** - if a user is logged in and this field is set to the value ```true```, then if the user has already submitted the form, the system will not allow them to submit it again. This way, the form will only be found in the database from one user once.
 - **Overwrite older submission** - if a user is logged in and this field is set to ```true```, then if the user has already submitted the form, its value will be overwritten by the new version. This way, the form will only be present in the database once for one user.
 - **Require email confirmation** - activates [email address confirmation] mode(#email-address-confirmation-settings).
 - **Send form as an attachment to an email** - when enabled, the form will be attached to the email as an HTML attachment.
   - **Form attachment name** - the name of the attachment in HTML format.
-- **Encryption key** - if you want to encrypt the form values, you can enter [encryption key](../../admin/README.md#header).
+- **Encryption key** - public key for encrypting the values ​​and HTML form of the submitted form in the database. Creating a key pair, setting up and decrypting data is described in [Form encryption](encryption.md). The sent email and generated PDF copy contain readable filled values.
 - **Doc id of the page where the form is located** - doc ID of the page where the form is located. By default, the system tries to determine this page based on ```refereru```, or the last viewed page in `session`. For precise determination, this value can be entered. If it is not entered, WebJET will automatically fill it in when the form is displayed.
 - **Doc id notification for user** - if set to the value of a web page, then after successfully saving the form, an email with the text of the given web page is sent to the visitor's email (from the email / e-mail field). This can be, for example, a thank you for filling out the form, or further instructions on the procedure.
-- **Doc id of the page with the email version** - doc ID of the page with the email version. The system needs the page to be able to generate the email form. If the value `none` is entered, the web page designation for the email will not be used. If the value is not entered at all, the value entered by the ```useFormDocId``` parameter will be used. The value is useful if you have one contact form on all pages, inserted e.g. in the footer. When generating the email, the code of the page itself is used as the code, but the form is not located there. This way, it is possible to tell it to use a different page for the email.
+- **Doc id of the page with the email version** - doc ID of the page whose content will be used to create the email version of the form. If the value `none` is specified, the page for email will not be used. If the value is not specified at all, the value of the parameter ```useFormDocId``` will be used. For a multi-step form, you can use a tag in the form `!identifikator-polozky!` in the content of the selected page; when submitted, it will be replaced with the value of the corresponding [form item](../multistep-form/README.md#tags-of-item-values). The content and CSS styles of the page will also be used for the saved HTML form and PDF version of the form. If the selected page does not exist, the standard form view will be used.
 
 ### Card - Email
 
@@ -90,6 +103,23 @@ It is possible to set additional optional parameters for the form that will affe
 - **Allowed extensions** - comma-separated list of allowed extensions for uploaded files, e.g. `jpg,png,pdf,docx`.
 - **Maximum height (for images)** - maximum height of the uploaded image in pixels.
 - **Maximum width (for images)** - maximum width of the uploaded image in pixels.
+
+## CSS styles for email and PDF
+
+When preparing an HTML email from a classic or multi-step form, WebJET loads the CSS styles of the page used for the email. Large CSS files on the website also make the sent message larger. The designer can prepare smaller files containing only the styles needed to display the completed form.
+
+For each CSS file, WebJET first looks for a file with the extension `-email.css` in the same folder. For example:
+
+| CSS template file | Preferred version for email |
+| --- | --- |
+| `/templates/orange/dist/css/main.css` | `/templates/orange/dist/css/main-email.css` |
+| `/templates/orange/dist/css/theme.css` | `/templates/orange/dist/css/theme-email.css` |
+
+If version `*-email.css` exists, it replaces the original file. If it does not, the original CSS is loaded. This rule is evaluated separately for main and secondary CSS templates, files from the `editorEditorCss` configuration variable, and additional CSS passed from form settings. Replacing one file does not disable other styles, so prepare smaller versions for any large CSS files that the form uses.
+
+The content of the selected files will be inserted into the email and PDF document via the `<style>` tag. The saved HTML form of the form references the same files via the `<link>` tags, so keep them available even after the form is submitted. Verify the email CSS edits when viewing the saved form and its PDF version. The form display on the website continues to use the original CSS.
+
+If the page does not have a template available, `/css/email.css` will be used; if this file does not exist either, the file from the configuration variable `editorPageCss` will be used. When sending as plain text, no CSS is added.
 
 ## Setting up email address confirmation
 
@@ -146,6 +176,8 @@ After exporting, the Last Export Date column is automatically set to the current
 
 ## Possible configuration variables
 
+- ```sendMailSaveEmail``` - ​​if set to ```true```, emails from both classic and multi-step forms will be saved as `.eml` files instead of being sent via SMTP. If the write fails, the form will report a sending error.
+- ```sendMailSaveEmailPath``` - ​​directory for saving files `.eml`, default ```/WEB-INF/tmp/emails```. For a development environment, you can set, for example, ```/files/protected/emails```; the directory must be writable. With ```useSMTPServer=false```, the preferred delayed sending of email is retained.
 - ```formmailAllowedRecipients``` - ​​List of email address tails to which forms can be sent, for example: ```@interway.sk,podpora@demo.webjet.sk```. Empty by default, which means that the form can be sent to any address
 - ```formMailEncoding``` - ​​character set for sending emails from forms. By default set to empty, which means that the same character encoding as set for the web page will be used.
 - ```spamProtection``` - ​​if set to ```true```, spam protection in forms will be enabled. Default is set to ```true```.

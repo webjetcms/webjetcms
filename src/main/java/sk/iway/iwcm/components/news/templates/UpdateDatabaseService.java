@@ -93,11 +93,13 @@ public class UpdateDatabaseService {
 	}
 
 	/**
-	 * Loop translation keys from input and return map of NewsTemplatesEntity.
-	 * The key in map is name of template (without prefix "news.template."), value is NewsTemplatesEntity.
-	 * Entities in map have set only name, templateCode, engine and domainId.
-	 * @param translationKeys
-	 * @return
+	 * Builds base news template entities from the supplied translation keys.
+	 *
+	 * The returned map is keyed by template name without the {@code news.template.} prefix.
+	 * Each entity contains only its name, template code, engine, and domain ID.
+	 *
+	 * @param templatesMap translation key values indexed by their full keys
+	 * @return base template entities indexed by template name without the translation key prefix
 	 */
     public static Map<String, NewsTemplatesEntity> getBaseNewsTemplates(Map<String, String> templatesMap) {
         Map<String, NewsTemplatesEntity> baseTemplatesMap = new HashMap<>();

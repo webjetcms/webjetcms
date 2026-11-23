@@ -15,7 +15,9 @@ plugins {
     //https://github.com/gretty-gradle-plugin/gretty
     id 'org.gretty' version "5.0.1"
     //https://plugins.gradle.org/plugin/io.freefair.lombok
-    id "io.freefair.lombok" version "8.11"
+    id "io.freefair.lombok" version "8.14"
+    // Compile Java and annotation processors with javac first, then weave the bytecode with ajc.
+    id "io.freefair.aspectj.post-compile-weaving" version "8.14"
     //http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
     id "org.owasp.dependencycheck" version "12.2.2"
     id 'maven-publish'
@@ -30,6 +32,15 @@ plugins {
 repositories {
     mavenCentral()
     maven {
+        name = "github"
+        url = uri("https://maven.pkg.github.com/webjetcms/webjet-ai")
+        credentials {
+            //define in gradle.properties or as environment variables
+            username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+            password = project.findProperty("gpr.api-key") ?: System.getenv("GPR_API_KEY")
+        }
+    }
+    maven {
         url "https://pd4ml.tech/maven2/"
     }
     flatDir {
@@ -38,7 +49,6 @@ repositories {
 }
 
 ext {
-    //pri zmene verzie je potrebne to zmenit aj v build.xml a compile.xml
     lombokVersion = "1.18.34";
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
@@ -46,10 +56,9 @@ ext {
     springDataVersion = "4.0.+";
     springSecurityVersion = "7.1.+";
     allureVersion = "2.32.0";
-    //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
-    //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
+    webjetAiVersion = '2.1.2';
 }
 
 lombok {
@@ -58,47 +67,30 @@ lombok {
     //config['lombok.addLombokGeneratedAnnotation'] = 'false'
 }
 
-war {
-    zip64 = true
-    exclude('**/node_modules/**')
-    exclude('**/node_scripts/**')
-    exclude('**/src/**')
-    exclude('**/tmp/**')
-    exclude('**/*.log')
-    exclude('**/*.map')
-    exclude('**/*.md')
-    exclude('**/*.sh')
-    exclude('**/.npmrc')
-    exclude('**/.editorconfig')
-    exclude('**/gulpfile.js')
-    exclude('**/package-lock.json')
-    exclude('**/package.json')
-    exclude('**/webpack*.js')
-    exclude('**/WEB-INF/imgcache/**')
-    exclude('**/scss/**')
-    exclude('scratchpad*.jsp')
-    exclude('localconf*.jsp')
-    exclude('**/LICENSE')
-    exclude('**/*.psd')
-    exclude('**/*.zip')
+def webAppSourcePrefix = 'src/main/webapp/'
+def gitIgnoredWebAppPathsOutput = providers.exec {
+    workingDir(rootDir)
+    setIgnoreExitValue(true)
+    commandLine(
+        'git', 'ls-files', '-z', '--others', '--ignored', '--directory',
+        '--exclude-from=.gitignore', '--',
+        "${webAppSourcePrefix}components", "${webAppSourcePrefix}templates"
+    )
+}
+def gitIgnoredWebAppPaths = gitIgnoredWebAppPathsOutput.result.zip(
+    gitIgnoredWebAppPathsOutput.standardOutput.asText
+) { result, output ->
+    if (result.exitValue != 0) {
+        throw new GradleException("Cannot determine Git-ignored webapp paths; refusing to build WAR (git exit code ${result.exitValue}).")
+    }
 
-    //pug files
-    exclude('**/pug/**')
-    exclude('**/admin/v9/views/**')
-    exclude('**/*.pug')
-    exclude('**/prepros-6.config')
+    output.tokenize('\u0000').collect { sourcePath ->
+        if (!sourcePath.startsWith(webAppSourcePrefix)) {
+            throw new GradleException("Unexpected Git-ignored webapp path: ${sourcePath}")
+        }
 
-    //templates
-    exclude('templates/bare/**')
-    exclude('templates/agency/**')
-    exclude('templates/creative/**')
-    exclude('templates/firma/**')
-    exclude('templates/interway/**')
-    exclude('templates/kostal/**')
-    exclude('templates/wa/**')
-    exclude('templates/vesmir/**')
-
-    rootSpec.exclude('**/poolman-*.xml')
+        sourcePath.substring(webAppSourcePrefix.length()).replaceFirst('/$', '')
+    }.sort()
 }
 
 sourceSets {
@@ -107,10 +99,28 @@ sourceSets {
             srcDirs 'src/main/java'
         }
     }
- }
+}
 
 
 configurations {
+    // Local AI is available for CMS development, but is not published to clients.
+    localAi {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    compileOnly.extendsFrom(localAi)
+    runtimeClasspath.extendsFrom(localAi)
+    testImplementation.extendsFrom(localAi)
+
+    // Use only published dependencies when packaging client distributions.
+    distributionRuntimeClasspath {
+        canBeConsumed = false
+        extendsFrom implementation, runtimeOnly
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+        }
+    }
+
     all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
@@ -131,13 +141,12 @@ configurations {
 
     }
 
-    agent {
-        canBeResolved = true
-        canBeConsumed = true
-    }
  }
 
 dependencies {
+
+    implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
+    localAi "com.webjetcms:webjet-ai-local:${webjetAiVersion}"
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
@@ -176,22 +185,25 @@ dependencies {
 
     implementation("org.eclipse.persistence:eclipselink:${eclipselinkVersion}")
 
-    implementation("org.freemarker:freemarker:2.3.34")
+    implementation("org.freemarker:freemarker:2.3.35")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
 
-    implementation("org.hibernate.validator:hibernate-validator:9.0.0.Final")
+    implementation("org.hibernate.validator:hibernate-validator:9.0.2.Final")
     implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.14")
     implementation("org.apache.httpcomponents:httpmime:4.5.14")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+    implementation platform("com.fasterxml.jackson:jackson-bom:2.22.4")
+    implementation platform("tools.jackson:jackson-bom:3.2.4")
+    implementation("com.fasterxml.jackson.core:jackson-annotations")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("sk.iway:wjjcaptcha:1.0-SNAPSHOT")
     //implementation("net.htmlparser.jericho:jericho-html:3.1")
     //implementation("joda-time:joda-time:2.10.13")
     //implementation("io.bit3:jsass:5.1.1")
-    implementation("org.jsoup:jsoup:1.17.2")
+    implementation("org.jsoup:jsoup:1.23.2")
     implementation("net.sourceforge.jtds:jtds:1.3.1")
     implementation("net.sourceforge.jexcelapi:jxl:2.6.10")
     implementation("org.apache.lucene:lucene-core:3.6.2")
@@ -199,7 +211,7 @@ dependencies {
     implementation("org.apache.lucene:lucene-highlighter:3.6.2")
     implementation("org.apache.lucene:lucene-memory:3.6.2")
     implementation("org.apache.lucene:lucene-analyzers:3.6.2")
-    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.6")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.10")
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
     implementation("com.oracle.database.jdbc:ojdbc8:19.8.0.0")
     //implementation("org.mcavallo:opencloud:0.3")
@@ -224,7 +236,7 @@ dependencies {
     //WebAuthn/PassKey support - separated module in Spring Security 7
     implementation("org.springframework.security:spring-security-webauthn:${springSecurityVersion}")
         //update webauthn version
-        implementation("tools.jackson.core:jackson-databind:3.2.0")
+        implementation("tools.jackson.core:jackson-databind")
     implementation("org.springframework:spring-webmvc:${springVersion}")
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")
@@ -250,8 +262,8 @@ dependencies {
 
     implementation("com.google.crypto.tink:tink:1.22.0")
     //implementation("com.google.protobuf:protobuf-java:3.21.7")
-    implementation("ch.qos.logback:logback-core:1.5.37")
-    implementation("ch.qos.logback:logback-classic:1.5.37")
+    implementation("ch.qos.logback:logback-core:1.6.5")
+    implementation("ch.qos.logback:logback-classic:1.6.5")
     //verzia je zjednotena s slf4j-api, ktore je aj tak resolvnute na 2.0.17 cez logback
     implementation("org.slf4j:slf4j-api:2.0.18")
     implementation("org.slf4j:jcl-over-slf4j:2.0.18")
@@ -259,7 +271,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-to-slf4j:2.26.1")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
-    implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
 
     // https://mvnrepository.com/artifact/jakarta.servlet.jsp.jstl/jakarta.servlet.jsp.jstl-api
     implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.2'
@@ -288,7 +299,7 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    runtimeOnly 'org.postgresql:postgresql:42.7.13'
+    runtimeOnly 'org.postgresql:postgresql:42.7.14'
 
     //UserAgent parser - https://github.com/ua-parser/uap-java
     implementation 'com.github.ua-parser:uap-java:1.6.1'
@@ -322,14 +333,117 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 
-    // CVE-2026-29062
-    // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
-    implementation("tools.jackson.core:jackson-core:3.1.2")
+    // The Jackson BOM above aligns this module with the security-patched databind release.
+    implementation("tools.jackson.core:jackson-core")
 
-    agent "org.aspectj:aspectjweaver:$aspectJVersion"
+    // Declare directly so the fixed accessors-smart transitive dependency is included in the distributed Maven POM.
+    implementation('org.ow2.asm:asm:9.11.1')
+}
+
+war {
+    zip64 = true
+    classpath = sourceSets.main.output + configurations.distributionRuntimeClasspath - configurations.providedRuntime
+
+    //exclude files/folders in .gitignore for /components and /templates
+    inputs.property('gitIgnoredWebAppPaths', gitIgnoredWebAppPaths)
+    exclude { element ->
+        def archivePath = element.relativePath.pathString
+        gitIgnoredWebAppPaths.get().any { ignoredPath ->
+            archivePath == ignoredPath || archivePath.startsWith(ignoredPath + '/')
+        }
+    }
+
+    exclude('**/node_modules/**')
+    exclude('**/node_scripts/**')
+    exclude('**/src/**')
+    exclude('**/tmp/**')
+    exclude('**/*.log')
+    exclude('**/*.map')
+    exclude('**/*.md')
+    exclude('**/*.sh')
+    exclude('**/.npmrc')
+    exclude('**/.editorconfig')
+    exclude('**/gulpfile.js')
+    exclude('**/package-lock.json')
+    exclude('**/package.json')
+    exclude('**/webpack*.js')
+    // Admin frontend build inputs are bundled into dist before packaging.
+    exclude('admin/v9/npm_packages/**')
+    exclude('admin/v9/rspack.config*.js')
+    exclude('admin/v9/pug.render.js')
+    exclude('admin/v9/.browserslistrc')
+    exclude('**/WEB-INF/imgcache/**')
+    exclude('**/scss/**')
+    exclude('admin/webpages/page-builder/style/sass/**')
+    exclude('scratchpad*.jsp')
+    exclude('localconf*.jsp')
+    exclude('**/LICENSE')
+    exclude('**/*.psd')
+    exclude('**/*.zip')
+
+    //pug files
+    exclude('**/pug/**')
+    exclude('**/admin/v9/views/**')
+    exclude('**/*.pug')
+    exclude('**/prepros-6.config')
+
+    //templates
+    exclude('templates/firma/**')
+
+    rootSpec.exclude('**/poolman-*.xml')
+    // Private chat history and attachments are runtime data.
+    rootSpec.exclude('files/protected/ai-chat/**')
+    // Generated docs-server feeds, thumbnails and private cache are runtime data.
+    rootSpec.exclude('json/wjnews.*.json', 'json/social-media/**', 'WEB-INF/social-media/**')
+}
+
+// Only the Ant finalwar target uses the development runtime, including local AI.
+tasks.register('prepareFinalWarRuntimeLibs', Sync) {
+    description = 'Prepares runtime libraries, including local AI, for the Ant finalwar target.'
+    from configurations.runtimeClasspath - configurations.providedRuntime
+    into providers.gradleProperty('finalWarLibDirectory').orElse('build/updatezip/finalwar/WEB-INF/lib')
+}
+
+def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
+def localAiModelTasks = [
+    prepareLocalAiTextModel: [
+        model: 'utter-project/EuroLLM-1.7B-Instruct',
+        variant: 'q4-k-m',
+        output: 'eurollm-1.7b-instruct-q4-k-m.zip'
+    ],
+    prepareLocalAiTranslationModel: [
+        model: 'facebook/m2m100_418M',
+        variant: 'int8',
+        output: 'm2m100-418m-int8.zip'
+    ],
+    prepareLocalAiEmbeddingModel: [
+        model: 'intfloat/multilingual-e5-base',
+        variant: 'fp32',
+        output: 'multilingual-e5-base-fp32.zip'
+    ]
+]
+
+localAiModelTasks.each { taskName, modelDefinition ->
+    tasks.register(taskName, JavaExec) {
+        group = 'webjet-ai'
+        description = "Prepares ${modelDefinition.model} for local WebJET AI use."
+        classpath = configurations.runtimeClasspath
+        mainClass = 'com.webjetcms.ai.local.tool.LocalModelTool'
+        args 'prepare',
+            '--model', modelDefinition.model,
+            '--output', new File(localAiModelsDirectory, modelDefinition.output).absolutePath
+        if (modelDefinition.variant != null) {
+            args '--variant', modelDefinition.variant
+        }
+        if (providers.gradleProperty('overwriteLocalAiModel').getOrElse('false').toBoolean()) {
+            args '--overwrite'
+        }
+    }
 }
 
 test {
+    def failedTestClasses = new TreeSet<String>()
+
     useJUnitPlatform()
     systemProperty 'sun.net.client.defaultConnectTimeout', '10000'
     systemProperty 'sun.net.client.defaultReadTimeout', '10000'
@@ -337,7 +451,6 @@ test {
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
     systemProperty 'webjetDbname', System.getProperty('webjetDbname') ?: '/poolman-local.xml'
-    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
     testLogging {
         events "passed", "skipped", "failed", "standard_out", "standard_error"
         showStandardStreams = true
@@ -345,6 +458,11 @@ test {
         showCauses = true
         showExceptions = true
         showStackTraces = true
+    }
+    afterTest { desc, result ->
+        if (result.resultType == TestResult.ResultType.FAILURE && desc.className) {
+            failedTestClasses.add(desc.className)
+        }
     }
     // For even more verbose output during development
     afterSuite { desc, result ->
@@ -354,6 +472,12 @@ test {
                     "${result.successfulTestCount} succeeded, " +
                     "${result.failedTestCount} failed, " +
                     "${result.skippedTestCount} skipped"
+            if (!failedTestClasses.isEmpty()) {
+                println "Failed test classes:"
+                failedTestClasses.each { className ->
+                    println " - ${className}"
+                }
+            }
         }
     }
 }
@@ -436,14 +560,19 @@ jacoco {
     toolVersion = "+"
 }
 
+// Identify the worktree without spaces so app-stop.sh can target only its server process.
+def worktreeId = java.security.MessageDigest.getInstance('SHA-256')
+    .digest(rootDir.canonicalPath.getBytes('UTF-8')).encodeHex().toString()
+
 gretty {
     // supported values:
     // 'jetty7', 'jetty8', 'jetty9', 'jetty9.3', 'jetty9.4', 'tomcat7', 'tomcat8'
     servletContainer = 'tomcat11'
     contextPath = ''
-    httpPort = 80
+    // Override ports with -PhttpPort, -PhttpsPort and -PdebugPort when running multiple worktrees.
+    httpPort = (project.findProperty('httpPort') ?: '80') as int
     httpsEnabled = true
-    httpsPort = 443
+    httpsPort = (project.findProperty('httpsPort') ?: '443') as int
     //hard mod spusti WJ rovno z src/main/webapp co zrychli start (netreba kopirovat JSP subory niekde inde)
     inplaceMode = 'hard'
     //scanovania pre hotswap
@@ -454,6 +583,7 @@ gretty {
     //managedClassReload = true - nie je mozne pouzit s Java > 8
     //chceme aby sa tomcat nereloadol po zmene triedy, v IDE je potrebne kliknut na Hot Code Replace pre aplikovanie zmeny v triede
     reloadOnClassChange = false
+    debugPort = (project.findProperty('debugPort') ?: '5005') as int
     debugSuspend = false
 
     //extraResourceBase 'src/webjet8/webapp'
@@ -466,8 +596,11 @@ gretty {
         '-Dfile.encoding=utf-8',
         '-Duser.language=sk',
         '-Duser.country=SK',
-        //povolenie remote debug na porte 5005
-        '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005',
+        // Keep debugging available for appStart as well as appStartDebug.
+        "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${debugPort}",
+        "-Dwebjet.worktreeId=${worktreeId}",
+        "-Dwebjet.httpServerPort=${httpPort}",
+        "-Dwebjet.httpsServerPort=${httpsPort}",
         //lokalny poolman-local.xml subor
         //'-DwebjetPoolmanPath=/poolman-local.xml',
         //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia
@@ -643,7 +776,7 @@ task writePom() {
         Node xml = new XmlParser().parse("build/publications/maven/pom-default.xml")
         //verziu je mozne zadat v gradle ako 5.3.+, do POM to potrebujeme resolvnut na konkretnu verziu 5.3.22
         Map resolvedVersionMap = new HashMap()
-        Set<ResolvedArtifact> resolvedArtifacts = configurations.runtimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
+        Set<ResolvedArtifact> resolvedArtifacts = configurations.distributionRuntimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
         //resolvedArtifacts.addAll(configurations.testImplementation.getResolvedConfiguration().getResolvedArtifacts())
         resolvedArtifacts.each {
             def group = it.getModuleVersion().getId().getGroup();
@@ -664,11 +797,19 @@ task writePom() {
             Node artifactId = it.get("artifactId").first()
             def groupId = it.get("groupId").first().value().first()
             def artifactName = artifactId.value().first()
-            def version = it.get("version").first().value().first()
+            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
+            if (it.get("version").isEmpty()) {
+                if (artifactVersion == null) {
+                    throw new GradleException("Cannot resolve version for ${groupId}:${artifactName}")
+                }
+                Node addedVersion = it.appendNode("version", artifactVersion)
+                it.children().remove(addedVersion)
+                it.children().add(it.children().indexOf(artifactId) + 1, addedVersion)
+            }
+            Node versionNode = it.get("version").first()
+            def version = versionNode.text()
             //println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
 
-            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
-            Node versionNode = it.get("version").first()
             if (artifactVersion!=null) {
                 def mostRecent = mostRecentVersion([artifactVersion, version]);
                 //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
@@ -702,6 +843,12 @@ task writePom() {
 
             //remove stripes, it is integrated with our changes in libs jar
             if ("stripes".equals(artifactName)) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
+
+            //remove displaytag, it is integrated with our changes in libs jar
+            if ("com.github.hazendaz".equals(groupId) && "displaytag".equals(artifactName)) {
                 println "----> removing: "+artifactName
                 i.remove();
             }

@@ -1,0 +1,171 @@
+import { AiBrowserExecutor } from '../../../npm_packages/webjetdatatables/ai/ai-browser-executor';
+import { requestAiText } from './ai-rest-transport';
+
+/** Executes chat requests independently of their container and content-insertion behavior. */
+export class AiChatTransport {
+
+    static lastTimestamp = 0;
+    request = null;
+    disposed = false;
+
+    /**
+     * Sends one turn, preserving the provider's raw text and opaque continuation ID.
+     * @param {object} assistant Assistant configuration, including provider and streaming preference.
+     * @param {object} inputData Current prompt, optional context and previous conversation ID.
+     * @param {object} callbacks Callbacks for updates, translated statuses, download progress and confirmation.
+     * @param {function(string): void} [callbacks.onUpdate] Receives the accumulated raw response.
+     * @param {function(string): void} [callbacks.onStatus] Receives a translated status message.
+     * @param {function(number|string): void} [callbacks.onDownload] Receives browser model download progress.
+     * @param {function(string, string): Promise<boolean>} [callbacks.onConfirm] Requests browser activation or download approval.
+     * @returns {Promise<object>} Raw response, usage, continuation ID and execution status.
+     */
+    async execute(assistant, inputData, callbacks = {}) {
+        const executionResult = {
+            success: false, response: "", totalTokens: 0, conversationId: null, errorText: null, stopped: false,
+            errorCategory: null, providerStatusCode: null, retryable: null
+        };
+        if (this.disposed) return { ...executionResult, stopped: true };
+        if (this.request != null) return { ...executionResult, errorText: "A chat request is already running." };
+
+        AiChatTransport.lastTimestamp = Math.max(Date.now(), AiChatTransport.lastTimestamp + 1);
+        const request = {
+            assistantId: assistant.assistantId,
+            timestamp: AiChatTransport.lastTimestamp,
+            controller: new AbortController(),
+            browser: null,
+            text: "",
+            resolveCancellation: null
+        };
+        this.request = request;
+        const current = () => this.request === request;
+        const update = text => {
+            if (!current()) return;
+            request.text = typeof text === "string" ? text : String(text ?? "");
+            callbacks.onUpdate?.(request.text);
+        };
+        request.cancellation = new Promise(resolve => { request.resolveCancellation = () => resolve(null); });
+
+        try {
+            const operation = assistant.provider === "browser"
+                ? this._executeBrowser(assistant, inputData, request, current, update, callbacks)
+                : this._executeRest(assistant, inputData, request, update, callbacks);
+            // Release the UI immediately on cancellation, even while a browser model or confirmation is still pending.
+            const result = await Promise.race([operation, request.cancellation]);
+            if (!current()) return { ...executionResult, response: request.text, stopped: true };
+            return { ...executionResult, ...result };
+        } catch (error) {
+            if (!current()) return { ...executionResult, response: request.text, stopped: true };
+            return { ...executionResult, response: request.text, errorText: error.message || String(error) };
+        } finally {
+            this._destroyBrowser(request);
+            if (this.request === request) this.request = null;
+        }
+    }
+
+    async _executeRest(assistant, inputData, request, update, callbacks) {
+        const persistent = inputData.persistentChat === true;
+        const data = persistent ? {
+            assistantId: request.assistantId, threadId: inputData.threadId, revision: inputData.revision,
+            requestId: inputData.requestId, retryMessageId: inputData.retryMessageId, userPrompt: inputData.userPrompt,
+            ...(inputData.context ? { context: inputData.context, inputValue: inputData.inputValue,
+                inputIsSelectedTextInEditor: inputData.inputIsSelectedTextInEditor === true } : {}),
+            ...(inputData.files?.length ? { files: inputData.files } : {})
+        } : { ...inputData, assistantId: request.assistantId, timestamp: request.timestamp };
+        if (persistent) request.threadId = data.threadId || data.requestId;
+        if (typeof data.conversationId !== "string" || data.conversationId.length === 0) delete data.conversationId;
+        const result = await requestAiText(data, {
+            streaming: assistant.useStreaming === true,
+            endpoint: persistent ? '/admin/rest/ai/chat/messages' : undefined,
+            signal: request.controller.signal,
+            onDelta: text => update(request.text + text),
+            onMetadata: metadata => callbacks.onMetadata?.(metadata)
+        });
+        if (result.threadId) callbacks.onMetadata?.(result);
+        if (result.error) {
+            return {
+                persisted: Boolean(result.threadId),
+                response: request.text,
+                errorText: result.error,
+                errorCategory: typeof result.errorCategory === "string" ? result.errorCategory : null,
+                providerStatusCode: Number.isInteger(result.providerStatusCode) && result.providerStatusCode > 0 ? result.providerStatusCode : null,
+                retryable: typeof result.retryable === "boolean" ? result.retryable : null,
+                stopped: result.errorCategory === "CANCELLED"
+            };
+        }
+        return {
+            persisted: Boolean(result.threadId),
+            success: true,
+            response: typeof result.response === "string" ? result.response : request.text,
+            totalTokens: result.totalTokens,
+            attachments: Array.isArray(result.attachments) ? result.attachments : [],
+            conversationId: typeof result.conversationId === "string" && result.conversationId.length > 0 ? result.conversationId : null
+        };
+    }
+
+    async _executeBrowser(assistant, inputData, request, current, update, callbacks) {
+        const bridge = {
+            setCurrentStatus: (key, pulsate, ...params) => {
+                if (current()) callbacks.onStatus?.(WJ.translate(key, params));
+            },
+            setDownloadStatus: percent => {
+                if (current()) callbacks.onDownload?.(percent);
+            },
+            requestBrowserConfirmation: async (text, buttonText) => {
+                const confirmed = await Promise.race([
+                    Promise.resolve().then(() => current() && callbacks.onConfirm?.(text, buttonText)),
+                    request.cancellation
+                ]);
+                return current() && confirmed === true;
+            }
+        };
+        request.browser = new AiBrowserExecutor(null, bridge);
+        if (!request.browser.isAvailable(assistant)) {
+            throw new Error(WJ.translate("components.ai_assistants.browser.api_not_available.js", [request.browser.getApiName(assistant)]));
+        }
+        const result = await request.browser.execute(assistant, inputData, false, update);
+        return {
+            success: result.success,
+            response: request.text,
+            totalTokens: result.totalTokens,
+            stopped: result.stopped,
+            errorText: result.errorText || (result.statusKey ? WJ.translate(result.statusKey, result.statusKeyParams || []) : null)
+        };
+    }
+
+    /** Stops the current turn without changing the caller's successful continuation. */
+    cancel() {
+        const request = this.request;
+        if (request == null) return;
+        this.request = null;
+        request.resolveCancellation();
+        request.controller.abort();
+        if (request.browser != null) {
+            this._destroyBrowser(request);
+        } else if (request.threadId) {
+            // Aborting fetch closes the connection; the separate stop request also cancels queued/server-side work.
+            fetch(`/admin/rest/ai/chat/threads/${encodeURIComponent(request.threadId)}/stop`, {
+                method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }, keepalive: true
+            }).catch(() => {});
+        } else {
+            const parameters = new URLSearchParams({ assistantId: request.assistantId, timestamp: request.timestamp });
+            fetch("/admin/rest/ai/assistant/stop-assistant/?" + parameters, {
+                method: "GET", headers: { "X-CSRF-Token": window.csrfToken }, keepalive: true
+            }).catch(() => {});
+        }
+    }
+
+    _destroyBrowser(request) {
+        if (request.browser == null) return;
+        try {
+            request.browser.destroy();
+        } catch (error) {
+            console.warn("Could not dispose the browser AI instance:", error);
+        }
+    }
+
+    /** Cancels pending work and prevents this transport from accepting another turn. */
+    dispose() {
+        this.disposed = true;
+        this.cancel();
+    }
+}

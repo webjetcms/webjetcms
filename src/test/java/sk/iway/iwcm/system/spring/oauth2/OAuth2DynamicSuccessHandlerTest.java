@@ -115,7 +115,7 @@ class OAuth2DynamicSuccessHandlerTest extends BaseWebjetTest {
             handler.onAuthenticationSuccess(request, response, authentication);
 
             // Verify admin redirect
-            verify(response).sendRedirect("/admin/");
+            verify(response).sendRedirect("/admin/v9/");
 
             // Verify session attribute was cleared
             verify(session).removeAttribute("oauth2_is_admin_section");

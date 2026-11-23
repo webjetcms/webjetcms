@@ -55,13 +55,12 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
     I.waitForInvisible(locate('td .ti.ti-trash'), 10);
 
     //Delete forum (soft delete)
-    I.clickCss(".buttons-select-all");
-    I.clickCss("button.buttons-remove");
+    I.clickCss("#forumDataTable_wrapper .buttons-select-all");
+    I.waitForElement("#forumDataTable tbody tr.selected", 10);
+    I.clickCss("#forumDataTable_wrapper button.buttons-remove");
     DTE.waitForEditor("forumDataTable");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.click("Zmazať", "#forumDataTable_modal div.DTE_Action_Remove");
     DTE.waitForModalClose("forumDataTable_modal");
-    I.wait(0.2);
     DT.waitForLoader();
 
     //See forum, BUT see allso recover button
@@ -71,7 +70,6 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
     //Recover deleted forum
     I.forceClick(locate('td .ti.ti-trash'));
     DT.waitForLoader();
-    I.wait(1);
 
     //Check, we see forum but dont see button to recover, because forum was recored succefull
     I.see(subject + "_1");
@@ -86,14 +84,13 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
 
         //
         I.say("Delete forum (soft delete)");
-        I.wait(1);
-        I.clickCss(".buttons-select-all");
-        I.wait(1);
-        I.clickCss("button.buttons-remove");
-        I.waitForElement("div.DTE_Action_Remove");
-        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.clickCss("#forumDataTable_wrapper .buttons-select-all");
+        I.waitForElement("#forumDataTable tbody tr.selected", 10);
+        I.clickCss("#forumDataTable_wrapper button.buttons-remove");
+        DTE.waitForEditor("forumDataTable");
+        I.click("Zmazať", "#forumDataTable_modal div.DTE_Action_Remove");
         DTE.waitForModalClose("forumDataTable_modal");
-        I.wait(1);
+        DT.waitForLoader();
 
         I.see(subject + "_2");
         I.waitForVisible(locate('td .ti.ti-trash'), 10);
@@ -102,7 +99,7 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
         I.say("Use other recover button");
         //I.clickCss(".buttons-select-all");
         I.clickCss("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(6)");
-        I.wait(1);
+        DT.waitForLoader();
 
         I.see(subject + "_2");
         I.waitForInvisible(locate('td .ti.ti-trash'), 10);
@@ -156,15 +153,15 @@ async function removeUserEditablePages(I, DT, DTE) {
 
     I.waitForElement("#editorAppDTE_Field_editorFields-editableGroups div.dt-tree-container", 10);
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
     I.wait(1);
-    await I.clickIfVisible(locate("button.btn-vue-jstree-item-remove"));
+    await I.clickIfVisible(locate("button.btn-webjet-jstree-item-remove"));
 
     DTE.save();
 }
@@ -197,7 +194,7 @@ function addPagePermision(I, DT, DTE, elelentId) {
     I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
     I.wait(1);
 
-    I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať web stránku'));
+    I.click(locate('.btn.btn-outline-secondary.btn-webjet-jstree-add').withText('Pridať web stránku'));
     I.click(locate('.jstree-node.jstree-closed').withText(I.getDefaultDomainName()).find('.jstree-icon.jstree-ocl'));
     I.waitForElement(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'), 10);
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));

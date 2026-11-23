@@ -11,6 +11,8 @@ html.pg-homepage(data-th-lang="${layout.lngIso}")
 
   body
 
+    a.skip-link(href="#main-content" data-th-text="\#{admin.layout.skip-to-main-content}") Preskocit na hlavny obsah
+
     div.ly-page-wrapper
 
         div(id="toast-container-logoff" class="toast-container toast-top-full-width")
@@ -23,7 +25,7 @@ html.pg-homepage(data-th-lang="${layout.lngIso}")
 
         div.ly-content-wrapper
             div.ly-content(data-scrollbar)
-                div.ly-container.container
+                main#main-content.ly-container.container(tabindex="-1")
 
                     div.breadcrumb-language-select(style="display:none")
                         select(name="languageSelect" id="breadcrumbLanguageSelect")

@@ -4,6 +4,7 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
 
 import org.json.JSONObject;
+import sk.iway.Html2Text;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -19,6 +20,7 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.cluster.ClusterRefresher;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
@@ -28,6 +30,7 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverterWithSave;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -182,6 +185,18 @@ public class DocDB extends DB
 	}
 
 	/**
+	 * Returns document caches for navbar link generation without checking scheduled publication.
+	 * Called by GroupDetails while GroupsDB is being constructed; a publication check could
+	 * re-enter GroupsDB initialization before its instance is stored in the servlet context.
+	 *
+	 * @return the cached or newly initialized DocDB instance
+	 */
+	static DocDB getInstanceWithoutPublishCheck()
+	{
+		return getInstanceWithoutPublishCheck(false, "iwcm");
+	}
+
+	/**
 	 *  Gets the instance attribute of the DocDB class
 	 *
 	 *@param  servletContext2  Description of the Parameter
@@ -193,14 +208,30 @@ public class DocDB extends DB
 	@Deprecated
 	public static DocDB getInstance(jakarta.servlet.ServletContext servletContext2, boolean force_refresh, String serverName)
 	{
+		DocDB myDocDB = getInstanceWithoutPublishCheck(force_refresh, serverName);
+		// Publication may initialize GroupsDB, so run it outside the DocDB initialization lock.
+		myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
+		return myDocDB;
+	}
+
+	/**
+	 * Retrieves or creates the DocDB instance without running scheduled publication checks.
+	 * Separating cache initialization from publication allows public getInstance methods to
+	 * check publication after this method returns, outside the DocDB initialization lock.
+	 *
+	 * @param force_refresh true to replace the cached instance and request a cluster refresh;
+	 *                      false to reuse it or initialize it without notifying the cluster
+	 * @param serverName database connection name used when creating the instance
+	 * @return the cached or newly initialized DocDB instance stored in the servlet context
+	 */
+	private static DocDB getInstanceWithoutPublishCheck(boolean force_refresh, String serverName)
+	{
 		jakarta.servlet.ServletContext servletContext = Constants.getServletContext();
 		if (!force_refresh)
 		{
 			DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 			if (myDocDB != null && myDocDB.urlsByUrlDomains!=null)
 			{
-				//Set publishable service and call checkPublishable
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -208,11 +239,10 @@ public class DocDB extends DB
 		{
 			if (force_refresh)
 			{
-				DocDB myDocDB = new DocDB(servletContext, serverName);
+				DocDB myDocDB = new DocDB(servletContext, serverName, force_refresh);
 				//save us to server space
 				servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 			else
@@ -220,14 +250,13 @@ public class DocDB extends DB
 				DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 				if (myDocDB == null)
 				{
-					myDocDB = new DocDB(servletContext, serverName);
+					myDocDB = new DocDB(servletContext, serverName, force_refresh);
 					//	remove
 					//servletContext.removeAttribute(Constants.A_DOC_DB);
 					//save us to server space
 					servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
 				}
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -241,7 +270,7 @@ public class DocDB extends DB
 	 * @param serverName
 	 *           Description of the Parameter
 	 */
-	private DocDB(jakarta.servlet.ServletContext servletContext, String serverName)
+	private DocDB(jakarta.servlet.ServletContext servletContext, String serverName, boolean force_refresh)
 	{
 		Logger.println(this,"DocDB: constructor ["+Constants.getInstallName()+"]");
 		Logger.debugMemInfo();
@@ -267,7 +296,7 @@ public class DocDB extends DB
 
 		loadUrls();
 
-		ClusterDB.addRefresh(DocDB.class);
+		if (force_refresh) ClusterDB.addRefresh(DocDB.class);
 
 		Logger.debug(this,"DocDB: constructor ["+Constants.getInstallName()+"] done");
 		Logger.debugMemInfo();
@@ -310,6 +339,11 @@ public class DocDB extends DB
 	{
 		docPublishService.refreshPagesToPublish();
 	}
+
+    /** Publishes an approved, due history record through the regular scheduled publication flow. */
+    public void publishDocHistory(DocHistory history) {
+        docPublishService.copyDHistory(history, this);
+    }
 
 	/**
 	 * @deprecated
@@ -816,7 +850,6 @@ public class DocDB extends DB
 			String onlyAvailableAppend = "";
 			if (onlyAvailable) {
 				onlyAvailableAppend = "available="+DB.getBooleanSql(true)+" AND";
-				if (Constants.DB_TYPE == Constants.DB_ORACLE) onlyAvailableAppend = "AND available="+DB.getBooleanSql(true)+" AND";
 			}
 
 			if (Constants.DB_TYPE == Constants.DB_MSSQL)
@@ -831,7 +864,7 @@ public class DocDB extends DB
 			else if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
 				//POZOR: ORA tu chyba limit!
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
 			}
 			else
 			{
@@ -1148,8 +1181,7 @@ public class DocDB extends DB
 		int publishType = DocDB.PUBLISH_NO_PEREX_CHECK_NEW;
 		int pageSize = docIds.size();
 
-		String docIdsStr = docIds.size() > 0 ? Tools.join(docIds) : "null";
-		String whereSql = " AND doc_id IN ( " + docIdsStr + ") ";
+		String whereSql = " AND " + DB.getInCondition("doc_id", docIds) + " ";
 		String oldWhereSql = (String) request.getAttribute("whereSql");
 		request.setAttribute("whereSql", (Tools.isEmpty(oldWhereSql) ? "" : oldWhereSql) + whereSql);
 
@@ -1404,10 +1436,10 @@ public class DocDB extends DB
 						if (pgb != null) pid = pgb.getPerexGroupId();
 					}
 
-					if(pid > 0) groupNamesIn.append(gn).append(",");
+					if(pid > 0) groupNamesIn.append(pid).append(",");
 				}
 
-				if(Tools.isNotEmpty(groupNamesIn)) whereSql.append(" AND p.perex_group_id IN ("+(groupNamesIn.toString().endsWith(",") ? groupNamesIn.substring(0, groupNamesIn.length()-1) : groupNamesIn)+") ");
+				if(Tools.isNotEmpty(groupNamesIn)) whereSql.append(" AND ").append(DB.getInCondition("p.perex_group_id", groupNamesIn.substring(0, groupNamesIn.length()-1))).append(" ");
 			}
 			else
 			{
@@ -1781,7 +1813,7 @@ public class DocDB extends DB
 		whereSql = whereSql.replace(';', ' ');
 
 		if(Tools.isNotEmpty(docIdsNotIn))
-			whereSql += " AND d.doc_id NOT IN ("+docIdsNotIn+")";
+			whereSql += " AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn);
 
 		List<DocDetails> ret = new ArrayList<>();
 
@@ -1836,14 +1868,12 @@ public class DocDB extends DB
 			}
 			else if (orderType == ORDER_PRICE)
 			{
-				String priceField = Constants.getString("basketPriceField");
-				//need to convert price field from Java format fieldK to SQL format field_k
-				priceField = priceField.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+				String priceField = DB.fixUntrustedColumnName(getBasketPriceColumnName(), "d");
 
 				if (Constants.DB_TYPE == Constants.DB_ORACLE) {
-					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS NUMBER(10, 2))");
+					order = new StringBuilder("CAST("+priceField+" AS NUMBER(10, 2))");
 				} else {
-					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS DECIMAL(10, 2))");
+					order = new StringBuilder("CAST("+priceField+" AS DECIMAL(10, 2))");
 				}
 			}
 
@@ -1938,7 +1968,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(" " ).append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order);
 			}
@@ -1954,7 +1984,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(' ').append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order);
 			}
@@ -1978,7 +2008,7 @@ public class DocDB extends DB
 				if (groupIds!=null && groupIds.length()>0)
 				{
 					if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-					else sql.append(" AND group_id IN (" ).append( getOnlyNumbersIn(groupIds) ).append( ") ");
+					else sql.append(" AND ").append(DB.getInCondition("group_id", getOnlyNumbersIn(groupIds))).append(" ");
 				}
 				sql.append(' ').append(dateSql).append(checkPerexSql).append(whereSql).append(" ORDER BY " ).append( order ).append( limit);
 			}
@@ -2095,7 +2125,7 @@ public class DocDB extends DB
 		whereSql = whereSql.replace(';', ' ');
 
 		if(Tools.isNotEmpty(docIdsNotIn))
-			whereSql += " AND d.doc_id NOT IN ("+docIdsNotIn+")";
+			whereSql += " AND " + DB.getNotInCondition("d.doc_id", docIdsNotIn);
 
 		int ret = 0;
 
@@ -2138,7 +2168,7 @@ public class DocDB extends DB
 			if (groupIds!=null && groupIds.length()>0)
 			{
 				if(rootGroupLevel <= 3 && rootGroupLevel > 0) sql.append(" AND root_group_l"+rootGroupLevel+" = "+rootGroupId);
-				else sql.append(" AND group_id IN (" ).append( groupIds ).append( ") ");
+				else sql.append(" AND ").append(DB.getInCondition("group_id", groupIds)).append(" ");
 			}
 
 			if (checkPerex) sql.append(" AND html_data IS NOT null ");
@@ -2461,7 +2491,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c, perex_image FROM documents";
 
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -2495,6 +2525,7 @@ public class DocDB extends DB
 				doc.setFieldA(DB.getDbString(rs, "field_a"));
 				doc.setFieldB(DB.getDbString(rs, "field_b"));
 				doc.setFieldC(DB.getDbString(rs, "field_c"));
+				doc.setPerexImage(DB.getDbString(rs, "perex_image"));
 
 				//POZOR: do fieldT si neskor ulozime DOMENU
 
@@ -2570,10 +2601,10 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Vrati docDetails s cache, su tam len zakladne info - docId, title, navbar, externalLink, groupId, virtualPath, available, showInMenu, showInSitemap, showInNavbar, loggedShowIn...
-	 * @param docId - id stranky
-	 * @param doNotReturnNull - ak je nastavene na true, tak to vzdy vrati aspon prazdny objekt
-	 * @return
+	 * Returns cached basic page metadata, including its title, URL, visibility and perex image.
+	 * @param docId page ID
+	 * @param doNotReturnNull whether a missing page should return a placeholder instead of null
+	 * @return cached metadata, a placeholder, or null when the page is missing
 	 */
 	public DocDetails getBasicDocDetails(int docId, boolean doNotReturnNull)
 	{
@@ -2860,8 +2891,8 @@ public class DocDB extends DB
 			String htmlFileName = doc.getVirtualPath();
 			if (Tools.isEmpty(htmlFileName))
 			{
-				htmlFileName = doc.getNavbar();
-				if (htmlFileName.contains("<") && htmlFileName.contains(">")) htmlFileName = Tools.html2text(htmlFileName);
+				// Decode entities even without HTML tags, keeping the stored navigation label unchanged.
+				htmlFileName = Html2Text.html2text(doc.getNavbar(), true);
 			}
 			StringBuilder fileName = new StringBuilder(groupDiskPath);
 			if (group == null)
@@ -2880,7 +2911,10 @@ public class DocDB extends DB
 			}
 			else
 			{
-				fileName.append(DocTools.removeChars(DB.internationalToEnglish(htmlFileName).toLowerCase())).append(Constants.getString("editorPageExtension"));
+				String pageFileName = DocTools.removeChars(DB.internationalToEnglish(htmlFileName).toLowerCase()) + Constants.getString("editorPageExtension");
+				// URL caches are initialized before the JPA-backed template cache during startup.
+				TemplateDetails template = InitServlet.isWebjetInitialized() ? TemplatesDB.getInstance().getTemplate(doc.getTempId()) : null;
+				fileName.append(DocTools.removeCharsDir(pageFileName, template));
 			}
 			return (normalizeVirtualPath(fixURL(fileName.toString())));
 		}
@@ -2894,7 +2928,8 @@ public class DocDB extends DB
 	{
 		if (url==null) return("");
 
-		url = DocTools.removeCharsDir(url).toLowerCase();
+		// Folder and page segments have already applied their respective stop-word settings.
+		url = DocTools.removeCharsDir(url, false).toLowerCase();
 
 		url = Tools.replace(url, "//", "/");
 		url = Tools.replace(url, "_-_", "_");
@@ -3812,7 +3847,7 @@ public class DocDB extends DB
 
 			if (searchGroups != null)
 			{
-				sql.append(" WHERE group_id IN (").append(getOnlyNumbersIn(searchGroups.toString(),true)).append(')');
+				sql.append(" WHERE ").append(DB.getInCondition("group_id", getOnlyNumbersIn(searchGroups.toString(), true)));
 			}
 
 
@@ -3857,6 +3892,13 @@ public class DocDB extends DB
 	public static List<String> getFieldDistinctValues(String field)
 	{
 		List<String> ret = new ArrayList<>();
+		field = DB.fixUntrustedColumnName(field, "documents");
+		if (field == null)
+		{
+			Logger.error(DocDB.class, "Invalid SQL identifier passed to getFieldDistinctValues");
+			return ret;
+		}
+
 		Connection db_conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -4686,7 +4728,7 @@ public class DocDB extends DB
 			String fileName = null;
 			if (group != null && group.isInternal()==false)
 			{
-				fileName = groupsDB.getGroupNamePath(docDetails.getGroupId());
+				fileName = AllowSafeHtmlAttributeConverterWithSave.sanitize(groupsDB.getGroupNamePath(docDetails.getGroupId()));
 				//musim obmedzit na max 255 znakov
 				if(fileName.length() > 255)
 				{
@@ -5029,7 +5071,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents WHERE doc_id=?";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c, perex_image FROM documents WHERE doc_id=?";
 
 			ps = db_conn.prepareStatement(sql);
 			ps.setInt(1, docId);
@@ -5073,6 +5115,7 @@ public class DocDB extends DB
 				doc.setFieldA(DB.getDbString(rs, "field_a"));
 				doc.setFieldB(DB.getDbString(rs, "field_b"));
 				doc.setFieldC(DB.getDbString(rs, "field_c"));
+				doc.setPerexImage(DB.getDbString(rs, "perex_image"));
 
 				//POZOR: do fieldT si neskor ulozime DOMENU
 				GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());
@@ -5208,6 +5251,10 @@ public class DocDB extends DB
 		catch (Exception ex)
 		{
 			Logger.error(DocDB.class, ex);
+			if (ClusterRefresher.THREAD_NAME.equals(Thread.currentThread().getName()))
+			{
+				throw new IllegalStateException("Cannot refresh document " + docId, ex);
+			}
 		}
 		finally
 		{
@@ -5220,29 +5267,31 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Tato metoda zmaze informacie o doc s docId z internych tabuliek
-	 * v pamati, basicAllDocsTable, basicAllDocsInGroupTable, urlsByUrlDomains
-	 * basicAllDocsTable, z cache ak sa tam nachadza, zmaze takisto data z lucene indexu
-	 * informacie o dokumente vyberie z basicAllDocsTable. ak sa tam doc uz nenachadza tak
-	 * metode nic nespravi
-	 * @param docId id dokumentu
+	 * Removes cached references and local index entries for a deleted document.
+	 * Index cleanup and cluster notification also run when the document is no
+	 * longer present in the cache.
+	 * @param docId the deleted document ID
 	 * @author mhalas
 	 */
 	private void cleanupDocReferences(int docId)
 	{
-		DocDetails doc;
-		doc = basicAllDocsTable.get(docId);
-		/* uz je to pravdepodobne vymazane aj z pamati */
-		if(doc == null) return;
-		removeDocFromBasilAllDocsInGroup(doc);
-		TObjectIntHashMap<String> oldTable = DocDB.getInstance().getUrlsByUrlDomains(doc.getGroup().getDomainName(), false);
-		if (oldTable != null && doc.getVirtualPath() != null)
+		DocDetails doc = basicAllDocsTable.get(docId);
+		if (doc != null)
 		{
-			Logger.debug(DocDB.class, "updateInternalCaches: mazem stare URL ("+doc.getVirtualPath()+") pre domenu "+doc.getGroup().getDomainName());
-			oldTable.remove(doc.getVirtualPath());
+			removeDocFromBasilAllDocsInGroup(doc);
+			GroupDetails group = doc.getGroup();
+			if (group != null)
+			{
+				TObjectIntHashMap<String> oldTable = getUrlsByUrlDomains(group.getDomainName(), false);
+				if (oldTable != null && doc.getVirtualPath() != null)
+				{
+					Logger.debug(DocDB.class, "Removing cached URL " + doc.getVirtualPath() + " for domain " + group.getDomainName());
+					oldTable.remove(doc.getVirtualPath());
+				}
+			}
+			basicAllDocsTable.remove(docId);
+			readPagesToPublic();
 		}
-		basicAllDocsTable.remove(docId);
-		readPagesToPublic();
 		if (cachedDocs.containsKey(Integer.valueOf(docId))) cachedDocs.remove(Integer.valueOf(docId));
 		Cache.getInstance().clearAll();
 		Cache.getInstance(true);
@@ -5334,7 +5383,7 @@ public class DocDB extends DB
 
 				if (group != null && group.isInternal()==false)
 				{
-					fileName = groupsDB.getGroupNamePath(lvd.getInt2());
+					fileName = AllowSafeHtmlAttributeConverterWithSave.sanitize(groupsDB.getGroupNamePath(lvd.getInt2()));
 				}
 
 				ps.setString(1, DB.prepareString(fileName, 255));
@@ -5714,6 +5763,7 @@ public class DocDB extends DB
 	 */
 	public static boolean changeGroupTitle(int groupId, int docId, String newTitle, boolean forceUpdate)
 	{
+		if (newTitle != null) newTitle = GroupsDB.sanitizeGroupName(newTitle, false);
 		GroupDetails grDetails =  GroupsDB.getInstance().getGroup(groupId);
 		if(grDetails != null && grDetails.getDefaultDocId() == docId && newTitle != null && !newTitle.equals(grDetails.getGroupName()) &&
 				(forceUpdate || (grDetails.isInternal()==false && grDetails.getMenuType()!=GroupDetails.MENU_TYPE_HIDDEN &&  grDetails.getFullPath()!=null))
@@ -5795,6 +5845,13 @@ public class DocDB extends DB
 
 	public DocDetails getDocByField(String fieldName, String fieldValue, boolean noData)
 	{
+		String fieldColumnReference = resolveCustomFieldColumnName(fieldName);
+		if (fieldColumnReference == null)
+		{
+			Logger.error(DocDB.class, "Invalid field name passed to getDocByField");
+			return null;
+		}
+
 		String sql = "";
 
 		Connection connection = null;
@@ -5806,9 +5863,9 @@ public class DocDB extends DB
 
 			String select = DocDB.getDocumentFields(noData==false);
 			if (Constants.getBoolean("docAuthorLazyLoad")) {
-				sql = "SELECT " + select + " FROM documents d WHERE field_" + fieldName + "= ?";
+				sql = "SELECT " + select + " FROM documents d WHERE " + fieldColumnReference + "= ?";
 			} else {
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE d.field_" + fieldName + "= ?";
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, " + select + " FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE " + fieldColumnReference + "= ?";
 			}
 
 			try {
@@ -5851,6 +5908,12 @@ public class DocDB extends DB
 		}
 
 		return (null);
+	}
+
+	protected static String resolveCustomFieldColumnName(String fieldName)
+	{
+		if (Tools.isEmpty(fieldName)) return null;
+		return DB.fixUntrustedColumnName("field_" + fieldName, "d");
 	}
 
 	/**
@@ -5906,21 +5969,12 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String priceColumnName = Constants.getString("basketPriceField");
-			if (priceColumnName == null)
-				ps = db_conn.prepareStatement("SELECT doc_id FROM documents");
-			else
-			{
-				//premena z fieldJ na field_j, ak je nutna
-				priceColumnName = priceColumnName.toLowerCase().startsWith("field") ?
-							"field_"+priceColumnName.toLowerCase().substring(priceColumnName.length() - 1) : priceColumnName;
-
-				StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
-				if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
-				else sql.append(" LENGTH(");
-				sql.append(priceColumnName).append(") > 0");
-				ps = db_conn.prepareStatement(sql.toString());
-			}
+			String priceColumnName = DB.fixUntrustedColumnName(fixUntrustedColumnName(Constants.getString("basketPriceField"), false), "documents");
+			StringBuilder sql = new StringBuilder("SELECT doc_id FROM documents WHERE");
+			if (Constants.DB_TYPE == Constants.DB_MSSQL) sql.append(" LEN(");
+			else sql.append(" LENGTH(");
+			sql.append(priceColumnName).append(") > 0");
+			ps = db_conn.prepareStatement(sql.toString());
 			rs = ps.executeQuery();
 			while (rs.next())
 			{
@@ -5962,6 +6016,43 @@ public class DocDB extends DB
 		}
 
 		return products;
+	}
+
+	private static String getBasketPriceColumnName()
+	{
+		String priceColumnName = Constants.getString("basketPriceField");
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(true);
+
+		// Convert the Java property format fieldK to the SQL column format field_k.
+		priceColumnName = priceColumnName.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase(Locale.ROOT);
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(true);
+		return priceColumnName;
+	}
+
+	protected static String fixUntrustedColumnName(String priceColumnName, boolean logInvalidValue)
+	{
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+
+		// Preserve the legacy mapping used by getItemsWithPrice.
+		if (priceColumnName.toLowerCase(Locale.ROOT).startsWith("field"))
+		{
+			String lowerCaseName = priceColumnName.toLowerCase(Locale.ROOT);
+			priceColumnName = "field_" + lowerCaseName.substring(lowerCaseName.length() - 1);
+		}
+
+		if (!DB.isValidColumnName(priceColumnName, false))
+			return getDefaultBasketPriceColumnName(logInvalidValue);
+		return priceColumnName;
+	}
+
+	private static String getDefaultBasketPriceColumnName(boolean logInvalidValue)
+	{
+		if (logInvalidValue)
+			Logger.error(DocDB.class, "Invalid basketPriceField SQL identifier, using field_k");
+		return "field_k";
 	}
 
 

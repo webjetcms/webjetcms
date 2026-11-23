@@ -20,15 +20,28 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
+/**
+ * Represents a configurable step of a multi-step form.
+ *
+ * Stores the step order, displayed content, navigation labels, and domain ownership
+ * used when rendering and editing a form workflow.
+ */
 @Entity
 @Table(name = "form_steps")
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MULTISTEP_FORM)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "stepBonusHtml", title = "components.insert_script.body", content = "<div></div>")
+})
 public class FormStepEntity {
 
     @Id
@@ -49,12 +62,12 @@ public class FormStepEntity {
 
     @Lob
     @Column(name = "header")
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.mustistep.form.header.title", tab = "main", renderFunction = "renderStepName")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.multistep.form.header.title", tab = "main", renderFunction = "renderStepName")
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String header;
 
     @Column(name = "next_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.mustistep.form.next_step.title", tab = "advanced", hidden = true, editor = {
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.multistep.form.next_step.title", tab = "advanced", hidden = true, editor = {
 			@DataTableColumnEditor(
 				attr = { @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "components.app-cookiebar.buttonText") }
 			)
@@ -63,7 +76,7 @@ public class FormStepEntity {
     private String nextStepBtnLabel;
 
     @Column(name = "back_step_btn_label")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title = "components.mustistep.form.back_step.title", tab = "advanced", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.multistep.form.back_step.title", tab = "advanced", hidden = true)
     private String backStepBtnLabel;
 
     @Lob

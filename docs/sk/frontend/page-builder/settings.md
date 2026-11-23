@@ -19,8 +19,8 @@ Pre správne spustenie Page Builder nastavte:
 
 Ďalšie konf. premenné, ktoré je možné upraviť:
 
-- `pagebuilderFilterAutoOpenItems` - počet položiek, ktoré sa pri filtrovaní v zozname blokov automaticky otvoria, predvolene 10.
 - `pagebuilderLibraryImageWidth` - šírka náhľadových obrázkov v knižnici blokov, predvolene 310.
+- `pagebuilderStructureWidth` - šírka panela Štruktúra v pixeloch, predvolene 280. Vyššia hodnota poskytne viac miesta pre vnorené bloky a dlhšie názvy. Na úzkej obrazovke sa panel zmenší podľa dostupného priestoru.
 - `inlineEditingDisabledUrls` - zoznam URL adries, pre ktoré nebude dostupný inline editor
 - `pageBuilderPrefix` - prefix, ktorý sa používa pre CSS triedy Page Builder (predvolene pb), zmeniť je možné len ak zmeníte aj prefixy v CSS triedach Page Builder
 
@@ -90,11 +90,25 @@ vznikne po inicializácii Page Builder kód:
 </div>
 ```
 
+## Ovládanie v editore
+
+Page Builder predvolene zobrazuje jeden rámik vybraného bloku a spoločnú nástrojovú lištu pod CKEditorom. Rámik sa kreslí v samostatnej vrstve mimo obsahu stránky, s odstupom od jeho hrany. Nepridáva sa kvôli nemu `padding`, `margin` ani `border` do blokov, takže nemení ich šírku a zalomenie textu. Vrstva nezachytáva kliknutia do obsahu a neoreže ju `overflow: hidden` rodičovského bloku.
+
+Tlačidlo s ikonou oka prepína tri režimy: rámik vybraného bloku (predvolený), žiadne rámiky a rámiky celej hierarchie aktívneho bloku (ikona vrstiev). Obrysy predkov sú odsadené smerom von, aby sa neprekrývali ani pri zhodných hranách blokov. Voľba sa ukladá do `localStorage` pod kľúčom `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). Pri nedostupnom úložisku funguje prepínanie pre aktuálne otvorený editor. Prepínanie nemení nástrojovú lištu ani výber bloku.
+
+Strom **Štruktúra** používa elementy rozpoznané existujúcou inicializáciou a názvy odvodzuje z obsahu. Nepridáva do blokov identifikátory ani ďalšie metadáta. Samostatné `pb-editable` elementy umožňuje vybrať, ale nepridáva im operácie určené pre stĺpce. Skryté elementy možno nájsť v strome bez zmeny ich viditeľnosti.
+
+Režim **Pridať blok** v spoločnej lište zobrazí pozície medzi sekciami, kontajnermi a stĺpcami. Tlačidlá zostávajú v samostatnej vrstve mimo obsahu; do štruktúry sa dočasne vložia iba neaktívne elementy `aside.pb-insert-space` na vytvorenie miesta. Nie sú súčasťou CKEditor polí a `getClearNode` ich odstráni aj pri ukladaní počas aktívneho režimu. Šírky stĺpcov sa nemenia. Vkladanie používa pôvodné ovládače a knižnicu, po vložení obnoví fokus CKEditora. Režim sa nepamätá v úložisku a nemení preferenciu rámikov.
+
+Počas vkladania a nastavovania šírky stĺpcov nahradí cestu a nástroje v lište modrý pomocník s tlačidlom **Ukončiť · Esc**. Ukončenie obnoví bežnú lištu. Pri nastavovaní šírky zostáva dostupné prepínanie zariadení.
+
+Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCustomSettings` zostávajú platné. Akcie hornej lišty používajú existujúce operácie Page Builder vrátane obmedzení presunu duplikovateľných elementov. Pri príprave náhľadu a uložení sa používajú pôvodné funkcie `getClearNode` a `clearEditorAttributes`.
+
 ## Štýlovanie elementov
 
 ### `SECTION` (modrá farba)
 
-Inicializácia pri použití elementu: ```<section>```.
+Inicializácia pri použití elementu `<section>` alebo `<div class="pb-section">`.
 
 Štýlovanie pomocou triedy, s prefixom: ```pb-style-section-```
 
@@ -104,9 +118,52 @@ Inicializácia pri použití elementu: ```<section>```.
 
 Nastavením CSS triedy ```pb-not-section``` sa element **nebude považovať za section* element.
 
-### `CONTAINER` (červená farba)
+Trieda `pb-section` označí aj bežný `DIV` ako sekciu - v Page Builderi má rovnaké ovládanie štýlov, presunu, duplikovania a zmazania. Technicky nemusí obsahovať vnorené `container`, `row` a ani stĺpce. Je to užitočné pre špecifické prípady, kedy potrebujete mať v stránke špeciálne elementy.
+
+Príklad:
+
+```html
+<div class="pb-section" id="app" data-plugin-type="roaming" data-plugin-customer="b2c"></div>
+```
+
+DIV sa vloží priamo medzi ostatné sekcie. Pri uložení sa zachová jeho značka, trieda `pb-section`, `id` aj vlastné atribúty.
+
+Trieda `pb-editable` umožní redaktorovi upravovať obsah vnoreného DIVu priamo v `pb-section`, aj mimo bežnej štruktúry `container` / `row` / stĺpec:
+
+```html
+<div id="app" class="pb-section" data-plugin-type="roaming" data-plugin-customer="b2c">
+    <p>FIXED CONTENT</p>
+    <div class="pb-editable">
+        <p>Editable content</p>
+    </div>
+</div>
+```
+
+V tomto príklade sa editor inicializuje iba vo vnorenom `div.pb-editable`. Text `Editable content` môže redaktor upravovať, zatiaľ čo `FIXED CONTENT` zostáva pevnou súčasťou bloku.
+
+Do takéhoto bloku môžete vložiť aj aplikáciu, napríklad existujúcu aplikáciu **Vloženie HTML kódu**:
+
+```html
+<div class="pb-section" id="app2">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
+```
+
+Aplikácia zobrazí náhľad a jej obsah nastavíte bežným dialógom aplikácie. Kliknutím na modrý pás nad alebo pod náhľadom označíte sekciu bez otvorenia nastavení aplikácie. Pásy sa zobrazujú iba počas editovania. Presúvanie a ďalšie operácie sa vykonávajú nad celým blokom `div.pb-section`.
+
+Náhľad `!INCLUDE(...)!` funguje aj priamo v sekcii alebo vo vnorenom `DIV` mimo stĺpcov. Page Builder dočasne obalí direktívu elementom `div.pb-editable.pb-temp-wrapper`, aby pre ňu inicializoval editor. Pri uložení a prepnutí editora obal odstráni. Pôvodný rodič, jeho atribúty a okolitý text zostanú zachované.
+
+### `CONTAINER` (ružová farba)
 
 Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-container```. Nastavením CSS triedy ```pb-not-container``` sa element **nebude považovať za kontajner** aj keď má CSS triedu ```container```.
+
+Aplikáciu môžete vložiť priamo do kontajnera bez riadka a stĺpca:
+
+```html
+<section>
+    <div class="container">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
+</section>
+```
+
+Page Builder k aplikácii nepridá prázdny `row`. Kliknutím na ružový pás nad alebo pod náhľadom označíte kontajner a môžete použiť jeho bežné ovládanie. Pri uložení zostane INCLUDE priamo v pôvodnom kontajneri.
 
 Štýlovanie pomocou triedy, s prefixom: ```pb-style-container-```
 
@@ -116,7 +173,7 @@ Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-cont
 
 ### `ROW`
 
-```<div class="row">``` sa momentálne nedá editovať pomocou Page Builder, je použitý z dôvodu bootstrap kompatibility.
+```<div class="row">``` sa štandardne nedá editovať ani štýlovať pomocou Page Builder a používa sa z dôvodu Bootstrap kompatibility. Ak riadok explicitne označíte CSS triedou `pb-duplicable` (`<div class="row pb-duplicable">`), Page Builder preň zobrazí oranžový rámik a nástroje na presun, duplikovanie a zmazanie. Stĺpce a ich obsah vo vnútri riadku zostanú editovateľné štandardným spôsobom.
 
 ### `COLUMN` (zelená farba)
 
@@ -132,6 +189,46 @@ Ak má column CSS triedu ```pb-not-editable``` tak sa **nebude považovať za co
 
 Nastavením CSS triedy ```pb-not-column``` sa element **nebude považovať za columns* aj keď má CSS triedu ```col-```.
 
+### Duplikovateľný element (oranžová farba)
+
+Ak chcete umožniť opakovanému elementu vo vnútri `COLUMN` alebo celému `ROW` presun, duplikovanie a zmazanie, označte ho CSS triedou `pb-duplicable`. Typickým príkladom sú položky zoznamu:
+
+```html
+<ul class="cards">
+    <li class="pb-duplicable">Prvá karta</li>
+    <li class="pb-duplicable">Druhá karta</li>
+</ul>
+```
+
+Celý Bootstrap riadok môžete označiť rovnakým spôsobom:
+
+```html
+<div class="container">
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Prvý riadok</p></div>
+    </div>
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Druhý riadok</p></div>
+    </div>
+</div>
+```
+
+Page Builder zobrazí na označenom elemente oranžový rámik a nástrojovú lištu s akciami na presun, duplikovanie a zmazanie. Element je možné presunúť alebo duplikovať iba pred alebo za cieľový element, ktorý je tiež označený ako duplikovateľný, má rovnaký HTML tag, rovnaký typ (`ROW` alebo bežný element) a rovnakého priameho rodiča. Napríklad jednotlivé `LI` elementy je možné meniť v rámci jedného `UL`, nie medzi dvoma zoznamami. `ROW` je možné meniť iba medzi označenými súrodeneckými `DIV.row` elementmi v tom istom kontajneri; presun medzi kontajnermi nie je podporovaný. Na presun musia byť v kontajneri aspoň dva označené riadky, jeden označený riadok je však možné duplikovať. Duplikovanie `ROW` zahŕňa celý riadok vrátane jeho stĺpcov a obsahu.
+
+Predvolený selektor vychádza z konfiguračnej premennej `pageBuilderPrefix` a má hodnotu `.pb-duplicable`. Ak potrebujete použiť existujúce CSS triedy alebo viac selektorov, nastavte ich vo funkcii [`pbCustomSettings`](blocks.md#podporný-javascript-kód):
+
+```javascript
+window.pbCustomSettings = function (me) {
+    me.grid.duplicable = ".pb-duplicable, .feature-item, ul.cards > li";
+};
+```
+
+Pri vlastnom selektore sa do uloženého HTML nepridáva trieda `pb-duplicable`; zostanú v ňom pôvodné triedy, ktoré selektor používa.
+
+Pri presune alebo duplikovaní celého `ROW` Page Builder automaticky znova inicializuje CKEditor vo vnorených editovateľných blokoch.
+
+!>**Upozornenie:** prvky vo vnútri `pb-not-editable` sa neoznačia. Ak sú duplikovateľné elementy vnorené do seba, Page Builder ovláda iba vonkajší element. Funkcia je určená pre kontajnerové HTML elementy, nie pre prázdne elementy ako `IMG`. Pri duplikovaní sa zachovávajú atribúty vrátane `id`; ich jedinečné hodnoty sa automaticky negenerujú.
+
 ## Výnimky editácie
 
 ### Editovateľný element
@@ -139,6 +236,10 @@ Nastavením CSS triedy ```pb-not-column``` sa element **nebude považovať za co
 Ak sa vyžaduje editovanie elementu, ktorý nie je z pomedzi vyššie spomenutých, je možné použiť element s triedou ```pb-editable```.
 
 Tento element sa nebude dať naštýlovať pomocou Page Builder, ale bude editovateľný pomocou CK editora.
+
+Samostatný editor sa vytvorí iba na elementoch podporovaných CKEditorom, napríklad `div`, `p` alebo nadpisoch. Na nepodporovaných elementoch, napríklad `li`, `ul` či `td`, sa označenie `pb-editable` ignoruje, aby vložený HTML kód nezablokoval otvorenie Page Buildera. Element aj jeho obsah zostanú zachované. Ak je vnútri editovateľného obalu, jeho text možno upravovať cez tento obal; napríklad celý zoznam vložte do `div.pb-editable`.
+
+Editovateľné oblasti nevnárajte do seba. Ak napríklad `div.pb-editable` obsahuje `p.pb-editable`, Page Builder pred spustením editora odstráni vnorenému odseku značku `pb-editable`. Rovnako odstráni vnorené značky `pb-content`. Text, ostatné CSS triedy a označenie vonkajšej oblasti zostanú zachované. Obsah spravuje jeden CKEditor, takže Enter a vytvorenie zoznamu neprenášajú nadbytočné označenie na nové odseky či položky zoznamu.
 
 ```html
 <div class="pb-editable"></div>
@@ -181,6 +282,7 @@ window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
 Aktuálne sú podporované nasledovné udalosti:
 
 - ```WJ.PageBuilder.loaded``` - po nahratí stránky v editore
+- ```WJ.PageBuilder.instanceReady``` - po inicializácii CKEditor inštancie v editovateľnom bloku; po presune alebo duplikovaní `ROW` môže byť vyvolaná opakovane
 - ```WJ.PageBuilder.gridChanged``` - zmena v ```gride```
 - ```WJ.PageBuilder.styleChange``` - zmena vo vlastnostiach bloku (štýlovanie)
 - ```WJ.PageBuilder.newElementAdded``` - pridaný nový element

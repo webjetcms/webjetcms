@@ -27,8 +27,6 @@ import java.util.Map;
  */
 public abstract class JsTreeRestController<T> {
 
-    private Prop prop;
-
     @Autowired
     private HttpServletRequest request;
 
@@ -45,6 +43,7 @@ public abstract class JsTreeRestController<T> {
         item.setSkipFoldersConst( Tools.getStringValue(request.getParameter("skipFolders"), null) );
         item.setRootFolder( Tools.getStringValue(request.getParameter("rootFolder"), null) );
         item.setHideRootParents( Tools.getBooleanValue(request.getParameter("hideRootParents"), false) );
+        item.setWritableOnly( Tools.getBooleanValue(request.getParameter("writableOnly"), false) );
 
         tree(result, item);
 
@@ -128,10 +127,7 @@ public abstract class JsTreeRestController<T> {
     public abstract boolean checkAccessAllowed(HttpServletRequest request);
 
     protected Prop getProp() {
-        if (prop == null) {
-            prop = Prop.getInstance(getRequest());
-        }
-        return prop;
+        return Prop.getInstance(getRequest());
     }
 
     public HttpServletRequest getRequest() {

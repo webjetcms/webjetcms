@@ -7,6 +7,8 @@ description: Skill for programming WebJET CMS datatable backend - JPA entity, Sp
 
 This skill provides complete instructions for creating a datatable-based admin application in WebJET CMS. The architecture uses JPA entities with `@DataTableColumn` annotations, Spring DATA repositories, `DatatableRestControllerV2` REST controllers, and Thymeleaf/HTML frontends.
 
+Before implementation, use the installed `wj-project-context` skill when available. Inspect the target project's CMS version, application package, `javax`/`jakarta` namespace, language bundles, SQL migrations and test infrastructure. Resolve working paths from that project root, not from this skill's installation directory. Examples describe current WebJET APIs; verify them against the installed dependency and existing project code. Do not upgrade CMS or introduce core-only files to satisfy an example.
+
 ## Architecture Overview
 
 A complete datatable application consists of:
@@ -192,7 +194,7 @@ And use `DomainIdRepository` instead of `JpaRepository` (see Repository section)
 
 ### Upgrading Database Schema
 
-When you create a new table or modify an existing table (add/alter columns), you **must** add a new `UpdateDBBean` XML element at the **bottom** of the file `src/main/webapp/WEB-INF/sql/autoupdate-webjet9.xml` (before the closing `</object></java>` tags). Each entry must contain SQL for all four supported databases: **MySQL**, **MSSQL** (Microsoft SQL Server), **Oracle** and **PostgreSQL**.
+When you create a new table or modify an existing table (add/alter columns), follow the target project's existing migration convention. In WebJET core, add a new `UpdateDBBean` XML element at the **bottom** of `src/main/webapp/WEB-INF/sql/autoupdate-webjet9.xml` (before the closing `</object></java>` tags). A customer project may use an installation-specific file or another established mechanism; inspect it before writing SQL and do not create `autoupdate-webjet9.xml` by default. Core entries must support **MySQL**, **MSSQL** (Microsoft SQL Server), **Oracle** and **PostgreSQL**; customer entries must cover that project's supported databases.
 
 #### XML Structure
 
@@ -737,7 +739,7 @@ Scenario('contact-zakladne testy', async ({ I, DataTables, DTE }) => {
 
 ## 7. Translation Keys
 
-Add translations to `src/main/webapp/WEB-INF/classes/text-webjet9.properties` in Slovak language, `text_cz-webjet9.properties` for Czech and `text_en-webjet9.properties` for English:
+Add translations to the target project's existing language bundles and supported languages. In core these are `src/main/webapp/WEB-INF/classes/text-webjet9.properties` for Slovak, `text_cz-webjet9.properties` for Czech and `text_en-webjet9.properties` for English; customer projects use their own installation suffix. Do not create parallel `webjet9` bundles in a customer project:
 
 ```properties
 components.contact.title=Contacts
@@ -829,9 +831,9 @@ jUnit tests are in `src/test/java`. When testing JPA entities:
 3. [ ] Create REST controller extending `DatatableRestControllerV2` with `@Datatable`, `@PreAuthorize`, `@RequestMapping`
 4. [ ] Create frontend HTML in `apps/{name}/admin/index.html`
 5. [ ] Create `modinfo.properties` in `apps/{name}/`
-6. [ ] Add translation keys to `text-webjet9.properties`, `text_cz-webjet9.properties`, `text_en-webjet9.properties`
-7. [ ] Create automated test in `src/test/webapp/tests/apps/{name}.js` using skill [codeceptjs](../wj-codeceptjs/SKILL.md).
-8. [ ] Add changelog entry in `docs/sk/CHANGELOG-2026.md`
-9. [ ] Check `docs/sk/ROADMAP.md` for planned item and mark as done
+6. [ ] Add translation keys to the project's existing language bundles.
+7. [ ] Add a test using the project's available infrastructure. For CodeceptJS, use the installed `wj-codeceptjs` skill; if it or the project's helpers are missing, report the missing prerequisite rather than creating a non-runnable test.
+8. [ ] Update the project's changelog if required. In core, use the current release's changelog and section.
+9. [ ] Update a matching roadmap item only when that project maintains one.
 10. [ ] Verify export/import functionality works correctly
 11. [ ] Write all code comments in English.

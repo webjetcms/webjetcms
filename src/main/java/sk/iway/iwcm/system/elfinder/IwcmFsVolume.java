@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.elfinder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,7 +121,7 @@ public class IwcmFsVolume implements FsVolume
 				FileIndexerTools.deleteIndexedFile(virtualPath);
 			}
 
-			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFile, path="+virtualPath, -1, -1);
+			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFile, path="+virtualPath+" deleted="+deleted, -1, -1);
 		}
 		return deleted;
 	}
@@ -144,7 +145,7 @@ public class IwcmFsVolume implements FsVolume
 		{
 			//JEEFF FileUtils.deleteDirectory(file);
 			deleted = FileTools.deleteDirTree(file);
-			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFolder, path="+file.getVirtualPath(), -1, -1);
+			Adminlog.add(Adminlog.TYPE_FILE_DELETE, "elfinder deleteFolder, path="+file.getVirtualPath()+" deleted="+deleted, -1, -1);
 		}
 
 		return deleted;
@@ -365,6 +366,8 @@ public class IwcmFsVolume implements FsVolume
 		List<FsItem> list = new ArrayList<>();
 
 		IwcmFile fsiFile = asFile(fsi);
+		//prevents to list ai-chats private folder
+		if (FileBrowserTools.hasForbiddenSymbol(fsiFile.getVirtualPath())) return new FsItem[0];
 
 		Logger.debug(IwcmFsVolume.class, "listChildrens, virtualPath="+fsiFile.getVirtualPath()+" realPath="+fsiFile.getAbsolutePath());
 
@@ -399,7 +402,7 @@ public class IwcmFsVolume implements FsVolume
 
 			for (IwcmFile c : cs)
 			{
-				if (FileBrowserTools.hasForbiddenSymbol(c.getName())) {
+				if (FileBrowserTools.hasForbiddenSymbol(c.getVirtualPath())) {
 					continue;
 				}
 
@@ -535,7 +538,21 @@ public class IwcmFsVolume implements FsVolume
 				name = DocTools.removeCharsDir(name, true).toLowerCase();
 			}
 		}
+		name = normalizeUnicode(name);
 		return name;
+	}
+
+	/**
+	 * normalize NFD (macOS) to NFC so server-side names match
+	 * @param value
+	 * @return
+	 */
+	public static String normalizeUnicode(String value) {
+		if (value == null) {
+			return "";
+		}
+
+		return Normalizer.normalize(value, Normalizer.Form.NFC);
 	}
 
 	/**

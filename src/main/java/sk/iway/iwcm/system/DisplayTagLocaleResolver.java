@@ -34,7 +34,7 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
    public static final String UNDEFINED_KEY = "???"; //$NON-NLS-1$
 
    /**
-    * @see LocaleResolver#resolveLocale(HttpServletRequest)
+    * @see LocaleResolver#resolveLocale(PageContext)
     */
    @Override
    public Locale resolveLocale(PageContext pageContext)

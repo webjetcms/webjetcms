@@ -14,6 +14,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Entity
@@ -22,6 +24,12 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_CALENDAR_CREATE)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "calendar_events.tab.basic", selected = true),
+    @DataTableTab(id = "description", title = "calendar_events.tab.description", content = ""),
+    @DataTableTab(id = "advanced", title = "calendar_events.tab.advanced"),
+    @DataTableTab(id = "notification", title = "calendar_events.tab.notification")
+})
 public class CalendarEventsEntity extends CalendarEventsBasic {
 
     public CalendarEventsEntity(){

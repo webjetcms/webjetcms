@@ -12,6 +12,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 public class TopDTO {
 
+    /** Current page image used by compact statistics previews. */
+    private String perexImage = "";
+
+    /** Page title without its parent folder path. */
+    private String title;
+
     @DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
         title="stat_browser.order"

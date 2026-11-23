@@ -24,10 +24,18 @@ The number of uses column shows the number of pages that use the template. If it
 
 - Installation name - when viewing a template, it is possible to change the installation name, which affects the application versions used. It allows you to use a specifically modified application in the `/components/MENO_INSTALACIE/aplikacia/` folder for the template.
 - Disable spam protection - disable spam protection if the page in this template is loaded using a REST service, or if it is a page used for mass email.
+- Hyphens in URL address - determines whether the words specified in the configuration variable `urlRemoveSpojkyList` are removed from the page name when generating the URL part:
+  - According to the configuration variable `urlRemoveSpojky` - ​​default option that preserves the global setting.
+  - Remove - removes connectors even with the global setting `false`.
+  - Keep - keeps the connectors even with the global setting `true`.
 - Move styles to `head` - ​​determines the processing of `<style>` and `<link rel="stylesheet">` tags that can be generated in the page body (e.g. from components):
   - By configuration variable - will use the global setting of the configuration variable `showDocMoveStyleToHead`.
   - On - forces styles to be moved to `<head>` for this template regardless of the global setting.
   - Disabled - disables style shifting for this template regardless of the global setting.
+
+For example, for the page name "News and Articles", the result will be `novinky-clanky.html` or `novinky-a-clanky.html`. Setting the links in the template does not change the URL prefix from the folder. Changing the template settings will not trigger a mass recalculation of existing addresses, it will take effect the next time a URL is generated, for example when a page is created or a page is saved with automatic URL generation enabled. Already removed links will only be restored when they are generated again from the name.
+
+You can set the blog to **Keep** and use the global `urlRemoveSpojky=true` for the rest of the site. If the blog uses the same template as other pages, create a separate template entry for it with the same HTML/JSP file.
 
 The configuration variable `showDocMoveStyleToHead` serves as the default value for the entire solution. A setting in the template can override it for a specific layout.
 

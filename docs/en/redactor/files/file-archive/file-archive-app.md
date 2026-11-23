@@ -77,6 +77,25 @@ The tab is used to set the display style and sorting of documents.
 - **Show patterns by** - select the value by which the patterns should be sorted
 - **Ascending order of sample listing** - if the option is selected, sample documents will be sorted in ascending order, otherwise vice versa
 
+The same sorting options are available for master documents, historical versions, and templates:
+
+| Option | Use |
+| --- | --- |
+| Priority | Custom order specified in the document metadata. |
+| Upload date | From the oldest or most recently uploaded document. |
+| Valid from | By date and time of start of validity. |
+| Valid until | By expiration date and time. |
+| Document name | Alphabetically by name displayed to the visitor. |
+| File name | By the actual file name, for example `pricelist-2026-01.pdf`. |
+| Product code | According to the product catalog designation. |
+| Product | Documents of the same product side by side. |
+| Category | Documents of the same category side by side. |
+| Document size | By size in bytes, from smallest to largest file. |
+
+The main document sorting is also used when the **Show only selected documents** option is enabled. The order of the entered `globalId` does not determine the order of the listing.
+
+Text values ​​are compared according to the Slovak alphabet, without distinguishing between uppercase and lowercase letters. Missing values ​​(`null`) are at the beginning in ascending order and at the end in descending order. If the value is the same, documents are sorted ascending by document name and then by ID to keep their order stable. You can set different criteria and sorting directions for master documents, historical versions, and templates.
+
 ![](file-archive-app-tab-advanced.png)
 
 ## Application

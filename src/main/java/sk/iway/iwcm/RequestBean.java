@@ -425,6 +425,17 @@ public class RequestBean
         return null;
     }
 
+	/**
+	 * Clear text key prefixes for the current request bean.
+	 * This method is useful when you want to reset the text key prefixes for a new context like import multiple rows
+	 */
+	public static void clearTextKeyPrefixes() {
+        RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+        if (requestBean != null) {
+			requestBean.textKeyPrefixes = null;
+		}
+    }
+
 	public ApplicationContext getSpringContext() {
 		return springContext;
 	}

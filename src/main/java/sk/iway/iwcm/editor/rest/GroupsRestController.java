@@ -13,7 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,6 +43,8 @@ import sk.iway.iwcm.doc.GroupPublisher;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.service.DeleteMirrorsService;
+import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -72,13 +76,27 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     private TranslationKeyRepository translationKeyRepository;
     private EditorFacade editorFacade;
     private final ApproveService approveService;
+    private final DeleteMirrorsService deleteMirrorsService;
 
-    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService) {
+    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService) {
         super(null);
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
         this.translationKeyRepository = translationKeyRepository;
         this.editorFacade = editorFacade;
         this.approveService = approveService;
+        this.deleteMirrorsService = deleteMirrorsService;
+    }
+
+    /**
+     * Previews additional mirrored folders affected by deleting the selected folders, without deleting data.
+     * Called by {@code bindDeleteMirrors} when the folder delete confirmation opens, before submission is enabled.
+     *
+     * @param ids IDs of the folders selected for deletion
+     * @return unique additional mirrors with accessible paths and a flag indicating any inaccessible mirrors
+     */
+    @PostMapping("/deletion-preview")
+    public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
+        return deleteMirrorsService.getGroupMirrors(ids, getUser());
     }
 
     @Override
@@ -219,8 +237,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public void beforeSave(GroupDetails entity) {
-        if (InitServlet.isTypeCloud() && CloudToolsForCore.isControllerDomain()==false) {
-            //force current domain
+        if (InitServlet.isTypeCloud() && "cloud".equals(Constants.getInstallName()) && CloudToolsForCore.isControllerDomain()==false) {
+            //force current domain for WebJET Cloud
             entity.setDomainName(CloudToolsForCore.getDomainName());
         }
         super.beforeSave(entity);
@@ -270,6 +288,14 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                     //read systemGroupIds for later use
                     systemGroupIds = groupsDB.getSubgroupsIds(system.getGroupId());
                 }
+            }
+            if (oldGroupDetails != null && entity.getGroupName().equals(oldGroupDetails.getDomainName())) {
+                //if group name is same as domain name, we also update group name to reflect new domain name
+                entity.setGroupName(entity.getDomainName());
+            }
+            if (oldGroupDetails != null && entity.getNavbarName().equals(oldGroupDetails.getDomainName())) {
+                //if group name is same as domain name, we update group navbar too
+                entity.setNavbarName(entity.getDomainName());
             }
         }
 
@@ -412,6 +438,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         if (entity.getEditorFields().isForceTemplateToSubgroupsAndPages()) {
+            // Use the committed hierarchy even if a cluster cache refresh is still pending.
+            groupsDB = GroupsDB.getInstance(true);
             groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());
             groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());
             refreshGroupsDB = true;
@@ -478,6 +506,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         int parGroupId = entity.getParentGroupId();
+        boolean domainRenamed = false;
         if ((parGroupId < 1 || Constants.getBoolean("multiDomainEnableNested")) && Tools.isNotEmpty(entity.getDomainName()) && entity.getEditorFields().isForceDomainNameChange())
         {
             if(parGroupId < 1) {
@@ -485,17 +514,24 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             }
 
             String groupIds = groupsDB.getSubgroupsIds(entity.getGroupId());
+            domainRenamed = true;
+            forceReloadNewDomainName = true;
 
             Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to subgroups: " + groupIds, entity.getGroupId(), entity.getTempId());
 
-            //updatni groups
-            new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+groupIds+")",entity.getDomainName());
-
-            if (systemGroupIds!=null) {
-                Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
-
+            if (InitServlet.isTypeCloud() && oldGroupDetails != null && Tools.isNotEmpty(oldGroupDetails.getDomainName())) {
+                //in multiweb rename domain in all root groups
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE domain_name=?", entity.getDomainName(), oldGroupDetails.getDomainName());
+            } else {
                 //updatni groups
-                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE group_id IN ("+systemGroupIds+")", entity.getDomainName());
+                new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", groupIds),entity.getDomainName());
+
+                if (systemGroupIds!=null) {
+                    Adminlog.add(Adminlog.TYPE_GROUP, "Force domain to system subgroups: " + systemGroupIds, -1, -1);
+
+                    //updatni groups
+                    new SimpleQuery().execute("UPDATE groups SET domain_name=? WHERE " + DB.getInCondition("group_id", systemGroupIds), entity.getDomainName());
+                }
             }
 
             //aktualizuj presmerovania
@@ -648,6 +684,15 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         if (forceReloadNewDomainName) {
+            if (domainRenamed && InitServlet.isTypeCloud()) {
+                //force reload to new domain after change domain name
+                GroupDetails entityReload = new GroupDetails();
+                entityReload.setDomainName(entity.getDomainName());
+                entityReload.setGroupId(-2);
+                entityReload.setEditorFields(new GroupEditorField());
+                entity = entityReload;
+            }
+
             //novo vytvorena domena, potrebujeme vyvolat reload stranky
             //fejkneme to cez atribut forceDomainNameChange, na ktory uz pocuvame v pug subore
             entity.getEditorFields().setForceDomainNameChange(true);
@@ -667,6 +712,11 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GroupDetails> target, Identity user, Errors errors, Long id, GroupDetails entity) {
 
+        if (InitServlet.isTypeCloud() && "cloud".equals(Constants.getInstallName()) && CloudToolsForCore.isControllerDomain()==false) {
+            //force current domain for WebJET Cloud
+            entity.setDomainName(CloudToolsForCore.getDomainName());
+        }
+
         if (entity.getGroupId()>0 && GroupsDB.isGroupEditable(user, entity.getGroupId())==false) {
             errors.rejectValue("errorField.groupId", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
             return;
@@ -681,8 +731,16 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 			if (oldGroup == null || oldGroup.getDomainName().equals(CloudToolsForCore.getDomainName())==false)
 			{
 				errors.rejectValue("errorField.domainName", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
-                return;
+	            return;
 			}
+
+            if (Tools.isNotEmpty(entity.getDomainName()) && oldGroup.getDomainName().equalsIgnoreCase(entity.getDomainName())==false) {
+                int domainCount = new SimpleQuery().forInt("SELECT COUNT(*) FROM groups WHERE LOWER(domain_name)=LOWER(?)", entity.getDomainName());
+                if (domainCount > 0) {
+                    errors.rejectValue("errorField.domainName", "403", Prop.getInstance(request).getText("groupedit.domain_already_exists"));
+                    return;
+                }
+            }
 		}
 
         if ("remove".equals(target.getAction())) return;
@@ -721,6 +779,14 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
+        if (getUser().isDisabledItem("deleteDir")) {
+            throwError("admin.delete.deleteDirDisabled.error");
+            return false;
+        }
+        // A previous selected folder may already have deleted this folder through mirroring or as a descendant.
+        // Treat this row as completed instead of validating its new Trash location or deleting it again.
+        if (DeleteRequestContext.isDeleted(GroupDetails.class, (int) id)) return true;
+
         List<String> errors = new ArrayList<>();
         if (!this.canModifyThisGroup(entity, getUser(), "editDir", errors)) {
             throwError(errors);
@@ -903,6 +969,9 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean checkItemPerms(GroupDetails entity, Long id) {
+        // Mirroring or parent deletion may already have processed this selected folder in the same request.
+        // Allow the completed row through; deleteItem will skip it without checking its changed location again.
+        if (id != null && DeleteRequestContext.isDeleted(GroupDetails.class, id.intValue())) return true;
         if (InitServlet.isTypeCloud() && entity.getGroupId()>0) {
             GroupDetails old = GroupsDB.getInstance().getGroup(entity.getGroupId());
             if (old != null && GroupsDB.isGroupEditable(getUser(), old.getGroupId())==false) return false;

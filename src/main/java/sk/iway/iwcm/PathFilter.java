@@ -11,6 +11,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocBasic.FollowLinksMode;
 import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.ninja.Ninja;
 import sk.iway.iwcm.filebrowser.EditForm;
@@ -25,6 +26,7 @@ import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
@@ -217,6 +219,12 @@ public class PathFilter implements Filter
 			{
 				path = path.substring(req.getContextPath().length());
 			}
+            if (sk.iway.iwcm.doc.PlannedAccess.isPathAccessible(path, req, res)==false) return;
+            if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(path)) {
+                res.setHeader("Cache-Control", "no-store");
+                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
 			if (path.contains("//"))
 			{
 				path = Tools.replace(path, "/////", "/");
@@ -695,6 +703,18 @@ public class PathFilter implements Filter
 						}
 						else
 						{
+							try {
+								if (AdminDeviceService.isBlocked(user, req)) {
+									LogonTools.clearUserFromSession(req.getSession());
+									res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+									return;
+								}
+							} catch (RuntimeException exception) {
+								Logger.error(PathFilter.class, "Cannot check device blocking for legacy login", exception);
+								LogonTools.clearUserFromSession(req.getSession());
+								res.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+								return;
+							}
 							user.setLoginName(username);
 							user.setPassword(UserTools.PASS_UNCHANGED);
 							user.setValid(true);
@@ -761,16 +781,13 @@ public class PathFilter implements Filter
 				return;
 			}
 
-			if (path.toLowerCase().endsWith(".jsp") || path.endsWith("/"))
+			if (isJspFromStaticFiles(path, req.getServletPath()))
 			{
-				if (path.startsWith("/images") || path.startsWith("/files") || path.startsWith("/shared"))
-				{
-					Logger.debug(PathFilter.class, "Volane JSP z nepovoleneho adresara, path="+path);
-					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
-					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					forwardSafely("/404.jsp", req, res);
-					return;
-				}
+				Logger.debug(PathFilter.class, "Volane JSP z nepovoleneho adresara, path="+path);
+				//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
+				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				forwardSafely("/404.jsp", req, res);
+				return;
 			}
 
 			if (path.endsWith(".appcache"))
@@ -1256,7 +1273,7 @@ public class PathFilter implements Filter
 				int fHistoryId = Tools.getIntValue(req.getParameter("fHistoryId"), -1);
 				if (fHistoryId > 0)
 				{
-					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, res);
+					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, user, res);
 					if (sendOK == false)
 					{
 						res.setStatus(404);
@@ -1492,6 +1509,9 @@ public class PathFilter implements Filter
 				String allowAdminUrls = Constants.getString("allowAdminUrls");
 				//ak v starom WJ mali customizovanu premennu a nemaju tam springove prihlasenie, pridajme
 				if (allowAdminUrls.contains("/admin/logon.do") && allowAdminUrls.contains("/admin/logon/")==false) allowAdminUrls += ",^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$";
+				// Keep the new login endpoints accessible with older custom configurations.
+				if (allowAdminUrls.contains("^/admin/logon/device/$")==false) allowAdminUrls += ",^/admin/logon/device/$";
+				if (allowAdminUrls.contains("^/admin/logon/location/$")==false) allowAdminUrls += ",^/admin/logon/location/$";
 
 				String[] adminUrls = Tools.getTokens(allowAdminUrls, ",", true);
 
@@ -2056,6 +2076,10 @@ public class PathFilter implements Filter
      */
 	public static boolean setStaticContentHeaders(String path, Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
+        if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(path.startsWith("/") ? path : "/" + path)) {
+            setNoCacheHeaders(response);
+            return false;
+        }
 		if (path.startsWith("/cache/")==false && request.getParameter("v")!=null)
 		{
 			//vygeneruj odkaz bez v parametra, negeneruje pre fiktivne /cache/nieco.css linky
@@ -2066,11 +2090,8 @@ public class PathFilter implements Filter
 		//vypnutie cachovania pre obrazky z imageeditora
 		if (path.contains("/_tmp_"))
 		{
-			response.setDateHeader("Expires",0);
+			setNoCacheHeaders(response);
 			response.setDateHeader("Last-Modified", Tools.getNow());
-			response.setHeader("Cache-Control","no-store, no-cache, must-revalidate, max-age=0");
-			//response.setHeader("Cache-Control","post-check=0, pre-check=0");
-			response.setHeader("Pragma","No-Cache");
 			response.setHeader("Etag", "");
 
 			return false;
@@ -2183,6 +2204,17 @@ public class PathFilter implements Filter
 	}
 
 	/**
+	 * Disables response caching. Call before writing the response body.
+	 * @param response response whose cache headers should be replaced
+	 */
+	public static void setNoCacheHeaders(HttpServletResponse response)
+	{
+		response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+		response.setHeader("Pragma", "no-cache");
+		response.setDateHeader("Expires", 0);
+	}
+
+	/**
 	 * Nastavi cache hlavicky na pozadovanu hodnotu v sekundach
 	 * @param myCacheStaticContentSeconds
 	 * @param response
@@ -2201,6 +2233,7 @@ public class PathFilter implements Filter
 	 */
 	public static boolean writeAndCacheFile(String url, HttpServletResponse response)
 	{
+        if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(url)) return false;
 		//ak je cache vypnuta, neriesime
 		if (FileCache.useFileCache() == false) return false;
 		//pre DB storage tu cache neriesime, to sa riesi priamo v IwcmFsFilter
@@ -2336,6 +2369,44 @@ public class PathFilter implements Filter
 				}
 			}
 		}
+	}
+
+	/**
+	 * Previews selected page headers using the same URL, custom-header and document rules.
+	 * The supplied servlet response is not modified.
+	 */
+	public static java.util.Map<String, String> previewPageHeaders(String path, DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
+		java.util.Map<String, String> headers = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		HttpServletResponse collector = new jakarta.servlet.http.HttpServletResponseWrapper(response) {
+			@Override
+			public void setHeader(String name, String value) {
+				if ("X-Robots-Tag".equalsIgnoreCase(name)) headers.put("X-Robots-Tag", value);
+				else if ("Referrer-Policy".equalsIgnoreCase(name)) headers.put("Referrer-Policy", value);
+				else if ("Location".equalsIgnoreCase(name)) headers.put("Location", value);
+			}
+
+			@Override
+			public void setLocale(java.util.Locale locale) {
+				// Custom Content-Language rules must not change the REST response locale.
+			}
+		};
+		Object languageHeaderSet = request.getAttribute("contentLanguageHeaderSet");
+		try {
+			setHeader(collector, "Referrer-Policy", "refererPolicy");
+			setXRobotsTagValue(path, collector);
+			setResponseHeaders(path, request, collector);
+			String redirect = ShowDoc.getExternalLinkRedirectUrl(doc, request);
+			if (redirect != null && !doc.getExternalLink().startsWith("http://") && !doc.getExternalLink().startsWith("https://")) {
+				String domain = GroupsDB.getInstance().getDomain(doc.getGroupId());
+				if (Tools.isNotEmpty(domain)) redirect = org.springframework.web.util.UriComponentsBuilder.fromUriString(redirect).host(domain).build().toUriString();
+			}
+			if (redirect != null) collector.setHeader("Location", redirect);
+			else setXRobotsTagValue("NOT_SEARCHABLE_PAGE", collector, doc);
+		} finally {
+			if (languageHeaderSet == null) request.removeAttribute("contentLanguageHeaderSet");
+			else request.setAttribute("contentLanguageHeaderSet", languageHeaderSet);
+		}
+		return headers;
 	}
 
 	/**
@@ -2789,6 +2860,25 @@ public class PathFilter implements Filter
 		}
 
 		return false;
+	}
+
+	/**
+	 * Blocks directories and JSP/Jasper resources under public upload roots.
+	 * @param path request path
+	 * @return true when the path must not be served from an upload root
+	 */
+	private static boolean isJspFromStaticFiles(String path) {
+		if (Tools.isEmpty(path)) return false;
+
+		boolean isStaticFilesRoot = path.startsWith("/images") || path.startsWith("/files") || path.startsWith("/shared");
+		return isStaticFilesRoot && (path.endsWith("/") || FileTools.isFileTypeForbiddenForUpload(path));
+	}
+
+	/**
+	 * Checks both the raw request URI and the container-decoded servlet path.
+	 */
+	private static boolean isJspFromStaticFiles(String requestPath, String servletPath) {
+		return isJspFromStaticFiles(requestPath) || isJspFromStaticFiles(servletPath);
 	}
 
 	private static boolean isPathSafe(String path) {

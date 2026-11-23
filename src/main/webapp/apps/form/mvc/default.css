@@ -23,7 +23,90 @@
     display: none;
 }
 
+.multistep-form-app .row > .col.mf-field-column-hidden {
+    display: none;
+}
+
+.multistep-form-app .step-header .step-description {
+    margin-top: 0.65rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
 .multistep-form-app .mf-error-list {
     margin: 0px;
     padding-left: 20px;
+}
+
+.multistep-form-app .cs-error,
+.multistep-form-app .alert-danger {
+    scroll-margin-top: 100px;
+}
+
+form.multistep-form .wj-form-tooltip-trigger:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.multistep-form-app .multistep-form:focus-visible,
+.multistep-form-app .multistep-form :is(button, input, select, textarea, a, .step-header):focus-visible {
+    outline: 3px solid #111 !important;
+    outline-offset: 2px !important;
+}
+
+.tooltip.wj-form-tooltip-hoverable {
+    pointer-events: auto;
+}
+
+/* Autocomplete styles — dropdown is appended inside .multistep-form-app via appendTo. */
+.multistep-form-app .ui-helper-hidden-accessible {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+.multistep-form-app ul.ui-autocomplete {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    z-index: 10011 !important;
+    border: 1px solid #ccc;
+    list-style-type: none;
+    padding: 5px;
+    max-height: 300px;
+    max-width: none;
+    overflow: auto;
+}
+
+.multistep-form-app ul.ui-autocomplete li.ui-menu-item .ui-menu-item-wrapper {
+    color: #666;
+    display: block;
+    padding: 3px 1em 3px 0.4em;
+}
+
+.multistep-form-app ul.ui-autocomplete li.ui-menu-item .ui-menu-item-wrapper:hover,
+.multistep-form-app ul.ui-autocomplete li.ui-menu-item .ui-menu-item-wrapper.ui-state-active {
+    background-color: #e5e5e5;
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .multistep-form-app *,
+    .multistep-form-app *::before,
+    .multistep-form-app *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
 }

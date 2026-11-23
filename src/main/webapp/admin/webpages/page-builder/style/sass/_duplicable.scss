@@ -1,0 +1,139 @@
+.#{$prefix}-grid-element.#{$prefix}-duplicable-element {
+    > .#{$prefix}-highlighter {
+        z-index: $highlighter-index + 3;
+        background-color: $color-duplicable;
+
+        &::after {
+            background-color: $color-duplicable;
+        }
+    }
+
+    > .#{$prefix}-highlighter__top {
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+
+    > .#{$prefix}-highlighter__bottom {
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+
+    > .#{$prefix}-highlighter__left {
+        top: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    > .#{$prefix}-highlighter__right {
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    > .#{$prefix}-toolbar {
+        left: 50%;
+        margin-left: -($toolbar-size * 0.5);
+        background: linear-gradient(to top, $color-duplicable, $color-magicline);
+
+        &.#{$prefix}-is-toolbar-active,
+        &:hover {
+            filter: brightness(1.1);
+        }
+
+        .#{$prefix}-toolbar__content {
+            left: 50%;
+            margin-left: -($toolbar-content-button-size * 1.5);
+        }
+    }
+
+    > .#{$prefix}-plus-button {
+        background: linear-gradient(to bottom, $color-duplicable, $color-magicline);
+
+        &:hover {
+            filter: brightness(1.1);
+        }
+
+        &.#{$prefix}-prepend {
+            top: $highlighter-size;
+            left: 50%;
+            margin-left: $highlighter-size;
+            border-bottom-right-radius: $plus-button-radius;
+            border-bottom-left-radius: $plus-button-radius;
+            box-shadow: 0 4px 25px 2px rgba(50, 50, 50, 0.25);
+
+            span {
+                background-image: $icon-move-up;
+            }
+        }
+
+        &.#{$prefix}-append {
+            right: 50%;
+            bottom: $highlighter-size;
+            margin-right: $highlighter-size;
+            border-top-right-radius: $plus-button-radius;
+            border-top-left-radius: $plus-button-radius;
+            background: linear-gradient(to top, $color-duplicable, $color-magicline);
+            box-shadow: 0 -4px 25px 2px rgba(50, 50, 50, 0.25);
+
+            span {
+                background-image: $icon-move-down;
+            }
+        }
+    }
+
+    &.#{$prefix}-row {
+        > .#{$prefix}-toolbar,
+        > .#{$prefix}-plus-button,
+        > .#{$prefix}-highlighter,
+        > .#{$prefix}-dimmer {
+            padding-right: 0;
+            padding-left: 0;
+            margin-top: 0;
+        }
+
+        > .#{$prefix}-toolbar {
+            left: calc(50% - #{$toolbar-size + $toolbar-content-gap});
+        }
+    }
+}
+
+.#{$prefix}-wrapper.#{$prefix}-has-child-toolbar-active {
+    .#{$prefix}-grid-element.#{$prefix}-duplicable-element.#{$prefix}-has-toolbar-active > .#{$prefix}-plus-button {
+        display: none;
+        opacity: 0;
+    }
+}
+
+.#{$prefix}-wrapper.#{$prefix}-is-moving-child.#{$prefix}-is-moving-duplicable-element {
+    .#{$prefix}-duplicable-element.#{$prefix}-is-duplicable-target {
+        > .#{$prefix}-highlighter,
+        > .#{$prefix}-plus-button {
+            display: block;
+            opacity: 1;
+        }
+
+        > .#{$prefix}-plus-button {
+            z-index: $plus-button-moving-index;
+            border-radius: $plus-button-radius;
+        }
+    }
+}
+
+.#{$prefix}-duplicable-element.#{$prefix}-is-duplicable-target.som-hover-prepend:hover > .#{$prefix}-highlighter__top,
+.#{$prefix}-duplicable-element.#{$prefix}-is-duplicable-target.som-hover-append:hover > .#{$prefix}-highlighter__bottom {
+    z-index: $highlighter-index + 50;
+
+    &::after {
+        visibility: visible;
+        opacity: 1;
+        right: 0;
+        left: 0;
+        animation: eye_catcher_horizontal 1s ease-in-out infinite;
+    }
+}
+
+.#{$prefix}-duplicable-element.#{$prefix}-is-duplicable-target.som-hover-append:hover > .#{$prefix}-highlighter__bottom::after {
+    animation: eye_catcher_horizontal_bottom 1s ease-in-out infinite;
+}

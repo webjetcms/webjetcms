@@ -58,8 +58,10 @@ Další konf. proměnné, které lze nastavit:
 Pokud potřebujete urychlit odesílání můžete postupovat následovně:
 
 - Zvyšte doménové limity, doporučujeme nastavit vyšší limity na domény ```gmail.com``` a vaši firemní doménu.
-- Upravte ```dmailWaitTimeout``` na hodnotu ```500```, což zvýší rychlost volání odeslání emailu, z důvodu blokování (viz výše). To ale neznamená, že se email odešle každých 500ms.
+- Upravte ```dmailWaitTimeout``` na hodnotu ```50```, což zvýší rychlost volání odeslání emailu, z důvodu blokování (viz výše). To ale neznamená, že se email odešle každých 50ms.
 - Pokud databáze obsahuje mnoho neplatných emailů snižte ```dmailSleepTimeAfterException```. **Upozornění:**, pokud skutečně nastane výpadek vašeho SMTP serveru, tak se emaily velmi rychle označí jako odeslané, protože přeteče počet ```dmailMaxRetryCount```.
 - Nastavte ```natUrlTranslate``` pro přímé stahování textu emailu z lokálního aplikačního serveru. Máte-li více doménovou instalaci může nastat problém s výběrem správné domény. Doporučujeme v ```hosts``` souboru na serveru nastavit všechny domény na IP adresu 127.0.0.1, v takovém případě nastavíte pouze přesměrování portu z 80 na 8080 (nebo na jakém portu máte spuštěn lokální aplikační server).
 - Minimalizujte obrázky a přílohy. Ty zvyšují zátěž na server a objem emailu. Případně nastavte konf. proměnnou ```dmailDisableInlineImages``` na ```false``` pro vypnutí přikládání obrázků přímo do těla emailu.
 - Pokud máte cluster můžete povolit odesílání z více nodů paralelně, zvyšuje se ale riziko více duplicitního odeslání emailu příjemci. Seznam nodů, ze kterých se email odesílá se nastavuje v konf. proměnné ```senderRunOnNode```.
+- Vypněte statistiku návštěvnosti (pokud ji nepotřebujete) nastavením `statMode=none`.
+- Stránce s textem emailu zapněte možnost Cachovat, aby se obsah nemusel pokaždé číst z databáze.

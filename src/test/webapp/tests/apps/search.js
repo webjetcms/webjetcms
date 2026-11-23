@@ -66,7 +66,7 @@ Scenario('testovanie app - Vyhladavanie', async ({ I, DTE, Apps, Document }) => 
         sForm: 'form'
     };
 
-    I.click(locate('.btn-vue-jstree-item-remove').first());
+    I.click(locate('.btn-webjet-jstree-item-remove').first());
     DTE.fillField('perpage', changedParams.perpage);
     DTE.clickSwitch('checkDuplicity_0');
     DTE.selectOption('orderType','Názvu');

@@ -56,7 +56,7 @@ public class ProxyDB
 		{
 			if (instance == null || forceRefresh)
 			{
-				instance = new ProxyDB();
+				instance = new ProxyDB(forceRefresh);
 			}
 			return instance;
 		}
@@ -139,12 +139,12 @@ public class ProxyDB
 	/**
 	 * Private konstruktor
 	 */
-	private ProxyDB()
+	private ProxyDB(boolean force_refresh)
 	{
 		Logger.debug(ProxyDB.class, "ProxyDB.constructor");
 		reloadData();
 
-		ClusterDB.addRefresh(ProxyDB.class);
+		if (force_refresh) ClusterDB.addRefresh(ProxyDB.class);
 	}
 
 	private static void fillProxyBean(ProxyBean proxy, ResultSet rs) throws SQLException

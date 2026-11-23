@@ -2,11 +2,14 @@ package sk.iway.demo8;
 
 import org.springframework.ui.Model;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
@@ -146,12 +149,20 @@ public class DemoComponent extends WebjetComponentAbstract {
 	private String colorAlpha = "#FF0000";
 
 	@DefaultHandler
-	public String render(Model model)
+	public String render(Model model, HttpServletRequest request)
 	{
 		Logger.debug(this.getClass(), "groupDetails="+groupDetails+" docDetails="+docDetails+" groupDetailsList="+groupDetailsList+" docDetailsList="+docDetailsList+" dirSimple="+dirSimple+" date="+date);
 
         model.addAttribute("test", "Toto je test");
 		model.addAttribute("demoComponent", this);
+		model.addAttribute("domainName", DocDB.getDomain(request));
+		model.addAttribute("path", request.getRequestURI());
+		model.addAttribute("origPath", PathFilter.getOrigPath(request));
+
+		if ("npe".equals(request.getParameter("act"))) {
+			String npe = null;
+			npe.toString(); // This will throw a NullPointerException for testing purposes
+		}
 
 		return "/components/aceintegration/demo-component/view";
 	}

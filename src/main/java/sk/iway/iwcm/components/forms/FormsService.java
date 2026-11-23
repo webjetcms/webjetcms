@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.springframework.beans.BeanWrapperImpl;
@@ -38,6 +39,8 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
+import sk.iway.iwcm.components.forms.archive.FormsArchiveRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -60,8 +63,20 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Provides form administration, submission searching, access control, export, and rendering operations.
+ *
+ * The service supports repository implementations for both form definitions and submitted records while
+ * consistently restricting data to the current domain and the pages editable by the current user.
+ *
+ * @param <R> repository type used to access form entities
+ * @param <E> form entity type handled by the repository
+ */
 public class FormsService<R extends FormsRepositoryInterface<E>, E extends FormsEntityBasic> {
 
+    /**
+     * Identifies the supported form layouts and their persisted values.
+     */
     public enum FORM_TYPE {
         SIMPLE("simple"),
         MULTISTEP("multistep"),
@@ -96,6 +111,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
 
+    /**
+     * Resolves the selected form name when the request displays form submission details.
+     *
+     * @param request  request containing the detail flag and form name
+     * @return selected form name, or {@code null} when detail mode is disabled
+     */
     public String getFormName(HttpServletRequest request) {
         if(Tools.getBooleanValue(request.getParameter("detail"), false))
             return Tools.getStringValue(request.getParameter("formName"), null);
@@ -111,6 +132,17 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         this.formItemsRepository = formItemsRepository;
     }
 
+    /**
+     * Returns either form definitions or submissions of the form selected by the request.
+     *
+     * Submission exports also update the last-export date of the returned records.
+     *
+     * @param page  page supplied by the DataTable request pipeline
+     * @param pageable  requested pagination and sorting
+     * @param request  request that selects detail and export modes
+     * @param user  user whose editable pages determine form access
+     * @return page of form definitions or submissions, or {@code null} when access is denied
+     */
     public Page<E> getAllItems(Page<E> page, Pageable pageable, HttpServletRequest request, Identity user) {
         String formName = getFormName(request);
 
@@ -126,6 +158,18 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return page;
     }
 
+    /**
+     * Searches submissions of the form selected by the request using DataTable filter parameters.
+     *
+     * Request parameters are merged into the supplied parameter map before the repository query is built.
+     *
+     * @param params  mutable map that receives request parameters used for filtering
+     * @param pageable  requested pagination and sorting
+     * @param search  search entity supplied by the DataTable pipeline
+     * @param request  request that selects the form and export mode
+     * @param user  user whose editable pages determine form access
+     * @return matching submissions, or {@code null} when no form is selected or access is denied
+     */
     public Page<E> findByColumns(Map<String, String> params, Pageable pageable, E search, HttpServletRequest request, Identity user) {
         String formName = getFormName(request);
         if(formName != null) {
@@ -144,6 +188,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return null;
     }
 
+    /**
+     * Enriches a form definition with its submission count and latest submission metadata.
+     *
+     * @param entity  form definition to enrich
+     * @param domainId  domain containing the form and its submissions
+     */
     public void prepareForm(E entity, int domainId) {
         entity.setCount(formsRepository.countAllByFormNameAndDomainId(entity.getFormName(), domainId) - 1);
         E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(entity.getFormName(), domainId);
@@ -154,9 +204,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vrati zoznam vsetkych formularov, vyfiltruje len take, na ktore ma pouzivatel prava
-     * @param user
-     * @return
+     * Returns distinct form definitions that the user is allowed to manage.
+     *
+     * @param user  user whose editable pages and groups determine form access
+     * @return accessible form definitions in the current domain
      */
     public List<E> getFormsList(UserDetails user) {
         Integer domainId = CloudToolsForCore.getDomainId();
@@ -167,9 +218,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Zrusi zo zoznamu duplicitne nazvy, tie su tam len ked je zle formular v DB vyplneny (typicky programovo)
-     * @param allForms
-     * @return
+     * Removes duplicate form definitions that share the same name.
+     *
+     * Duplicate management records can exist when forms were populated incorrectly by application code.
+     *
+     * @param allForms  form definitions to filter
+     * @return form definitions containing only the first occurrence of each name
      */
     private List<E> filterDistinct(List<E> allForms) {
         List<E> ret = new ArrayList<>();
@@ -186,10 +240,11 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-	 * Vyfiltruje formulare na zaklade prav pouzivatela na pristup k adresarom a strankam a docId formularu
-	 * @param user
-	 * @param allForms
-	 * @return
+	 * Filters forms by the user's permission to edit their associated page or directory.
+	 *
+	 * @param user  user whose editable pages and groups are evaluated
+	 * @param allForms  forms to filter
+	 * @return forms accessible to the user
 	 */
 	private List<E> filterFormsByUser(UserDetails user, List<E> allForms) {
 		List<E> ret = new ArrayList<>(allForms.size());
@@ -208,13 +263,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 		}
 
 		return ret;
-	}
+    }
 
     /**
-     * Overi, ci pouzivatel ma pravo na dany formular
-     * @param formName
-     * @param user
-     * @return
+     * Checks whether the user can manage a form through its associated page or directory.
+     *
+     * @param formName  name of the form to check in the current domain
+     * @param user  user whose editable pages and groups are evaluated
+     * @return {@code true} when the form is accessible to the user
      */
     public boolean isFormAccessible(String formName, UserDetails user) {
         Integer domainId = CloudToolsForCore.getDomainId();
@@ -227,18 +283,19 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 		DocDB docDB = DocDB.getInstance();
 
         E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(formName, domainId);
+		if (lastOne == null) return false;
 
         return isFormAccessible(lastOne, userEditableGroups, userEditablePages, docDB);
     }
 
     /**
-     * Overi, ci konkretny formular je dostupny pre pouzivatela
-     * @param form
-     * @param user
-     * @param userEditableGroups
-     * @param userEditablePages
-     * @param docDB
-     * @return
+     * Checks whether a form belongs to a page or directory in the user's editable scope.
+     *
+     * @param form  form whose associated document is checked
+     * @param userEditableGroups  identifiers of editable directories, including expanded child directories
+     * @param userEditablePages  identifiers of individually editable pages
+     * @param docDB  document cache used to resolve the form's page
+     * @return {@code true} when the form is in an editable page or directory
      */
     private boolean isFormAccessible(E form, int[] userEditableGroups, int[] userEditablePages, DocDB docDB) {
         if (userEditableGroups!=null && userEditableGroups.length>0)
@@ -269,9 +326,15 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vrati zoznam stlpcov formulara
-     * @param formName
-     * @return
+     * Resolves submission columns and display labels for a form.
+     *
+     * Multistep form fields are labeled from their item definitions and associated steps. The result also
+     * includes the submission count, form type, and double opt-in state when available.
+     *
+     * @param formName  name of the form in the current domain
+     * @param user  user whose access to the form is verified
+     * @param prop  localization provider used to build field and step labels
+     * @return form column metadata, or {@code null} when access is denied
      */
     public FormColumns getColumnNames(String formName, UserDetails user, Prop prop) {
 
@@ -281,9 +344,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         E entity = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, CloudToolsForCore.getDomainId());
 
         Map<String, String> itemNames = new HashMap<>();
-        if(formItemsRepository!= null && entity instanceof FormsEntity fe) {
-            formColumns.setFormType(fe.getFormType());
-            if(FORM_TYPE.MULTISTEP.value.equals(fe.getFormType())) {
+        if(formItemsRepository != null) {
+            formColumns.setFormType(entity.getFormType());
+            if(entity instanceof FormsEntity && FORM_TYPE.MULTISTEP.value.equals(entity.getFormType())) {
 
                 int index = 1;
                 Map<Long, String> stepNames = new HashMap<>();
@@ -292,9 +355,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     index++;
                 }
 
-                for(FormItemEntity fie : formItemsRepository.findAllByFormNameAndDomainId(fe.getFormName(), fe.getDomainId())) {
+                for(FormItemEntity fie : formItemsRepository.findAllByFormNameAndDomainId(entity.getFormName(), entity.getDomainId())) {
                     StringBuilder itemName = new StringBuilder(MultistepFormsService.getFieldName(fie, prop));
-                    if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId().longValue())).append(")");
+                    if(stepNames != null && stepNames.size() > 1) itemName.append(" (").append(stepNames.get(fie.getStepId())).append(")");
                     itemNames.put(fie.getItemFormId(), itemName.toString());
                 }
             }
@@ -337,10 +400,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vrati zaznamy v databaze pre dany formular (zaznamy formularu)
-     * @param formName
-     * @param pageable
-     * @return
+     * Returns submitted records for a form and parses their serialized data columns.
+     *
+     * @param formName  name of the form in the current domain
+     * @param user  user whose access to the form is verified
+     * @param pageable  requested pagination and sorting
+     * @return page of submitted records, or {@code null} when access is denied
      */
     Page<E> getFormsData(String formName, UserDetails user, Pageable pageable) {
 
@@ -352,12 +417,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vyhlada (serverovo) v udajoch formularu (jednotlive zaznamy formularu)
-     * @param formName
-     * @param user
-     * @param params
-     * @param pageable
-     * @return
+     * Searches submitted form records using server-side DataTable filters.
+     *
+     * @param formName  name of the form in the current domain
+     * @param user  user whose access to the form is verified
+     * @param params  filter parameters from the DataTable request
+     * @param pageable  requested pagination and sorting
+     * @return matching submitted records, or {@code null} when access is denied
      */
     public Page<E> findInDataByColumns(String formName, UserDetails user, Map<String, String> params, Pageable pageable) {
 
@@ -377,6 +443,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return filteredForms;
     }
 
+    /**
+     * Builds database predicates for form identity, domain, submission state, and supported column filters.
+     *
+     * @param formName  name of the form whose submissions are searched
+     * @param domainId  domain containing the form submissions
+     * @param params  DataTable search parameters to convert into predicates
+     * @return specification representing the supported search conditions
+     */
     protected Specification<E> getSearchConditions(String formName, Integer domainId, Map<String, String> params) {
 		return (Specification<E>) (root, query, builder) -> {
 			final List<Predicate> predicates = new ArrayList<>();
@@ -392,7 +466,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     if (Tools.isNotEmpty(value) && "false".equals(value)==false) {
                         predicates.add(builder.isNull(root.get(value)));
                     }
-                } else if ("id".equals(key)) {
+                } else if ("id".equals(key) || "searchId".equals(key)) {
                         String value = DatatableRestControllerV2.getCleanValue(paramsEntry.getValue());
                         int[] ids = Tools.getTokensInt(value, ",");
                         List<Integer> idsList = Arrays.stream(ids).boxed().collect(Collectors.toList());
@@ -446,9 +520,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Skonvertuje retazec daterange:tsfrom-tsto na par Date objektov
-     * @param dateRange - par Date objektov, pre nezadany datum obsahuje null
-     * @return
+     * Parses a {@code daterange:from-to} value into optional lower and upper date bounds.
+     *
+     * @param dateRange  serialized date range; either bound may be omitted
+     * @return parsed date bounds with {@code null} for an omitted bound, or {@code null} for an empty value
      */
     protected Pair<Date, Date> parseDate(String dateRange) {
         Pair<Date, Date> dateRangePair = null;
@@ -470,6 +545,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return dateRangePair;
     }
 
+    /**
+     * Parses serialized submission data into named, decrypted values for DataTable rendering.
+     *
+     * Values originating from WYSIWYG fields are selectively unescaped, and stored HTML is removed from
+     * each returned entity after it has been used to determine the field rendering mode.
+     *
+     * @param formsEntities  submitted form records to transform in place
+     */
     private void parseDataColumnInFormsEntities(Page<E> formsEntities) {
         for (E entity : formsEntities) {
             String[] columns = (entity.getData().split("\\|", -1));
@@ -521,18 +604,20 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Ziska zaznam z repozitara podla ID
-     * @param id
-     * @return
+     * Finds a form record by identifier in the current domain.
+     *
+     * @param id  database identifier of the form record
+     * @return matching form record, or {@code null} when no record exists in the current domain
      */
     public E getById(long id) {
         return formsRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
     }
 
     /**
-     * Aktualizuje poznamku formulara
-     * @param note
-     * @param id
+     * Updates the note of an existing form record.
+     *
+     * @param note  note to store
+     * @param id  database identifier of the form record
      */
     public void updateNote(String note, long id) {
         E form = getById(id);
@@ -543,8 +628,9 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Nastavi datum posledneho exportu pre zadane formulare
-     * @param forms
+     * Sets the last-export date of the supplied form records using batched repository updates.
+     *
+     * @param forms  form records marked as exported
      */
     public void setExportDate(List<E> forms) {
         int counter = 0;
@@ -566,41 +652,32 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Zmaze zaznam z databazy
-     * + ak maze riadiaci zaznam (createDate je null) tak zmaze vsetky zaznamy
-     * @param entity
-     * @param id
-     * @return
+     * Deletes form data through the deletion service, preserving definitions still in use.
+     *
+     * @param entity submitted record retained for API compatibility; only the stored ID is used
+     * @param id database identifier of the record initiating the deletion
+     * @param formStepsRepository retained for API compatibility
+     * @param formItemsRepository retained for API compatibility
+     * @param formSettingsRepository retained for API compatibility
+     * @return whether the record was deleted in the current domain
      */
     public boolean deleteItem(E entity, long id, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
-        try {
-            String formName = entity.getFormName();
-            E entityDb = getById(id);
-
-            int domainId = CloudToolsForCore.getDomainId();
-            if (domainId != entityDb.getDomainId()) return false;
-
-            int count = formsRepository.countAllByFormNameAndDomainId(formName, domainId);
-
-            if (entityDb.getCreateDate()==null || count <= 2) {
-                //zmaz vsetky podla mena formu, ak su uz len 2 zaznamy (cize riadiaci + jeden form) zmaz tiez vsetko
-                formsRepository.deleteByFormNameAndDomainId(formName, domainId);
-                // Ak ma, zmaz aj steps/items (multistep forms)
-                formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
-                formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
-                // DO NOT DELETE maybe form is still in webpage and we just deleted form records
-                // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
-            } else {
-                formsRepository.deleteById(id);
-            }
-
-            return true;
-        } catch (Exception e) {
-            Logger.error(getClass(), e);
-        }
-        return false;
+        FormsDeletionService deletionService = Tools.getSpringBean("formsDeletionService", FormsDeletionService.class);
+        return deletionService.delete(id, formsRepository instanceof FormsArchiveRepository).deleted();
     }
 
+    /**
+     * Authorizes and streams a stored form attachment to the HTTP response.
+     *
+     * Access requires an authenticated administrator with form permissions and, when the owning form can
+     * be resolved, edit access to that form. Invalid sessions or permissions return a login redirect.
+     *
+     * @param name  stored attachment name, optionally prefixed by its form record ID
+     * @param request  current HTTP request used for authentication and access checks
+     * @param response  response receiving attachment headers and file content
+     * @return login redirect for an unauthorized request, otherwise {@code null}
+     * @throws IOException if the response stream cannot be opened or written
+     */
     public String downloadAttachment(String name, HttpServletRequest request, HttpServletResponse response) throws IOException {
         //Something wrong
         if(request == null || response == null) return null;
@@ -680,11 +757,155 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return null;
     }
 
+    /**
+     * Creates the placeholder map shared by form field and tooltip templates.
+     *
+     * @param item form item metadata
+     * @param id rendered field identifier
+     * @param label label rendered by the target template
+     * @param labelSanitized label without HTML markup
+     * @param value field value
+     * @param placeholder field placeholder
+     * @param classes CSS classes added to the field
+     * @param tooltip rendered tooltip HTML
+     * @return mutable placeholder map
+     */
+    public static Map<String, String> getFieldReplacementMap(
+        JSONObject item,
+        String id,
+        String label,
+        String labelSanitized,
+        String value,
+        String placeholder,
+        String classes,
+        String tooltip
+    ) {
+        String safeId = Tools.getStringValue(id, "");
+        String safeValue = Tools.getStringValue(value, "");
+        String itemId = item == null ? "" : item.optString("id", "");
+        String stepId = item == null ? "" : item.optString("stepId", "");
+        String tooltipId = ("info-tooltip-" + safeId + "-" + itemId).replaceAll("[^A-Za-z0-9_-]", "-");
+
+        Map<String, String> fields = new HashMap<>();
+        fields.put("tooltipId", tooltipId);
+        fields.put("id", safeId);
+        fields.put("itemId", itemId);
+        fields.put("stepId", stepId);
+        fields.put("label", Tools.getStringValue(label, ""));
+        fields.put("labelSanitized", Tools.getStringValue(labelSanitized, ""));
+        fields.put("hint", item == null ? "" : item.optString("hint", ""));
+        fields.put("value", safeValue);
+        fields.put("valueSanitized", DocTools.removeChars(safeValue, true));
+        fields.put("placeholder", ResponseUtils.filter(Jsoup.parse(Tools.getStringValue(placeholder, "")).text()));
+        fields.put("classes", Tools.getStringValue(classes, ""));
+        fields.put("tooltip", Tools.getStringValue(tooltip, ""));
+        return fields;
+    }
+
+    /**
+     * Creates the explicitly supported settings placeholders for HTML templates.
+     * Custom fields and email introduction/conclusion allow HTML; other settings are escaped
+     * for HTML text and quoted attributes. Entity HTML escaping is normalized once.
+     *
+     * @param formSettings settings for the current form and domain, or {@code null}
+     * @return mutable map with all supported settings keys, using empty strings for missing values
+     */
+    public static Map<String, String> getSettingsReplacementMap(FormSettingsEntity formSettings) {
+        FormSettingsEntity settings = formSettings == null ? new FormSettingsEntity() : formSettings;
+        Map<String, String> fields = new HashMap<>();
+        putSetting(fields, "fieldA", settings.getFieldA(), true);
+        putSetting(fields, "fieldB", settings.getFieldB(), true);
+        putSetting(fields, "fieldC", settings.getFieldC(), true);
+        putSetting(fields, "fieldD", settings.getFieldD(), true);
+        putSetting(fields, "fieldE", settings.getFieldE(), true);
+        putSetting(fields, "fieldF", settings.getFieldF(), true);
+        putSetting(fields, "emailTextBefore", settings.getEmailTextBefore(), true);
+        putSetting(fields, "emailTextAfter", settings.getEmailTextAfter(), true);
+        putSetting(fields, "formName", settings.getFormName(), false);
+        putSetting(fields, "recipients", settings.getRecipients(), false);
+        putSetting(fields, "ccEmails", settings.getCcEmails(), false);
+        putSetting(fields, "bccEmails", settings.getBccEmails(), false);
+        putSetting(fields, "replyTo", settings.getReplyTo(), false);
+        putSetting(fields, "subject", settings.getSubject(), false);
+        putSetting(fields, "forward", settings.getForward(), false);
+        putSetting(fields, "forwardFail", settings.getForwardFail(), false);
+        putSetting(fields, "maxSizeInKilobytes", settings.getMaxSizeInKilobytes(), false);
+        putSetting(fields, "maxCombinedSizeInKilobytes", settings.getMaxCombinedSizeInKilobytes(), false);
+        putSetting(fields, "allowedExtensions", settings.getAllowedExtensions(), false);
+        putSetting(fields, "pictureHeight", settings.getPictureHeight(), false);
+        putSetting(fields, "pictureWidth", settings.getPictureWidth(), false);
+        putSetting(fields, "formAddClasses", settings.getFormAddClasses(), false);
+        putSetting(fields, "rowView", settings.getRowView(), false);
+        return fields;
+    }
+
+    private static void putSetting(Map<String, String> fields, String name, Object value, boolean allowHtml) {
+        String text = value == null ? "" : StringEscapeUtils.unescapeHtml4(value.toString());
+        fields.put("settings." + name, allowHtml ? text : ResponseUtils.filter(text));
+    }
+
+    /**
+     * Replaces form placeholders in one pass without interpreting placeholders contained in replacement values.
+     *
+     * @param html template containing placeholders in the {@code ${name}} format
+     * @param fields placeholder values
+     * @return template with known placeholders replaced
+     */
+    public static String replaceFields(String html, Map<String, String> fields) {
+        StringSubstitutor substitutor = new StringSubstitutor(fields);
+        substitutor.setDisableSubstitutionInValues(true);
+        substitutor.setValueDelimiterMatcher(null);
+        substitutor.setEscapeChar('\0');
+        return substitutor.replace(Tools.getStringValue(html, ""));
+    }
+
+    /**
+     * Renders a form field template by replacing form, item, label, value, validation, and iterable placeholders.
+     *
+     * Selected item metadata is filtered before being inserted into HTML, optional first-use headings are applied,
+     * and user-specific expressions are resolved in the completed fragment.
+     *
+     * @param html  HTML template containing supported placeholders
+     * @param formName  form name inserted into form-related placeholders
+     * @param recipients  recipient value inserted into the template
+     * @param item  form item metadata, or {@code null} for a template without item placeholders
+     * @param requiredLabelAdd  marker appended to required labels and placeholders
+     * @param isEmailRender  whether the fragment is rendered for email rather than an interactive form
+     * @param rowView  whether non-closing fragments are wrapped in a row column
+     * @param firstTimeHeadingSet  mutable set used to prevent repeated first-use headings
+     * @param prop  localization provider for tooltip, iterable, and heading templates
+     * @param request  request used to resolve user-specific expressions
+     * @return rendered HTML fragment
+     */
     public static final String replaceFields(String html, String formName, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
     {
-        html = Tools.replace(Tools.getStringValue(html, ""), "${formname}", Tools.getStringValue(formName, ""));
-        html = Tools.replace(html, "${savedb}", Tools.getStringValue(formName, ""));
-        html = Tools.replace(html, "${recipients}", Tools.getStringValue(recipients, ""));
+        return replaceFields(html, formName, null, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
+    }
+
+    /**
+     * Renders a field or form wrapper with the settings already loaded by the caller.
+     *
+     * @param html source HTML template
+     * @param formName form identifier used by the legacy placeholders
+     * @param formSettings current domain's form settings, or {@code null}
+     * @param recipients legacy recipient placeholder value
+     * @param item item metadata, or {@code null} for wrappers
+     * @param requiredLabelAdd required-field label suffix
+     * @param isEmailRender whether to omit interactive tooltips
+     * @param rowView whether to wrap the item in a column
+     * @param firstTimeHeadingSet headings already rendered in this form
+     * @param prop localization provider
+     * @param request current request used for user expressions
+     * @return rendered HTML without recursively expanding replacement values
+     */
+    public static String replaceFields(String html, String formName, FormSettingsEntity formSettings, String recipients, JSONObject item, String requiredLabelAdd, boolean isEmailRender, boolean rowView, Set<String> firstTimeHeadingSet, Prop prop, HttpServletRequest request)
+    {
+        html = Tools.getStringValue(html, "");
+        Map<String, String> formFields = getSettingsReplacementMap(formSettings);
+        formFields.put("formname", Tools.getStringValue(formName, ""));
+        formFields.put("savedb", Tools.getStringValue(formName, ""));
+        formFields.put("recipients", Tools.getStringValue(recipients, ""));
+        requiredLabelAdd = replaceFields(requiredLabelAdd, formFields);
 
         if (item != null) {
             try {
@@ -719,16 +940,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
 
-                String tooltip = "";
+                String tooltipLabel = "";
                 if (item.has("tooltip")) {
-                    tooltip = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("tooltip", ""), ""));
-                    if (Tools.isNotEmpty(tooltip)) {
-                        tooltip = ResponseUtils.filter(tooltip);
-                        tooltip = " " + Tools.replace(prop.getText("components.formsimple.tooltipCode"), "${label}", tooltip);
-                    }
+                    tooltipLabel = StringEscapeUtils.unescapeHtml4(Tools.getStringValue(item.optString("tooltip", ""), ""));
+                    if (Tools.isNotEmpty(tooltipLabel)) tooltipLabel = ResponseUtils.filter(tooltipLabel);
                 }
 
-                String labelSanitized = Jsoup.parse(label).text();
+                String labelSanitized = ResponseUtils.filter(Jsoup.parse(label).text());
 
                 // Prefer explicit itemFormId; fallback keeps backward compatibility.
                 String id = Tools.getStringValue(item.optString("itemFormId", ""), "");
@@ -744,8 +962,6 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     }
                 }
 
-                if (isEmailRender) tooltip = "";
-
                 //skus zobrazit nadpis nad pole ak je definovany cez components.formsimple.firstTime.xxx
                 String firstTimeHeadingKey = "components.formsimple.firstTimeHeading." + fieldType;
                 String firstTimeHeading = prop.getText(firstTimeHeadingKey, false);
@@ -754,59 +970,69 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     html = firstTimeHeading + html;
                 }
 
-                //iterable - pre skupinu poli
-                int iterableSize = 0;
+                // Prepare nested templates before expanding any replacement values.
+                String iterableCode = null;
+                String[] values = null;
                 if (html.contains("${iterable}") && Tools.isNotEmpty(value)) {
-                    StringBuilder iterable = new StringBuilder();
                     String iterableKey = "components.formsimple.iterable." + fieldType;
-                    String iterableCode = prop.getText(iterableKey);
-                    if (Tools.isNotEmpty(iterableCode) && iterableCode.equals(iterableKey) == false) {
-                        String[] values = parseIterableValues(value);
-
-                        int counter = 0;
-                        iterableSize = values.length;
-                        for (String token : values) {
-                            String valueLabel = token;
-                            String code = iterableCode;
-
-                            int separator = token.indexOf(":");
-                            if (code.contains("${value-label}") && separator > 0) {
-                                valueLabel = token.substring(0, separator);
-                                token = token.substring(separator + 1);
-                            }
-
-                            code = Tools.replace(code, "${value}", token);
-                            code = Tools.replace(code, "${value-label}", valueLabel);
-                            code = Tools.replace(code, "${counter}", String.valueOf(counter));
-
-                            iterable.append(code).append("\n");
-                            counter++;
-                        }
+                    iterableCode = prop.getText(iterableKey);
+                    values = new String[0];
+                    if (Tools.isNotEmpty(iterableCode) && !iterableCode.equals(iterableKey)) {
+                        values = parseIterableValues(removeUnsupportedEmptyOption(value, fieldType, prop));
                     }
-                    html = Tools.replace(html, "${iterable}", iterable.toString());
                 }
-
-                html = Tools.replace(html, "${id}", id);
-                html = Tools.replace(html, "${label}", isEmailRender && label.trim().endsWith(":") == false ? label + ":" : label);
-                html = Tools.replace(html, "${labelSanitized}", labelSanitized);
-                html = Tools.replace(html, "${value}", value);
-                html = Tools.replace(html, "${valueSanitized}", DocTools.removeChars(value, true));
-                html = Tools.replace(html, "${placeholder}", placeholder);
-                html = Tools.replace(html, "${classes}", classes);
-                html = Tools.replace(html, "${tooltip}", tooltip);
 
                 StringBuilder csError = new StringBuilder();
                 csError.append("<div class=\"help-block cs-error cs-error-").append(id);
-                if (iterableSize > 0) {
-                    for (int counter = 0; counter < iterableSize; counter++) {
+                if (values != null) {
+                    for (int counter = 0; counter < values.length; counter++) {
                         csError.append(" cs-error-").append(id).append("-").append(counter);
                     }
                 }
                 csError.append("\"></div>");
-                html = Tools.replace(html, "${cs-error}", csError.toString());
+
+                String tooltip = "";
+                Map<String, String> replacementFields = getFieldReplacementMap(item, id, label, labelSanitized, value, placeholder, classes, tooltip);
+                replacementFields.putAll(formFields);
+                replacementFields.put("cs-error", csError.toString());
+                if (isEmailRender == false && Tools.isNotEmpty(tooltipLabel)) {
+                    Map<String, String> tooltipFields = new HashMap<>(replacementFields);
+                    tooltipFields.put("label", tooltipLabel);
+                    tooltip = " " + replaceFields(prop.getText("components.formsimple.tooltipCode"), tooltipFields);
+                    replacementFields.put("tooltip", tooltip);
+                }
+
+                if (values != null) {
+                    StringBuilder iterable = new StringBuilder();
+                    int counter = 0;
+                    for (String token : values) {
+                        String valueLabel = token;
+                        int separator = token.indexOf(":");
+                        if (":".equals(token) && isEnumerationOptions(value) == false) {
+                            token = "";
+                            valueLabel = "";
+                            if ("radiogroup".equals(fieldType)) {
+                                valueLabel = ResponseUtils.filter(prop.getText("components.formsimple.emptyOptionLabel.radiogroup"));
+                            }
+                        } else if (iterableCode.contains("${value-label}") && separator >= 0) {
+                            valueLabel = token.substring(0, separator);
+                            token = token.substring(separator + 1);
+                        }
+                        Map<String, String> iterableFields = new HashMap<>(replacementFields);
+                        iterableFields.put("value", token);
+                        iterableFields.put("value-label", valueLabel);
+                        iterableFields.put("counter", String.valueOf(counter));
+                        iterable.append(replaceFields(iterableCode, iterableFields)).append("\n");
+                        counter++;
+                    }
+                    replacementFields.put("iterable", iterable.toString());
+                }
+                html = replaceFields(html, replacementFields);
             } catch (Exception ex) {
                 sk.iway.iwcm.Logger.error(ex);
             }
+       } else {
+           html = replaceFields(html, formFields);
        }
 
        if (rowView && html.startsWith("</div") == false) {
@@ -817,7 +1043,44 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
     }
 
-    private static String[] parseIterableValues(String value) {
+    /**
+     * Removes the manual empty-option sentinel when the field type hides its editor control.
+     * Enumeration configurations and all other option tokens are preserved verbatim.
+     * Separators are retained so a single remaining option keeps its original parsing mode.
+     *
+     * @param value serialized options
+     * @param fieldType configured form field type
+     * @param prop localization provider containing the field visibility configuration
+     * @return options without unsupported empty entries
+     */
+    public static String removeUnsupportedEmptyOption(String value, String fieldType, Prop prop) {
+        if (Tools.isEmpty(value) || isEnumerationOptions(value)) return value;
+        String hiddenFields = prop.getText("components.formsimple.hide." + fieldType);
+        if (Arrays.asList(Tools.getTokens(hiddenFields, ",", true)).contains("emptyOption") == false) return value;
+
+        String delimiter = " ";
+        if (value.contains("|")) delimiter = "|";
+        else if (value.contains(",")) delimiter = ",";
+        return Arrays.stream(value.split(java.util.regex.Pattern.quote(delimiter), -1))
+            .map(token -> ":".equals(token.trim()) ? "" : token)
+            .collect(Collectors.joining(delimiter));
+    }
+
+    private static boolean isEnumerationOptions(String value) {
+        String normalized = Tools.getStringValue(value, "").trim();
+        if (normalized.startsWith("{") && normalized.endsWith("}")) {
+            normalized = normalized.substring(1, normalized.length() - 1).trim();
+        }
+        return normalized.startsWith("enumeration-options");
+    }
+
+    /**
+     * Resolves configured options, including options backed by an enumeration.
+     *
+     * @param value  serialized options
+     * @return resolved option tokens, or an empty array for an empty or invalid enumeration configuration
+     */
+    public static String[] parseIterableValues(String value) {
         String normalized = Tools.getStringValue(value, "").trim();
         if (Tools.isEmpty(normalized)) return new String[0];
 
@@ -831,6 +1094,13 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return Tools.getTokens(normalized, delimiter, true);
     }
 
+    /**
+     * Resolves an {@code enumeration-options} configuration into label and value pairs.
+     *
+     * @param value  serialized iterable configuration
+     * @return resolved {@code label:value} entries, an empty array for an invalid enumeration configuration,
+     *         or {@code null} when the value is not an enumeration configuration
+     */
     private static String[] resolveEnumerationIterableValues(String value) {
         String normalized = value;
         if (normalized.startsWith("{") && normalized.endsWith("}")) {

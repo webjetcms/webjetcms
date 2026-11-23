@@ -36,6 +36,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
 
 @Entity
@@ -44,6 +46,12 @@ import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_RESERVATION_OBJECT)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "chooseDays", title = "components.reservation.admin_addObject.chooseDays"),
+    @DataTableTab(id = "specialPrice", title = "components.reservation.reservation_object_reservation_price.extra_price")
+})
 public class ReservationObjectEntity implements Serializable {
 
     @Id

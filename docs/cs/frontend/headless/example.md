@@ -1,6 +1,6 @@
 # Ukázková headless aplikace (Astro)
 
-V adresáři [docs/examples/headless-astro/](../../../examples/headless-astro/) se nachází kompletní ukázková aplikace postavená na frameworku **[Astro 7](https://astro.build) **, která demonstruje headless integraci s WebJET CMS.
+V adresáři [docs/examples/headless-astro/](https://github.com/webjetcms/webjetcms/tree/main/docs/examples/headless-astro) se nachází kompletní ukázková aplikace postavená na frameworku **[Astro 7](https://astro.build) **, která demonstruje.
 
 ![](home.png)
 

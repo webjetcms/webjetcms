@@ -418,6 +418,7 @@ public class RedirectCleaningService {
     }
 
     /** Internal mutable analysis representation of one database redirect. */
+    @SuppressWarnings("unused")
     private static class Candidate {
         private final Long id;
         private final String domain;

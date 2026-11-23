@@ -107,12 +107,17 @@ public class ConfDB
 		return conf;
 	}
 
+	/** Whether the configured key prefixes leave this user unrestricted. */
+	public static boolean canViewAllKeys(Identity user, String configEnabledKeys) {
+		return Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables");
+	}
+
 	public static List<ConfDetails> filterConfDetailsByPerms(Identity user, List<ConfDetails> confList)
 	{
 		//odfiltruj zoznam podla prav
 		String configEnabledKeys = Constants.getStringExecuteMacro("configEnabledKeys");
 
-		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables")) return confList;
+		if (canViewAllKeys(user, configEnabledKeys)) return confList;
 
 		List<ConfDetails> filtered = new ArrayList<>();
 		String[] enabledKeys = Tools.getTokens(configEnabledKeys, ",");
@@ -132,7 +137,7 @@ public class ConfDB
 		//odfiltruj zoznam podla prav
 		String configEnabledKeys = Constants.getStringExecuteMacro("configEnabledKeys");
 
-		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables")) return confList;
+		if (canViewAllKeys(user, configEnabledKeys)) return confList;
 
 		List<String> filtered = new ArrayList<>();
 		String[] enabledKeys = Tools.getTokens(configEnabledKeys, ",");
@@ -151,7 +156,7 @@ public class ConfDB
 		//odfiltruj zoznam podla prav
 		String configEnabledKeys = Constants.getStringExecuteMacro("configEnabledKeys");
 
-		if (Tools.isEmpty(configEnabledKeys) || user.isEnabledItem("conf.show_all_variables")) return true;
+		if (canViewAllKeys(user, configEnabledKeys)) return true;
 
 		String[] enabledKeys = Tools.getTokens(configEnabledKeys, ",");
 		return isKeyVisibleToUser(user, enabledKeys, key);
@@ -194,12 +199,7 @@ public class ConfDB
 				db_conn = null;
 				Adminlog.add(Adminlog.TYPE_CONF_DELETE, "Zmazana konfiguracna premenna: "+name, -1, -1);
 
-				if ("statLanguageDomain".equals(name)) StatDB.setLanguageDomainTable(null);
-				if (name.startsWith("multiDomainAlias:")) MultiDomainFilter.clearDomainAlias();
-				if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
-
-				String oldValue = ConfDB.getOldValue(name);
-				Constants.setString(name, oldValue);
+				restoreDefaultValue(name);
 
 				//if (update != 0)
 				return true;
@@ -342,38 +342,87 @@ public class ConfDB
 		return ret;
 	}
 
+	/**
+	 * Applies a configuration value to the current node without persisting it or refreshing other cluster nodes.
+	 *
+	 * @param name configuration variable name
+	 * @param value runtime value
+	 */
+	public static void setRuntimeValue(String name, String value)
+	{
+		setConstantValueImpl(name, value);
+	}
+
+	/**
+	 * Converts a stored configuration value to the representation used on the current node.
+	 *
+	 * @param name configuration variable name
+	 * @param value stored configuration value
+	 * @return normalized runtime value
+	 */
+	public static String normalizeRuntimeValue(String name, String value)
+	{
+		if (value == null) return null;
+
+		String normalizedValue = tryDecrypt(value);
+		if ("linkType".equals(name))
+		{
+			boolean isHtml = "html".equalsIgnoreCase(normalizedValue) || String.valueOf(Constants.LINK_TYPE_HTML).equals(normalizedValue);
+			return String.valueOf(isHtml ? Constants.LINK_TYPE_HTML : Constants.LINK_TYPE_DOCID);
+		}
+
+		return normalizedValue;
+	}
+
 	private static void setConstantValueImpl(String name, String valueParam)
 	{
 		if (valueParam == null) return;
-		String value = tryDecrypt(valueParam);
+		String value = normalizeRuntimeValue(name, valueParam);
 
 		if ("linkType".equals(name))
 		{
-			if ("html".equalsIgnoreCase(value))
-			{
-				Constants.setInt(name, Constants.LINK_TYPE_HTML);
-			}
-			else
-			{
-				Constants.setInt(name, Constants.LINK_TYPE_DOCID);
-			}
+			Constants.setInt(name, Integer.parseInt(value));
 		}
 		else
 		{
-			if ("statLanguageDomain".equals(name)) StatDB.setLanguageDomainTable(null);
-			else if (name.startsWith("multiDomainAlias:")) MultiDomainFilter.clearDomainAlias();
-			else if ("logLevel".equals(name)) Logger.setWJLogLevel(value);
-			else if ("logLevels".equals(name)) Logger.setWJLogLevels(Logger.getLogLevelsMap(value));
-			else if ("cacheStaticContentSeconds".equals(name) || "cacheStaticContentSuffixes".equals(name)) PathFilter.resetCacheStaticContentSeconds();
-			else if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
-			else if ("pathFilterBlockedPaths".equals(name)) PathFilter.resetBlockedPaths();
-			else if ("constantsAliasSearch".equals(name)) Constants.setConstantsAliasSearch("true".equals(value));
-			else if ("multiDomainFolders".equals(name)) MultiDomainFilter.clearDomainFolders();
-			else if ("xssHtmlAllowedFields".equals(name)) DB.resetHtmlAllowedFields();
-			else if ("ninjaNbspReplaceRegex".equals(name)) Ninja.resetNbspReplaceRegex();
-			else if ("thumbServletAllowedSizes".equals(name)) ThumbServlet.cleanAllowedSizesCache();
+			applyConstantValueSideEffects(name, value);
 			Constants.setString(name, value);
 		}
+	}
+
+	private static void applyConstantValueSideEffects(String name, String value)
+	{
+		if ("statLanguageDomain".equals(name)) StatDB.setLanguageDomainTable(null);
+		else if (name.startsWith("multiDomainAlias:")) MultiDomainFilter.clearDomainAlias();
+		else if ("logLevel".equals(name)) Logger.setWJLogLevel(value);
+		else if ("logLevels".equals(name)) Logger.setWJLogLevels(Logger.getLogLevelsMap(value));
+		else if ("cacheStaticContentSeconds".equals(name) || "cacheStaticContentSuffixes".equals(name)) PathFilter.resetCacheStaticContentSeconds();
+		else if ("responseHeaders".equals(name)) PathFilter.resetResponseHeaders();
+		else if ("pathFilterBlockedPaths".equals(name)) PathFilter.resetBlockedPaths();
+		else if ("constantsAliasSearch".equals(name)) Constants.setConstantsAliasSearch("true".equals(value));
+		else if ("multiDomainFolders".equals(name)) MultiDomainFilter.clearDomainFolders();
+		else if ("xssHtmlAllowedFields".equals(name)) DB.resetHtmlAllowedFields();
+		else if ("ninjaNbspReplaceRegex".equals(name)) Ninja.resetNbspReplaceRegex();
+		else if ("thumbServletAllowedSizes".equals(name)) ThumbServlet.cleanAllowedSizesCache();
+	}
+
+	private static void restoreDefaultValue(String name)
+	{
+		List<ConfDetails> constantsData = Constants.getAllValues();
+		if (constantsData != null)
+		{
+			for (ConfDetails conf : constantsData)
+			{
+				if (conf != null && name.equals(conf.getName()) && conf.getValue() != null)
+				{
+					setConstantValueImpl(name, conf.getValue());
+					return;
+				}
+			}
+		}
+
+		applyConstantValueSideEffects(name, "");
+		Constants.deleteConstant(name);
 	}
 
 	/**
@@ -539,7 +588,15 @@ public class ConfDB
 			if (i != -1) url = url.substring(i+1);
 
 			i = url.lastIndexOf('.');
-			if (i != -1) url = url.substring(0, i);
+			if (i != -1)
+			{
+				String extension = url.substring(i + 1);
+				if ("jsp".equalsIgnoreCase(extension) || "jspx".equalsIgnoreCase(extension) || "do".equalsIgnoreCase(extension)
+					|| "html".equalsIgnoreCase(extension) || "htm".equalsIgnoreCase(extension))
+				{
+					url = url.substring(0, i);
+				}
+			}
 
 			if ("banner_system".equals(url)) url = "banner";
 			else if ("forms".equals(url)) url = "form";
@@ -551,7 +608,7 @@ public class ConfDB
 
 			for (ConfDetails conf : Constants.getAllValues())
 			{
-				if (conf.getModules()!=null && (conf.getModules().indexOf(url)==0 || conf.getModules().indexOf(";"+url)!=-1)) list.add(conf);
+				if (ConfigurationModulePath.matchesLegacyModule(conf.getModules(), url)) list.add(conf);
 			}
 		}
 		catch (Exception e)
@@ -599,6 +656,12 @@ public class ConfDB
 			if (count > 0) {
 				//ak je v DB ale hodnota je null tak ju nastavime na prazdny retazec
 				value = "";
+			}
+			else
+			{
+				// The configuration override was deleted on another cluster node, restore the default value.
+				restoreDefaultValue(name);
+				return;
 			}
 		 }
 		 setConstantValueImpl(name, value);

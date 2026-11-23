@@ -52,10 +52,12 @@ function m_click(dest)
 
 function m_click_help()
 {
-   var lng = "sk";
+   var lng = "<%=sk.iway.iwcm.admin.DocumentationTools.normalizeLanguage(sk.iway.iwcm.PageLng.getUserLng(request))%>";
    if (typeof window.userLng != "undefined" && window.userLng != null && window.userLng != "") lng = window.userLng;
-   var url = "http://docs.webjetcms.sk/latest/"+lng;
-   popWindow=window.open(url,"_blank");
+   if (lng === "cz") lng = "cs";
+   if (lng !== "sk" && lng !== "cs" && lng !== "en") lng = "en";
+   var url = <%=org.json.JSONObject.quote(sk.iway.iwcm.admin.DocumentationTools.getBaseUrl())%> + "/latest/" + lng;
+   popWindow=window.open(url,"_blank","noopener");
 }
 
 var t_server = 1040376789

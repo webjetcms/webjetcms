@@ -26,6 +26,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @Entity
@@ -34,6 +36,12 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @EntityListenersType(Adminlog.TYPE_GALLERY)
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "description", title = "components.catalog.desc", selected = true),
+    @DataTableTab(id = "metadata", title = "gallery.admin.metadata.title"),
+    @DataTableTab(id = "photoeditor", title = "admin.editor.title", content = "<div id=\"photoEditorContainer\" class=\"dte-tab-autoheight\"></div>"),
+    @DataTableTab(id = "areaOfInterest", title = "components.gallery.areaOfInterest", content = "<div class=\"dte-tab-autoheight\" style=\"overflow:scroll;\"><webjet-image-area-selector></webjet-image-area-selector></div>")
+})
 public class GalleryEntity {
 
     public GalleryEntity() {

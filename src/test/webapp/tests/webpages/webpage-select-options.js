@@ -31,7 +31,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      // Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace
      I.say('Aktivovanie zobrazenia web stranky a vyhladavanie cez vyhladavace');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+     I.checkOption('#DTE_Field_searchable_0');
 
      // ------------------------ ZALOZKA SABLONA ------------------
      I.say('Select options na zalozke Sablona');
@@ -87,7 +87,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      I.clickCss('#pills-dt-datatableInit-menu-tab');
      I.waitForText('Poradie usporiadania', 10);
      I.waitForElement(locate('.filter-option-inner-inner').withText('Nezobraziť'), 10); // Zobrazenie odkazu neprihlasenemu uzivatelovi - Menu
-     I.dtEditorCancel();
+     DTE.cancel();
 });
 
 Scenario('Zmaz strukturu', ({ I }) => {

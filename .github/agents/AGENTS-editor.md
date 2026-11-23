@@ -1,93 +1,60 @@
-# AGENTS: editor package (`sk.iway.iwcm.editor`)
+# AGENTS: Page editor and approval
 
-<!-- Navigation (edit in AGENTS-NAV.md) -->
-<div align="right">[Root](AGENTS.md) | [System](AGENTS-system.md) | [DataTable](AGENTS-datatable.md) | [Doc](AGENTS-doc.md) | [Users](AGENTS-users.md) | [Components](AGENTS-components.md) | [Common](AGENTS-common.md) | [Utils](AGENTS-utils.md)</div>
+[Index](AGENTS.md) · [Working guide](CONTRIBUTING.md)
 
-## Scope
+The editor combines the admin DataTable, CKEditor, PageBuilder and request-scoped backend services. It owns page editing, approval, media associations and multigroup coordination. See [Doc](AGENTS-doc.md) for content models, public rendering and timed publication.
 
-- Backend services powering the WYSIWYG/editor admin: content approval, link/media checks, webpage CRUD, multi-group operations, notifications, appstore integration.
+All source paths are core-root-relative. In a customer project, verify the installed CMS version and existing extension points instead of copying current-core internals into the application.
 
-## What Belongs Here / Not Here
+## Request flow and source map
 
-- Put here: services and utilities strictly tied to rich-text page editing, approval workflow, link/media validation, editor-facing REST endpoints.
-- Not here: generic CRUD scaffolding (datatable), low-level path/domain helpers (common/utils), unrelated feature widgets (components).
-- If logic becomes page-neutral (usable by components) consider extraction to common.
+| Entry point | Role |
+|---|---|
+| `src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java` | `/admin/rest/web-pages`, guarded by `menuWebpages`; extends `WebpagesDatatable`. |
+| `src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java` | DataTable CRUD/actions, response metadata and notifications. Calls the facade for saves and deletion. |
+| `src/main/java/sk/iway/iwcm/editor/facade/EditorFacade.java` | Request-scoped entry point for `getDocForEditor(docId, historyId, groupId)` and `save(DocDetails)`. Coordinates editor fields, master/slave pages, attributes, media and template cache refreshes. |
+| `src/main/java/sk/iway/iwcm/editor/service/EditorService.java` | Request-scoped persistence/workflow implementation. Checks permissions, prepares URLs/content, saves documents/history and invokes approval. Its class documentation directs normal callers to `EditorFacade`. |
+| `src/main/java/sk/iway/iwcm/editor/service/WebpagesService.java` | Page list/detail preparation, filtering and the `DATA_NOT_LOADED` sentinel for content not loaded into list rows. |
+| `src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java` | `/admin/rest/groups`; folder editing, validation and approval/scheduling integration. |
+| `src/main/java/sk/iway/iwcm/editor/service/GroupsService.java` | Folder operations and System/Trash helpers. |
+| `src/main/java/sk/iway/iwcm/editor/service/MultigroupService.java` | Master/slave page mapping and synchronization across folders. |
+| `src/main/java/sk/iway/iwcm/editor/service/MediaService.java` | Page-to-media associations, temporary media for new pages and link updates; not the general thumbnail/image service. |
+| `src/main/java/sk/iway/iwcm/editor/service/LinkCheckService.java` | Link-check workflow; exposed by `src/main/java/sk/iway/iwcm/editor/rest/LinkCheckRestController.java`. |
 
-## Key Services (editor/service)
+Legacy entry points such as `src/main/java/sk/iway/iwcm/editor/SaveDocAction.java` and `src/main/java/sk/iway/iwcm/editor/EditorDB.java` remain in use. Inspect call sites before removing or bypassing one; a `.struts` route can also be handled by a modern Spring controller.
 
-- EditorService: Central operations on page entities (create/update/publish) coordinating approval & locking.
-- ApproveService: Approval workflow (status transitions, permissions checks, notification triggers).
-- WebpagesService: Higher-level facade around Groups/Docs for listing & filtering pages.
-- MediaService: File/media management (thumbnails, storage decisions) respecting domain & security.
-- GroupsService / MultigroupService: Hierarchical group structure logic & multi-assignment handling.
-- LinkCheckService: Validation of internal/external links within content.
-- NotifyService: Aggregates user-facing notifications (ties into ThreadBean notify in DataTables when invoked via admin UI).
+## Save, approval and publication
 
-## Supporting Layers
+1. Load an editable page through `EditorFacade.getDocForEditor(...)`. It handles history selection, new-page defaults and multigroup master resolution.
+2. Keep `DocEditorFields` consistent with `DocDetails`; the facade converts editor fields back to persistent fields before saving. Do not submit a list row containing `DATA_NOT_LOADED` as page HTML.
+3. The facade delegates to `EditorService.saveEditedDoc(...)`. The service validates access, normalizes content/URLs and decides whether the change can reach the public document or remains a history/work version.
+4. Approval is in `src/main/java/sk/iway/iwcm/editor/approve/ApproveService.java`. It loads folder approvers, supports approval levels and self-approval, and handles notifications/actions. It is not under `editor/service`.
+5. The facade then performs related updates and returns the saved editor representation. `WebpagesDatatable` propagates notification and reload information to the UI.
 
-- facade/: Simplified entry points for UI layer (thin wrappers around service complexity).
-- rest/: REST controllers exposing JSON endpoints (naming: *RestController, returns DataTableResponse or ApiResponse pattern for uniform error handling).
-- util/: Helper utilities (sanitization, diffing, content transforms) specific to editor domain.
+`editorFields.requestPublish`, page `available`, history `actual`/`publicable`, approval fields and publication dates have different meanings. Avoid treating them as a single status enum or toggling them to implement a save. Timed publication is handled by `src/main/java/sk/iway/iwcm/doc/DocPublishService.java`.
 
-## Core Patterns
+Folder approval and deletion also have workflows: `src/main/java/sk/iway/iwcm/editor/approve/GroupsApproveRestController.java`, `src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java` and `GroupSchedulerDto` use scheduled/pending folder data. Test page and folder deletion/recovery separately from ordinary updates.
 
-1. Permission & Identity
-   - UsersDB.getCurrentUser(request) is primary identity fetch; enforce admin/editor role checks early in service methods.
-2. Locking & Concurrency
-   - Editor locking integrates with system.datatable.editorlocking; always acquire lock before mutating content; release in finally block.
-3. Approval Workflow
-   - State transitions centralized in ApproveService; callers should not directly toggle status fields to keep audit consistent.
-4. Notifications
-   - Use NotifyService to queue messages; in DataTable context these surface via ThreadBean -> DatatableResponse.notify.
-5. Multi-Domain
-   - Always resolve current domain via CloudToolsForCore.getDomainName() for content-scoped operations (media paths, URL generation).
-6. i18n
-   - Prop.getInstance(request) for localized strings; expose language codes to frontend via LayoutService when needed.
-7. Error Handling
-   - Throw EditorException for user-displayable issues; allow generic exceptions to be logged then mapped to DataTableError.
-8. JSON / Serialization
-   - For complex rich-text operations rely on JsonTools.prepare4Json before embedding HTML in JSON payloads.
-9. Streaming / AI Integration
-   - When integrating AI-generated content, use structured result object (AiExecutionResult) with success/error/metrics to keep editor UI consistent.
+## Permissions, scope and notifications
 
-## Extension Points
+- A controller's `menuWebpages` check does not replace per-page checks. `EditorService.checkPermissions(...)` also evaluates page operations and `isPageEditable(...)`; folder operations use folder permissions. Preserve checks for the target folder when moving or copying content.
+- The facade, editor service and approval service hold request-specific user/state. Do not reuse them as static singletons or carry their mutable state between requests.
+- Editor locking is an advisory presence/notification mechanism in `src/main/java/sk/iway/iwcm/system/datatable/editorlocking/EditorLockingRestController.java` and `src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-wjfunctions.js`. It does not provide a transaction lock around `EditorFacade.save(...)`.
+- Follow existing `NotifyBean` handling and DataTable error responses. `src/main/java/sk/iway/iwcm/editor/service/NotifyService.java` is a small notification-list base class, not a global message queue.
+- For JSON payloads, use the existing Jackson DTO serialization. HTML content needs the appropriate content validation and output escaping; a JSON escaping helper is not an HTML sanitizer.
+- Page/group domain ownership comes from the content hierarchy. Derive URLs and destination permissions from the actual page/group, including when the administrator has selected another domain.
 
-- Add new services in editor/service with @Service annotation; expose via rest/ with clear URL prefix (/admin/rest/editor/*).
-- Introduce utilities under util/ for reusable transformations; keep pure/static where side-effects unnecessary.
-- To augment approval, subclass or wrap ApproveService; avoid scattering approval logic across unrelated services.
+## Frontend and extension points
 
-## Conventions
+- Page list/editor glue: `src/main/webapp/admin/v9/src/js/pages/web-pages-list/` and `src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug`.
+- CKEditor integration: `src/main/webapp/admin/v9/src/js/datatables-ckeditor.js`; the bundled CKEditor 4 distribution/configuration is in `src/main/webapp/admin/skins/webjet8/ckeditor/`.
+- PageBuilder: `src/main/webapp/admin/webpages/page-builder/`; read `docs/en/frontend/page-builder/blocks.md` and the `wj-page-builder` skill when editing blocks.
+- AppStore editor: `src/main/java/sk/iway/iwcm/editor/rest/ComponentsService.java`, `src/main/java/sk/iway/iwcm/editor/rest/ComponentListener.java` and `src/main/java/sk/iway/iwcm/editor/appstore/`. See [Components](AGENTS-components.md) for app authoring.
+- Save events: `EditorService` publishes `WebjetEvent<DocDetails>` for save/delete/recover phases; `src/main/java/sk/iway/iwcm/editor/rest/SaveGroupListener.java` shows a folder-save listener. `src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java` instead prepares the initial admin page model through `ThymeleafEvent`. Use the event contract matching the extension; subclassing `ApproveService` alone does not replace the injected service.
+- AI editor integration lives in `src/main/webapp/admin/v9/npm_packages/webjetdatatables/editor-ai.js` and `src/main/java/sk/iway/iwcm/components/ai/`. Its DTO/provider contract is separate from the page save workflow; see [Components](AGENTS-components.md).
 
-- Method names reflect action + domain (publishPage, approveRevision, checkLinks).
-- Keep service class responsibilities focused; if class exceeds ~500 LOC consider extracting helper.
-- Prefer constructor injection (@Autowired optional) to allow unit testing with mocks.
+## Verification starting points
 
-## Pitfalls
-
-- Skipping lock acquisition can cause silent overwrite in concurrent edits.
-- Direct entity field mutation bypassing ApproveService leads to inconsistent audit trail.
-- Forgetting domain context in media operations may leak files across tenants.
-
-## How To Add A New Editor Feature
-
-1. Define service method in appropriate service or create new one.
-2. Implement permission + domain checks at top.
-3. Reuse Tools/JsonTools for formatting & sanitization.
-4. Expose through REST controller returning DataTableResponse or ApiResponse.
-5. Update frontend to consume structured result; include error path tests.
-
-## Testing Tips
-
-- Unit test service logic with mock UsersDB / repository beans.
-- Integration test approval transitions: create draft -> submit -> approve -> publish.
-- Validate notification propagation: assert NotifyBean entries appear in REST response.
-
-## Related System Dependencies
-
-- DatatableRestControllerV2 for uniform CRUD scaffolding.
-- Constants / Prop for configuration and language.
-- CloudToolsForCore for domain scoping.
-
-## Update Process
-
-- Document new workflow steps here (add to Approval Workflow bullet) staying concise.
+- Backend examples: `src/test/java/sk/iway/iwcm/editor/service/EditorServiceTest.java`, `src/test/java/sk/iway/iwcm/editor/service/WebpagesUrlTest.java` and `src/test/java/sk/iway/iwcm/editor/approve/GroupsApproveRestControllerTest.java`.
+- Browser scenarios: `src/test/webapp/tests/webpages/` covers content, permissions, history, approval, publishing, media, multigroup and PageBuilder; `src/test/webapp/tests/admin/editor-locking.js` covers presence warnings.
+- For workflow changes, check restricted users, work-version save versus publish, approval, future publication and the public page after saving. Run only the relevant available scenarios using the project's established database and fixtures.

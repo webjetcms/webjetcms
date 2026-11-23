@@ -26,7 +26,7 @@ Performs a read-only code review of changes in the repository — either all com
 
 Based on the answer, use one of the two modes:
 
-When running branch-level review commands in this skill, resolve the comparison base as follows:
+Resolve the actual PR base first. In customer repositories without a PR, use their remote default branch or ask when the base is ambiguous. Do not assume `main` or a core hotfix branch. The following fallback applies only to the WebJET core repository:
 
 - Branches starting with `hotfix/` -> `origin/hotfix/2026.0-main`
 - All other branches -> `origin/main`
@@ -95,6 +95,16 @@ For each change, verify:
 - **Error handling**: Are exceptions caught at the right level? Are error messages meaningful?
 - **SQL/JPQL correctness**: Are queries correct? Are parameters properly bound (no injection risk)?
 
+#### HTTP session and Redis compatibility
+
+When changed code stores a session attribute or mutates an object read from session, trace the affected attribute's writes and subsequent reads. Include `setAttribute`, `Tools.sessionSetAttribute`, and application helpers.
+
+- **Serialization**: Check the complete object graph against the session codec, including nested collections and beans. With Java serialization, every reachable non-transient value must be serializable; adding `Serializable` only to the outer class is insufficient.
+- **Transient state**: Distinguish JPA `@Transient` from Java `transient`. Java serialization omits `transient` fields, and field initializers do not restore them during deserialization. Verify that required derived state is reconstructed before use. Removing `transient` also requires checking the nested object's serializability and whether that state belongs in session.
+- **Persisting mutations**: Verify that changed beans and collections are written back through `setAttribute` or the established helper after mutation, including item removal or token consumption. In-place changes to a detached object are insufficient. For logged-in `Identity` updates, use `LogonTools.setUserToSession` to keep authentication state coordinated.
+- **Regression coverage**: Check behavior with ordinary sessions and with serializing sessions that return detached copies. In core, reuse `src/test/java/sk/iway/iwcm/test/SerializingMockHttpSession.java`; in customer projects, check available helpers. Assertions must read the attribute again and verify state survives between requests, including transient reconstruction and one-time token consumption where relevant. This simulation does not replace testing the deployed Redis configuration.
+- **Deployment evidence**: Check the actual codec and Redis session read/update modes when available. If unknown, state the configuration dependency in the finding; distinguish a confirmed defect from a deployment-dependent risk.
+
 ### 5. Code Quality & Pattern Analysis
 
 Review new code for:
@@ -135,7 +145,7 @@ Code quality improvements, better patterns, or minor issues that are not blockin
 Good patterns, clean code, or improvements worth acknowledging.
 
 #### Missing CHANGELOG / ROADMAP Entries
-Flag if the CHANGELOG entry in `/docs/sk/CHANGELOG-2026.md` is missing for this branch's ticket number, or if a matching ROADMAP item is not checked off.
+Check changelog and roadmap entries only when the target project's conventions require them. In WebJET core, use the current release's changelog and an existing matching roadmap item. Missing core documentation directories are not findings in customer projects.
 
 For each finding, include:
 - **File and location** (line numbers or method names)
@@ -153,9 +163,9 @@ git rev-parse --abbrev-ref HEAD
 
 The branch has the format `feature/XXXX-description` or `hotfix/XXXX-description` — the ticket number is `XXXX` (the digits between `/` and the first `-`).
 
-Check if `/docs/sk/CHANGELOG-2026.md` contains an entry with `(#XXXX)` in the `## 2026.0-SNAPSHOT` section. If not, report it as a missing CHANGELOG entry.
+Identify the project's actual changelog and release section. For core changes, check for an entry with the known ticket number. Do not assume the year, release name or branch naming convention in a customer project, and do not invent a ticket number.
 
-Also check `/docs/sk/ROADMAP.md` — if the change matches a planned item, verify it is checked off with `(#XXXX)`.
+Check a roadmap only if the project maintains one and the change matches a planned item. If changelog checks are not applicable, omit them from the findings.
 
 ### 9. Final Summary
 
@@ -169,7 +179,7 @@ Provide a brief overall assessment:
 
 - NEVER modify any files — this is a read-only review
 - Write all findings in the language the user used (Slovak if the user wrote in Slovak, English otherwise)
-- Follow the project's coding standards from copilot-instructions.md and AGENTS.md
+- Follow the project's existing instruction files. For WebJET conventions, use the installed `wj-project-context` skill when available and verify API compatibility against the target project's CMS version. Do not assume core source paths exist in a customer checkout.
 - Focus on real issues, not style nitpicks (unless they violate project conventions)
 - Be specific — always reference exact files, line numbers, and code snippets
 - Consider the broader impact of changes on the rest of the system

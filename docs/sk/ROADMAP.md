@@ -15,20 +15,19 @@ Vysvetlenie použitých piktogramov:
 ## 2026
 
 - [x] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG` (#211).
-- [ ] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
+- [x] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
 - [x] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde (#58597) (#258).
 - [ ] Migrácia na `Spring Boot` projekt (#58569).
 - [x] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
 - [x] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor (#58517).
-- [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
+- [x] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze (#303).
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [x] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole (#58517).
 - [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
 - [x] Mazanie dát - pridať možnosť mazať stránky a priečinky z koša. Vyriešiť aj možnosť mazanie dát spúšťať ako automatizovanú úlohu (#58617) (#271).
 - [x] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
-- [ ] Nepoužívané súbory - spraviť možnosť získať zoznam nepoužívaných súborov - nikde v stránke sa nepoužívajú, ani v médiach atď. Bola na to API `FileTools.getDirFileUsage(currentDir, request)`. Pridať ako kartu do vlastností priečinka v prieskumníku (#58621).
-- [ ] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov.
+- [x] Prieskumník - zamedziť prácu s priečinku pre Manažér dokumentov, aby sa so súbormi nedalo manipulovať mimo Manažér dokumentov (#298).
 - [x] +Prieskumník - pridať právo pre nahrávanie súborov s diakritikou (odstraňuje sa pre `/images` a `/files` priečinky) (#58589).
 - [x] +Web stránky - lepšie integrovať manažér dokumentov pre vkladanie odkazu do stránky - nová karta podobne ako je Fotobanka pri obrázkoch (#58593).
 - [x] +Formuláre - pridať podrobnejšiu štatistiku chýb vyplnených formulárov (#58509).
@@ -42,20 +41,35 @@ Vysvetlenie použitých piktogramov:
 - [x] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [x] Voliteľné polia – pridať možnosť nastaviť obmedzenie dĺžky textu pre pole typu `textarea`, podobne ako je to aktuálne možné pri poli typu `text`.
-- [ ] Datatabuľka – upraviť polia typu `Date` a `Datetime` tak, aby správne fungovala validácia `not null`.
-- [ ] Datatabuľka – upraviť spôsob `mergovania` upravenej entity tak, aby bolo možné vynulovať hodnoty typu `number`.
+- [x] Datatabuľka – upraviť polia typu `Date` a `Datetime` tak, aby správne fungovala validácia `not null` (#58770).
+- [x] Datatabuľka – upraviť spôsob `mergovania` upravenej entity tak, aby bolo možné vynulovať hodnoty typu `number` (#58770).
 - [x] +Presmerovania - rozlíšiť v databáze automaticky vytvorené presmerovanie (hľadaj premennú `editorDisableAutomaticRedirect`) od manuálne vytvoreného, možnosť podľa toho filtrovať v UI (zobraziť len manuálne vytvorené presmerovania) (#58625).
-- [ ] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc` (#58629).
+- [x] +Presmerovania - doplniť funkciu čistenia presmerovaní - zmaže staré presmerovania (bolo pôvodne `aaa-bbb` a potom vzniklo `aaa-ccc` takže `aaa-bbb` nemá zmysel = zmaže sa) a skontroluje cyklické presmerovania v ktorom zmaže posledný krok. Tiež optimalizovať presmerovania `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - [x] +Galéria - pridať možnosť nastaviť iný spôsob zmeny veľkosti na veľký obrázok, napr. na malý obrázok sa aplikuje Orezať na mieru (chcú mať štvorec) a na veľký presná šírka (zachová pomer strán). Predvolene bude hodnota NULL=rovnako ako pre malý obrázok (#58633).
 - [x] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník (#58637).
-- [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
+- [x] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
-- [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.
-- [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
-- [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
-- [ ] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze.
+- [x] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený (#58718).
+- [x] +Číselník - presunúť výber a správu typov číselníkov do stromu v ľavom paneli, s vyhľadávaním a zachovaním editora nastavení (#58786).
+- [x] +Blog - presunúť výber priečinka do stromu vľavo, s vyhľadávaním a zachovaním výberu Všetky sekcie aj pridávania sekcií (#58786).
+- [x] +Novinky - presunúť výber priečinka do stromu vľavo podobne ako v galérii/webových stránkach, s výberom podpriečinkov a vyhľadávaním (#58786).
+- [x] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu (#58714).
+- [x] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze. (#291)
 - [ ] Prieskumník - opraviť zobrazovanie súborov so špeciálnymi znakmi (napríklad `@`).
 - [ ] Automatický premazávať `temp` súbory, ktoré sa môžu hromadiť.
+- [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).
+- [ ] +Upraviť načítanie admin časti tak, aby sa vymenilo cez volanie REST služby len vnútro stránky, nie kompletný reload HTML kódu.
+- [x] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky (#332).
+- [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
+filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
+- [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
+- [x] +Webové stránky - konfigurovateľné predvolené zobrazenie pre používateľa bez vlastného nastavenia (`webpagesTreeDefaultSettings`), predvolene usporiadať vzostupne podľa poradia; zobrazenie ID a poradia možno zapnúť v konfigurácii (#368).
+- [x] +Webové stránky - hromadné pridanie a odobratie značky aj skupiny používateľov pri zachovaní ostatných skupín cez menu Ďalšie akcie, do ktorého bol presunutý aj Import/Export (#368).
+- [x] +Webové stránky - pred zmazaním stránky alebo priečinka zobraziť upozornenie so zoznamom zrkadlených položiek, ktoré sa zmažú spolu s výberom (#58846).
+- [x] +Pridať podporu obrázkov a animácií typu AVIF (#371).
+- [x] +Možnosť zmeniť poradie polí v datatables editore, kartu v ktorej sa pole nachádza, prípadne aj vytvoriť novú kartu do ktorej sa polia vložia. Teda konfiguračne upraviť hodnoty čo sa dnes nastavujú cea anotácie (#366).
+- [ ] +V okne pred pripravených blokov pridať možnosť editovať blok, ktorý sa načíta z web stránok (otvoriť v novej karte editor s docid bloku) (#NNCZ-4456).
+- [ ] +Ak vytváram veľký ZIP súbor často sa preruší spojenie so serverom (ak tam je napr. proxy), zobrazí sa chyba ale po nejakom čase ZIP vznikne. Buď upraviť chybovú správu aby používateľ vedel, že sa len prerušilo spojenie, alebo zo servera to spojenie nejako udržiavať posielaním nejakých status info aby proxy spojenie neprerušila.
 
 ## 2025
 
@@ -105,7 +119,8 @@ Vysvetlenie použitých piktogramov:
 - [x] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok (#57561).
 - [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
 - [x] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené (#58433).
-- [ ] +Konfigurácia - doplniť stĺpec skupina s hodnotou `modules` konfiguračnej premennej (výberové pole, môže mať viac hodnôt). Doplniť možnosť zobraziť aj nenastavené premenné (čiže kompletný zoznam). Vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii pre prehľad všetkých premenných.
+- [x] +Konfigurácia - doplniť hierarchický strom modulov a možnosť zobraziť aj nenastavené premenné (kompletný zoznam).
+- [ ] +Konfigurácia - vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii.
 - [x] +Ak mám neuloženú stránku s titulkom Upratovanie a už existuje iná stránka s názvom Upratovanie, tak novo nahraté obrázky sa pred jej uložením nahrajú do priečinka `upratovanie`. Ale keď sa stránka uloží, získa URL adresu upratovanie-2.html a ďalšie obrázky sa už nahrajú do priečinka `upratovanie-2`. Je potrebné upraviť kód v `getPageUploadSubDir` tak, aby namiesto priameho použitia titulku stránky skúsil získať URL adresu pre novú stránku a to potom použil (#58361).
 - [x] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť (#PR83, #58129).
 - [x] +Integrácia AI nástrojov, pomocníkov, asistentov (#57997).

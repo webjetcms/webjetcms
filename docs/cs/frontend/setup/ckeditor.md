@@ -12,7 +12,39 @@ Podporovány jsou následující konfigurační proměnné:
 - `ckeditor_toolbar-standalone` - ​​nastavení položek nástrojové lišty pro vložení editoru do různých datových tabulek, hodnoty jsou v JSON formátu.
 - `ckeditor_removeButtons` - ​​seznam tlačítek, která chcete v editoru schovat (nezobrazit), není třeba upravit nastavení `toolbar`, stačí sem nastavit čárkou oddělený seznam.
 
-Nastavení pro tabulky:
+### Čištění HTML kódu při vložení z Word/Excel
+
+Pravidla se nastavují přes konfigurační proměnnou:
+
+- `ckeditor_pasteFromWord_disallowedContent` - ​​seznam pravidel [CKEditor Advanced Content Filter](https://ckeditor.com/docs/ckeditor4/latest/guide/dev_allowed_content_rules.html), která se odstraní při vložení obsahu z Word/Excel. Pravidla se používají ve standardním editoru i v režimu Page Builder. Prázdná hodnota neprovede žádné dodatečné filtrování přes `filter.disallow` ; ostatní standardní čištění obsahu zůstane aktivní.
+
+Každé pravidlo určuje HTML element a jeho vlastnosti, které se mají z vloženého obsahu odstranit. Formát ACF pravidla je:
+
+```text
+element[atribúty]{štýly}(triedy)
+```
+
+Jednotlivé části mají následující význam:
+
+| Zápis | Význam | Příklad |
+| --- | --- | --- |
+| `element` | Název HTML elementu. Pravidlo bez dalších částí odstraní samotný element, jeho vnořený obsah zůstane zachován. | `span` odstraní značku `span`. |
+| `[atribut1,atribut2]` | HTML atributy elementu. | `td[align,valign,nowrap]` odstraní z `td` atributy `align`, `valign` a `nowrap`. |
+| `{styl1,styl2}` | CSS vlastnosti zapsané v atributu `style`. | `td{width,height}` odstraní z `td` styly `width` a `height`. |
+| `(třída1,třída2)` | CSS třídy elementu. | `td(word-cell)` odstraní z `td` třídu `word-cell`. |
+| Zástupný znak pro všechny položky dané skupiny. | `td(*)` odstraní z `td` všechny CSS třídy, `td[*]` všechny atributy a `td{*}` všechny styly. | `td(*)` odstráni z `td` všetky CSS triedy, `td[*]` všetky atribúty a `td{*}` všetky štýly. |
+
+Pravidla se oddělují středníkem. Čárka odděluje položky pouze uvnitř hranatých, složených nebo kulatých závorek, proto například `td[align,valign,nowrap]` představuje jedno pravidlo. Mezery, nové řádky a prázdné položky mezi středníky se ignorují. Každé pravidlo se aplikuje samostatně; neplatné pravidlo se zaznamená do JavaScript konzole a nebrání použití ostatních platných pravidel.
+
+Výchozí hodnota je:
+
+```text
+table[width,height,border];td(*);td[align,valign,nowrap];th(*);th[align,valign];p[align];span;col[width]
+```
+
+Výchozí pravidla odstraní rozměry a orámování tabulky, všechny CSS třídy buněk `td` a `th`, uvedené atributy zarovnání buněk, atribut `nowrap` z `td`, atribut `align` z odstavců, elementy `span` @@atribut. Chcete-li zachovat horizontální zarovnání buněk, změňte příslušná pravidla na `td[valign,nowrap]` a `th[valign]`.
+
+### Nastavení pro tabulky
 
 - `ckeditor_table_class` - ​​Výchozí CSS třída pro tabulky v CKEditoru, standardně `table table-sm tabulkaStandard`.
 - `ckeditor_table_cols` - ​​Výchozí počet sloupců tabulky v CKEditoru, standardně 5.

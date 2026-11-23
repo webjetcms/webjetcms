@@ -1,572 +1,468 @@
 .#{$prefix}-modal {
-    font-family: 'Roboto', sans-serif;
+    position: fixed;
+    z-index: $modal-index;
+    top: 16px;
+    left: 16px;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    height: 760px;
+    max-height: calc(100vh - 32px);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    transform: scale(0.4);
-    position: fixed;
-    top: 105px;
-    left: 30px;
-    height: auto;
-    width: 380px;
-    z-index: $modal-index;
-
+    color: $secondary;
+    background: white;
+    border: 1px solid $nice-gray-100;
     border-radius: $modal-radius;
-    border: 1px solid $modal-boder-color;
-    overflow: hidden;
+    box-shadow: 0 8px 32px rgba($secondary, .18);
+    font: 400 14px/1.5 $font-family-base;
+    text-align: left;
 
-    box-shadow: $modal-box-shadow;
-    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.3s ease-in-out;
+    &, *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
 
-    input {
-        font-family: $font-family-base;
-        font-size: 14px;
-        line-height: 24px;
+    button, input, select, textarea {
+        font: inherit;
+        letter-spacing: normal;
+        text-transform: none;
     }
-
     button {
-        border: 0px;
+        appearance: none;
+        margin: 0;
+        color: inherit;
+        cursor: pointer;
+        box-shadow: none;
+        text-decoration: none;
+        white-space: normal;
+        &:disabled { opacity: .45; cursor: default; }
+    }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px white;
     }
 
     &__header {
+        min-width: 0;
+        background: white;
+        border-bottom: 1px solid $nice-gray-100;
+    }
+    &__header-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 12px 0 16px;
+        cursor: move;
+        .modal-drag-handle { flex-shrink: 0; color: $dark-60; font-size: 16px; }
+        .header-title {
+            flex: 1;
+            min-width: 0;
+            margin: 0;
+            color: $secondary;
+            font-size: 18px;
+            line-height: 1.4;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+    }
+    .#{$prefix}-modal__header__button-show, .#{$prefix}-modal__header__button-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 28px;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: $modal-radius;
+        background: white;
+        color: $dark-60;
+        font-size: 18px;
+        &:hover { color: $secondary; background: $nice-gray; }
+    }
+    &__context {
+        padding: 2px 16px 12px 40px;
+        color: $dark-60;
+        font-size: 12px;
+        line-height: 18px;
+        overflow-wrap: anywhere;
+    }
+    &__content {
+        min-width: 0;
+        min-height: 0;
+        width: 100%;
+        padding: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        background: white;
+        backdrop-filter: none;
+        form { display: block; margin: 0; padding: 0; border: 0; }
+    }
+
+    .#{$prefix}-style-accordion {
+        margin: 0;
+        border-bottom: 1px solid $nice-gray-100;
+        background: white;
+        &__toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            min-height: 34px;
+            padding: 7px 16px;
+            border: 0;
+            border-radius: 0;
+            background: white;
+            color: $secondary;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 20px;
+            > i { flex: 0 0 16px; font-size: 16px; transform: rotate(-90deg); }
+            > span { min-width: 0; overflow-wrap: anywhere; }
+            &:hover { background: $nice-gray; }
+            &[aria-expanded=true] {
+                background: rgba($primary, .07);
+                color: $primary;
+                > i { transform: none; }
+            }
+            &:focus-visible { outline-offset: -3px; box-shadow: none; }
+        }
+        &__content { padding: 12px 16px; }
+    }
+    .#{$prefix}-style-input-group {
+        display: block;
+        min-width: 0;
+        & + .#{$prefix}-style-input-group { margin-top: 12px; }
+    }
+    .#{$prefix}-style-input-group-headline {
+        padding: 0;
+        margin: 0 0 8px;
+        color: $secondary;
+        font-size: 13px;
+        line-height: 18px;
+        font-weight: 400;
+        &:not(:first-child) { margin-top: 16px; }
+    }
+    .#{$prefix}-style-input-wrapper {
+        display: block;
+        min-width: 0;
+        padding: 0;
+        margin: 0 0 10px;
+        &:last-child { margin-bottom: 0; }
+    }
+    .#{$prefix}-style-label {
+        display: block;
+        padding: 0;
+        margin: 0 0 5px;
+        border: 0;
+        color: $dark-60;
+        font-size: 12px;
+        line-height: 18px;
+        font-weight: 400;
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+    .#{$prefix}-style-input:not([type=radio]):not([type=checkbox]):not([type=hidden]) {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        height: 32px;
+        margin: 0;
+        padding: 5px 8px;
+        border: 1px solid $nice-gray-300;
+        border-radius: $modal-radius;
+        background: white;
+        color: $secondary;
+        font-size: 13px;
+        line-height: 20px;
+        &:disabled { background: $nice-gray; color: $dark-60; }
+        &[data-changed=true]:not(:disabled) { border-color: $primary; }
+        &:focus:not(:disabled) {
+            border-color: mix(white, $primary, 50%);
+            outline: 0;
+            box-shadow: 0 0 0 .25rem rgba($primary, .25);
+        }
+    }
+    input[type=checkbox] {
+        flex: 0 0 16px;
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        padding: 0;
+        accent-color: $primary;
+        cursor: pointer;
+        &:disabled { cursor: default; }
+    }
+    .#{$prefix}-style-accordion[data-input-group-id="10"] .#{$prefix}-style-input-wrapper {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        .#{$prefix}-style-label { margin: 0; }
+    }
+    .#{$prefix}-style-accordion[data-input-group-id="08"] .#{$prefix}-style-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 24px;
+        margin-bottom: 6px;
+        &:last-child { margin-bottom: 0; }
+        input { order: -1; }
+        .#{$prefix}-style-label {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            color: $secondary;
+            font-size: 13px;
+            cursor: pointer;
+            > i { flex: 0 0 18px; font-size: 18px; }
+        }
+    }
+    .input-group {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0;
+        > .#{$prefix}-style-input:not([type=radio]):not([type=checkbox]):not([type=hidden]) {
+            flex: 1;
+            width: 0 !important;
+            position: relative;
+            border-radius: $modal-radius 0 0 $modal-radius;
+            &:focus { z-index: 1; }
+        }
+    }
+    .#{$prefix}-input-group-addon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        margin-left: -1px;
+        padding: 0;
+        border: 1px solid $nice-gray-300;
+        border-radius: 0 $modal-radius $modal-radius 0;
+        background: white;
+        color: $secondary;
+        font-size: 18px;
+        &:hover { background: $nice-gray; }
+    }
+
+    .ui-spinner.ui-widget.ui-widget-content {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        overflow: visible;
+        border: 0;
+        border-radius: $modal-radius;
+        background: transparent;
+        font: inherit;
+        .ui-spinner-input { padding-right: 22px; }
+        .ui-spinner-button {
+            width: 18px;
+            height: 15px;
+            right: 1px;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-left: 1px solid $nice-gray-100;
+            border-radius: 0;
+            background: $nice-gray;
+            color: $dark-60;
+            cursor: pointer;
+            > span { display: none; }
+            &::after {
+                content: "";
+                position: absolute;
+                top: 6px;
+                left: 6px;
+                width: 5px;
+                height: 5px;
+                border: solid currentColor;
+                border-width: 1px 1px 0 0;
+                transform: rotate(-45deg);
+            }
+            &.ui-spinner-up { top: 1px; border-top-right-radius: $modal-radius; }
+            &.ui-spinner-down {
+                bottom: 1px;
+                border-bottom-right-radius: $modal-radius;
+                &::after { top: 3px; transform: rotate(135deg); }
+            }
+            &:hover { background: $nice-gray-100; color: $secondary; }
+        }
+        &:has(input:disabled) .ui-spinner-button { display: none; }
+    }
+    .#{$prefix}-style-input-group-four-in-row {
         position: relative;
-        overflow: hidden;
-        margin:  0;
-        background-color: $modal-color;
-
-        &__button-show {
-            display: block;
-            float: left;
-            width: 44px;
-            height: 44px;
-            opacity: 0.7;
-            margin-left: 10px;
-            background-color: transparent;
-            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ1IDc5LjE2MzQ5OSwgMjAxOC8wOC8xMy0xNjo0MDoyMiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RDhEMUFBRjkxMUQwMTFFOTlDMUJBRDU1MkExRjJDMUIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RDhEMUFBRkExMUQwMTFFOTlDMUJBRDU1MkExRjJDMUIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpEOEQxQUFGNzExRDAxMUU5OUMxQkFENTUyQTFGMkMxQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpEOEQxQUFGODExRDAxMUU5OUMxQkFENTUyQTFGMkMxQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjrH1N8AAAJMSURBVHja7FrdccMgDHZyHYAR6AbuBHE2SDZwNqAbuBN0FGcDJxM4G+AN6g0o3OGHUhD/PJDoTnc5G5C+BIlPIjvGWJNBMNeZK1Ker1w/uC6pDe6bPII1IBr5DOcwmAtIcakGyC5hjLRcT1wP8jMyjBNx8uB653qVn+NFAIlQxJVwpSxcqFwDxfgSA0IY/2HpRKw1lATScp1ZPpmljaxAelZO+lxABlZehtRAhoDtEfIuGEzK7UTlWJF9OmBcJ8f0HtmujwXSOmYbosyzAQnJfm0MkNlhC2HNPB8gjVzDxZbRV4iiDPKENok4kY+JmOwi13pYmAPxpSiCXlCAZmwgVsDwaKDxZ2COGD8BX6CY/661C5zaUEzgSGoDKbbEDPGJEeq7UGIlluzoBKT1XSSTUp8Mpgv2E7CHvwqWGJCtk0thdQAWuBYEAtn65+ObrKGxkuZMmUp9d3NwqAsYC9ncfOz+pO/ImmK0sAKqxBd0Oo8xtcweOCtcBFnOEax0VsbAtax+5Go+dIa2D9Zsn1cXpQSQm4GDLY5BHwRkjZgPzT0rYBYLz4ryQ5BGNf2OhsATqfCzcPr9NqRflXwuujQ4AWkOFaQoCPBjcqEodx9qkFEgW3cXGl8NaXwAVR+GqrSEQoDrh0VbSdZSWFVf6tp+la2rYcpivl2ULUvZOinDU7eDhFwcLnfmyARA5BptlC/P0jKtqold1bVCVRc9VV29qVst9WVocBezmuvpav4wkBKIWulNhnfHHHX7q4vyLEAWA8Vfmwx/OhPyK8AAkDM0bOVaM8AAAAAASUVORK5CYII="); /*/admin/webpages/page-builder/images/icon-crosshairs.png*/
-            filter: invert(1);
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: 20px auto;
-            transition: opacity 0.3s ease-in-out;
-            background-color: transparent;
-
-            &:hover {
-                opacity: 1;
-                cursor: pointer;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        &:has(> .#{$prefix}-style-input-group-four-in-row-tools) { padding-bottom: 20px; }
+        .#{$prefix}-style-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            .#{$prefix}-style-label {
+                display: flex;
+                align-items: flex-end;
+                min-height: 32px;
+                font-size: 11px;
+                line-height: 16px;
             }
         }
-
-        .header-title {
-            display: block;
-            float: left;
-            background-color: transparent;
-            line-height: 44px;
-            font-size: 14px;
-            color: $nice-black;
-            margin-left: $modal-padding;
-
-            &:hover {
-                cursor: move;
+        .#{$prefix}-style-input-group-four-in-row-tools {
+            position: absolute;
+            right: 0;
+            bottom: 8px;
+            left: 0;
+            border-bottom: 1px solid $nice-gray-300;
+            .#{$prefix}-style-input-group-four-in-row-checkbox {
+                position: absolute;
+                z-index: 1;
+                bottom: 20px;
             }
+            .#{$prefix}-style-input-group-four-in-row-all {
+                left: 50%;
+                bottom: -8px;
+                transform: translateX(-50%);
+            }
+            .#{$prefix}-style-input-group-four-in-row-first-second { left: calc(25% - 4px); transform: translateX(-50%); }
+            .#{$prefix}-style-input-group-four-in-row-third-fourth { right: calc(25% - 4px); transform: translateX(50%); }
+        }
+        &.all {
+            .#{$prefix}-style-input-group-four-in-row-first-second,
+            .#{$prefix}-style-input-group-four-in-row-third-fourth { display: none; }
         }
     }
 
-    &__content {
-        padding:0 $modal-padding;
-        overflow-y: auto;
+    .radio-group {
+        display: flex;
+        position: relative;
         width: 100%;
-        max-height: 60vh;
+        margin: 0;
+        border: 1px solid $nice-gray-300;
+        border-radius: $modal-radius;
+        background: white;
+        input[type=radio] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            clip-path: inset(50%);
+        }
+        label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            min-width: 0;
+            min-height: 30px;
+            margin: 0;
+            padding: 4px;
+            color: $secondary;
+            font-size: 11px;
+            line-height: 18px;
+            text-align: center;
+            cursor: pointer;
+            &:not(:last-child) { border-right: 1px solid $nice-gray-300; }
+            &:first-of-type { border-radius: $modal-radius 0 0 $modal-radius; }
+            &:last-of-type { border-radius: 0 $modal-radius $modal-radius 0; }
+            &:hover { background: $nice-gray; }
+        }
+        input[type=radio]:checked + label { color: white; background: $primary; }
+        input[type=radio]:focus-visible + label { outline: 2px solid $secondary; outline-offset: 2px; box-shadow: 0 0 0 4px white; z-index: 1; }
+        input[type=radio]:disabled + label { opacity: .45; cursor: default; }
+    }
+    .style-connections-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        color: $dark-60;
+        font-size: 12px;
+        .#{$prefix}-connection-reference {
+            max-width: 100%;
+            margin: 0;
+            padding: 3px 8px;
+            border: 1px solid $nice-gray-100;
+            border-radius: $modal-radius;
+            background: $nice-gray;
+            color: $secondary;
+            font-size: 12px;
+            line-height: 20px;
+            overflow-wrap: anywhere;
+            cursor: pointer;
+            &:hover { border-color: $primary; color: $primary; }
+        }
+    }
 
-        background-color: $modal-body-background;
-        backdrop-filter: $modal-body-filter;
-
-        padding-bottom: 8px;
+    .minicolors.minicolors-inline { width: 210px; max-width: 100%; }
+    .minicolors:not(.no-color-picker) > input.#{$prefix}-style-input.minicolors-input {
+        display: block !important;
+        margin-bottom: 10px;
+    }
+    .minicolors-with-opacity .minicolors-panel { width: 100%; border: 0; background: transparent; }
+    .minicolors .minicolors-grid { top: 0; left: 0; margin: 0; border-radius: $modal-radius; }
+    .minicolors .minicolors-grid-inner { border-radius: $modal-radius; }
+    .minicolors-slider { top: 0; left: 160px; border-radius: $modal-radius; }
+    .minicolors-opacity-slider { top: 0; left: 190px; border-radius: $modal-radius; }
+    .minicolors .minicolors-swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 100%;
+        margin: 10px 0 0;
+        overflow: visible;
+        .minicolors-swatch {
+            flex: 0 0 24px;
+            width: 24px;
+            height: 24px;
+            margin: 0;
+            overflow: hidden;
+            border: 1px solid $nice-gray-300;
+            border-radius: $modal-radius;
+            &.selected { outline: 2px solid $primary; outline-offset: 1px; }
+            &:focus-visible { outline: 2px solid $secondary; outline-offset: 2px; box-shadow: 0 0 0 4px white; }
+        }
+    }
+    .minicolors.no-color-picker {
+        .minicolors-slider, .minicolors-opacity-slider, .minicolors-grid { display: none; }
+        .minicolors-swatches { margin-top: 0; }
     }
 
     &__footer {
-        height: auto;
-        padding: $modal-padding;
-        overflow: hidden;
-        clear: both;
-        text-align: center;
-        background-color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
         border-top: 1px solid $nice-gray-100;
-
-        &__button-reset,
-        &__button-close,
-        &__button-save {
-            display: inline-block;
-            width: auto;
-            height: 30px;
-            line-height: 30px;
-            padding: 0 16px;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
+        background: white;
+        > button {
+            min-height: 32px;
+            padding: 5px 10px;
+            border: 1px solid transparent;
             border-radius: $modal-radius;
-            transition: all 0.3s ease-in-out;
-        }
-
-        &__button-reset:hover,
-        &__button-close:hover,
-        &__button-save:hover {
-            cursor: pointer;
-        }
-
-        &__button-close {
-            float: left;
-            border: 1px solid $nice-gray-300 !important;
-            background-color: transparent;
-            color: $nice-black;
-
-            &:hover {
-                background-color: $secondary;
-                color: white;
-            }
-        }
-
-        &__button-save {
-            float: right;
-            background-color: $primary;
-            color: white;
-            &:hover {
-                background-color: $primary-hover;
-            }
-        }
-
-        &__button-reset {
+            background: white;
+            color: $dark-60;
+            font-size: 13px;
+            line-height: 20px;
             text-align: center;
-            background-color: transparent;
-            color: $dark-60;
-            font-weight: 400;
-            &:hover {
-                background-color: $secondary;
-                color: white;
-            }
+            &:hover { color: $secondary; background: $nice-gray; }
+        }
+        > .#{$prefix}-modal__footer__button-reset { margin-right: auto; }
+        > .#{$prefix}-modal__footer__button-save {
+            padding-inline: 16px;
+            color: white;
+            background: $primary;
+            &:hover { color: white; background: $primary-hover; }
         }
     }
 
-
-
-    .#{$prefix}-style-input-group {
-        display: none;
-        clear: both;
-
-        &.active {
-            display: block;
-        }
-
-        .#{$prefix}-style-input-group-headline {
-            font-size: 14px;
-            line-height: 16px;
-            color: $secondary;
-            font-weight: 500;
-            padding: 0;
-            margin: 12px 0 6px 0;
-        }
-
-        .#{$prefix}-style-input-group-content {
-
-            .#{$prefix}-style-input-wrapper {
-                display: block;
-                padding: 0;
-                width: 100%;
-                margin:8px 0;
-
-                .#{$prefix}-style-input {
-                    width: 100%;
-                    background-color: white;
-                    color: $nice-black;
-                    border: 1px solid $nice-gray-300;
-                    border-radius: $modal-radius;
-                }
-
-                .#{$prefix}-input-group-addon {
-                    min-width: 34px;
-                    background-color: $nice-gray-300;
-                    background-size:26px;
-                    background-repeat:no-repeat;
-                    background-position:center;
-                    border-radius: $modal-radius;
-                }
-
-                .#{$prefix}-style-label {
-                    display: block;
-                    font-size: 13px;
-                    font-weight: 300;
-                    line-height: 14px;
-                    margin-bottom: 5px;
-                    padding: 0;
-                    color: $secondary;
-                }
-
-                input[type=number] {
-                    &[disabled] {
-                        background-color: $nice-gray-100;
-                        color: $dark-60;
-                    }
-                }
-                input[data-changed="true"] {
-                    border-color: $primary;
-                }
-
-                .ui-spinner.ui-widget.ui-widget-content {
-                    width: 100%;
-                    overflow: hidden;
-                    background-color: transparent;
-                    border: 0px solid transparent !important;
-
-                    &::after {
-                        content: " ";
-                        position: absolute;
-                        top: 0;
-                        bottom: 0;
-                        right: 0;
-                        width: 26px;
-                        background-color: transparent;
-                        z-index: 1;
-                    }
-
-                    .ui-spinner-input {
-                        font-size: 14px;
-                        line-height: 18px;
-                        font-weight: 400;
-                        padding: 6px 10px;
-                        margin: 0;
-                        width: 100%;
-                        border-radius: 4px;
-                        color: $secondary;
-                        outline: none;
-
-                        &[disabled] {
-                            background-color: $nice-gray-100;
-                            color: $dark-60;
-                        }
-                    }
-
-                    a.ui-spinner-button {
-                        width: 20px;
-                        height: 12px;
-                        border-radius: 4px;
-                        border: 0 solid transparent;
-                        background-color: #464d61;
-                        right: 3px;
-                        z-index: 2;
-                        opacity: 0;
-                        transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out;
-
-                        span {
-                            display: none;
-                        }
-
-                        &.ui-spinner-down {
-                            bottom: 3px;
-                            border-top-right-radius: 0;
-                            border-top-left-radius: 0;
-                        }
-
-                        &.ui-spinner-up {
-                            top: 3px;
-                            border-bottom-right-radius: 0;
-                            border-bottom-left-radius: 0;
-                        }
-
-                        &:hover {
-                            background-color: #34394c;
-                            cursor: pointer;
-                        }
-                    }
-
-                    &:hover a.ui-spinner-button {
-                        opacity: 1;
-                    }
-                }
-            }
-
-            .#{$prefix}-style-input-group-four-in-row {
-                overflow: hidden;
-                position: relative;
-                padding-bottom: 3px;
-
-                .#{$prefix}-style-input-wrapper {
-                    float: left;
-                    width: 21%;
-                    margin-right: 5.3%;
-
-                    &:last-child {
-                        margin-right: 0;
-                    }
-                }
-
-                .#{$prefix}-style-input-group-four-in-row-tools {
-                    position: absolute;
-                    bottom: 1px;
-                    width: 100%;
-                    border-bottom: 1px solid $nice-gray-300;
-                    margin-bottom: 5px;
-
-                    .#{$prefix}-style-input-group-four-in-row-checkbox {
-                        position: absolute;
-                        bottom: 12px;
-                        z-index: 9;
-
-                        &.#{$prefix}-style-input-group-four-in-row-all {
-                            bottom: -7px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                        }
-                        &.#{$prefix}-style-input-group-four-in-row-first-second {
-                            left: 21.7%;
-                        }
-                        &.#{$prefix}-style-input-group-four-in-row-third-fourth {
-                            right: 21.9%;
-                        }
-                    }
-                }
-
-                &.all .#{$prefix}-style-input-wrapper:not(.#{$prefix}-style-input-group-four-in-row-first),
-                &.first-second .#{$prefix}-style-input-wrapper.#{$prefix}-style-input-group-four-in-row-second,
-                &.third-fourth .#{$prefix}-style-input-wrapper.#{$prefix}-style-input-group-four-in-row-fourth {
-                    .ui-spinner {
-                        input {
-                            background-color: transparent;
-                        }
-                        a {
-                            display: none;
-                        }
-                    }
-                }
-                &.all {
-                    .pb-style-input-group-four-in-row-first-second,
-                    .pb-style-input-group-four-in-row-third-fourth {
-                        display: none;
-                    }
-                }
-            }
-        }
-
-        &:last-child .#{$prefix}-style-input-group-headline {
-            margin-bottom: 0;
-        }
-
-
-    }
-
-    $bg: $primary;
-    $fg: $nice-gray-300;
-    $borderWidth: 1px;
-
-    input[type=radio] {
-        position: absolute;
-        visibility: hidden;
-        display: none;
-      }
-
-      label {
-        color: $secondary;
-        display: table-cell;
-        cursor: pointer;
-        padding: 5px 5px;
-        margin: 0;
-        font-size: 14px;
-        font-weight: 400;
-        text-align: center;
-        border: 0 !important;
-      }
-
-      input[type=radio]:checked + label {
-        color: white;
-        background: $primary;
-      }
-
-      label + input[type=radio] + label {
-        border-left: solid $borderWidth $fg;
-      }
-      .radio-group {
-        border: solid $borderWidth $fg;
-        background-color: white;
-        display: table;
-        width: 100%;
-        margin: 0;
-        border-radius: $modal-radius;
-        overflow: hidden;
-      }
-
-    .style-connections-list {
-        overflow: hidden;
-        clear: both;
-
-        .pb-connection-reference {
-            float: left;
-            display: block;
-            color: $secondary;
-            font-size: 13px;
-            line-height: 24px;
-            padding: 0 8px;
-            border-radius: 4px;
-            background-color: $dark-60;
-            margin:6px 6px 0 0;
-
-            &:hover {
-                cursor: pointer;
-                background-color: $primary
-            }
-        }
-    }
-
-    .minicolors {
-        width: 210px !important;
-    }
-
-    .minicolors-with-opacity .minicolors-panel {
-        background-color: transparent;
-        border: 0;
-        width:100%;
-    }
-
-    .minicolors .minicolors-grid {
-        top: 0;
-        left: 0;
-        border-radius: 8px;
-        margin: 0;
-    }
-
-    .minicolors .minicolors-grid-inner {
-        border-radius: 8px;
-    }
-
-    .minicolors-opacity-slider {
-        left: auto;
-        right: 0;
-        border-radius: 8px;
-        top: 0;
-    }
-
-    .minicolors-slider {
-        left: auto;
-        right: 30px;
-        border-radius: 8px;
-        top: 0;
-    }
-
-    .minicolors-picker {
-        width: 22px;
-        margin-left: -3px;
-        border-radius: 8px;
-        border: 2px solid $nice-gray-300;
-        background-color: black;
-    }
-
-    .minicolors-swatches {
-        margin: 10px 0 0 0;
-        width: 100%;
-    }
-
-    .minicolors-with-opacity .minicolors-swatches .minicolors-swatch {
-        border-radius: 50%;
-        overflow: hidden;
-        margin-right: 8px;
-        margin-bottom: 8px;
-    }
-
-    .minicolors.no-color-picker {
-        .minicolors-slider, .minicolors-opacity-slider, .minicolors-grid {
-            display: none;
-        }
-    }
-
-    .tab-menu {
-        margin: 0;
-        display: block;
-        padding-left: 16px;
-        float: right;
-
-        .tab-link {
-            position: relative;
-            display: inline-block;
-            padding: 0 10px;
-            background-color: transparent;
-            color: $dark-60;
-            line-height: 44px;
-            font-size: 13px;
-            font-weight: 400;
-            border-bottom: 2px solid transparent;
-
-            &:first-child {
-                border-top-left-radius: 8px;
-            }
-            &:last-child {
-                border-top-right-radius: 8px;
-            }
-
-            &.active {
-                color: $primary;
-                font-weight: 500;
-                border-bottom-color: $primary;
-            }
-            &:hover {
-                cursor: pointer;
-            }
-        }
-
-    }
-
-    .tab-content {
-        border-radius: 0px;
-        overflow: hidden;
-        overflow: hidden;
-        clear: both;
-        width: 100%;
-        background-color: $modal-body-background;
-        backdrop-filter: $modal-body-filter;
-        padding-top: 4px;
-        padding-bottom: 4px;
-        border-top: 1px solid $nice-gray-100;
-        border-bottom: 1px solid $nice-gray-100;
-
-        .tab-item {
-            display: none;
-            overflow: hidden;
-            margin: 0 $modal-padding;
-
-            span {
-                display: block;
-                float: left;
-                width: 32.3333%;
-                margin: 0.5%;
-                padding: 0 10px;
-                color: $dark-60;
-                font-size: 13px;
-                line-height: 30px;
-                font-weight: 400;
-                text-align: center;
-                background-color: $nice-gray-100;
-                border-radius: $modal-radius;
-
-                &.active {
-                    background-color: $primary;
-                    color: white;
-                }
-
-                &:hover {
-                    cursor: pointer;
-                    color: white;
-                    background-color: $primary;
-                }
-            }
-            &.active {
-                display: block;
-            }
-        }
-    }
-
-
-    /*==================================================================
-    /*====================|> IS MODAL OPEN
-    /*=================================================================*/
-
-    .#{$prefix}-wrapper.#{$prefix}-is-modal-open & {
-        opacity: 1;
-        visibility: visible;
-        transform: scale(1);
-    }
+    .#{$prefix}-wrapper.#{$prefix}-is-modal-open & { opacity: 1; visibility: visible; }
 }

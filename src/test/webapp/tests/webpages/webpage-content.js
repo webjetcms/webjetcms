@@ -1,5 +1,89 @@
 Feature('webpages.webpage-content');
 
+const { event, container } = require('codeceptjs');
+const tracedScenario = 'Nastavenie editorAutoFillPublishStart @singlethread';
+const failedCreateRoute = /\/admin\/rest\/web-pages\/-1(?:\?|$)/;
+
+// Execution events run when queued steps actually start and finish, including steps in Before.
+event.dispatcher.on(event.test.before, (test) => {
+     if (test?.file !== __filename || test.title !== tracedScenario) return;
+
+     const steps = new Map();
+     const observedPages = new WeakSet();
+     const pageListeners = [];
+     let stepNumber = 0;
+     const log = (message) => console.log(`[editorAutoFillPublishStart] ${new Date().toISOString()} ${message}`);
+     const onBodyStarted = () => log('BODY START');
+     const onStepStarted = (step) => {
+          const entry = {
+               number: ++stepNumber,
+               startedAt: Date.now(),
+               description: step.toCode()
+          };
+          steps.set(step, entry);
+          log(`START #${entry.number} ${entry.description} ${step.line()}`);
+     };
+     const onStepFinished = async (step) => {
+          const entry = steps.get(step);
+          if (!entry) return;
+
+          const status = step.status === 'failed' ? 'FAILED' : 'DONE';
+          log(`${status} #${entry.number} ${Date.now() - entry.startedAt}ms ${entry.description}`);
+          steps.delete(step);
+
+          try {
+               const page = container.helpers('Playwright').page;
+               if (step.name === 'amOnPage' && entry.description.includes('/admin/v9/webpages/web-pages-list/') && !observedPages.has(page)) {
+                    observedPages.add(page);
+                    const response = response => {
+                         if (response.url().includes('/admin/rest/web-pages/-1')) log(`INITIALIZATION RESPONSE ${response.status()} ${response.url()}`);
+                    };
+                    const pageError = error => log(`PAGE ERROR ${error.stack || error.message}`);
+                    const dialog = dialog => log(`NATIVE DIALOG ${dialog.type()} ${dialog.message()}`);
+                    page.on('response', response);
+                    page.on('pageerror', pageError);
+                    page.on('dialog', dialog);
+                    pageListeners.push({ page, response, pageError, dialog });
+               }
+               if (step.status === 'failed') {
+                    // The failed recorder cannot queue I.* steps, so inspect the page directly for diagnostics.
+                    const state = await Promise.race([page.evaluate(() => {
+                         const modal = document.querySelector('#datatableInit_modal');
+                         return {
+                              url: location.href,
+                              modal: modal && {
+                                   classes: modal.className,
+                                   focusState: modal.dataset.dteFocusState,
+                                   closeState: modal.dataset.dteCloseState,
+                                   display: getComputedStyle(modal).display
+                              },
+                              focusedElement: document.activeElement?.id
+                         };
+                    }), new Promise(resolve => setTimeout(() => resolve({ unavailable: 'Page inspection timed out' }), 5000))]);
+                    log(`FAILED EDITOR STATE ${JSON.stringify(state)}`);
+               }
+          } catch (error) {
+               log(`DIAGNOSTICS UNAVAILABLE ${error.message}`);
+          }
+     };
+
+     log('SCENARIO START (including Before hook)');
+     event.dispatcher.on(event.test.started, onBodyStarted);
+     event.dispatcher.on(event.step.started, onStepStarted);
+     event.dispatcher.on(event.step.finished, onStepFinished);
+     event.dispatcher.once(event.test.after, () => {
+          event.dispatcher.removeListener(event.test.started, onBodyStarted);
+          event.dispatcher.removeListener(event.step.started, onStepStarted);
+          event.dispatcher.removeListener(event.step.finished, onStepFinished);
+          for (const { page, response, pageError, dialog } of pageListeners) {
+               page.removeListener('response', response);
+               page.removeListener('pageerror', pageError);
+               page.removeListener('dialog', dialog);
+          }
+          log('SCENARIO AFTER');
+     });
+});
+
 var folder_name, randomNumber;
 
 Before(({ I, login }) => {
@@ -87,6 +171,10 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser, Document 
      I.waitForElement(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), 20);
      I.wait(1);
      I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
+     I.waitForText('Súbory', 10, ".elfinder-cwd-file");
+     I.doubleClick(".elfinder-cwd-filename[title='Súbory']");
+     I.waitForElement(".elfinder-cwd-file.elfinder-ro .elfinder-cwd-filename[title='archiv']", 10);
+     I.click(".elfinder-button-icon-up");
      I.waitForText('Foto galéria', 10, ".elfinder-cwd-file");
      I.wait(1);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'));
@@ -228,6 +316,7 @@ Scenario('TODO - bugs', ({ I, DT, DTE }) => {
 Scenario('Zmaz strukturu', ({ I }) => {
      //ak zostalo nieco zaseknute na editacii reloadni aby sa dalo dobre zmazat
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+     I.waitForVisible(locate('#SomStromcek a.jstree-anchor').withText(folder_name), 20);
      I.jstreeNavigate([folder_name]);
 
      // vymazanie webstranky
@@ -545,45 +634,102 @@ Scenario('Zmena linky btn', async ({ I, DT, DTE }) => {
 
 });
 
-Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, Document }) => {
+Scenario('Repeated new page initialization after closing the editor', async ({ I, DT, DTE, Document }) => {
+     Document.resetPageBuilderMode();
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=40273');
+     DT.waitForLoader();
+     DTE.waitForEditor();
+     await I.executeScript(() => {
+          window.autotestEditorErrors = [];
+          window.addEventListener('error', event => window.autotestEditorErrors.push(event.message));
+     });
+
+     for (let attempt = 0; attempt < 5; attempt++) {
+          DTE.cancel('datatableInit');
+          I.click(DT.btn.add_button);
+          DTE.waitForEditor();
+          I.waitForFunction(() => {
+               const field = window.webpagesDatatable.EDITOR.field('data').s.opts;
+               return field.dirtyDataOriginal !== undefined;
+          }, 30);
+          I.assertDeepEqual(await I.executeScript(() => window.autotestEditorErrors), [], 'Reopening the editor must not raise JavaScript errors');
+     }
+     DTE.cancel('datatableInit');
+});
+
+Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
+     I.relogin("admin");
      var date = I.formatDate((new Date()).getTime());
 
      //
      I.say("Vypinam nastavenie editorAutoFillPublishStart");
-     Document.setConfigValue("editorAutoFillPublishStart", "false");
+     Document.setConfigValue("editorAutoFillPublishStart", "false", true);
 
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
 
-     DTE.cancel();
+     DTE.cancel('datatableInit');
 
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
+
+     DTE.cancel('datatableInit');
 
      //
      I.say("Zapinam nastavenie editorAutoFillPublishStart");
-     Document.setConfigValue("editorAutoFillPublishStart", "true");
+     Document.setConfigValue("editorAutoFillPublishStart", "true", true);
 
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
 
-     DTE.cancel();
+     DTE.cancel('datatableInit');
 
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
+
+     DTE.cancel('datatableInit');
+});
+
+Scenario('Restore editorAutoFillPublishStart configuration @singlethread', ({ Document }) => {
+     Document.setConfigValue('editorAutoFillPublishStart', 'true');
+});
+
+Scenario('New page initialization can be retried after a failed request', async ({ I, DT, DTE }) => {
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
+     DT.waitForLoader();
+     const errorText = await I.executeScript(() => WJ.translate('datatables.error.network.js'));
+     await I.mockRoute(failedCreateRoute, route => route.fulfill({ status: 503, body: 'Autotest initialization failure' }));
+
+     I.click(DT.btn.add_button);
+     I.waitForText(errorText, 10, '#toast-container-webjet');
+     I.dontSeeElement('#datatableInit_modal');
+
+     await I.stopMockingRoute(failedCreateRoute);
+     I.click(DT.btn.add_button);
+     DTE.waitForEditor();
+     I.waitForVisible('#datatableInit_modal[data-action="create"]', 10);
+     DTE.cancel();
+});
+
+Scenario('Cleanup new-page initialization interception', async ({ I }) => {
+     await I.stopMockingRoute(failedCreateRoute);
 });
 
 async function testLink(link, fixedLink, I, DT, DTE) {
@@ -756,6 +902,7 @@ async function testLinkElfinder(DTE, I) {
      I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
      I.waitForText('Súbory', 10, ".elfinder-cwd-file");
      I.doubleClick(".elfinder-cwd-filename[title='Súbory']");
+     I.waitForElement(".elfinder-cwd-file.elfinder-ro .elfinder-cwd-filename[title='archiv']", 10);
      I.click(".elfinder-cwd-filename[title='jurko.jpg']");
      await I.waitForElement(".elfinder-stat-selected[title^='jurko.jpg']", 10);
      I.switchTo();

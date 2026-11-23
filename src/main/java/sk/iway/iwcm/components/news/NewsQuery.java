@@ -178,33 +178,10 @@ public class NewsQuery
 			}
 			else if (Constants.DB_TYPE==Constants.DB_MSSQL)
 			{
-			    if (Constants.getBoolean("mssqlUseOldTopQuery"))
-                {
-                    //toto je potrebne pre staru verziu MSSQL
-                    StringBuilder sqlPaging = new StringBuilder();
-                    if (offset==NOT_SET_INT && initialOffset==0)
-                    {
-                        sqlPaging.append("SELECT TOP ").append(limit).append(sql.substring(6));
-                    }
-                    else
-                    {
-                        sqlPaging.append("SELECT * FROM (SELECT TOP ").append(limit).append(" * FROM ( SELECT TOP ").append(limit + (offset>0?offset:0) + initialOffset);
-                        sqlPaging.append(sql.substring(6));
-                        sqlPaging.append(") AS _subQuery1 ");
-                        // pridam reverzny ordering
-                        setOrdering(sqlPaging, "_subQuery1", true);
-                        // znova zoradim do povodneho radenia
-                        sqlPaging.append(") AS _subQuery2 ");
-                        setOrdering(sqlPaging, "_subQuery2", false);
-                    }
-                    sql = sqlPaging;
-                }
-			    else
-                {
-                    /* LPA - uprava limit a offset pre MS SQL */
-                    sql.append("OFFSET ").append((offset > 0 ? offset : 0) + initialOffset).append(" ROWS ")
-                            .append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
-                }
+
+				/* LPA - uprava limit a offset pre MS SQL */
+				sql.append("OFFSET ").append((offset > 0 ? offset : 0) + initialOffset).append(" ROWS ")
+						.append("FETCH NEXT ").append(limit).append(" ROWS ONLY");
 
 				/*
 				takto nejak:
@@ -327,38 +304,11 @@ public class NewsQuery
 		}
 		else if (c.getType()==CriteriaType.IN)
 		{
-			List<Object> objectList = (List<Object>)c.getValue();
-			sql.append(c.getProperty().getDbName()).append(" IN ( ");
-			boolean addComma = false;
-			for (Object obj : objectList)
-			{
-				if (addComma)
-				{
-					sql.append(", ");
-				}
-				addComma = true;
-				//appendCriteria(andCriteria, sql);
-				sql.append("?");
-				arguments.add(obj);
-			}
-			sql.append(") ");
+			sql.append(DB.getInCondition(c.getProperty().getDbName(), (List<?>)c.getValue(), arguments)).append(" ");
 		}
 		else if (c.getType()==CriteriaType.NOT_IN)
 		{
-			List<Object> objectList = (List<Object>)c.getValue();
-			sql.append(c.getProperty().getDbName()).append(" NOT IN ( ");
-			boolean addComma = false;
-			for (Object obj : objectList)
-			{
-				if (addComma)
-				{
-					sql.append(", ");
-				}
-				addComma = true;
-				sql.append("?");
-				arguments.add(obj);
-			}
-			sql.append(") ");
+			sql.append(DB.getNotInCondition(c.getProperty().getDbName(), (List<?>)c.getValue(), arguments)).append(" ");
 		}
 		else if (c.getType()==CriteriaType.LIKE)
 		{

@@ -19,7 +19,7 @@ Scenario('vybrany email docid @baseTest', async ({ I, DataTables }) => {
           perms: 'user.admin.userGroups',
           createSteps: function(I, options) {
                //vyber stranku
-               I.click("div.DTE_Field_Name_emailDoc button.btn-vue-jstree-item-edit");
+               I.click("div.DTE_Field_Name_emailDoc button.btn-webjet-jstree-item-edit");
                I.click(locate('.jstree-node.jstree-closed').withText("Jet portal 4").find('.jstree-icon.jstree-ocl')); //rozklikne adresar
                I.wait(1);
                I.click("Jet portal 4 - testovacia stranka");
@@ -28,7 +28,7 @@ Scenario('vybrany email docid @baseTest', async ({ I, DataTables }) => {
           },
           editSteps: function(I, options) {
                //zmaz stranku
-               I.click("div.DTE_Field_Name_emailDoc button.btn-vue-jstree-item-remove");
+               I.click("div.DTE_Field_Name_emailDoc button.btn-webjet-jstree-item-remove");
                I.seeInField("div.DTE_Field_Name_emailDoc input", "");
           },
           skipSwitchDomain: true

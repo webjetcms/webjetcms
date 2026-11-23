@@ -26,6 +26,15 @@ V okne editora záznamu je možné nastaviť:
 
 ![](editor.png)
 
+## Manuálne spustenie
+
+Po označení jednej alebo viacerých úloh ich môžete manuálne spustiť pomocou tlačidiel v nástrojovej lište:
+
+- tlačidlo prehrávania spustí úlohu na aktuálnom uzle,
+- tlačidlo servera spustí úlohu podľa hodnoty **Beží na uzle**. Hodnota `all` ju spustí na všetkých uzloch, `all-admin` na administračných uzloch, `all-public` na verejných uzloch a konkrétny názov iba na zadanom uzle.
+
+Požiadavka na vzdialené spustenie sa prenáša cez cluster a vykoná sa najneskôr pri ďalšej kontrole nastavenej konfiguračnou premennou `clusterRefreshTimeout`. Mimo cluster režimu sa úloha spustí lokálne.
+
 Zmeny pre časovanie úloh sa aplikujú okamžite, ale už odštartované úlohy ostanú bežať až pokým neskončia.
 
 ## Štandardné úlohy
@@ -102,6 +111,12 @@ SQL príkazy, oddelené znakom `|`.
 - Nemá.
 
 [sk.iway.iwcm.components.file_archiv.FileArchivatorInsertLater](../../../../../src/main/java/sk/iway/iwcm/components/file_archiv/FileArchivatorInsertLater.java) - Publikuje naplánované zmeny v archíve súborov.
+
+**Parametre:**
+
+- Nemá.
+
+[sk.iway.iwcm.components.ai.rest.AiTokenUsageReset](../../../../../src/main/java/sk/iway/iwcm/components/ai/rest/AiTokenUsageReset.java) - Vynuluje počítadlo použitých tokenov všetkých AI asistentov vo všetkých doménach. Nastavené limity a historické štatistiky zachová. Aktualizácia pridá denný reset o polnoci na administrátorských nodoch. Časovanie môžete zmeniť podľa [nastavenia limitov AI asistentov](../../../redactor/ai/settings/README.md#automatické-vynulovanie-tokenov).
 
 **Parametre:**
 

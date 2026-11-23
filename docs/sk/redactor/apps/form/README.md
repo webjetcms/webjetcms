@@ -16,6 +16,14 @@ V editácii formuláru môžete meniť pole poznámka (v ktorom si môžete evid
 
 ![](detail-editnote.png)
 
+Vymazaním všetkých odoslaných záznamov v detaile formulára sa nevymaže jeho definícia, nastavenia ani položky.
+
+Tlačidlo **Zmazať** v zozname formulárov odstráni odoslané záznamy. Ak formulár používa web stránka so zapnutým zobrazovaním alebo obsahuje dáta v archíve, jeho nastavenia, kroky, položky a podmienky zostanú zachované.
+
+Ak formulár nepoužíva žiadna zobrazovaná stránka a nemá dáta v archíve, zmaže sa celý vrátane nastavení, krokov, položiek a podmienok. Notifikácia potvrdí úplné odstránenie.
+
+Vymazanie formulára zo zoznamu archívov odstráni iba jeho archívne záznamy. Nastavenia a položky sa zachovajú, ak formulár zostáva v aktívnom zozname alebo ho používa zobrazovaná stránka.
+
 ## Vytvorenie formuláru
 
 Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením jeho základných parametrov v karte Základné. Vytvoríte tak nový formulár typu [Viackrokový formulár](../multistep-form/README.md). Následne môžete k formuláru pridať jednotlivé položky formuláru (textové polia, zaškrtávacie polia, výberové polia a podobne) kliknutím na názov vytvoreného formuláru v tabuľke a prechodom do karty [Položky formuláru](../multistep-form/README.md).
@@ -23,6 +31,10 @@ Formulár najjednoduchšie vytvoríte kliknutím na ikonu Pridať a nastavením 
 <div class="video-container">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/XRnwipQ-mH4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+### Duplikovanie formulára
+
+Označený viackrokový formulár môžete v zozname formulárov duplikovať. Pri duplikovaní zadajte nový unikátny názov formulára. Do nového formulára sa skopírujú jeho nastavenia, všetky kroky a položky formulára; pôvodné odoslané záznamy sa nekopírujú.
 
 ### Karta Základné
 
@@ -41,16 +53,17 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 
 - **Presmerovanie po vyplnení** - url adresa, na ktorú sa má vykonať presmerovanie po uložení formuláru. Ak nie je zadané presmeruje sa na pôvodnú stránku.
 - **Presmerovanie po chybe** - url adresa, na ktorú sa má vykonať presmerovanie, ak sa formulár nepodarí odoslať. Ak nie je zadané, použije sa rovnaká hodnota ako má ```forward```.
+- **Zobraziť obsah bez presmerovania** - pri viackrokovom formulári zobrazí po úspešnom odoslaní obsah webovej stránky z poľa **Presmerovanie po vyplnení** alebo **Presmerovanie po chybe** namiesto prednastavenej hlášky. Návštevník zostane na rovnakej URL adrese. Ak nemá oprávnenie na zobrazenie tejto webovej stránky, formulár sa odošle a zobrazí sa prednastavená hláška o úspešnom odoslaní. Predvolene je vypnuté. Pri zapnutí je pole **Presmerovanie po vyplnení** povinné.
 - **Ulož kópiu ako PDF** - ak je nastavené na `true`, tak systém po uložení formuláru vygeneruje aj jeho PDF verziu do adresára ```/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf```, pričom hodnota ```ID_FORMULARU``` je ```id``` formuláru v databáze.
 - **Umožni iba jedno odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, systém mu nedovolí ďalšie odoslanie. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Prepíš staršie odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, bude jeho hodnota prepísaná novou verziou. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.
 - **Vyžadovať potvrdenie súhlasu emailom** - aktivuje režim [potvrdenia emailovej adresy](#nastavenie-potvrdenia-emailovej-adresy).
 - **Poslať formulár ako prílohu do e-mailu** - zapnutím sa formulár do emailu priloží ako príloha vo formáte HTML.
   - **Názov prílohy formulára** - názov prílohy vo formáte HTML.
-- **Šifrovací kľúč** - ak chcete hodnoty formuláru zašifrovať, môžete zadať [šifrovací kľúč](../../admin/README.md#hlavička).
+- **Šifrovací kľúč** - verejný kľúč na šifrovanie hodnôt a HTML podoby odoslaného formulára v databáze. Vytvorenie páru kľúčov, nastavenie a dešifrovanie údajov opisuje [Šifrovanie formulárov](encryption.md). Odoslaný email a generovaná PDF kópia obsahujú čitateľné vyplnené hodnoty.
 - **Doc id stránky, na ktorej sa formulár nachádza** - doc ID stránky na ktorej sa formulár nachádza. Štandardne sa systém túto stránku snaží určiť na základe ```refereru```, alebo posledne zobrazenej stránky v `session`. Pre presné určenie je možné zadať túto hodnotu. Ak nie je zadaná WebJET ju automaticky doplní pri zobrazení formuláru.
 - **Doc id notifikácie pre používateľa** - ak je nastavené na hodnotu niektorej web stránky, tak po úspešnom uložení formuláru je na email návštevníka (z poľa email / e-mail) zaslaný email s textom danej web stránky. Môže sa jednať napríklad o poďakovanie za vyplnenie formuláru, alebo ďalšie inštrukcie postupu.
-- **Doc id stránky s verziou pre email** - doc ID stránky s verziou pre email. Stránku systém potrebuje na to, aby vedel vygenerovať emailovú podobu. Ak je zadaná hodnota `none` nepoužije sa určenie web stránky pre email. Ak hodnota nie je zadaná vôbec použije sa hodnota zadaná parametrom ```useFormDocId```. Hodnota je užitočná v tom prípade, ak na všetkých stránkach máte jeden kontaktný formulár vkladaný napr. v pätičke. Pri generovaní emailu sa ako kód použije kód samotnej stránky, v ktorej sa ale formulár nenachádza. Takto je možné povedať aby pre email použil inú stránku.
+- **Doc id stránky s verziou pre email** - doc ID stránky, ktorej obsah sa použije na vytvorenie emailovej podoby formulára. Ak je zadaná hodnota `none`, určenie stránky pre email sa nepoužije. Ak hodnota nie je zadaná vôbec, použije sa hodnota parametra ```useFormDocId```. Pri viackrokovom formulári môžete v obsahu zvolenej stránky použiť značku v tvare `!identifikator-polozky!`; pri odoslaní sa nahradí hodnotou príslušnej [položky formulára](../multistep-form/README.md#značky-hodnôt-položiek). Obsah a CSS štýly stránky sa použijú aj pre uloženú HTML podobu a PDF verziu formulára. Ak zvolená stránka neexistuje, použije sa štandardné zobrazenie formulára.
 
 ### Karta - Email
 
@@ -90,6 +103,23 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 - **Povolené prípony** - čiarkou oddelený zoznam povolených prípon nahrávaných súborov, napr. `jpg,png,pdf,docx`.
 - **Maximálna výška (pre obrázky)** - maximálna výška nahrávaného obrázku v pixeloch.
 - **Maximálna šírka (pre obrázky)** - maximálna šírka nahrávaného obrázku v pixeloch.
+
+## CSS štýly pre email a PDF
+
+Pri príprave HTML emailu z klasického alebo viackrokového formulára WebJET načíta CSS štýly stránky použitej pre email. Veľké CSS súbory webu zväčšujú aj odosielanú správu. Dizajnér môže pripraviť menšie súbory obsahujúce iba štýly potrebné na zobrazenie vyplneného formulára.
+
+Pre každý CSS súbor WebJET najprv hľadá súbor s príponou `-email.css` v rovnakom priečinku. Napríklad:
+
+| CSS súbor šablóny | Prednostne použitá verzia pre email |
+| --- | --- |
+| `/templates/orange/dist/css/main.css` | `/templates/orange/dist/css/main-email.css` |
+| `/templates/orange/dist/css/theme.css` | `/templates/orange/dist/css/theme-email.css` |
+
+Ak verzia `*-email.css` existuje, nahradí pôvodný súbor. Ak neexistuje, načíta sa pôvodné CSS. Toto pravidlo sa vyhodnocuje samostatne pre hlavné a druhoradé CSS šablóny, súbory z konfiguračnej premennej `editorEditorCss` a dodatočné CSS odovzdané z nastavení formulára. Náhrada jedného súboru nevypne ostatné štýly, preto pripravte menšie verzie pre všetky veľké CSS súbory, ktoré formulár používa.
+
+Obsah vybraných súborov sa vloží do emailu a PDF podkladu cez značku `<style>`. Uložená HTML podoba formulára odkazuje na rovnaké súbory značkami `<link>`, preto ich ponechajte dostupné aj po odoslaní formulára. Úpravu emailových CSS overte aj pri zobrazení uloženého formulára a jeho PDF verzie. Zobrazenie formulára na webovej stránke naďalej používa pôvodné CSS.
+
+Ak stránka nemá dostupnú šablónu, použije sa `/css/email.css`; ak ani tento súbor neexistuje, použije sa súbor z konfiguračnej premennej `editorPageCss`. Pri odosielaní ako čistý text sa CSS nepridáva.
 
 ## Nastavenie potvrdenia emailovej adresy
 
@@ -146,6 +176,8 @@ Po exporte sa automaticky nastaví stĺpec Dátum posledného exportu na aktuál
 
 ## Možné konfiguračné premenné
 
+- ```sendMailSaveEmail``` - ak je nastavené na ```true```, emaily z klasických aj viackrokových formulárov sa namiesto SMTP odoslania uložia ako súbory `.eml`. Ak sa zápis nepodarí, formulár oznámi chybu odoslania.
+- ```sendMailSaveEmailPath``` - adresár na ukladanie súborov `.eml`, predvolene ```/WEB-INF/tmp/emails```. Pre vývojové prostredie môžete nastaviť napríklad ```/files/protected/emails```; adresár musí byť zapisovateľný. Pri ```useSMTPServer=false``` zostáva zachované prednostné odložené odoslanie emailu.
 - ```formmailAllowedRecipients``` - Zoznam koncových častí email adries na ktoré je možné odoslať formuláre, napríklad: ```@interway.sk,podpora@demo.webjet.sk```. Štandardne prázdne, čo znamená, že formulár je možné odoslať na ľubovoľnú adresu
 - ```formMailEncoding``` - znaková sada pre odosielanie emailov z formulárov. Štandardne nastavené na prázdnu hodnotu, čo znamená, že sa použije rovnaké kódovanie znakov ako je nastavené pre web stránky.
 - ```spamProtection``` - ak je nastavené na ```true```, bude zapnutá ochrana proti spamu vo formulároch. Štandardne nastavené na ```true```.

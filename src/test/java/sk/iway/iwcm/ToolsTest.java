@@ -3,6 +3,7 @@ package sk.iway.iwcm;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import sk.iway.iwcm.components.domainRedirects.DomainRedirectDB;
 import sk.iway.iwcm.doc.DocDB;
@@ -67,16 +71,18 @@ class ToolsTest extends BaseWebjetTest {
 
     @Test
     void testGetServerNameWithAlias() {
+        String defaultDomainName = System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME");
+        assumeTrue(Tools.isNotEmpty(defaultDomainName), "CODECEPT_DEFAULT_DOMAIN_NAME is not configured");
         Constants.setBoolean("multiDomainEnabled", true);
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getServerName()).thenReturn("iwcm.interway.sk");
 
         String domainAlias = DomainRedirectDB.getDomainFromAlias(request.getServerName());
         System.out.println("domainAlias: " + domainAlias);
-        assertEquals(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"), domainAlias);
+        assertEquals(defaultDomainName, domainAlias);
 
         String serverName = Tools.getServerName(request, true);
-        assertEquals(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"), serverName);
+        assertEquals(defaultDomainName, serverName);
     }
 
     @Test
@@ -145,6 +151,59 @@ class ToolsTest extends BaseWebjetTest {
     void testConvertToHtmlTags_noReplacement() {
         String input = "plain text";
         assertEquals("plain text", Tools.convertToHtmlTags(input));
+    }
+
+    /** Preserves absent and empty optional values. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    void testRemoveNbsp_preservesNullAndEmptyValues(String value) {
+        assertEquals(value, Tools.removeNbsp(value));
+    }
+
+    /** Converts pasted separators into a single space while trimming both ends. */
+    @ParameterizedTest
+    @ValueSource(ints = {
+        0x0009, 0x000A, 0x000B, 0x000C, 0x000D, 0x0020, 0x0085, 0x00A0,
+        0x1680, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006,
+        0x2007, 0x2008, 0x2009, 0x200A, 0x200B, 0x2028, 0x2029, 0x202F, 0x205F, 0x3000
+    })
+    void testRemoveNbsp_normalizesSeparators(int codePoint) {
+        String separator = Character.toString(codePoint);
+        assertEquals("Ročné správy", Tools.removeNbsp(separator + "Ročné" + separator + separator + "správy" + separator));
+        assertEquals("", Tools.removeNbsp(separator + separator));
+    }
+
+    /** Removes non-spacing artifacts within words and in otherwise empty names. */
+    @ParameterizedTest
+    @ValueSource(ints = {0x0000, 0x0007, 0x0008, 0x001B, 0x007F, 0x0080, 0x009F, 0x00AD, 0x2060, 0xFEFF})
+    void testRemoveNbsp_removesNonSpacingArtifacts(int codePoint) {
+        String artifact = Character.toString(codePoint);
+        assertEquals("Dokument", Tools.removeNbsp("Doku" + artifact + "ment"));
+        assertEquals("", Tools.removeNbsp(artifact));
+    }
+
+    /** Keeps word boundaries when whitespace and removed artifacts are interleaved. */
+    @Test
+    void testRemoveNbsp_collapsesMixedWhitespaceIdempotently() {
+        String value = "\uFEFF \u00A0Ročné\r\n\t\u0000\u2060  správy\u202F\uFEFF";
+        String normalized = Tools.removeNbsp(value);
+        assertEquals("Ročné správy", normalized);
+        assertEquals(normalized, Tools.removeNbsp(normalized));
+    }
+
+    /** Normalizes HTML non-breaking-space entities together with surrounding whitespace. */
+    @ParameterizedTest
+    @ValueSource(strings = {"&nbsp;", "&NBSP;", "&NonBreakingSpace;", "&#160;", "&#0160;", "&#xA0;", "&#x00a0;", "&#8239;", "&#x202f;"})
+    void testRemoveNbsp_normalizesHtmlSpaceEntities(String entity) {
+        assertEquals("Ročné správy", Tools.removeNbsp(entity + "Ročné " + entity + " správy" + entity));
+        assertEquals("", Tools.removeNbsp(entity));
+    }
+
+    /** Preserves accents, combining marks, emoji joiners, script-specific formatting and other HTML entities. */
+    @Test
+    void testRemoveNbsp_preservesMeaningfulUnicodeAndLiteralHtml() {
+        String value = "Žltý kôň a\u0301 👩‍💻 می\u200Cروم \u200Fالعربية &amp; &#47; <b>Text</b>";
+        assertEquals(value, Tools.removeNbsp(value));
     }
 
 }

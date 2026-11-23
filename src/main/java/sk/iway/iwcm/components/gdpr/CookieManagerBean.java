@@ -18,6 +18,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 
 /**
@@ -35,6 +37,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Table(name="cookies")
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_GDPR_COOKIES)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced")
+})
 public class CookieManagerBean extends ActiveRecord implements Serializable
 {
 	private static final long serialVersionUID = -1L;

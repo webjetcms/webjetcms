@@ -5,8 +5,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.i18n.Prop;
@@ -131,5 +135,21 @@ public class EnumerationService {
 		});
 
         return enumTypeChild;
+    }
+
+    public static String getStringFieldName(EnumerationTypeBean enumerationType, char alphabet) {
+        int index = alphabet - 'A' + 1;
+        if (enumerationType == null || index < 1 || index > 12) return null;
+
+        BeanWrapper wrapper = new BeanWrapperImpl(enumerationType);
+        return (String) wrapper.getPropertyValue("string" + index + "Name");
+    }
+
+    public static String getStringFieldLabel(EnumerationTypeBean enumerationType, char alphabet, Prop prop) {
+        int index = alphabet - 'A' + 1;
+        String label = prop.getText("components.enumerations.admin_enum_list.retazec", String.valueOf(index));
+        String name = getStringFieldName(enumerationType, alphabet);
+        if (Tools.isNotEmpty(name)) label += " – " + name;
+        return label;
     }
 }

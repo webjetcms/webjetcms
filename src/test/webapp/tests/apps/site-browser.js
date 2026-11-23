@@ -72,7 +72,7 @@ Scenario('testovanie app - Zobrazenie súborov', async ({ I, DTE, Apps }) => {
         target: '_self',
         showActualDir: 'false'
     };
-    I.clickCss('button.btn-vue-jstree-item-edit');
+    I.clickCss('button.btn-webjet-jstree-item-edit');
     I.click(locate(".jstree-anchor").withText("archiv"));
     //I.click('apps','.jstree-anchor');
     DTE.fillField('target', changedParams.target);

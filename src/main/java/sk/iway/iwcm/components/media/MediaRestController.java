@@ -26,6 +26,8 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.doc.PlannedAccess;
+import sk.iway.iwcm.doc.PlannedChangesService;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -99,7 +101,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             if (getUser().isDisabledItem("editor_edit_media_all")) throw new IllegalArgumentException("Access is denied");
 
             //docId ani groupId ako parameter neboli poslane = sme v zozname vsetkych medii
-            page = new DatatablePageImpl<>(mediaRepository.findAllByDomainId(domainId, pageable));
+            page = new DatatablePageImpl<>(mediaRepository.findAllByMediaFkTableNameAndDomainId(DOCUMENTS_TABLE_NAME, domainId, pageable));
         } else {
             //dostali sme docId parameter, sme vnorena datatabulka vo web stranke
             page = new DatatablePageImpl<>(mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(getMediaFkId(), getTableName(), domainId, pageable));
@@ -133,14 +135,15 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
             checkPerms(docId);
         } else {
-            //docid zober z request.getDocId(pripad editacie vo web stranke) alebo z entity (ak je zadane v editacii) alebo ako -1 ked nie je nic
-            docId = Tools.getIntValue(getRequest().getParameter("docId"), Tools.getIntValue(entity.getMediaFkId(), -1));
+            // Embedded media require the page context; a new page explicitly sends docId=-1.
+            String requestedDocId = getRequest().getParameter("docId");
+            if (Tools.isEmpty(requestedDocId)) throw new IllegalArgumentException(getProp().getText("components.media.pageContextRequired"));
+            docId = Tools.getIntValue(requestedDocId, -1);
             if (docId > 0) {
                 int mutigroupDocId = MultigroupMappingDB.getMasterDocId(docId);
                 if (mutigroupDocId > 0) docId = mutigroupDocId;
             }
-            tableName = entity.getMediaFkTableName();
-            if (Tools.isEmpty(tableName)) tableName = getTableName();
+            tableName = getTableName();
 
             checkPerms(docId);
 
@@ -149,6 +152,9 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
                 docId = user.getUserId();
             }
         }
+
+        if (isPlanned()) PlannedChangesService.getInstance().validateMedia(entity, docId);
+        else PlannedChangesService.rejectPrivateReferences(entity);
 
         //IMPORTANT - dont use method getMediaFkId here because we need know if it's docId or userId
         //this difference we need to know to call getLastOrder with right param
@@ -159,8 +165,9 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         }
 
         //set docId(document creating/editing media) and table name as "documents"
-        if (entity.getMediaFkId()==null) entity.setMediaFkId(docId);
-        if (Tools.isEmpty(entity.getMediaFkTableName())) entity.setMediaFkTableName(tableName);
+        entity.setMediaFkId(docId);
+        entity.setMediaFkTableName(tableName);
+        entity.setDomainId(CloudToolsForCore.getDomainId());
 
         //set new mediaSortOrder
         if (entity.getMediaSortOrder()==null) entity.setMediaSortOrder(mediaSortOrder);
@@ -259,6 +266,10 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
     public String getTableName() {
         int docId = Tools.getIntValue(getRequest().getParameter("docId"), -1);
 
+        if (isPlanned()) {
+            if (docId < 1 || !PlannedAccess.enabled()) throw new IllegalArgumentException("Planned page context is required");
+            return PlannedChangesService.PLANNED_MEDIA_TABLE;
+        }
         if(docId  < 1) {
             return "documents_temp";
         } else return DOCUMENTS_TABLE_NAME;
@@ -305,11 +316,44 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         if (groupId > 0) {
             predicates.add(builder.equal(root.join("groups").get("id"), groupId));
         }
+        if (getRequest().getParameter("docId") != null) {
+            checkPerms(Tools.getIntValue(getRequest().getParameter("docId"), -1));
+            predicates.add(builder.equal(root.get("mediaFkTableName"), getTableName()));
+            predicates.add(builder.equal(root.get("mediaFkId"), getMediaFkId()));
+        } else {
+            predicates.add(builder.notEqual(root.get("mediaFkTableName"), PlannedChangesService.PLANNED_MEDIA_TABLE));
+        }
         String docTitle = params.get("searchEditorFields.docDetails");
         if (Tools.isNotEmpty(docTitle)) {
             SpecSearch<Media> specSearch = new SpecSearch<>();
             specSearch.addSpecSearchDocFullPath(docTitle, "mediaFkId", predicates, root, builder);
         }
+    }
+
+
+    private boolean isPlanned() {
+        return "true".equals(getRequest().getParameter("planned"));
+    }
+
+    @Override
+    public boolean checkItemPerms(Media entity, Long id) {
+        if (id != null && id > 0) {
+            Media stored = mediaRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
+            if (stored == null) return false;
+            if (getRequest().getParameter("docId") != null) {
+                if (!getTableName().equals(stored.getMediaFkTableName()) || !Integer.valueOf(getMediaFkId()).equals(stored.getMediaFkId())) return false;
+            } else if (PlannedChangesService.PLANNED_MEDIA_TABLE.equals(stored.getMediaFkTableName())) return false;
+            if ("documents_temp".equals(stored.getMediaFkTableName())) {
+                if (!Integer.valueOf(getUser().getUserId()).equals(stored.getMediaFkId())) return false;
+            } else checkPerms(stored.getMediaFkId());
+        }
+        return true;
+    }
+
+    @Override
+    public boolean beforeDelete(Media entity) {
+        if (isPlanned()) PlannedChangesService.getInstance().requirePlannedMedia(getMediaFkId());
+        return true;
     }
 
     @Override

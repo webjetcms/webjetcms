@@ -301,7 +301,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
 	if(ibaPodPriecinky.size() > 0 && pageParams.getBooleanValue("showCategory", true))
 	{%>
-	<div class="productsTags">
+	<div class="productsTags col-sm-12 mb-3">
 		<iwcm:text key="components.cloud.basket.category.sub"/>:
 			<%for(GroupDetails podPriecinok:ibaPodPriecinky)
 			{%>
@@ -345,8 +345,8 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
     	<div class="row basket style01">
     <iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 
-  		<div class="col-md-3 col-sm-6">
-    		<span class="thumbnail clearfix">
+		<div class="col-md-3 col-sm-6 mb-3">
+			<span class="thumbnail clearfix shadow-none">
       			<%if(Tools.isNotEmpty(doc.getFieldQ())){
       			String styleAttr="";
 
@@ -361,7 +361,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
       			<div class="basket-label" style="<%=styleAttr%>"><%=doc.getFieldQ() %></div>
       			<%} %>
       			<a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><img src="/thumb<jsp:getProperty name="doc" property="perexImageSmall"/>?w=500&h=400&ip=5" alt="" /></a>
-      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:beanWrite name="doc" property="title"/></a></h4>
+			<h4 class="text-truncate"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:beanWrite name="doc" property="title"/></a></h4>
       			<div class="ratings">
 			<%
 				request.setAttribute("ratingForm", "!INCLUDE(/components/rating/rating_form.jsp, ratingDocId="+doc.getDocId()+", range=5)!");
@@ -402,9 +402,6 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
 	</div>
 
-	<iwcm:empty name="novinky">
-		<iwcm:text key="components.basket.category.empty"/>
-	</iwcm:empty>
   		<!-- END PRODUCTS -->
 </div>
 <%} else if("02".equals(style)){ %>
@@ -522,9 +519,6 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 
 	</div>
 
-	<iwcm:empty name="novinky">
-		<iwcm:text key="components.basket.category.empty"/>
-	</iwcm:empty>
   		<!-- END PRODUCTS -->
 </div>
 <div class="col-sm-5 sideBasket">

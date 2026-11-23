@@ -9,6 +9,7 @@ Scenario('kontrola banner-stat a banner-detail', ({I, DT}) => {
 
     I.click("div.md-breadcrumb input.dt-filter-from-dayDate");
     I.fillField("div.md-breadcrumb input.dt-filter-from-dayDate", "01.05.2022");
+    I.fillField("div.md-breadcrumb input.dt-filter-to-dayDate", "");
     I.clickCss("#bannerStatDataTable_extfilter > div > div.col-auto.dt-extfilter.dt-extfilter-dayDate > form > div > button");
     DT.waitForLoader();
 

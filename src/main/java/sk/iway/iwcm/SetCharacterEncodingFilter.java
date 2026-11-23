@@ -22,6 +22,7 @@ import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 import sk.iway.iwcm.system.ntlm.NtlmLogonAction;
 import sk.iway.iwcm.system.ntlm.RedirectedException;
 import sk.iway.iwcm.users.UserDetails;
@@ -225,6 +226,76 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
    }
 
    /**
+    * Opens an independent request and persistence context for synchronous background rendering.
+    * Close it on the same thread, in reverse order when nested. Caller entity managers are
+    * restored without closing them or rolling back their transactions.
+    */
+   public static IsolatedDataContext openIsolatedDataContext(HttpServletRequest request)
+   {
+       IsolatedDataContext context = new IsolatedDataContext();
+       try
+       {
+           registerDataContext(request);
+           return context;
+       }
+       // Keep Exception and Error handlers separate for AspectJ's exception advice.
+       catch (RuntimeException ex)
+       {
+           closeFailedDataContext(context, ex);
+           throw ex;
+       }
+       catch (Error ex)
+       {
+           closeFailedDataContext(context, ex);
+           throw ex;
+       }
+   }
+
+   private static void closeFailedDataContext(IsolatedDataContext context, Throwable failure)
+   {
+       try
+       {
+           context.close();
+       }
+       catch (RuntimeException cleanupException)
+       {
+           failure.addSuppressed(cleanupException);
+       }
+   }
+
+   public static final class IsolatedDataContext implements AutoCloseable
+   {
+       private final RequestBean originalBean = getCurrentRequestBean();
+       private final Map<EntityManagerFactory, EntityManager> originalManagers = threadEntityManagers.get();
+       private boolean closed;
+
+       private IsolatedDataContext()
+       {
+           threadEntityManagers.remove();
+           requests.remove(Thread.currentThread().getId());
+       }
+
+       @Override
+       public void close()
+       {
+           if (closed) return;
+           closed = true;
+           try
+           {
+               closeEntityManagers();
+           }
+           finally
+           {
+               if (originalManagers == null) threadEntityManagers.remove();
+               else threadEntityManagers.set(originalManagers);
+
+               if (originalBean == null) requests.remove(Thread.currentThread().getId());
+               else setCurrentRequestBean(originalBean);
+           }
+       }
+   }
+
+   /**
     * inicializacia mapy EntityManager-ov
     */
    private static void initializeEntityManagerMap()
@@ -253,21 +324,30 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 
 		threadEntityManagers.remove();
 
+		RuntimeException failure = null;
 		for (EntityManager entityManager : map.values())
 		{
-			EntityTransaction transaction =	entityManager.getTransaction();
-
-			// ak niekto nechal otvorene transakcie, spravime rollback
-			if (transaction != null)
+			try
 			{
-				if (transaction.isActive())
-					transaction.rollback();
+				if (entityManager.isOpen() == false) continue;
+				try
+				{
+					EntityTransaction transaction = entityManager.getTransaction();
+					if (transaction != null && transaction.isActive()) transaction.rollback();
+				}
+				finally
+				{
+					entityManager.close();
+				}
 			}
-			if (entityManager.isOpen())
+			catch (RuntimeException ex)
 			{
-				entityManager.close();
+				// A failing manager must not prevent cleanup of the remaining databases.
+				if (failure == null) failure = ex;
+				else if (failure != ex) failure.addSuppressed(ex);
 			}
 		}
+		if (failure != null) throw failure;
    }
 
    public static void printDbErrorMessage(String path, HttpServletRequest request, HttpServletResponse res) throws IOException
@@ -402,7 +482,9 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			}
 
 			Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
-			if (AuthenticationFilter.weTrustIIS() && Tools.getUserPrincipal(request) != null &&
+			if (request.getSession().getAttribute(AdminDeviceService.PENDING_LOGIN) == null
+                && request.getSession().getAttribute("adminUser_waitingForToken") == null
+                && AuthenticationFilter.weTrustIIS() && Tools.getUserPrincipal(request) != null &&
 						Tools.isNotEmpty(Tools.getUserPrincipal(request).getName()))
 			{
 				if (isLoggedAsSomeoneElse(request, user))
@@ -623,6 +705,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		if (Tools.isSecure(req))
 		{
 			PathFilter.setHeader(res, "Strict-Transport-Security", "strictTransportSecurity");
+			res.addHeader("Accept-CH", "Sec-CH-UA-Platform-Version");
 		}
 		PathFilter.setHeader(res, "X-Content-Type-Options", "xContentTypeOptions");
 		if (path != null && path.toLowerCase().endsWith(".svg")) {
@@ -988,6 +1071,15 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		}
 
 		Identity loggedUser = UsersDB.getCurrentUser(request);
+        if (AdminDeviceService.requireVerification(request)) {
+            try {
+                response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+            } catch (java.io.IOException exception) {
+                Logger.error(SetCharacterEncodingFilter.class, "Cannot redirect to device verification", exception);
+            }
+            throw new RedirectedException();
+        }
+		LogonTools.afterSuccessLogon(request, response);
 
 		Logger.debug(SetCharacterEncodingFilter.class, "logUserInViaNtlm() END, user="+loggedUser);
 

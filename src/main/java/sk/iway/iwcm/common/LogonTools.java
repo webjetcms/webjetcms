@@ -52,8 +52,10 @@ import sk.iway.iwcm.users.PermissionGroupBean;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 public class LogonTools {
+    private static final String AFTER_SUCCESS_LOGON_ALREADY_EXECUTED = LogonTools.class.getName() + ".afterSuccessLogon";
 
     protected LogonTools() {
         //utility class
@@ -695,7 +697,7 @@ public class LogonTools {
                     errors.add("passwordsNotMatch");
                     request.setAttribute("passwordsNotMatch", "true");
 
-                    session.removeAttribute(Constants.USER_KEY);
+                    clearUserFromSession(session);
 
                     Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), "LogonTools - user ("+user.getLogin()+") password to change not match", -1, -1);
 
@@ -738,7 +740,7 @@ public class LogonTools {
             }
             else
             {
-                session.removeAttribute(Constants.USER_KEY);
+                clearUserFromSession(session);
                 session.setAttribute(Constants.USER_KEY+"_changepassword", passUser);
             }
             //END kontrola hesla
@@ -820,8 +822,6 @@ public class LogonTools {
 			return errors;
 		}
 
-        callLogonLogoffInterceptor(user, request);
-
         return errors;
     }
 
@@ -850,6 +850,45 @@ public class LogonTools {
         SetCharacterEncodingFilter.registerDataContext(request);
     }
 
+    /**
+     * Runs post-login callbacks and browser recognition once for the current account and request.
+     * Call after the session is established, password policy and all required authentication factors
+     * have succeeded, and before redirecting or forwarding. API token and HTTP Basic authentication
+     * must not call this browser-login hook.
+     *
+     * @param request completed authentication request containing the logged-in user's session
+     * @param response response receiving login cookies
+     */
+    public static void afterSuccessLogon(HttpServletRequest request, HttpServletResponse response) {
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user == null) return;
+
+        //prevent duplicate execution
+        Integer account = user.getUserId();
+        if (account.equals(request.getAttribute(AFTER_SUCCESS_LOGON_ALREADY_EXECUTED))) return;
+        request.setAttribute(AFTER_SUCCESS_LOGON_ALREADY_EXECUTED, account);
+
+        if (user.isAdmin()) sk.iway.iwcm.users.devices.AdminLoginLocation.beginLogin(request.getSession());
+
+        //call all required post-login hooks
+        callLogonLogoffInterceptor(user, request);
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        afterLogon(user, request, response);
+    }
+
+    /**
+     * Invokes only the configured {@code afterLogonMethod} callback for legacy integrations.
+     * Uses the supplied identity independently of the session and preserves repeated callback calls.
+     *
+     * @param user identity passed to the configured callback
+     * @param request login request passed to the configured callback
+     * @param response login response passed to the configured callback
+     * @deprecated Scheduled for removal ú make it PRIVATE in WebJET CMS 2027. For completed browser logins, use
+     *             {@link #afterSuccessLogon(HttpServletRequest, HttpServletResponse)} after establishing
+     *             the session and completing all required authentication steps. That method also runs
+     *             login interceptors and browser recognition once per account and request.
+     */
+    @Deprecated(forRemoval = true)
     public static void afterLogon(Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
 		String afterLogon = Constants.getString("afterLogonMethod");
@@ -982,8 +1021,10 @@ public class LogonTools {
                 if (o != null) preservedSessionObjects.put(name, o);
             }
 
+            Object loginLocation = request.getSession().getAttribute(sk.iway.iwcm.users.devices.AdminLoginLocation.PENDING);
             request.getSession(false).invalidate();
             request.getSession().setAttribute(SESSION_KEY, 1);
+            if (loginLocation != null) request.getSession().setAttribute(sk.iway.iwcm.users.devices.AdminLoginLocation.PENDING, loginLocation);
 
             //preserve atributov
             for (String name : preservedSessionObjectNames)
@@ -1085,6 +1126,14 @@ public class LogonTools {
         }
 
         return null;
+    }
+
+    /** Removes both authentication contexts while a required login step is pending. */
+    public static void clearUserFromSession(HttpSession session) {
+        session.removeAttribute(Constants.USER_KEY);
+        session.removeAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        session.removeAttribute(AdminDeviceService.SESSION_DEVICE_ID);
+        SecurityContextHolder.clearContext();
     }
 
     /**

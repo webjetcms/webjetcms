@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.file_archiv.BasicManagerBean.ManagerType;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -44,6 +45,15 @@ public class ManagerRestController extends DatatableRestControllerV2<BasicManage
             List<BasicManagerBean> allValues = getValues();
             return allValues.get((int)id - 1);
         }
+    }
+
+    /**
+     * Normalizes the replacement name before validation so invisible-only names are rejected.
+     * The original name remains unchanged because it identifies the records to rename.
+     */
+    @Override
+    public void beforeSave(BasicManagerBean entity) {
+        entity.setNewName(Tools.removeNbsp(entity.getNewName()));
     }
 
     @Override

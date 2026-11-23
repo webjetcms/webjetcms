@@ -47,6 +47,7 @@ block content
                     ) REJECT
 
     script.
+        window.helpLink = "/redactor/webpages/approve/README";
         function submitForm(status) {
             document.getElementById('approveAction').value = status;
             document.querySelector("button[type='submit']").click();

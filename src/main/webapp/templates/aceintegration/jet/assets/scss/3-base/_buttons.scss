@@ -2,13 +2,13 @@
 
 .btn {
     min-width: 140px;
-    border: 0;
     border-radius: 0;
 }
 
 .btn-primary {
     color: #fff;
     background: $c-text-highlight;
+    border-color: $c-text-highlight;
 
     &:hover,
     &:active,
@@ -16,6 +16,7 @@
     &:not(:disabled):not(.disabled).active,
     &:not(:disabled):not(.disabled):active {
         background: darken($c-text-highlight, 10%);
+        border-color: darken($c-text-highlight, 10%);
     }
 }
 
@@ -29,6 +30,7 @@
     &:not(:disabled):not(.disabled).active,
     &:not(:disabled):not(.disabled):active {
         background: darken(#fafafa, 2%);
+        border-color: darken(#fafafa, 2%);
         color: $c-text-main;
     }
 }

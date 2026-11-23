@@ -90,7 +90,7 @@ public class IterateTag extends BodyTagSupport {
     protected String indexId = null;
 
     /**
-     * The length value or attribute name (<=0 means no limit).
+     * The length value or attribute name ({@code <= 0} means no limit).
      */
     protected String length = null;
 

@@ -4,6 +4,8 @@ Sekcia Prekladové kľúče umožňuje vytvárať/upravovať/duplikovať preklad
 
 Každý záznam v tabuľke obsahuje všetky jazykové kombinácie pre daný prekladový kľúč, ako aj ich pôvodné hodnoty pred zmenou. Ich pôvodná hodnota je daná súborom a vy môžete túto hodnotu aktualizovať alebo ju ponechať.
 
+V ľavej časti je stromová štruktúra prefixov prekladových kľúčov oddelených bodkou. Kliknutím na prefix sa zoznam v tabuľke automaticky vyfiltruje na kľúče s daným prefixom. V strome môžete prefixy vyhľadávať, pričom možnosť **Všetky prekladové kľúče** zruší filter a zobrazí celý zoznam. Strom zobrazuje iba prefixy kľúčov, na ktoré má prihlásený používateľ oprávnenie.
+
 ![](dataTable.png)
 
 ## Typy prekladových kľúčov

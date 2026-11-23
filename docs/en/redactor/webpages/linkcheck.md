@@ -1,8 +1,8 @@
 # Checking links and blank pages
 
-> In web pages, after selecting a folder and then pressing the ![](linkcheck-href-button.png ":no-zoom") button, a table with a list of broken links and empty pages will be displayed.
+You can open the check in the list of websites via **More actions → Check links and empty pages**. It works with the current folder and its subfolders; you do not need to mark the pages.
 
-The application will check links and web pages from the selected folder and also from all subfolders. The result will be displayed in 3 tabs:
+The scan result will be displayed in 3 tabs:
 
 - Broken links - links that do not exist. Only local links are checked, not links to external sites (starting with http).
 - Pages with display disabled - pages that have their display disabled.

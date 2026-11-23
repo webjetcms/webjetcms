@@ -1,6 +1,7 @@
 package sk.iway.iwcm.gallery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,6 +11,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
@@ -117,6 +119,26 @@ class GalleryDBResizePictureTest extends BaseWebjetTest {
         Path image = tempDir.resolve(name);
         assertTrue(ImageIO.write(source, "png", image.toFile()));
         return image;
+    }
+
+    /** A copied source already smaller than the requested bounds is still a successful gallery upload. */
+    @Test
+    void smallerSourceIsSuccessful() throws IOException {
+        Path image = createSourceImage("small.png", 30, 20);
+        assertEquals(1, GalleryDB.resizePicture(image.toString(), tempDir.resolve("copy.png").toString(), 300, 200, "S"));
+        assertTrue(GalleryDB.resizePictureImpl(new Dimension[] { new Dimension(60, 40), new Dimension(120, 80) },
+            image.toString(), null, null, "S", "S"));
+        assertImageDimensions(tempDir.resolve("s_small.png"), 30, 20);
+    }
+
+    /** Invalid metadata is reported as an unsupported/unreadable image for PNG as well as AVIF. */
+    @Test
+    void malformedPngFailsGalleryProcessing() throws IOException {
+        Path image = tempDir.resolve("broken.png");
+        Files.write(image, new byte[] {0, 1, 2, 3});
+        assertEquals(4, GalleryDB.resizePicture(image.toString(), tempDir.resolve("copy.png").toString(), 30, 20, "S"));
+        assertFalse(GalleryDB.resizePictureImpl(new Dimension[] { new Dimension(30, 20), new Dimension(60, 40) },
+            image.toString(), null, null, "S", "S"));
     }
 
     private void assertImageDimensions(Path image, int expectedWidth, int expectedHeight) throws IOException {

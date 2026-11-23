@@ -64,6 +64,8 @@ In the application it will be possible to edit the list of items, change their o
 
 The function for changing the order of rows using the `Drag&Drop` function is also automatically activated. Due to conflicts when moving rows and their different arrangement, the option to sort the list by any column is disabled, the list is automatically arranged according to the order of arrangement. For JSON editor mode, this column is automatically added - note that the `ImpressSlideshowItem` class in the example below does not contain either the `ID` or `rowOrder` columns, since they are technically not needed to display the data. They are added automatically. If you need to display the column manually, use the `DataTableColumnType.ROW_REORDER` annotation.
 
+!> Local JSON mode does not call the backend endpoint `/row-reorder` because it handles the reordering in the editor data on the client side. For a data table connected to a REST service, [server conditions for allowing reordering](../datatables/README.md#row-ordering-order) apply.
+
 Example of use:
 
 ```java

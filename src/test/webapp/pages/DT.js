@@ -1,4 +1,4 @@
-const { I } = inject();
+const { I, i18n } = inject();
 const buttons = require('./buttons.js')
 
 /**
@@ -30,6 +30,8 @@ module.exports = {
             name = "#" + name + "_processing";
         }
 
+        // CodeceptJS checks only the first match; ignore idle tables before waiting.
+        name += ":visible";
         I.waitForInvisible(name, 40);
         //ak by sa este nestihol zobrazit kym sa vykona prva podmienka, pre istotu pockame a potom skusime znova
         I.wait(0.3);
@@ -37,8 +39,14 @@ module.exports = {
         I.wait(0.2);
     },
 
-    //skontroluje prava na datatabulke - zobrazi, odoberie pravo a overi zobrazenie chyby prav
-    checkPerms(perms, url, datatableId=null) {
+    /**
+     * Verifies REST and page permissions after removing a permission from the current session.
+     * @param {string} perms - Permission to remove.
+     * @param {string} url - Page containing the table.
+     * @param {string|null} [datatableId=null] - Table whose refresh button should be used.
+     * @param {Function|null} [reloadTable=null] - Queues a reload when the table has no refresh button.
+     */
+    checkPerms(perms, url, datatableId=null, reloadTable=null) {
         let warningText = "Prístup k tejto stránke je zamietnutý";
         I.say("Testing permissions, perms=" + perms + " url=" + url + " warningText=" + warningText);
         I.amOnPage(url);
@@ -55,7 +63,8 @@ module.exports = {
         I.amOnPage(url + paramTokenizer + "removePerm=" + perms);
         I.closeCurrentTab();
 
-        if (typeof datatableId != "undefined" && datatableId != null) I.click({ css: "#"+datatableId+"_wrapper button.buttons-refresh"});
+        if (reloadTable != null) reloadTable();
+        else if (typeof datatableId != "undefined" && datatableId != null) I.click({ css: "#"+datatableId+"_wrapper button.buttons-refresh"});
         else I.click({css: "button.buttons-refresh"});
 
         I.say("Obnovujem datatabulku, overujem prava na REST sluzbu");
@@ -266,6 +275,14 @@ module.exports = {
         I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     },
 
+    setPageLength(rows, tableId="datatableInit") {
+        var container = "#"+tableId+"_wrapper";
+        I.clickCss(container+" button.buttons-settings");
+        I.clickCss(container+" button.buttons-page-length");
+        I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=presentation]");
+        I.click(locate(container+" button.btn.button-page-length").withText(""+rows));
+        I.clickCss(container+" button.btn.btn-primary.dt-close-modal");
+    },
 
     /**
      * Check cell value in selected row and column, index starts at 1
@@ -318,7 +335,7 @@ module.exports = {
         I.clickCss(container + " div.dt-scroll-headInner button.buttons-select-all");
         I.clickCss(container + " div.dt-buttons button.buttons-remove");
         I.waitForVisible("#" + name + "_modal", 200);
-        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.click(i18n.get("Delete::2"), "div.DTE_Action_Remove");
         I.waitForInvisible("div.DTE_Processing_Indicator", 200);
     },
 

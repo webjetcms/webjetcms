@@ -18,6 +18,32 @@ a potrebujeme, aby sme ho mali v max rozmere `200x200` bodov. Pred URL obrázku 
 
 Obrázok reálne môže byť menší ako požadovaných `200x200` bodov, záleží od jeho pomeru strán. V tomto prípade sa vygeneroval ako `200x134` bodov, vždy sa ale zmestí do požadovaného rozmeru.
 
+## Obrázky AVIF
+
+Generovanie miniatúr a úpravy AVIF vyžadujú na serveri **ImageMagick s podporou čítania aj zápisu AVIF vrátane priehľadnosti a animácií**. Používajte ImageMagick **7.1.2-34 alebo novší**, `libheif` **1.22.0 alebo novší** a AV1 kodek. V konfigurácii `imageMagickDir` nastavte priečinok s príkazom `magick`. Podporu musí zabezpečiť správca servera. WebJET pri spracovaní predpokladá funkčný kodek.
+
+Verzie overte v termináli pod účtom, pod ktorým beží WebJET. Do premennej `image_magick_dir` zadajte rovnaký priečinok ako v konfigurácii `imageMagickDir` (v príklade `/usr/local/bin`):
+
+```sh
+magick -version
+magick -list format | awk '$1 == "AVIF" { print }'
+```
+
+Príklad vyhovujúceho výstupu (skrátený):
+
+```text
+Version: ImageMagick 7.1.2-34 Q16-HDRI ...
+     AVIF  HEIC      rw+   AV1 Image File Format (1.23.6)
+```
+
+- Verzia za `ImageMagick` musí byť **7.1.2-34 alebo novšia**.
+- Číslo v zátvorke na riadku `AVIF` je verzia knižnice `libheif` používanej ImageMagickom. Musí byť **1.22.0 alebo novšia**.
+- Riadok `AVIF` musí obsahovať `rw`, teda podporu čítania aj zápisu. Ak riadok chýba, toto zostavenie nemá podporu AVIF. Stĺpec `HEIC` sa podľa zostavenia nemusí zobrazovať.
+
+Pri úpravách sa používa bežný SDR výstup, bez záruky zachovania HDR a pôvodnej 10/12-bitovej hĺbky. Automatická vodotlač pri nahrávaní (`galleryWatermarkApplyOnUpload`) sa aplikuje aj na originál AVIF a vloží sa do každého snímku. Prekódovanie môže zmeniť bajty súboru. Kresliaci editor TUI odosiela jediný PNG obrázok z plátna, preto jeho uložením vznikne statický AVIF.
+
+Kvalitu a rýchlosť kódovania nastavíte existujúcim mechanizmom [vlastných parametrov ImageMagick](../../redactor/apps/gallery/README.md#vlastné-parametre-imagemagick). Predvolená hodnota `imageMagickCustomParams_avif` je `-quality 80 -define heic:speed=6`. Platia aj špecifickejšie nastavenia pre operáciu, napríklad `imageMagickCustomParams_resize_avif`.
+
 ## Predvolený obrázok
 
 Predvolene sa pre neexistujúci obrázok pri použití `/thumb` adresy vráti štandardná chyba 404. Ak ale potrebujete pre taký prípad zobraziť predvolený obrázok, je možné použiť konfiguračnú premennú `thumbServletMissingImg`. Do nej je možné do riadkov doplniť meno priečinku a meno súboru, ktorý sa pre tento prípad má použiť. Príklad nastavenia:
@@ -38,13 +64,27 @@ Generovanie obrázkov zaťažuje server, je teda chránené SPAM ochranou. Použ
 - `spamProtectionTimeout-ThumbServlet` - čas medzi HTTP požiadavkami, nastavené na hodnotu `-2` pre vypnutie, keďže na stránke môže byť viacero obrázkov, ktoré sa generujú naraz.
 - `spamProtectionHourlyLimit-ThumbServlet` - maximálny počet vygenerovaných obrázkov z jednej IP adresy za hodinu, predvolene nastavené na hodnotu `300`.
 - `cloudCloneAllowedIps` - zoznam začiatkov IP adries oddelených čiarkou pre ktoré sa obmedzenie nebude aplikovať, predvolene prázdne (nepoužije sa).
-- `thumbServletAllowedSizes` - zoznam povolených rozmerov súborov pre generovanie obrázka. Generuje sa vo formáte `{width}x{height}ip{ip}{noip}c{color}q{quality}`, napríklad `730x401ip5ncff00ffq90`. Parametre ktoré nie sú zadané nie su použité, napríklad `430x405` alebo `730x404ip5`. Odporúčame použiť režim `learn` na prvotné nastavenie a následne nastaviť režim `check`.
+- `thumbServletAllowedSizes` - zoznam povolených rozmerov súborov pre generovanie obrázka. Generuje sa vo formáte `{width}x{height}ip{ip}{noip}c{color}q{quality}`, napríklad `730x401ip5ncff00ffq90`. Parametre ktoré nie sú zadané nie su použité, napríklad `430x405` alebo `730x404ip5`. Odporúčame použiť režim `learn` na prvotné nastavenie a následne nastaviť režim `check`. Ak používate `ip=1/ip=2` bez `h/w` parametra použite pre povolenie rovnakú hodnotu, napríklad pre `/thumb/images/image.jpg?ip=1&w=610` nastavte `610x610ip1`.
 - `thumbServletAllowedSizeMode` - Nastavuje režim povolených rozmerov pre generovanie obrázka. Možné hodnoty:
   - `deny` - zakáže generovanie nových obrázkov ak nie je prihlásený administrátor (existujúce obrázky sa budú zobrazovať, keďže už sú na disku vygenerované)
   - `allow` - povolí všetky rozmery, ani nekontroluje zoznam povolených možností
   - `learn` - pridá hodnotu do zoznamu `thumbServletAllowedSizes` (ak už tam nie je) - režim učenia sa existujúcich hodnôt
   - `check` - povolí len zadané hodnoty, ak je prihlásený administrátor, automaticky pridá nový rozmer do zoznamu
   - `strict` - povolí vygenerovať obrázok len pre zadané hodnoty (kontroluje zoznam povolených hodnôt)
+
+Karta **Miniatúra** vo vlastnostiach obrázka sa riadi nastavením `thumbServletAllowedSizeMode`:
+
+| Režim | Zadané povolené rozmery | Prázdny zoznam |
+| --- | --- | --- |
+| `strict` | Výber povoleného rozmeru alebo **Nepoužiť miniatúru** | Len **Nepoužiť miniatúru** |
+| `learn`, `check`, `allow` | Výber rozmeru, **Nepoužiť miniatúru** alebo **Zadať vlastný rozmer…** | Pôvodné polia na zadanie rozmerov |
+| `deny` | Karta je skrytá | Karta je skrytá |
+
+Možnosti sa načítajú z `thumbServletAllowedSizes` (oddelené čiarkou alebo novým riadkom), odstránia sa duplicity a zoradia sa číselne podľa šírky a výšky. Napríklad `96x96ip2` sa zobrazí ako **96 px – Fixná výška (ip2)**. Názov režimu používa rovnaký preklad ako pole **Režim**. Hodnota bez `ip` sa zobrazí ako maximálne rozmery `(ip0)`. Farba pozadia sa zobrazí hexadecimálne; vypnutie bodu záujmu a kvalita sa doplnia do popisu.
+
+Vybraná kombinácia sa uloží do URL obrázka aj CSS triedy `fixedSize`. Kvalita sa zapisuje príponou `-q90`, napríklad `fixedSize-730-401-5-ff00ff-true-q90`. Pri opätovnom otvorení sa vyberie zodpovedajúca možnosť. Ak existujúci rozmer nie je v zozname, v režime `strict` sa zobrazí upozornenie a treba vybrať povolený rozmer alebo **Nepoužiť miniatúru**. V ostatných režimoch sa otvorí vlastné nastavenie s pôvodnými hodnotami. V režime `deny` potvrdenie dialógu zachová pôvodnú miniatúru.
+
+Voľba **Nepoužiť miniatúru** má prázdnu hodnotu a použije pôvodný obrázok: odstráni prefix `/thumb/`, parametre miniatúry a triedu `fixedSize`.
 
 Nastavte najskôr režim `learn` pre naučenie sa existujúcich hodnôt a následne nastavte režim `check` v ktorom sa hodnoty kontrolujú, ale ak je prihlásený administrátor automaticky sa pridá nová hodnota do zoznamu povolených hodnôt. WebJET automaticky pri aktualizácii nastaví režim `learn` a následne po minimálne mesiaci a ďalšom reštarte prepne na režim `check`.
 

@@ -1,8 +1,8 @@
 # Kontrola odkazů a prázdných stránek
 
-> Ve web stránkách po zvolení složky a následném stisknutí tlačítka ![](linkcheck-href-button.png ":no-zoom") se zobrazí tabulka s výpisem chybných odkazů a prázdných stránek.
+Kontrolu otevřete v seznamu web stránek přes **Další akce → Kontrola odkazů a prázdných stránek**. Pracuje s aktuální složkou a její podsložkami; stránky nemusíte označovat.
 
-Aplikace zkontroluje odkazy a webové stránky ze zvolené složky a také ze všech pod složek. Výsledek zobrazí ve 3 kartách:
+Výsledek kontroly se zobrazí ve 3 kartách:
 
 - Nefunkční odkazy - odkazy které neexistují. Kontrolují se pouze lokální odkazy, nikoli odkazy na externí stránky (začínající na http).
 - Stránky se zakázaným zobrazováním - stránky, které mají vypnuté zobrazení.

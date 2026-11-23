@@ -4,6 +4,164 @@ Tato sekce obsahuje popisy vlastností a **funkcionalit WebJET CMS srozumitelný
 
 ---
 
+## Přehlednější a rychlejší tvorba stránek v PageBuilderu
+
+WebJET CMS modernizuje **PageBuilder – nástroj pro skládání stránek z připravených bloků**. Redaktor má ovládání vybrané části na jednom místě v pevné horní liště. Klikatelná cesta mu ukáže, zda upravuje sloupec, jeho kontejner nebo celou sekci, a umožní jednoduše přejít na nadřazenou část. **Kopii bloku vloží hned vedle původního a pořadí bloků změní rychlým posunem**, což šetří čas při úpravách produktových stránek, kampaní i opakujících se nabídek.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Nový panel **Struktura zobrazuje přehled všech částí stránky** s názvy odvozenými z obsahu. Redaktor může blok vyhledat a přejít přímo na jeho místo, což usnadňuje orientaci i na dlouhých a složitě členěných stránkách. Při přidávání obsahu si nejprve zvolí označené místo přímo na stránce a následně vybere vhodný blok. Propracovaná knihovna nabízí **vizuální náhledy, kategorie a kombinaci vyhledávání podle názvu s filtrováním podle štítku**, takže připravené prvky firemního designu najde rychleji.
+
+Editor podporuje také **soustředěnou práci s obsahem**: během psaní se označení zjemní a rámečky lze zcela skrýt nebo zobrazit pro celou hierarchii vybraného bloku. Nastavení vzhledu jsou uspořádána do rozbalovacích skupin a při úpravě šířky sloupců nápověda ukazuje, pro které zařízení se rozložení mění. Stávající bloky a možnosti přizpůsobení zůstávají použitelné; **knihovnu i nabízená nastavení lze přizpůsobit konkrétnímu projektu**. Organizace tak získává pohodlnější každodenní správu při zachování svého designu a připraveného obsahu.
+
+**Hlavní benefity:**
+
+- **Rychlejší úpravy stránek**: Duplikování vedle původního bloku a posun o jednu pozici zkracují opakované redakční úkony.
+- **Lepší orientace v obsahu**: Strom struktury a klikatelná cesta pomáhají najít a vybrat přesně tu část, kterou je třeba upravit.
+- **Jednodušší rozšiřování stránky**: Viditelná místa vložení a náhledy v knihovně usnadňují výběr i umístění nového bloku.
+- **Méně rušení při psaní**: Jemnější nebo skryté rámečky umožňují soustředit se na text bez ztráty přístupu k nástrojům.
+- **Přehlednější rozložení pro různá zařízení**: Nápověda při nastavování šířky usnadňuje rozlišení úprav pro mobil, tablet a počítač.
+- **Využití stávajícího designu**: Nové ovládání navazuje na připravené bloky a zachovává možnost upravit knihovnu i dostupné vlastnosti podle potřeb organizace.
+
+![Panel Struktura a společná nástrojová lišta PageBuildera](../../redactor/webpages/pagebuilder-structure.png)
+
+Podrobná dokumentace: [Práce s PageBuilderem](../../redactor/webpages/pagebuilder.md) | [Přizpůsobení bloků](../../frontend/page-builder/blocks.md)
+
+## Lokální umělá inteligence s daty pod vlastní kontrolou
+
+WebJET CMS umožňuje **generovat text, překládat a vyhledávat podle významu přímo na serveru zákazníka**. Při použití lokálních modelů se zpracovávaný obsah ani vyhledávací dotazy **neposílají externí AI službě**. Organizace tak může využívat tyto funkce i tam, kde interní pravidla omezují odesílání údajů mimo vlastní prostředí. Po přípravě a nasazení modelových balíků samotné zpracování **nevyžaduje připojení na internet ani API klíč externího poskytovatele**.
+
+![](local-ai.png)
+
+K dispozici jsou tři samostatné modely: **EuroLLM** pro tvorbu textu, **M2M100** pro překlad čistého textu a **multilingual-e5-base** pro sémantické indexování a vyhledávání. Poskytovatel se vybírá v nastavení konkrétního AI asistenta, takže zákazník může lokální a externí služby kombinovat podle potřeb jednotlivých úkolů. Pro vyhledávání lze lokálně zpracovat obsah i otázku návštěvníka a volitelně zapojit lokální textový model pro vytvoření AI odpovědi.
+
+Modely lze provozovat **na standardních procesorech** bez **speciální grafické karty**. Nasazení vyžaduje doplňkovou knihovnu a připravené modelové balíky; jejich vytvoření potřebuje internetové připojení. Výkon a paměť serveru je třeba přizpůsobit očekávané zátěži. Menší modely mají omezenější kvalitu výstupů a zejména generování AI odpovědí může trvat déle, proto je vhodné před nasazením ověřit výsledky na vlastním obsahu. Lokální překlad podporuje čistý text s určeným zdrojovým a cílovým jazykem, nikoli celé HTML stránky.
+
+Součástí úprav je i **přesnější správa sémantického indexu u více domén**. Ruční indexování a odstranění indexu kontrolují oprávnění ke zvolené složce a její příslušnost k aktuální doméně. Pokud se stránka mezi zařazením do fronty a zpracováním odstraní nebo přesune do jiné domény, systém vyčistí její zastaralé záznamy v původní doméně.
+
+**Hlavní benefity:**
+
+- **Kontrola nad zpracováním údajů**: Obsah i dotazy zůstávají při lokálním zpracování v prostředí zákazníka.
+- **Menší závislost na externích službách**: Nasazené modely zpracovávají požadavky bez internetového připojení a externího AI API.
+- **Využití vlastní infrastruktury**: Provoz na CPU umožňuje nasazení bez nákupu specializované grafické karty, při zohlednění potřebného výkonu a paměti.
+- **Volba podle konkrétní úlohy**: Organizace může samostatně zvolit poskytovatele pro tvorbu textu, překlad a vyhledávání.
+- **Spolehlivější údržba vyhledávání**: Kontrola oprávnění a čištění zastaralého indexu pomáhají udržet výsledky ve správné doméně.
+
+Podrobná dokumentace: [Lokální AI modely](../../redactor/ai/settings/README.md#lokální-modely) | [Sémantické vyhledávání](../../redactor/apps/semantic-search/README.md) | [Správa sémantického indexu](../../redactor/apps/semantic-search/embedding-chunks.md)
+
+## Přehled prodeje a tržeb elektronického obchodu
+
+WebJET CMS přináší **přehled výsledků elektronického obchodu přímo v administraci**. Provozovatel na jednom místě vidí počet objednávek, jejich průměrnou hodnotu, počet prodaných kusů i průměrný počet produktů v objednávce. Graf vývoje tržeb s DPH a bez DPH pomáhá sledovat silnější a slabší období bez ručního sestavování přehledů. **Finanční ukazatele vycházejí z hodnot nestornovaných objednávek** ; stornované objednávky zůstávají viditelné v celkovém počtu a grafech rozdělení objednávek, ale nezvyšují tržby ani počet prodaných produktů.
+
+![Přehled objednávek, tržeb a prodeje produktů v elektronickém obchodě](../../redactor/apps/eshop/stats/stats.png)
+
+Obchodní tým získá podklady pro **plánování sortimentu, zásob a propagace**. Žebříček deseti nejprodávanějších produktů podle počtu kusů ukáže, o které položky je největší zájem, a rozbalovací strom kategorií umožní prozkoumat prodej až po podkategorie. Viditelné zůstávají také kategorie bez prodeje, takže lze snáze najít oblasti, které potřebují pozornost. Grafy zároveň ukazují zastoupení stavů objednávek, způsobů doručení a platby. Samostatný finanční přehled **odděluje poplatky za doručení a platbu od tržeb za produkty**, což usnadňuje posouzení skladby hodnoty objednávek.
+
+Přehled lze **přizpůsobit obdobím, měnou a výběrem jednoho nebo více stavů objednávek**, včetně vlastních stavů nastavených pro projekt. Objednávky v různých měnách se přepočítají do zvolené měny podle nakonfigurovaných kurzů. Zvolené období si prohlížeč pamatuje i po odhlášení a sdílí jej se statistikou návštěvnosti, čímž usnadňuje sledování návštěvnosti a prodeje za stejnou dobu. Údaje se vyhodnocují **samostatně pro aktuální doménu** a přístup je vázán na oprávnění k elektronickému obchodu, což podporuje kontrolovanou správu více obchodů v jednom CMS.
+
+**Hlavní benefity:**
+
+- **Rychlejší přehled o výsledcích**: Souhrnné ukazatele a grafy šetří čas při pravidelném vyhodnocování objednávek a tržeb.
+- **Lepší podklady pro sortiment a propagaci**: Nejprodávanější produkty a prodej podle kategorií pomáhají rozhodnout, které položky podpořit a kde prověřit slabší zájem.
+- **Jasné oddělení poplatků**: Provozovatel vidí hodnotu dopravy a plateb i tržby po odečtení těchto poplatků, takže dokáže lépe vyhodnotit samotný prodej produktů.
+- **Přehled nákupních preferencí**: Zastoupení způsobů doručení a platby poskytuje podklad pro úpravu nabídky služeb podle jejich využívání zákazníky.
+- **Vyhodnocování dle potřeb firmy**: Filtry období, měny a stavů včetně vlastních stavů umožňují zaměřit se na konkrétní část objednávek bez ručního třídění.
+- **Jednodušší správa více obchodů**: Oddělené výsledky jednotlivých domén a přístup podle oprávnění pomáhají udržet obchodní údaje pod kontrolou.
+
+Podrobná dokumentace: [Statistiky elektronického obchodu](../../redactor/apps/eshop/stats/README.md)
+
+## Jednoduché odhalení a odstranění nepoužívaných souborů
+
+WebJET CMS pomáhá organizacím **odhalit soubory, které již pravděpodobně nejsou potřebné**, přímo ve vlastnostech složky v Průzkumníkovi. Administrátor spustí kontrolu zvolené složky a systém porovná její obsah s použitím v publikovaných webových stránkách, médiích, bannerech, galeriích a dalších standardních částech CMS. Bez zdlouhavého ručního prohledávání tak získá podklad pro uvolnění úložiště a odstranění zastaralého digitálního obsahu.
+
+Kontrola probíhá **na pozadí bez zablokování práce** a její rozsah lze přizpůsobit volbou konkrétní složky nebo zahrnutím všech podsložek. Výsledek se zobrazí v přehledné tabulce s názvem, umístěním, datem změny a velikostí souboru; soubor lze před rozhodnutím otevřít v náhledu. Administrátor poté odstraní pouze označené položky nebo celý zkontrolovaný seznam najednou, což umožňuje spojit rychlé hromadné čištění s individuální kontrolou citlivých souborů.
+
+![Výsledek kontroly nepoužívaných souborů](../../redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
+Funkce respektuje **přístupová práva, oddělení domén a oprávnění k zápisu do složky**. Výsledky jednotlivých administrátorů se nesdílejí a systém koordinuje souběžnou kontrolu a mazání, aby omezil kolize při týmové zprávě. Jelikož soubor používaný z vlastního kódu, externího systému nebo jiného nestandardního zdroje nemusí být rozpoznán, výsledek je záměrně určen na kontrolované rozhodnutí administrátora; před nevratným smazáním je třeba označené soubory ověřit.
+
+**Hlavní benefity:**
+
+- **Nižší náklady na úložiště**: Odhalení zapomenutých obrázků, dokumentů a dalších souborů pomáhá uvolnit diskový prostor bez ruční inventury.
+- **Rychlejší údržba obsahu**: Automatická kontrola standardních částí CMS nahrazuje zdlouhavé vyhledávání odkazů a vazeb ke každému souboru.
+- **Flexibilní rozsah kontroly**: Administrátor si zvolí konkrétní složku a podle potřeby zahrne i její podsložky, takže čištění lze přizpůsobit velikosti a struktuře projektu.
+- **Rozhodnutí zůstává pod kontrolou**: Náhled a podrobnosti o každém souboru umožňují výsledek prověřit a odstranit pouze vybrané položky nebo celý seznam.
+- **Plynulá práce administrátorů**: Analýza probíhá na pozadí a systém průběžně zobrazuje její stav, takže není třeba čekat v zablokovaném okně.
+- **Bezpečnější týmová zpráva**: Respektování oprávnění, domén a koordinace souběžných operací snižují riziko nechtěného zásahu do cizího obsahu.
+
+Podrobná dokumentace: [Nepoužívané soubory](../../redactor/files/fbrowser/folder-settings/README.md#nepoužívané-soubory)
+
+## Bezpečné čištění a optimalizace přesměrování
+
+WebJET CMS přináší **přehlednou kontrolu a čištění přesměrování webových adres**, které se během provozu webu přirozeně hromadí při přesouvání nebo přejmenovávání obsahu. Systém odhalí zastaralá a duplicitní pravidla, cyklická přesměrování vedoucí návštěvníka do smyčky i zbytečně dlouhé řetězce více přesměrování. Organizace tak dokáže udržet navigaci na webu spolehlivou bez časově náročné ruční kontroly každého záznamu.
+
+Čištění je navrženo jako **kontrolovaný dvoukrokový proces**. Administrátor nejprve spustí analýzu a v přehledné tabulce uvidí každou navrhovanou změnu; teprve poté potvrdí její provedení. Systém při duplicitách zachová původní záznam, při cyklu odstraní krok, který smyčku uzavírá, a řetězec typu `/a → /b → /c` zkrátí na přímější `/a → /c`. Tím se snižuje riziko neúmyslných zásahů a zároveň se návštěvníci i vyhledávače dostanou k cílovému obsahu kratší a spolehlivější cestou.
+
+Analýza respektuje **oddělení jednotlivých domén** a na přání může zahrnout i pravidla bez přiřazené domény. Speciální přesměrování založené na vzorech a pravidla s časovou platností ponechá beze změny. Pokud stejnou doménu spravuje více administrátorů, systém nedovolí souběžné čištění, čímž pomáhá předcházet kolizím. Řešení je tak vhodné i pro rozsáhlé weby s velkým počtem přesměrování a více správci.
+
+**Hlavní benefity:**
+
+- **Nížné riziko nefunkčních odkazů**: Odhalení zastaralých pravidel a cyklů pomáhá návštěvníky spolehlivě přivést na správný obsah.
+- **Rychlejší a jednodušší údržba**: Automatická analýza nahrazuje zdlouhavou ruční kontrolu velkého množství přesměrování.
+- **Kontrola před provedením změn**: Administrátor vidí přesný návrh úprav a čištění spustí až po jeho ověření a potvrzení.
+- **Kratší cesta k obsahu**: Zkrácení řetězců omezuje zbytečné mezikroky pro návštěvníky i internetové vyhledávače.
+- **Bezpečná správa více webů**: Přesměrování se vyhodnocují samostatně pro zvolenou doménu a systém chrání před souběžnými zásahy administrátorů.
+- **Zachování speciálních pravidel**: Časově řízená a pokročilá přesměrování zůstávají nedotčena, takže automatizace respektuje individuální nastavení projektu.
+
+![Náhled navrhovaného čištění přesměrování](../../redactor/webpages/redirects/redirect-cleaning-analyzed.png)
+
+Podrobná dokumentace: [Čištění přesměrování](../../redactor/webpages/redirects/README.md#čištění-přesměrování)
+
+## Rychlejší správa a vkládání dokumentů
+
+WebJET CMS propojuje **Manažer dokumentů přímo s editorem webových stránek**. Redaktor může při vytváření odkazu procházet složky archivu, vybrat dokument a vložit jeho adresu bez kopírování mezi více okny. Pokud dokument ještě neexistuje, může jej nahrát přímo ve stejném dialogu. Publikování příloh, formulářů, ceníků či výročních zpráv je tak rychlejší a méně náchylné k chybám.
+
+![Manažer dokumentů v dialogu pro vložení odkazu](../../redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+Samotný Manažer dokumentů získal **přehlednou stromovou strukturu složek** s možností vytvářet nové složky a filtrovat dokumenty podle zvoleného umístění. Více souborů lze nahrát najednou pouhým přesunutím z počítače (`drag&drop`), přičemž systém zobrazuje průběh každé položky i celého nahrávání. Týmy tak dokážou výrazně efektivněji zpracovat rozsáhlé aktualizace dokumentů bez zdlouhavého opakování stejných kroků.
+
+![Seznam dokumentů se stromovou strukturou](../../redactor/files/file-archive/datatable.png)
+
+U souboru se stejným názvem systém nahrávání pozastaví a nabídne **bezpečné rozhodnutí pro každý soubor nebo pro celou dávku**: přeskočit jej, nahradit aktuální dokument nebo jej uložit jako novou verzi se zachováním předchozí verze v historii. Aktualizace probíhá nad stávajícím záznamem, takže zůstávají zachována jeho metadata a vazby. Povolené typy souborů, cílové složky i oprávnění k zápisu respektují nastavení projektu, díky čemuž je řešení **kontrolované, bezpečné a přizpůsobitelné** potřebám organizace.
+
+![Kontrola duplicit při hromadném nahrávání](../../redactor/files/file-archive/drag-drop-upload-duplicity-dialog.png)
+
+**Hlavní benefity:**
+
+- **Méně kroků při publikování**: Redaktor najde, nahraje a vloží dokument přímo z dialogu odkazu bez přepínání mezi aplikacemi a ručního kopírování URL adresy.
+- **Rychlé hromadné aktualizace**: Více dokumentů lze nahrát najednou a společné rozhodnutí použít na celou dávku, což šetří čas při pravidelných výměnách ceníků, tiskopisů nebo produktových materiálů.
+- **Kontrola nad duplicitami**: Systém před přepsáním souboru vyžádá rozhodnutí, čímž snižuje riziko nechtěné ztráty nebo vytvoření nepřehledných kopií.
+- **Historie a kontinuita dokumentů**: Volba nové verze uchová původní dokument v historii a zároveň zachová stávající metadata a vazby.
+- **Přehlednější organizace obsahu**: Strom složek a filtrování zkracují hledání dokumentů i správu rozsáhlých archivů.
+- **Bezpečný provoz podle pravidel organizace**: Nahrávání respektuje povolené typy souborů, cílovou složku a přístupová práva uživatele.
+
+Podrobná dokumentace: [Manažer dokumentů](../../redactor/files/file-archive/README.md) | [Vkládání odkazů na soubory](../../redactor/webpages/working-in-editor/README.md#odkazy-na-soubory-a-nahrávání-souborů)
+
+## Headless CMS pro moderní a flexibilní weby
+
+WebJET CMS lze použít v **headless režimu**, ve kterém zůstává centrálním místem pro správu obsahu, ale vzhled a uživatelské rozhraní webu může být vytvořeno v libovolné moderní technologii. Obsah, navigace, novinky a vyhledávání se poskytují přes **API (rozhraní pro propojení systémů)**, díky čemuž zákazník není vázán na jednu prezentační vrstvu ani na jeden způsob tvorby webu.
+
+Jedna instalace WebJET CMS tak může **centrálně spravovat obsah pro více webů a domén**, ačkoli každý z nich používá jiný design nebo technologii, například `Astro, Next.js, Vue` či `React`. Organizace může rychleji spouštět nové portály, mikrostránky nebo digitální služby bez budování samostatné redakční administrace pro každý projekt. Zároveň může nadále využívat stávající aplikace WebJET CMS, například galerii, formuláře nebo správu souhlasů s cookies.
+
+![](../../frontend/headless/home.png)
+
+Řešení přináší také **připravenou ukázkovou aplikaci**, která zkracuje čas a snižuje riziko prvního nasazení. Přenáší SEO data, podporuje náhled nezveřejněného obsahu a zachování uživatelské relace. Přístup lze omezit na povolené domény a IP adresy a požadavky na změnu dat jsou chráněny proti podvržení. Zákazník tak získává **rozšiřitelnou architekturu s kontrolovanou bezpečností**, vhodnou i pro postupnou modernizaci rozsáhlých webů.
+
+![](../../frontend/headless/gallery.png)
+
+**Hlavní benefity:**
+
+- **Svoboda při výběru technologie**: Frontend lze vytvořit v technologii nejvhodnější pro konkrétní projekt bez ztráty komfortní správy obsahu ve WebJET CMS.
+- **Jedna administrace pro více webů**: Centrální správa obsahu pro více domén snižuje duplicitu, provozní náklady a nároky na zaškolení redaktorů.
+- **Rychlejší uvedení digitálních služeb na trh**: Hotová rozhraní a ukázková aplikace urychlují vývoj i ověření nového řešení.
+- **Opětovné využití stávajících funkcí**: Nový web může využít obsah, vyhledávání, novinky, formuláře, galerii i správu cookies ze stávajícího CMS.
+- **Bezpečné a kontrolované propojení**: Povolené domény, IP omezení a ochrana požadavků pomáhají chránit obsah i provoz propojených webů.
+- **Prostor pro postupnou modernizaci**: Organizace může modernizovat jednotlivé weby vlastním tempem bez potřeby najednou nahradit celý redakční systém.
+
+Podrobná dokumentace: [Headless režim](../../frontend/headless/README.md) | [Ukázková aplikace](../../frontend/headless/example.md) | [Dostupné služby](../../frontend/headless/services.md)
+
 ## AI odpověď přímo ve vyhledávání webu
 
 WebJET CMS rozšiřuje vyhledávání o možnost zobrazit **stručnou AI odpověď nad výsledky**. Návštěvník už nemusí proklikávat více stránek, aby se dopátral k základní informaci. Systém nejprve najde relevantní části obsahu a následně z nich vytvoří přehlednou odpověď, která pomáhá rychleji pochopit téma a pokračovat na správný obsah.

@@ -10,7 +10,7 @@ import lombok.Setter;
 public class EditorLockingBean {
 
     private int userId;
-    private int entityId;
+    private long entityId;
     private Date lastChange;
 
 }

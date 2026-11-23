@@ -8,13 +8,21 @@ In the displayed list, we see all documents that have been uploaded to the manag
 
 On the left side is a **folder tree** (JSTREE) that allows you to browse the archive folders and filter documents by the selected folder. The tree displays folders from the archive root directory set by the configuration variable `fileArchivDefaultDirPath` (default `files/archiv/`). The folder for scheduled uploads from the configuration variable `fileArchivInsertLaterDirPath` is not displayed in the tree.
 
+Folders to which you do not have write access are marked with an icon<i class="ti ti-folder-x"></i> . The label also applies to the root folder of the archive. You can expand such folders and navigate to subfolders to which you have permission.
+
+If, when selecting a destination directory for uploading a document, you do not have write access to the folder currently specified in the field, a warning will be displayed with its path after opening the selection. If a subfolder is enabled in the field, the warning will not be displayed even if the archive root folder is disabled. In the tree, select a folder to which you can write.
+
+Selecting a folder when opened will expand the path to the folder specified in the field and highlight it if you have permission to select it. This also applies to nested subfolders and manually edited paths. Click on the folder to confirm the selection.
+
 When you click on a folder in the tree, only documents belonging to that folder will be displayed in the table. The selected folder will also be used as the target directory for [bulk file uploads](#bulk-file-uploads) and will be automatically pre-filled when creating a new document via the editor.
 
 Above the tree there are buttons:
 
--<i class="ti ti-plus"></i> - **Add** - creates a new subfolder in the currently selected folder. The button is visible to users with `menuFileArchivManagerCategory` rights and creating a folder requires write rights to the selected folder.
+-<i class="ti ti-plus"></i> - **Add** - creates a new subfolder in the currently selected folder. The button is visible to users with the `menuFileArchivManagerCategory` right and is active when you have write access to the selected folder. You can also create a new subfolder in an enabled subfolder of the archive if you do not have write access to the root folder.
 -<i class="ti ti-refresh"></i> - **Restore** - restores the folder tree structure
 -<i class="ti ti-adjustments-horizontal"></i> - **Settings** - allows you to set the width of the tree structure relative to the table
+
+You can choose the width of the tree in terms of the ratio to the table or in pixels. The tree has a minimum width of `200 px` to accommodate the search field and buttons. A smaller ratio will not reduce this limit.
 
 ![](datatable.png)
 
@@ -55,6 +63,25 @@ The card contains basic information for inserting a document.
   - **Upload after** - select the date and time after which the document should be uploaded
   - **Comma-separated emails (notification after upload)** - enter comma-separated emails to which you want to send notification about successful/unsuccessful document upload
 
+#### Validity and downloading of historical versions
+
+The fileArchivCheckHistoryValid configuration variable determines whether the **Valid from and Valid to** dates are checked for already uploaded historical versions. With the default value true, a historical version of a document outside the validity range will not be displayed in the list of older versions in the application on the website and cannot be downloaded. With the value `false`, the dates are ignored, so the version can be displayed and available for download even outside the validity range. Other display conditions and access permissions remain intact. An empty date does not limit the respective validity range.
+
+The in-app display data in the table assumes that the document meets the other application filters. Archive versions are listed only when the **Show archive versions** option is enabled, and templates are listed only when the **Show templates** option is enabled.
+
+| Record type and status | `true` (default value) | `false` |
+| --- | --- | --- |
+| Historical version of the document, **View** enabled, date valid | It will be downloaded and displayed in the app. | It will be downloaded and displayed in the app. |
+| Historical version of the document, **Show** enabled, before **Valid from** or after **Valid to** | Returns a 404 error and does not appear in the application | It will be downloaded and displayed in the app. |
+| Historical version of the pattern, **Show** enabled, date valid | It will download, but it won't appear in the app. | It will download, but it won't appear in the app. |
+| Historical version of the pattern, **Show** enabled, before **Valid from** or after **Valid to** | Returns a 404 error and does not appear in the application | It will download, but it won't appear in the app. |
+| Document or pattern, **Show** off | Returns a 404 error and does not appear in the application | Returns a 404 error and does not appear in the application |
+| Current document or current template, **Show** on, date valid | It will be downloaded and displayed in the app. | It will be downloaded and displayed in the app. |
+| Current document or current template, **Show** on, date invalid | Returns a 404 error and does not appear in the application | Returns a 404 error and does not appear in the application |
+| Version waiting to be uploaded | The pending version will not be displayed, the currently published version remains displayed. | The pending version will not be displayed, the currently published version remains displayed. |
+
+With the value `false`, the dates of historical versions remain stored and displayed in the archive as information about the document's effectiveness. The application lists only their current versions among the templates. With both values, access permissions are still checked. Document indexing settings are preserved.
+
 ### Tab - Advanced
 
 ![](editor_advanced.png)
@@ -71,7 +98,9 @@ The card contains basic information for inserting a document.
   - the document must not be waiting to be uploaded (it must already be uploaded)
   - it can't be a pattern
 - **Note** - the note will appear on the page when linking to the document
-- **Save document even if it already exists** - by default the manager does not allow adding the same document multiple times (to prevent duplication). If you want to allow this, you must check this option.
+- **Save document even if it already exists** - allows saving a file with the same content as another document already in the manager. For details, see [Duplicate document check](#duplicate-document-check).
+
+When saving and renaming the **Product** and **Category** fields, hard and other Unicode spaces, tabs, and line breaks are converted to regular spaces. Repeated spaces are merged, and spaces at the beginning and end of the name are removed. Remaining control characters and invisible BOM characters, soft hyphens, and word joiners are also removed; zero-width spaces are converted to spaces. The adjustment also applies to bulk uploads of documents, so copying names from other documents does not create different categories just because of these characters.
 
 !>**Note:** The **Product** / **Category** / **Product Code** fields will later be used to filter the display of files on the page
 
@@ -89,13 +118,23 @@ If you uploaded a file with the wrong format, validation will not save the recor
 
 ![](invalid-file-type.png)
 
-In the background, it checks whether the uploaded file/document already exists in the manager.
+## Check for duplicate documents
 
-!>**Warning:** it is not the document name that is checked, but its **content**. This means that if the documents are the same, renaming them will not help.
+When uploading a file, the manager checks whether a document with **the same content** already exists. It calculates an MD5 checksum (a fingerprint of its content) from the file and compares it with the main documents in the current domain, regardless of their name or folder. The check is performed when inserting a new document, uploading a new version, or replacing the current document.
 
-If an existing document is detected, the save operation will be aborted and an error message will be displayed. A notification will also be displayed listing all documents with the same content. If you want to save this document anyway, you must enable the **Save document even if it already exists** option from the Advanced tab.
+!>**Note:** Simply renaming a file on your computer does not change its contents. For example, if you rename `cennik.pdf` to `cennik-novy.pdf` without changing the contents, the manager will still recognize it as the same file. This is true even if you want to upload it as a new version of the original document.
+
+If the manager finds a match, it will by default abort the save and display a notification with a list of matching documents. The message "Document Manager has detected that the file ... you uploaded already exists in the archive" also means that the file content matches, not just their names.
 
 ![](file-duplicity-notif.png)
+
+The goal of the check is to prevent the same document from being saved in multiple locations. You can link to a single saved document from multiple sites. When updating it, you just need to upload the new version in one location and existing links will point to the current file. This also saves disk space and reduces the risk of a link to an outdated copy remaining on a site.
+
+When alerting, follow the steps below to achieve what you want:
+
+- **Use the same document on the next page** - use a link to an existing document listed in the notification.
+- **Update document** - edit its content, save the changes to the file and use the [Upload new version] action in the manager (#action---upload-new-version). Simply renaming a local file is not enough to create a new version.
+- **Intentionally save the same content again** - on the **Advanced** tab, check the **Save document even if it already exists** option and save again. This option will allow you to bypass the duplicate check even when uploading a new version.
 
 ## Publishing scheduled versions
 
@@ -135,9 +174,13 @@ The Basic tab offers the option to physically **rename the document** (i.e. the 
 
 ### Action - Upload new version
 
-This action will create a new current version of the document. The current version (which we are going to replace) will become the historical version of the document. You just need to upload a new document, as the destination directory is pre-populated (but can be changed). We will get to the **Upload document later** option in the next section.
+This action will create a new current version of the document. The current version (which we are going to replace) will become the historical version of the document. Simply upload the new document, and the destination directory must remain the same as the current document's directory. We will get to the **Upload document later** option in the next section.
+
+This action also performs a [duplicate document check](#duplicate-document-check). If you simply rename the file and its contents remain the same, the manager will by default refuse to save it as a new version.
 
 !>**Warning:** You are only allowed to upload a document of the same type as the current document being replaced.
+
+!>**Warning:** When uploading a new version or replacing a document, it is not possible to change its destination directory. If the configuration variable `fileArchivUseCategoryAsLink` is set to `true`, it is also not possible to change the category to a value that would move the document to a different directory.
 
 Please note that the uploaded document will be automatically physically renamed to the name of the document being replaced after saving. If you want the document to be called differently, you must use the **Physically rename document** option and enter a new name.
 
@@ -174,6 +217,8 @@ All pending versions of a given document are available directly in its **Pending
 This action does exactly what the name suggests. It does not upload a new version of the document, but replaces the current main document with another one, i.e. the file representing the document is replaced. The document can have a different name, but the original document name is automatically preserved.
 
 This action works for **Template** documents as well as documents that are waiting to be uploaded. This way, you can, for example, replace a document that is to be uploaded in the future without having to delete the original document and create a new record.
+
+The target directory of the replaced document must remain unchanged. The same restriction applies to the category if the category is configured to specify the physical directory of the document.
 
 !>**Warning:** You are only allowed to upload a document of the same type as the current document being replaced.
 
@@ -252,6 +297,14 @@ As with deleting patterns, these scheduled versions can be deleted **ONLY** usin
 
 You can also upload files to the currently selected folder directly from the document list. Drag one or more files from your computer onto the document manager page. The upload uses the currently selected folder in the tree structure and the allowed file extensions from the configuration variable `fileArchivAllowExt`.
 
+If `fileArchivUseCategoryAsLink` is set to `true` and you specify a category when bulk uploading, the target folder is derived from that category. Files with the same name in that folder are also checked and the selected **Replace** or **New Version** actions are performed.
+
+Before starting the upload, the same editor as when creating a document is displayed, containing only fields intended for bulk settings. On the **Basic** tab, you can optionally set the same **Valid from** and **Valid to** for all selected files. By enabling the **Upload document later** option, you can also set a future upload date and email addresses for notification.
+
+![](drag-drop-upload-settings-dialog.png)
+
+The **Advanced** tab allows you to set the product, category, product code, display, indexing, priority, master document reference, note, and permission to save a document with existing content for all uploaded files. Empty text fields and unedited radio buttons will leave the default or existing values. The **Cancel** button will cancel the entire pending upload.
+
 During the upload, a progress bar will be displayed for each file and the overall progress. After a successful upload, a separate master document will be created for each file, its name will be pre-filled from the file name without the extension, and the table will be automatically refreshed.
 
 ![](drag-drop-upload-dialog.png)
@@ -263,6 +316,8 @@ If a file with the same real name already exists in the selected folder, recordi
 - **New version** - the new file will be saved as the current version of the document and the original file will be moved to historical versions.
 
 At the bottom of the panel, you can use the same option for all files awaiting a decision at once.
+
+The set validity dates are also used for the **Replace** and **New Version** options. These options reject a category change that would move an existing document to a different physical directory. Scheduled upload of a duplicate file is supported for the **New Version** option, not for immediate replacement. The **Skip** option does not change the existing document.
 
 ![](drag-drop-upload-duplicity-dialog.png)
 

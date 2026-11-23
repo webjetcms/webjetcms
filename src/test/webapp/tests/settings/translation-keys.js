@@ -15,6 +15,62 @@ Before(({ I, login }) =>{
     }
 });
 
+Scenario('translation key tree', ({ I, DT }) => {
+    I.waitForVisible("#SomStromcek", 20);
+    I.waitForElement("#translation-key-root-node", 20);
+    I.see("Všetky prekladové kľúče", "#SomStromcek");
+    I.dontSeeElement("#SomStromcek .ti-file-text");
+
+    I.clickCss("#SomStromcek li[data-translation-key-prefix='components'] > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components.map'] > a.jstree-anchor", 20);
+
+    I.clickCss("#SomStromcek li[data-translation-key-prefix='components.map'] > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components.map.width'].jstree-leaf", 20);
+
+    I.prevent429();
+    I.jstreeFilter("width");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='components.map.width'].jstree-leaf > a.jstree-search");
+    I.dontSeeElement("#SomStromcek .ti-file-text");
+
+    I.clickCss("#SomStromcek li[data-translation-key-prefix='components.map.width'] > a.jstree-anchor");
+    DT.waitForLoader();
+    I.see("components.map.width.short", "#datatableInit");
+    I.dontSee("components.map.address", "#datatableInit");
+
+    I.prevent429();
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
+    I.dontSeeElement("#SomStromcek li[data-translation-key-prefix='components']");
+    I.clickCss("#tree-folder-search-clear-button");
+    I.jstreeWaitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
+
+    I.prevent429();
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
+    I.clearField("#tree-folder-search-input");
+    I.pressKey("Enter");
+    I.jstreeWaitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
+
+    I.prevent429();
+    I.jstreeFilter("grideditor");
+    I.seeElement("#SomStromcek li[data-translation-key-prefix='grideditor'] > a.jstree-search");
+    I.clickCss("#translation-key-root-node > a.jstree-anchor");
+    I.jstreeWaitForLoader();
+    DT.waitForLoader();
+    I.dontSeeInField("#tree-folder-search-input", "grideditor");
+    I.waitForElement("#SomStromcek li[data-translation-key-prefix='components']", 20);
+    DT.filterContains("key", "components.map.address");
+    I.see("components.map.address", "#datatableInit");
+});
+
 Scenario('zakladne testy @baseTest', async ({ I, DataTables }) =>{
     I.see("Kľúč");
     let options = await DataTables.baseTest({
@@ -194,53 +250,68 @@ Scenario('overenie filtrovania', async ({ I, DT, DTE }) => {
     I.dontSee("Kľúč nie je možné zmazať");
  });
 
- Scenario('overenie zmazania kluca zo suboru', async ({ I, DT, DTE }) => {
-    var entity = "admin.fck.last_pages";
-
-    DT.filterContains("key", entity);
-
-    I.click("td.dt-select-td.sorting_1");
+async function deleteFileKeyOverrides(I, DT, DTE) {
+    const entity = "admin.fck.last_pages";
+    DT.filterEquals("key", entity);
+    const row = locate("#datatableInit tbody tr").withText(entity);
+    if (await I.grabNumberOfVisibleElements(locate("#datatableInit tbody tr.selected").withText(entity)) === 0) {
+        I.click(row.find("td.dt-select-td"));
+    }
+    I.waitForEnabled(DT.btn.delete_button, 10);
     I.click(DT.btn.delete_button);
     DTE.waitForEditor();
+    I.click("Zmazať", "#datatableInit_modal div.DTE_Action_Remove");
+    DTE.waitForModalClose();
+    DT.waitForLoader();
+}
 
-    I.click("Zmazať", "div.DTE_Action_Remove");
+Scenario('Reset file-based translation key overrides', async ({ I, DT, DTE }) => {
+    // A previous failed run may have left the test values in the database.
+    await deleteFileKeyOverrides(I, DT, DTE);
+});
 
-    //We cant remove allready set keys in file
+Scenario('overenie zmazania kluca zo suboru', async ({ I, DT, DTE }) => {
+    const entity = "admin.fck.last_pages";
+
+    await deleteFileKeyOverrides(I, DT, DTE);
+
+    // File-backed translations cannot be deleted.
     I.waitForText("Zvolený prekladový kľúč pre jazyky SK,CZ,EN,DE,HU je načítaný zo súboru, a preto ho nie je možné zmazať. Mazať je možné len upravené alebo novo vytvorené kľuče.", 10);
-    I.wait(5);
+    I.toastrClose();
 
-    //now check update plus again delete :D
+    // Saving creates database overrides for the file-backed translations.
     I.click(entity);
     DTE.waitForEditor();
 
-    //Change only 2 values (but all this values will be set into DB ass new values)
     I.clickCss('#DTE_Field_fieldA');
     I.fillField('#DTE_Field_fieldA', value1);
     I.clickCss('#DTE_Field_fieldB');
     I.fillField('#DTE_Field_fieldB', value2);
 
     DTE.save();
-    I.wait(2);
 
     I.click(entity);
     DTE.waitForEditor();
     I.see(value1);
     I.see(value2);
 
-    //Close editor
     DTE.cancel();
 
-    //Now all values can bee delete, so delete without popup msg
-    I.click(DT.btn.delete_button);
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    // Saving reloads the table, so select the row again before deleting its overrides.
+    await deleteFileKeyOverrides(I, DT, DTE);
     I.dontSee("Kľúč nie je možné zmazať");
 
-    //BUT key is still there just with original values from FILE
+    // The key remains available with its original file-backed values.
     I.click(entity);
     DTE.waitForEditor();
     I.dontSee(value1);
     I.dontSee(value2);
+    DTE.cancel();
  });
+
+Scenario('Restore file-based translation key', async ({ I, DT, DTE }) => {
+    await deleteFileKeyOverrides(I, DT, DTE);
+});
 
  Scenario('overenie zobrazenia so zakladnymi pravami', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/translation-keys/");

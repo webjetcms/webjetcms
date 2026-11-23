@@ -7,9 +7,8 @@ import sk.iway.iwcm.rag.service.RagEntityType;
 
 /**
  * Abstraction for vector storage and similarity search.
- * Handles ONLY the embedding (vector) column via native SQL.
+ * Handles ONLY native vector storage and search operations.
  * Entity CRUD operations are handled by EmbeddingChunkRepository (JPA).
- * Primary implementation uses PgVector (PostgreSQL + pgvector extension).
  */
 public interface VectorStore {
 
@@ -32,6 +31,7 @@ public interface VectorStore {
     /**
      * Find the most similar chunks to the query embedding.
      * @param queryEmbedding the query vector
+     * @param embeddingProvider provider used to generate/query embeddings
      * @param embeddingModel model used to generate/query embeddings
      * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
@@ -40,11 +40,12 @@ public interface VectorStore {
      * @param bonusParams optional store-specific filters, such as document root groups
      * @return list of search results ordered by similarity (descending)
      */
-    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
+    List<VectorSearchResult> search(float[] queryEmbedding, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Find relevant chunks by fulltext search in chunk text.
      * @param query textual query
+     * @param embeddingProvider provider used to filter rows
      * @param embeddingModel model used to filter rows
      * @param entityType entity type to filter by (null for all)
      * @param domainId domain ID to filter by (null for all)
@@ -53,7 +54,7 @@ public interface VectorStore {
      * @param bonusParams optional store-specific filters, such as document root groups and fallback flags
      * @return list of search results ordered by fulltext rank (descending)
      */
-    List<VectorSearchResult> searchFulltext(String query, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
+    List<VectorSearchResult> searchFulltext(String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams);
 
     /**
      * Check if the vector store can be used in the current runtime configuration.
@@ -67,20 +68,35 @@ public interface VectorStore {
      */
     boolean isAvailableAndInitialized();
 
-    /**
-     * Initialize the pgvector extension and create the table if needed.
-     */
+    /** Initialize the database-specific vector schema if needed. */
     boolean initializeSchema();
 
     /**
-     * Delete all stored embeddings for a specific model.
-     * @param embeddingModel model used to generate the embeddings to delete
+     * Recreate the database-specific vector index using the configured metric.
+     * Implementations without a native index-management capability may keep the default.
+     *
+     * @return true when the index was recreated successfully
      */
-    boolean deleteModelData(String embeddingModel);
+    default boolean recreateIndex() {
+        return false;
+    }
 
     /**
-     * Get existing embeddings for an entity, keyed by content hash.
-     * Used to skip re-embedding unchanged chunks.
+     * Delete all stored embeddings and resize the vector column.
+     * @param dimensions new vector dimensions
      */
-    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingModel);
+    boolean resetDimensions(int dimensions);
+
+    /**
+     * Get existing embeddings for an entity and domain, keyed by content hash.
+     * Used to skip re-embedding unchanged chunks.
+     *
+     * @param entityType entity type of the indexed object
+     * @param entityId ID of the indexed object
+     * @param embeddingProvider provider that generated the embeddings
+     * @param embeddingModel model that generated the embeddings
+     * @param domainId domain that owns the indexed object
+     * @return existing embeddings keyed by content hash
+     */
+    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId);
 }

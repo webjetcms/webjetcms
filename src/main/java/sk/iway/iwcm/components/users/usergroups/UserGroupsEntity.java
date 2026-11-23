@@ -29,6 +29,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 /**
  * Entita skupin pouzivatelov
@@ -39,6 +41,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_GROUP_UPDATE)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "folders", title = "user.groups.folders", hideOnCreate = true),
+    @DataTableTab(id = "sites", title = "menu.root.websites", hideOnCreate = true),
+    @DataTableTab(id = "users", title = "webpages.tab.users", hideOnCreate = true)
+})
 public class UserGroupsEntity {
 
     public UserGroupsEntity() {

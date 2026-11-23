@@ -70,6 +70,27 @@ Automatic setting of the number of table rows is used only in the main window, i
 
 The value all is limited by the configuration variable `datatablesExportMaxRows`, so with the value All the maximum number of rows defined in this configuration variable is actually loaded. The rows are displayed directly in the browser and a high number will result in a high processor load.
 
+## Notifications about unsaved changes
+
+### Refresh or leave the page
+
+If you have the datasheet editor window open and you refresh the page with **F5**, navigate to another page, or close the browser tab, the browser will display a warning about possible unsaved changes. In this case, it only checks whether the editor window is open and visible. **It does not check whether you have actually changed anything in its fields.** Therefore, the warning may appear even after opening the record without editing.
+
+This is to protect against the loss of data in progress when you accidentally refresh or leave the page. If you want to keep your changes, stay on the page and save them with the **Save** button. Confirming to leave or refresh will discard unsaved data. The exact text of the warning and the names of the buttons are determined by the browser, so they are different in Chrome and Firefox, for example.
+
+### Cancel button in the editor window
+
+The **Cancel** button closes the editor window without saving any changes in progress. The administration page itself remains open, so the above-described warning when leaving the page is not triggered.
+
+In the **website editor**, before closing, the current page content is compared with the content recorded after the editor was loaded:
+
+- If the content has not changed, the window will close without warning.
+- If the content has changed, a warning about unsaved text will appear. Click **OK** to confirm closing without saving, or click **Cancel** in the warning to return to the editor.
+
+This check applies to **web page content**, not all form fields. It does not detect changes to the page name or settings on other tabs in this way. Other datasheets do not have a general check for changes to all fields on the **Cancel** button either. If you want to keep the data in progress, use **Save** before closing.
+
+When investigating the cause of the warning, you can view the `window.top.lastDirty` object in the browser console. After a change is detected, it contains the original and current HTML code, as well as the first difference found. You can print a readable summary with the `console.log(window.top.lastDirty.summary)` command. The object stores the last detected change and is used **only for web page content**, not for other fields or data tables.
+
 ## Keyboard shortcuts
 
 For more efficient work, you can use the following keyboard shortcuts (```Windows/MacOS```):

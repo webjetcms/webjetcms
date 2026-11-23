@@ -1,0 +1,54 @@
+div.dropdown.md-user-menu
+    button#dropdownMenuUser.btn.btn-sm.btn-outline-secondary.js-profile-toggler.form-select(type="button" data-bs-toggle="dropdown" data-bs-offset="0,8" aria-expanded="false" aria-controls="admin-user-menu")
+        i.ti.ti-user(aria-hidden="true")
+        span(data-th-text="${layout.user.fullName}" style="padding-left: 3px;") WebJET User
+
+    ul#admin-user-menu.dropdown-menu.dropdown-menu-end.md-user-menu__panel(aria-labelledby="dropdownMenuUser")
+        li.md-user-menu__identity
+            span.md-user-menu__avatar(aria-hidden="true" data-th-text="${layoutService.userInitials}") WU
+            div.md-user-menu__account
+                strong(data-th-text="${layout.user.fullName}") WebJET User
+                small
+                    span(data-th-text="${layout.user.login}") admin
+                    span(data-th-if="${!#strings.isEmpty(layout.user.email)}" data-th-text="${' · ' + layout.user.email}")
+        li.md-user-menu__notice-container(hidden)
+            div.md-user-menu__notice
+                strong.md-user-menu__notice-title
+                    i.ti.ti-alert-triangle(aria-hidden="true")
+                    span(data-th-text="\#{admin.userMenu.newLoginTitle.js}") New login to your account
+                ul.md-user-menu__notice-list
+                a.dropdown-item.btn.btn-white.md-user-menu__review(href="/admin/v9/?activeSessions=devices" data-th-text="\#{admin.userMenu.review.js}") Review
+        li: hr.dropdown-divider
+        li
+            button.dropdown-item.md-user-menu__profile(type="button" data-th-data-userid="${layout.user.userId}" data-th-data-onlyself="${!layout.hasPermission('users.edit_admins')}" onclick="window.openProfileDialog($(this).data('userid'), $(this).data('onlyself'))")
+                i.ti.ti-user(aria-hidden="true")
+                span.md-user-menu__content
+                    span(data-th-text="\#{components.forum.bb.profile}") Profile
+                    small(data-th-text="\#{admin.userMenu.profileHint.js}") Personal and contact details, password
+        li: hr.dropdown-divider
+        li.dropdown-header(data-th-text="\#{admin.userMenu.security.js}") Security
+        li
+            a.dropdown-item.md-user-menu__sessions(href="/admin/v9/?activeSessions=true")
+                i.ti.ti-devices(aria-hidden="true")
+                span.md-user-menu__content
+                    span(data-th-text="\#{admin.dashboard.activeSessions.js}") Active sessions
+                    small.md-user-menu__session-hint(aria-live="polite")
+                span.md-user-menu__badge.md-user-menu__session-count.is-loading(aria-live="polite")
+        li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
+            button.dropdown-item.md-user-menu__two-factor(type="button")
+                i.ti.ti-shield-lock(aria-hidden="true")
+                span.md-user-menu__content(data-th-text="\#{user.gauth.title}") Two-factor authentication
+                span.md-user-menu__badge.md-user-menu__two-factor-badge.is-loading(aria-live="polite")
+        li(data-th-if="${layout.getConstantBoolean('password_passKeyEnabled')}")
+            button.dropdown-item.passkey(type="button" onclick="WJ.openModal({url: '/admin/v9/users/passkey/', title: this.textContent.trim()})")
+                i.ti.ti-fingerprint(aria-hidden="true")
+                span.md-user-menu__content(data-th-text="\#{passkey.manage.title}") Passkey
+        li(data-th-if="${layout.hasPermission('cmp_form')}")
+            button.dropdown-item(type="button" onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
+                i.ti.ti-key(aria-hidden="true")
+                span.md-user-menu__content(data-th-text="\#{admin.keymanagement.title}") Encryption key management
+        li: hr.dropdown-divider
+        li
+            a.dropdown-item.md-user-menu__logout(href="javascript:document.adminLogoffForm.submit()")
+                i.ti.ti-logout(aria-hidden="true")
+                span.md-user-menu__content(data-th-text="\#{menu.logout}") Log out

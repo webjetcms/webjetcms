@@ -1,0 +1,3 @@
+interface:
+  display_name: "WJ Styles Combo Metadata"
+  short_description: "Add style picker metadata to template CSS and SCSS"

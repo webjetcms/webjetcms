@@ -1,7 +1,6 @@
 package sk.iway.iwcm.components.basket.delivery_methods.jpa;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,6 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.basket.rest.PriceRoundingService;
 import sk.iway.iwcm.components.basket.support.SupportMethodEntity;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -134,13 +134,7 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
     private Integer domainId;
 
     public BigDecimal getPriceVat() {
-        if(price == null) return BigDecimal.ZERO;
-        if(vat == null || vat < 1) return price;
-
-        BigDecimal bdVat = new BigDecimal(vat);
-        return price
-            .multiply(BigDecimal.ONE.add(bdVat.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP)))
-            .setScale(2, RoundingMode.HALF_UP);
+        return PriceRoundingService.deliveryPriceWithVat(price, vat);
     }
 
     @JsonIgnore

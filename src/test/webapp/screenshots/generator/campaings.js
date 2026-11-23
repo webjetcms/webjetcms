@@ -29,7 +29,7 @@ Scenario('campaings', ({ I, DTE, DT, Document }) => {
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#DTE_Field_subject")
     I.fillField("#DTE_Field_subject", entityName);
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.waitForElement(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'), 10);
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');

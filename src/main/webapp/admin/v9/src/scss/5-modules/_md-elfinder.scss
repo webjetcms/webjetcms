@@ -51,6 +51,12 @@
             }
         }
     }
+    /* disable lock icon, we are using elfinder-perms to show lock icon */
+    .elfinder-cwd-file-wrapper {
+        .elfinder-lock {
+            display: none !important;
+        }
+    }
 }
 
 .elfinder-cwd-wrapper {
@@ -60,8 +66,8 @@
 
 .md-breadcrumb .nav-link  { font-size: 15px !important; }
 
-#linkInput.inputs.container-fluid {
-    background: #fff; padding-top: 10px; padding-bottom: 10px; height: auto; overflow: auto;
+#linkInput.inputs {
+    background: #fff; height: auto; overflow: auto;
 }
 
 html.pg-iframe {
@@ -73,14 +79,13 @@ html.pg-iframe {
             padding-left: 28px !important;
         }
     }
-    #linkInput.inputs.container-fluid {
-        padding: 0px 10px 2px 10px;
-        font-size: 14px;
-        .elfinder-url-input {
-            padding: 1px 4px;
-            font-size: 14px;
-        }
+    #linkInput.inputs {
+        border-top: 1px solid var(--wj-nice-gray-100);
     }
+}
+
+html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
+    height: 100vh;
 }
 
 /* STATUS BAR */
@@ -310,8 +315,9 @@ html.pg-iframe {
     border: 0px transparent !important;
 }
 
-/* NAVBAR PERMS aka lock icon*/
-.elfinder-perms {
+/* FILE AND FOLDER PERMISSION MARKERS */
+.elfinder-perms,
+.elfinder-read-only {
     background: none !important;
     font-family: 'tabler-icons-filled';
     left: -2px !important;
@@ -325,11 +331,30 @@ html.pg-iframe {
 }
 .elfinder-perms::before { content: $ti-icon-lock-filled; }
 
-.elfinder-cwd-view-icons .elfinder-perms {
+//.elfinder-read-only::before { content: $ti-icon-pencil-off; }
+//.elfinder-read-only { width: 16px; height: 16px; font-family: 'tabler-icons-filled'; }
+
+.elfinder-navbar-dir.elfinder-ro:not(.elfinder-navbar-root) {
+    .elfinder-navbar-icon::before { content: $ti-icon-folder-x; }
+}
+.elfinder-cwd-file.elfinder-ro {
+    .elfinder-cwd-icon-directory::before { content: $ti-icon-folder-x !important; }
+}
+.elfinder-navbar-wrapper-root:has(#nav-iwcm_archiv_volume_L2ZpbGVzL2FyY2hpdg_E_E) {
+    .elfinder-navbar-dir.elfinder-ro:not(.elfinder-navbar-root) {
+        .elfinder-navbar-icon::before { content: $ti-icon-book-2 !important; }
+    }
+}
+
+.elfinder-cwd-view-icons .elfinder-perms,
+.elfinder-cwd-view-icons .elfinder-read-only {
     bottom: 29px !important;
     left: 43px !important;
     position: absolute !important;
 }
+
+.elfinder-cwd-view-list .elfinder-read-only { margin-top: -6px; }
+.elfinder-navbar .elfinder-read-only { margin-top: -8px; }
 
 /* CLOSED NAVBAR FOLDER ICON */
 .elfinder-navbar-dir > .elfinder-navbar-arrow {
@@ -496,7 +521,8 @@ html.pg-iframe {
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png { display: block !important; }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-png::before { display: none !important; }
 
-.elfinder-cwd-icon-webp::before {
+.elfinder-cwd-icon-webp::before,
+.elfinder-cwd-icon-avif::before {
     color: white !important;
     background-color: $dark-60 !important;
     font-size: 14px !important;
@@ -709,6 +735,10 @@ html.pg-iframe {
     display: flex;
     flex-direction: column;
 
+    .elfinder-info-title .elfinder-cwd-icon {
+        position: relative;
+    }
+
     .ui-dialog-titlebar.ui-widget-header {
         flex: 0 0 auto;
     }
@@ -726,6 +756,71 @@ html.pg-iframe {
 .ui-dialog.elfinder-dialog.elfinder-dialog-error .ui-dialog-content.ui-widget-content, .ui-dialog.elfinder-dialog.elfinder-dialog-confirm .ui-dialog-content.ui-widget-content {
     padding-left: 56px !important;
     display: block !important;
+}
+
+.ui-dialog.elfinder-dialog.elfinder-dialog-error,
+.ui-dialog.elfinder-dialog.elfinder-dialog-notify {
+    overflow: hidden;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 24px rgba(31, 32, 34, 0.18);
+}
+
+.ui-dialog.elfinder-dialog.elfinder-dialog-error {
+    width: 480px !important;
+    max-width: calc(100% - 24px) !important;
+
+    .ui-dialog-titlebar.ui-widget-header {
+        min-height: 44px;
+        padding: 12px 56px 0 16px;
+        background: #fff;
+        border-bottom: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .ui-dialog-titlebar .elfinder-titlebar-button {
+        width: 28px !important;
+        height: 28px !important;
+        color: $dark-60 !important;
+        border: 0 !important;
+
+        &:hover {
+            color: $secondary !important;
+            background: $nice-gray !important;
+        }
+    }
+
+    .ui-dialog-content.ui-widget-content {
+        position: relative;
+        box-sizing: border-box;
+        min-height: 72px;
+        max-height: min(60vh, 480px) !important;
+        padding: 16px 20px 20px 68px !important;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+        line-height: 20px;
+    }
+
+    .elfinder-dialog-icon-error {
+        top: 16px;
+        left: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        margin: 0;
+        color: $danger;
+        background: rgba($danger, 0.08) !important;
+        border-radius: 8px;
+
+        &::before {
+            font-family: 'tabler-icons-filled' !important;
+            content: $ti-icon-exclamation-circle;
+            font-size: 24px;
+            line-height: 1;
+        }
+    }
 }
 
 .ui-dialog.elfinder-dialog .ui-dialog-content.ui-widget-content .elfinder-cwd-icon::before {
@@ -756,6 +851,20 @@ html.pg-iframe {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
         text-align: center;
+
+        &:not(:has(.elfinder-upload-dialog-or)) {
+            display: flex;
+            align-items: center;
+
+            > .ui-button {
+                flex: 1;
+            }
+
+            .elfinder-upload-dirselect {
+                position: static !important;
+                flex: 0 0 34px;
+            }
+        }
     }
 
     .elfinder-upload-dropbox {
@@ -876,7 +985,7 @@ html.pg-iframe {
         }
     }
 
-    .elfinder-upload-dialog-or ~ .ui-button {
+    .elfinder-upload-dialog-wrapper > .ui-button {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -923,7 +1032,8 @@ html.pg-iframe {
         }
     }
 
-    .elfinder-upload-dialog-or + .ui-button {
+    .elfinder-upload-dialog-or + .ui-button,
+    .elfinder-upload-dialog-wrapper:not(:has(.elfinder-upload-dialog-or)) > .ui-button {
         color: white !important;
         background: $primary !important;
 
@@ -949,9 +1059,6 @@ html.pg-iframe {
     width: 380px !important;
     max-width: calc(100% - 24px);
     height: auto !important;
-    overflow: hidden;
-    border-radius: 10px !important;
-    box-shadow: 0 8px 24px rgba(31, 32, 34, 0.18);
 
     &:has(.elfinder-notify:nth-child(2)) {
         min-height: 148px !important;
@@ -1330,21 +1437,78 @@ div.ui-dialog-content:has(div.CodeMirror) {
     }
 }
 
-.elfinder-notify-customErrorDialog {
-    padding: 2px !important;
+.ui-dialog.elfinder-dialog.elfinder-dialog-notify .elfinder-notify-customErrorDialog {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 28px;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px !important;
+    text-align: left;
+    overflow: visible;
+
+    .elfinder-notify-progressbar {
+        display: none;
+    }
 
     .elfinder-dialog-icon-customError {
-        background: none !important;
-        display: contents;
+        position: static !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        margin: 0;
+        background: rgba($danger, 0.08) !important;
+        color: $danger;
+        border-radius: 8px;
     }
     .elfinder-dialog-icon-customError::before {
         font-family: 'tabler-icons-filled' !important;
         content: $ti-icon-exclamation-circle !important;
-        color: lighten($danger, 25%) !important;
-        background-color: transparent !important;
-        font-size: 2rem;
+        color: inherit !important;
+        font-size: 24px;
+        line-height: 1;
     }
-    .elfinder-notify-msg{display: block;}
+    .elfinder-notify-msg {
+        display: block;
+        min-width: 0;
+        color: $secondary;
+        font-family: $admin-font-family;
+        font-size: 14px;
+        line-height: 20px;
+        overflow-wrap: anywhere;
+    }
+    .elfinder-notify-cnt {
+        display: none;
+    }
+    .elfinder-notify-cancel {
+        position: static;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+    }
+    .elfinder-notify-button.ui-icon-close {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        color: $dark-60;
+        border-radius: 6px;
+
+        &:hover {
+            background: $nice-gray !important;
+            color: $secondary;
+        }
+
+        &::before {
+            color: inherit !important;
+            font-size: 18px;
+            line-height: 1;
+        }
+    }
 }
 
 /* Mobile version */
@@ -1591,3 +1755,6 @@ div.ui-dialog-content:has(div.CodeMirror) {
         }
     }
 }
+
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-avif { display: block !important; }
+.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-avif::before { display: none !important; }

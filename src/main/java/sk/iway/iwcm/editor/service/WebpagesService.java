@@ -40,6 +40,8 @@ import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocEditorFields;
+import sk.iway.iwcm.doc.DocHistory;
+import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupEditorField;
 import sk.iway.iwcm.doc.GroupsDB;
@@ -87,8 +89,6 @@ public class WebpagesService {
 	private static final String GROUP_ID = "groupId";
 	private static final String ROOT_GROUP_ID = "rootGroupId";
 	private static final String PASSWORD_PROTECTED = "passwordProtected";
-	private static final String DOC_ID = "docId";
-	private static final String TITLE = "title";
 	private static final String USER_GROUP_ID = "userGroupId";
 
 	private static final String MENU_TYPE_SAME_AS_NORMAL = "groupedit.menu_type_same_as_normal";
@@ -293,6 +293,20 @@ public class WebpagesService {
 		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);
 		return docs;
 	}
+
+    /**
+     * Adds page selectors with readable slashes without changing cached or persisted page titles.
+     * Only the slash entity used by full-path storage is decoded; other title markup is preserved.
+     * @param page response receiving the options
+     * @param fields comma-separated editor field names
+     * @param docs pages available for selection
+     */
+    public static void addDocOptions(DatatablePageImpl<?> page, String fields, List<DocDetails> docs) {
+        for (DocDetails doc : docs) {
+            String label = doc.getTitle() == null ? "" : doc.getTitle().replace("&#47;", "/");
+            page.addOption(fields, label, String.valueOf(doc.getDocId()), null);
+        }
+    }
 
 	private List<DocDetails> addFromTemlateAndEmptyDoc(List<DocDetails> list)
 	{
@@ -511,7 +525,7 @@ public class WebpagesService {
         Adminlog.add(Adminlog.TYPE_GROUP, "Force "+DB.removeSlashes(attributeName)+" to subgroups: " + groupIds + " value=" + attributeValue, groupId, -1);
 
         try {
-			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE group_id IN (" + groupIds + ")");
+			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE " + DB.getInCondition("group_id", groupIds));
 
 			if (attributeValue instanceof String string) ps.setString(1, string);
 			else if (attributeValue instanceof Integer integer) ps.setInt(1, integer);
@@ -537,62 +551,73 @@ public class WebpagesService {
     }
 
 	/**
-	 * Pregeneruje URL adresy stranok v zadanom adresari
-	 * @param rootGroupId
-	 * @param user
-	 * @param request
-	 * @param onlyChangeUrlInheritGroup //Default false, ak je true bude vykonane pregenerovanie iba pre tie kt. maju urlInheritGroup = true
+	 * Regenerates URLs in a folder and its descendants without publishing pages or changing approval state.
+	 *
+	 * @param rootGroupId folder to process
+	 * @param user user requesting the change
+	 * @param request current request, used for redirects and link updates
+	 * @param onlyChangeUrlInheritGroup whether to restrict changes to automatically generated or inherited URLs
 	 */
 	public static void regenerateUrl(int rootGroupId, Identity user, HttpServletRequest request, boolean onlyChangeUrlInheritGroup)
 	{
-		//ziskaj zoznam stranok v adresari
-		List<DocDetails> docs = DocDB.getInstance().getDocByGroup(rootGroupId);
-		EditorForm ef;
+		DocDB docDB = DocDB.getInstance();
+		List<DocDetails> docs = docDB.getDocByGroup(rootGroupId, DocDB.ORDER_TITLE, true, -1, -1, true, false);
+		GroupsDB groupsDB = GroupsDB.getInstance();
+		GroupDetails currentGroup = groupsDB.getGroup(rootGroupId);
+		String fileName = currentGroup != null && !currentGroup.isInternal() ? DB.prepareString(groupsDB.getGroupNamePath(rootGroupId), 255) : null;
+		int[] rootGroups = DocDB.getRootGroupL(rootGroupId, null, -1);
 		for (DocDetails doc : docs)
 		{
+			String virtualPath = regenerateVirtualPath(doc, onlyChangeUrlInheritGroup);
+			if (virtualPath == null) continue;
 
-			if(onlyChangeUrlInheritGroup) {
-				//Ak ma doc urlInheritGroup != true preskoc tento doc a nepregeneruj url
-				if(Boolean.TRUE.equals(doc.getUrlInheritGroup())==false && Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())==false) {
-					continue;
-				}
-			}
-
-			ef = EditorDB.getEditorForm(request, doc.getDocId(), -1, rootGroupId);
-			//out.println("<strong>"+ef.getTitle()+"</strong> [docid:"+ef.getDocId()+"] - "+ef.getVirtualPath());
-
-			if (ef.getVirtualPath().contains("*"))
+			// Folder moves also require refreshing the stored folder path and root groups.
+			new SimpleQuery().execute("UPDATE documents SET virtual_path=?, file_name=?, root_group_l1=?, root_group_l2=?, root_group_l3=?, sync_status=1 WHERE doc_id=?",
+				virtualPath, fileName, rootGroups[0], rootGroups[1], rootGroups[2], doc.getDocId());
+			if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML)
 			{
-				//out.println(" skipping (contains *)<br/>");
-				continue;
+				List<DocDetails> updated = EditorDB.fixRenamedVirtualPath(request, doc.getDocId(), virtualPath);
+				if (!updated.isEmpty()) request.getSession().setAttribute("updatedDocs", updated);
 			}
-
-			ef.setVirtualPath("");
-
-			if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) ef.setVirtualPath(doc.getEditorVirtualPath());
-
-			//nastav aktualneho usera
-			ef.setAuthorId(user.getUserId());
-			ef.setPublish("1");
-
-			EditorDB.saveEditorForm(ef, request);
-
-			//out.println(" -> " + ef.getVirtualPath()+"<br>");
-
-			EditorDB.cleanSessionData(request);
-
-			//out.flush();
+			Adminlog.add(Adminlog.TYPE_SAVEDOC, "Regenerate URL: " + doc.getVirtualPath() + " -> " + virtualPath, doc.getDocId(), -1);
+			docDB.updateInternalCaches(doc.getDocId());
 		}
 
-		//out.flush();
+		DocHistoryRepository historyRepository = Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class);
+		Set<Integer> changedHistoryDocs = new HashSet<>();
+		for (DocHistory history : historyRepository.findPendingByGroupId(rootGroupId))
+		{
+			String virtualPath = regenerateVirtualPath(history, onlyChangeUrlInheritGroup);
+			if (virtualPath == null || virtualPath.equals(history.getVirtualPath())) continue;
 
-		//rekurzivne sa zavolaj na podadresare
-		List<GroupDetails> subGroups = GroupsDB.getInstance().getGroups(rootGroupId);
-		for (GroupDetails group : subGroups)
+			historyRepository.updateVirtualPath(history.getId(), virtualPath);
+			Adminlog.add(Adminlog.TYPE_SAVEDOC, "Regenerate pending URL: " + history.getVirtualPath() + " -> " + virtualPath, history.getDocId(), history.getHistoryId());
+			changedHistoryDocs.add(history.getDocId());
+		}
+		// Also refresh the scheduled-publication cache and notify other cluster nodes.
+		for (Integer docId : changedHistoryDocs) docDB.updateInternalCaches(docId);
+
+		for (GroupDetails group : GroupsDB.getInstance().getGroups(rootGroupId))
 		{
 			regenerateUrl(group.getGroupId(), user, request, onlyChangeUrlInheritGroup);
 		}
-		//out.flush();
+	}
+
+	/** Returns a regenerated URL, or null when this version must keep its existing URL. */
+	private static String regenerateVirtualPath(DocBasic doc, boolean onlyChangeUrlInheritGroup)
+	{
+		if (doc.getVirtualPath().contains("*")) return null;
+		if (onlyChangeUrlInheritGroup && !Boolean.TRUE.equals(doc.getUrlInheritGroup()) && !Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) return null;
+
+		EditorForm form = new EditorForm();
+		form.setDocId(doc.getDocId());
+		form.setGroupId(doc.getGroupId());
+		form.setTempId(doc.getTempId());
+		form.setTitle(doc.getTitle());
+		form.setNavbar(doc.getNavbar());
+		form.setVirtualPath(Boolean.TRUE.equals(doc.getUrlInheritGroup()) && Tools.isNotEmpty(doc.getEditorVirtualPath()) ? doc.getEditorVirtualPath() : "");
+		EditorDB.setVirtualPath(form);
+		return form.getVirtualPath();
 	}
 
 	/**
@@ -689,7 +714,7 @@ public class WebpagesService {
 						groupIds.add(rootGroup.getGroupId());
 					}
 					if (groupIds.isEmpty()==false) {
-						predicates.add(root.get("rootGroupL1").in(groupIds));
+						predicates.add(JpaTools.in(root.get("rootGroupL1"), groupIds, builder));
 					}
 
 					//Vylúč všetky kôš adresáre
@@ -700,8 +725,11 @@ public class WebpagesService {
 						groupIdsTrash.add(group.getGroupId());
 					}
 					if (groupIdsTrash.isEmpty()==false) {
-						predicates.add(builder.not(root.get(GROUP_ID).in(groupIdsTrash)));
-						predicates.add(builder.not(root.get("rootGroupL2").in(groupIdsTrash)));
+						predicates.add(JpaTools.notIn(root.get(GROUP_ID), groupIdsTrash, builder));
+						predicates.add(builder.or(
+							builder.isNull(root.get("rootGroupL2")),
+							JpaTools.notIn(root.get("rootGroupL2"), groupIdsTrash, builder)
+						));
 					}
 				}
 			}
@@ -729,7 +757,7 @@ public class WebpagesService {
 				//ak sa jedna o posledny uzol daj to ako klasicku where kvoli efektivite
 				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
 			} else if (groupIds.isEmpty()==false) {
-				predicates.add(root.get(GROUP_ID).in(groupIds));
+				predicates.add(JpaTools.in(root.get(GROUP_ID), groupIds, builder));
 			}
 		} else if (groupId>0)  {
 			predicates.add(builder.equal(root.get(GROUP_ID), groupId));
@@ -941,10 +969,11 @@ public class WebpagesService {
 	}
 
 	/**
-	 * Add options to DatatablePage object
-	 * @param pageImpl - current response Page object
-	 * @param options - options object
-	 * @param forceGroupId - if true, force options.groupId to WebpagesService even if it's < 1
+	 * Adds editor lookup options to the supplied datatable page.
+	 *
+	 * @param pageImpl datatable page to enrich with lookup options
+	 * @param options source of the request, user, repositories, and filtering settings
+	 * @param forceGroupId whether to use {@code options.getGroupId()} even when it is {@code < 1}
 	 */
 	public static void addOptions(DatatablePageImpl<DocDetails> pageImpl, GetAllItemsDocOptions options, boolean forceGroupId) {
 		Prop prop = Prop.getInstance(options.getRequest());
@@ -952,9 +981,9 @@ public class WebpagesService {
 		if (forceGroupId) ws.groupId = options.getGroupId();
 
 		pageImpl.addOptions("tempId", ws.getTemplates(options.isRecursiveSubfolders()), "tempName", "tempId", true);
-        pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), TITLE, DOC_ID, false);
-        pageImpl.addOptions("headerDocId,footerDocId", ws.getHeaderList(true), TITLE, DOC_ID, false);
-		pageImpl.addOptions("tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true), TITLE, DOC_ID, false);
+        addDocOptions(pageImpl, "menuDocId,rightMenuDocId", ws.getMenuList(true));
+        addDocOptions(pageImpl, "headerDocId,footerDocId", ws.getHeaderList(true));
+        addDocOptions(pageImpl, "tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true));
         pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", USER_GROUP_ID, false);
         pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", USER_GROUP_ID, false);
         pageImpl.addOptions("perexGroups", ws.getPerexGroups(options.isRecursiveSubfolders()), "label", "value", false);
@@ -1201,17 +1230,16 @@ public class WebpagesService {
 			if (groupIds.size()==1) {
 				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
 			} else if (groupIds.size()>1) {
-				predicates.add(root.get(GROUP_ID).in(groupIds));
+				predicates.add(JpaTools.in(root.get(GROUP_ID), groupIds, builder));
 			}
 
 			//filter iba hlavnych stranok adresarov
 			String searchStatusIcon = params.get("searchEditorFields.statusIcons");
 			if ("searchDefaultPage".equals(searchStatusIcon) && groupIds.size()>0) {
 				//ziskaj zoznam default_doc_id pre zvolene adresare
-				String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN ("+ids+")");
+				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE " + DB.getInCondition("group_id", groupIds));
 				//pridaj to ako predikat
-				predicates.add(root.get("id").in(defaultDocIds));
+				predicates.add(JpaTools.in(root.get("id"), defaultDocIds, builder));
 			}
 		}
     }

@@ -47,15 +47,66 @@ Scenario("filter podla datumu", async ({ I, DT }) => {
   DT.checkTableRow("serverMonitoringRecordsTable", 5, ["991620", "25.07.2020 08:04:00", "webjet4.dev.iwa", "1", "3", "90 159 792", "243 269 632", "7", "0", "0", "0"]);
 });
 
-Scenario("aktualne hodnoty", ({ I }) => {
+Scenario("aktualne hodnoty", async ({ I }) => {
   I.amOnPage("/apps/server_monitoring/admin/");
+
+  const configureType = await I.executeScript(() => typeof document.querySelector("webjet-server-monitoring")?.configure);
+  I.assertEqual(configureType, "function", "The administration bundle must register the monitoring component");
+  I.waitForElement("webjet-server-monitoring[data-ready='true']", 10);
+  I.waitForElement(".monitoring-table", 10);
+  I.waitForFunction(() => {
+    const charts = document.querySelector("webjet-server-monitoring").charts;
+    return [charts.memoryAmchart, charts.cpuAmchart].every(chart => chart?.series.values[0]?.data.length > 0);
+  }, 20);
 
   //over fungovanie prekladov
   I.see("Dátum a čas spustenia servera");
   I.see("Správca jazyka JAVA");
+  I.seeNumberOfElements(".server-monitoring-tables > .col-md-6", 2);
+  I.see("Kódovanie znakov", ".server-monitoring-tables > .col-md-6:first-child");
+
+  const tableSemantics = await I.executeScript(() => {
+    const tables = [...document.querySelectorAll(".server-monitoring-tables .monitoring-table")];
+    const rows = tables.flatMap(table => [...table.rows]);
+    const headingIds = tables.map(table => table.getAttribute("aria-labelledby"));
+    return {
+      tableCount: tables.length,
+      uniqueHeadings: new Set(headingIds).size === tables.length,
+      tablesAreLabelled: tables.every(table => {
+        const id = table.getAttribute("aria-labelledby");
+        const heading = id ? document.getElementById(id) : null;
+        return heading?.matches(".server-monitoring-table-header")
+          && heading.parentElement === table.parentElement
+          && heading.textContent.trim().length > 0;
+      }),
+      iconsAreHidden: tables.every(table => {
+        const id = table.getAttribute("aria-labelledby");
+        const icons = [...(document.getElementById(id)?.querySelectorAll("i.ti") || [])];
+        return icons.length === 1 && icons[0].getAttribute("aria-hidden") === "true";
+      }),
+      rowsHaveHeaders: rows.length > 0 && rows.every(row =>
+        row.cells[0]?.tagName === "TH"
+        && row.cells[0]?.scope === "row"
+        && row.cells[1]?.tagName === "TD"
+      )
+    };
+  });
+  I.assertEqual(tableSemantics.tableCount, 5, "All monitoring tables must be rendered");
+  I.assertTrue(tableSemantics.uniqueHeadings, "Each monitoring table must have its own heading");
+  I.assertTrue(tableSemantics.tablesAreLabelled, "Each monitoring table must reference a non-empty heading");
+  I.assertTrue(tableSemantics.iconsAreHidden, "Decorative monitoring heading icons must be hidden from assistive technologies");
+  I.assertTrue(tableSemantics.rowsHaveHeaders, "Each monitoring row must start with a scoped row header");
+  I.see("file.encoding");
+  I.see("sun.jnu.encoding");
   I.see("0 dní");
   I.see("hodín");
   I.see("minút");
+
+  I.click("#secondsDropdown button");
+  I.click("#secondsDropdown [data-seconds='10']");
+  I.see("10s", "#seconds-display");
+  const refreshInterval = await I.executeScript(() => document.querySelector("webjet-server-monitoring").refreshInterval);
+  I.assertEqual(refreshInterval, 10000, "The selected interval must update live monitoring polling");
 });
 
 /**
@@ -144,7 +195,7 @@ Scenario("Monitoring server documents @singlethread", ({I, DT}) => {
   phase3(I, DT);
 });
 
-Scenario("Monitoring server sql", ({I, DT}) => {
+Scenario("Monitoring server sql @singlethread", ({I, DT}) => {
   I.amOnPage("/apps/server_monitoring/admin/sql/");
 
   phase1(I, DT);
@@ -164,5 +215,3 @@ Scenario("Monitoring server sql", ({I, DT}) => {
 
   phase3(I, DT);
 });
-
-

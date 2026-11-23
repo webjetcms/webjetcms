@@ -6,7 +6,9 @@ Using Structure Cloning, we can clone the entire contents of a directory in the 
 
 To perform a cloning action, you need to enter the source folder ID (which folder you are cloning) and the destination folder ID (where the source folder is being cloned to). You can enter the folder IDs directly if you remember them, or you can use the **Select** option, which opens a new window with a folder tree structure, where you select a specific folder by clicking on its name.
 
-The cloning itself uses [Structure Mirroring](../docmirroring/README.md) and [Automatic Translation](../../../admin/setup/translation.md). This means that when cloning is started, the selected folders (if they are not already) are automatically linked using the configuration variable ```structureMirroringConfig```. All subfolders (including all their nesting) and web pages are cloned from the source folder to the target folder, with the original and cloned folders/pages being linked to each other. The language is taken from the settings of the source and target folders. These folders/pages are also automatically translated if a translator is set.
+Cloning uses [Structure Mirroring](../docmirroring/README.md) and [Automatic Translation](../../../admin/setup/translation.md). A temporary link between the source and target folders is created for the duration of the cloning operation, valid only for this operation. It is saved in the configuration variable `structureMirroringConfig` only if the option **Keep structure mirroring active after cloning** is selected. Concurrent edits to other pages use the original mirroring settings.
+
+All subfolders, including web pages, are cloned to the target folder. If a translator is set, the content is translated according to the languages ​​of the source and target folders. Cloned pages take on the display settings from the source and folders take on the display method in the menu; the `structureMirroringDisabledOnCreate` option does not hide them during cloning.
 
 ## Options
 
@@ -45,6 +47,8 @@ Since cloning uses [Automatic translation](../../../admin/setup/translation.md),
 ## Canceling mirroring
 
 The window offers the option to [cancel mirroring](../docmirroring/README.md) the selected folder. Simply select the folder at the bottom of the window and press the <button class="btn btn-sm btn-outline-secondary" type="button">Cancel mirroring</button> button. The value `sync_id` that provided mirroring for the selected folder and all subfolders as their pages will then be deleted.
+
+To unmirror, you need the **Clone Structure** right and the right to edit the selected folder and all its subfolders. When domain separation is enabled, the entire selected structure must belong to the currently selected domain. If page access control by user group is enabled, access to each page in this structure is also verified. If any check fails, the operation is rejected and the links are preserved.
 
 ![](clone_structure_undo_sync.png)
 

@@ -35,6 +35,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
@@ -44,6 +46,13 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_BANNER_UPDATE)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "advanced", title = "components.banner.tab.advanced"),
+    @DataTableTab(id = "restrictions", title = "components.banner.tab.restrictions"),
+    @DataTableTab(id = "fields", title = "editor.tab.fields"),
+    @DataTableTab(id = "stat", title = "components.banner.stat", hideOnCreate = true, content = "<div class=\"statContainer\"><iframe id=\"statIframe\" src=\"about:blank\" width=\"100%\" height=\"500\"></iframe><div>")
+})
 public class BannerBean extends ActiveRecordRepository implements Serializable {
 
 	@JsonIgnore

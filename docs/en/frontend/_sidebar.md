@@ -5,9 +5,11 @@
 - Settings
   - [Templates](/frontend/setup/README.md)
   - [General Settings](/frontend/setup/config.md)
-  - Optional fields
-    - [Optional fields](/frontend/webpages/customfields/README.md)
-    - [Settings](/frontend/webpages/customfields/custom-fields-settings.md)
+  - Data tables
+    - [Field Settings](/frontend/datatables/fields-settings.md)
+    - [Tabs Settings](/frontend/datatables/tabs-settings.md)
+    - [Optional fields](/frontend/datatables/custom-fields-settings.md)
+  - [Optional fields via translation keys](/frontend/webpages/customfields/README.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
   - [CKEditor](/frontend/setup/ckeditor.md)
 - Templates

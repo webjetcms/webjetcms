@@ -66,7 +66,7 @@ export function typeDatatable() {
     }
 
     const getUrlWithParams = function(EDITOR, conf) {
-        let url = conf.attr["data-dt-field-dt-url"];
+        let url = conf.attr["data-dt-field-dt-url"]?.replaceAll("&amp;", "&");
         //url += "?docid={docId}&groupId={groupId}";
         //nahrad parametre z json objektu
         if (typeof url != "undefined" && url!=null && url.indexOf("{")!==-1) {
@@ -203,7 +203,7 @@ export function typeDatatable() {
                 }
                 const url = getUrlWithParams(EDITOR, conf);
 
-                //vue kompoennta este nebola inicializovana, pri opakovanom otvoreni DTED sa toto uz nevola
+                // The component is initialized only once; subsequent editor openings reuse it.
                 //console.log("DATATABLE SET, conf=", conf);
 
                 if (!empty(conf.datatable)) {

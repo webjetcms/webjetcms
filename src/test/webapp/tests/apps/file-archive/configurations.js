@@ -1,4 +1,5 @@
-Feature('apps.file-archive.configurations');
+// These suites share the insertion cron schedule and global archive configuration.
+Feature('apps.file-archive.configurations').tag('@singlethread');
 
 const SL = require("./SL.js");
 
@@ -67,14 +68,18 @@ Scenario('Set variable fileArchivCanEdit to default', ({ Document }) => {
 Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Document, DTE, TempMail }) => {
     const scheduledDocFileName = 'archive_file_test.pdf';
     const scheduledDocVirtualFileName = SL.randomName("scheduledfile");
-    const email = SL.randomName("email") + "@interway.sk";
+    const email = SL.randomName("email") + "@balat.sk";
     Document.setConfigValue("fileArchivFromMail", email);
     await SL.setCronjob('*/10', '*');
 
     I.amOnPage(SL.fileArchive);
-    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(30), "webjetarchive2"+TempMail.getTempMailDomain());
+    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName);
+    // Finish the upload before calculating the scheduled time; queued steps can take longer than 30 seconds.
+    await I.click({ css: '#DTE_Field_editorFields-saveLater_0' });
+    DTE.fillField('editorFields-dateUploadLater', SL.getFutureTimestamp(30));
+    I.fillField('#DTE_Field_editorFields-emails', "webjetarchive2"+TempMail.getTempMailDomain());
     DTE.save('fileArchiveDataTable');
-    I.wait(30);
+    I.waitForInvisible('#fileArchiveDataTable_modal', 10);
 
     await TempMail.login("webjetarchive2");
     TempMail.openLatestEmail();
@@ -88,7 +93,7 @@ Scenario('Set variable and Cronjob fileArchivFromMail to default', async ({ I, D
 
 
 Scenario('Delete archiv entities', async ({I}) => {
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
 });
 
 Scenario('Set variable fileArchivAllowPatternVersion and verify behaviour', ({ I, DT, DTE, Document }) => {
@@ -144,6 +149,6 @@ Scenario('Set variable and Cronjob fileArchivAllowPatternVersion to default', ({
 });
 
 Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({I, TempMail}) => {
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
     await TempMail.destroyInbox("webjetarchive2");
 });

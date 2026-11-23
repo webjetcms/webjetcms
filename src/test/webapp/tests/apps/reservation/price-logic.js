@@ -50,16 +50,21 @@ Scenario('Remove discount', ({I, DT, DTE}) => {
 });
 
 function checkUserReservationPrice(I, reservationDate, slots, expectedPrice) {
-    I.amOnPage("/apps/spring-app/rezervacie/");
-    I.waitForVisible("#reservationDate");
-    I.wait(1);
+    const isoDate = reservationDate.split("-").reverse().join("-");
+    I.amOnPage("/apps/rezervacie/rezervacia-tenisovych-kurtov.html");
+    I.waitForVisible("#reservationDate", 10);
     I.fillField("#reservationDate", reservationDate);
     I.pressKey("Tab");
+    I.waitInUrl("reservation-date=" + isoDate, 10);
+    I.waitForValue("#reservationDate", isoDate, 10);
     for (const slot of slots) {
-        I.click(locate(`td[id='${slot}'].free`));
-        I.wait(1);
+        const cell = `td[id='${slot}']`;
+        I.waitForVisible(cell + ".free", 10);
+        I.prevent429();
+        I.click(locate(cell + ".free"));
+        I.waitForElement(cell + ".selectedTableCell", 10);
     }
-    I.seeInField("#price", expectedPrice);
+    I.waitForValue("#price", String(expectedPrice), 10);
 }
 
 function checkAdminReservationPrice(I, DT, DTE, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, expectedPrice) {
@@ -68,5 +73,5 @@ function checkAdminReservationPrice(I, DT, DTE, reservationObjectName, dateFrom,
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("reservationDataTable");
     SL.setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo);
-    I.seeInField("#DTE_Field_price", expectedPrice);
+    I.waitForValue("#DTE_Field_price", expectedPrice, 10);
 }

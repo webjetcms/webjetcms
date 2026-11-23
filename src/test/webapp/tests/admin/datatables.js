@@ -124,7 +124,7 @@ Scenario('Dynamicke urcenie poctu zaznamov', ({ I }) => {
 Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
     DT.filterContains("newUrl", "/test-stavov/virtualpath/podla-title.html");
 
     if (Browser.isFirefox()) {
@@ -135,7 +135,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
     I.click({css: "div.buttons-select-cel"});
 
-    I.forceClickCss("#datatableInit tbody tr:nth-child(1) td:nth-child(3)");
+    I.forceClickCss("#redirectTable tbody tr:nth-child(1) td:nth-child(4)");
 
     I.seeInField("div.DTE.DTE_Bubble div.DTE_Bubble_Table div.DTE_Field_InputControl input", "301");
 
@@ -146,12 +146,12 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
     I.say("over, ze poradie si to po reloade stranky pamata");
     I.amOnPage("/admin/v9/settings/redirect/");
 
-    I.see("Presmerovací kód", "div.dt-scroll-headInner table thead tr:first-child th:nth-child(3)")
+    I.see("Presmerovací kód", "div.dt-scroll-headInner table thead tr:first-child th:nth-child(4)")
 
     //
     I.say("Over korektne filtrovanie po presune stlpca");
     I.dtFilter("newUrl", "/sk12345-");
-    I.see("/sk12345-imptest2b/", "#datatableInit");
+    I.see("/sk12345-imptest2b/", "#redirectTable");
     I.see("Záznamy 1 až 7 z 7");
 
     I.dtFilter("oldUrl", "imptest3");
@@ -165,7 +165,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
 Scenario('Presun stlpca, editacia bunky-reset', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
 });
 
 Scenario('Zobrazenie nazvu v hlavicke', ({ I, DT, DTE }) => {
@@ -176,31 +176,28 @@ Scenario('Zobrazenie nazvu v hlavicke', ({ I, DT, DTE }) => {
     DT.waitForLoader();
     I.waitForText("page-2021-02-23-134924-937", 10, "#datatableInit_wrapper");
 
-    I.clickCss("#datatableInit tbody tr:nth-child(1) td.dt-row-edit a");
+    const menuPage = locate({ xpath: '//table[@id="datatableInit"]/tbody/tr[td//a[normalize-space(.)="Zobrazený v menu"]]' });
+    const otherPage = locate({ xpath: '//table[@id="datatableInit"]/tbody/tr[td//a[normalize-space(.)="page-2021-02-23-134924-937"]]' });
+    I.click(menuPage.find("td.dt-row-edit a"));
     DTE.waitForEditor();
     I.see("Zobrazený v menu", "#datatableInit_modal div.DTE_Header_Content h5.modal-title");
-    I.wait(3);
     DTE.cancel();
-    I.wait(1);
 
     I.say("Oznac 2 riadky a over zobrazenie nadpisu");
 
-    I.forceClickCss("#datatableInit tbody tr:nth-child(1) td.dt-select-td");
-    I.forceClickCss("#datatableInit tbody tr:nth-child(2) td.dt-select-td");
-
-    I.wait(1);
+    I.forceClick(menuPage.find("td.dt-select-td"));
+    I.forceClick(otherPage.find("td.dt-select-td"));
+    I.seeNumberOfElements("#datatableInit tbody tr.selected", 2);
 
     I.clickCss("#datatableInit_wrapper button.buttons-edit");
     DTE.waitForEditor();
     I.see("Upraviť", "#datatableInit_modal div.DTE_Header_Content h5.modal-title");
-    I.wait(1);
     DTE.cancel();
-
-    I.wait(1);
 
     I.say("Overenie pri mazani");
 
     I.clickCss("#datatableInit_wrapper button.buttons-remove");
+    I.waitForVisible("#datatableInit_modal .DTE_Form_Info", 10);
     I.see("Zobrazený v menu", "#datatableInit_modal div.DTE_Form_Info div.col-sm-7");
     I.see("page-2021-02-23-134924-937", "#datatableInit_modal div.DTE_Form_Info div.col-sm-7");
     DTE.cancel();
@@ -236,13 +233,13 @@ Scenario('drag drop okna editora', async ({ I, DTE, Browser }) => {
 Scenario('pamatanie usporiadania', ({ I }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
     I.click(locate("div.dt-scroll-headInner table thead tr:first-child th").withText("Dátum vytvorenia"));
-    I.see("/sk12345/", "#datatableInit tbody tr:first-child td");
-    I.see("26.06.2020 10:52:32", "#datatableInit tbody tr:first-child td");
+    I.see("/sk12345/", "#redirectTable tbody tr:first-child td");
+    I.see("26.06.2020 10:52:32", "#redirectTable tbody tr:first-child td");
 });
 
 Scenario('pamatanie usporiadania-reset', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
 });
 
 Scenario('pamatanie velkost stranky', ({ I, DT }) => {
@@ -263,7 +260,7 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
     I.say("reloadni a over, ze mame 50 zaznamov");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 50 z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až 50 z", 20, "div.dt-footer-row");
 
     //
     I.say("nastav nazad na auto");
@@ -275,25 +272,25 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
     I.click("Automaticky ("+rowsTabs+")");
     I.click("Uložiť");
     DT.waitForLoader();
-    I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až "+rowsTabs+" z", 20, "div.dt-footer-row");
 
     //
     I.say("reloadni v auto rezime");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až "+rowsTabs+" z", 20, "div.dt-footer-row");
 
     //
     I.say("zvacsi okno a over, ze auto rezim funguje");
     I.resizeWindow(1280, 1000);
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 18 z", "div.dt-footer-row");
+    I.waitForText("Záznamy 1 až 18 z", 20, "div.dt-footer-row");
 });
 
 Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
-    DT.resetTable();
+    DT.resetTable("redirectTable");
     I.amOnPage("/admin/v9/settings/redirect/");
     I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
 
@@ -449,7 +446,7 @@ Scenario("extfilter - select BUG 57657-8", ({ I, DT }) => {
     I.see("Česká firma", ".datatableInit tbody tr td");
 });
 
-Scenario("BUF: filter table with startsWith and endsWith", ({ I, DT }) => {
+Scenario("BUG: filter table with startsWith and endsWith", ({ I, DT }) => {
     I.amOnPage("/apps/contact/admin/");
     DT.waitForLoader();
     var tdSelector = "#dataTable td.dt-row-edit a";

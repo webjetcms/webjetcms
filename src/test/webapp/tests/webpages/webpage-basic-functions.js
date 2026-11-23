@@ -1,5 +1,7 @@
 Feature('webpages.webpage-basic-functions');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber,
      note = 'AUTOTEST';
 
@@ -22,7 +24,7 @@ function createNewWebPage(I, randomNumber, DTE, DT) {
      I.say('Pridanie novej web stranky ' + auto_webPage);
      I.waitForElement(DT.btn.add_button, 10);
      I.click(DT.btn.add_button);
-     I.dtWaitForEditor();
+     DTE.waitForEditor();
      I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement('#DTE_Field_title');
      I.clickCss('#DTE_Field_title');
@@ -40,7 +42,7 @@ function createNewWebPage(I, randomNumber, DTE, DT) {
      DTE.save();
 }
 
-function checkEditedWebPage(I, randomNumber) {
+function checkEditedWebPage(I, DTE, randomNumber) {
      // premenne
      var auto_webPage = 'webPage-autotest-' + randomNumber;
      var edit_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
@@ -54,7 +56,7 @@ function checkEditedWebPage(I, randomNumber) {
      I.forceClick(locate('.even.is-not-public').withText(auto_webPage).find('.dt-select-td.sorting_1'));
      I.waitForText('1 riadok označený', 10);
      I.click(edit_webpage);
-     I.dtWaitForEditor();
+     DTE.waitForEditor();
      I.waitForText('Obsah', 10);
 }
 
@@ -107,18 +109,18 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
 
      // Pridat kopiu web stranky
      I.say('Pridanie kopie web stranky');
-     I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať kópiu web stránky'));
-     I.waitForVisible('#jsTree', 10);
-     I.click(locate('.jstree-anchor').withText(folder_name).inside('#jsTree'));
+     I.click(locate('.btn.btn-outline-secondary.btn-webjet-jstree-add').withText('Pridať kópiu web stránky'));
+     I.waitForVisible(WebjetDteJsTree.tree, 10);
+     I.click(locate('.jstree-anchor').withText(folder_name).inside(WebjetDteJsTree.tree));
      I.dtWaitForLoader();
-     I.waitForValue('.dt-tree-container>.form-group>div>div.input-group>input.form-control', '/' + folder_name, 5);
+     I.waitForValue('.dt-tree-container>.form-group>div.input-group>input.form-control', '/' + folder_name, 5);
 
      // Deaktivovat - nepovolene zobrazenie web stranky a vyhladanie cez vyhladavace
      I.say('Aktivovanie zobrazenia web stranky a vyhladavanie cez vyhladavace');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
      I.wait(0.5);
      I.dontSeeCheckboxIsChecked('#DTE_Field_available_0');
-     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+     I.checkOption('#DTE_Field_searchable_1');
      I.wait(0.5);
      I.dontSeeCheckboxIsChecked('#DTE_Field_searchable_0');
 
@@ -131,13 +133,13 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      I.waitForText('Záznamy 1 až 3 z 3');
 
      // ------------------------------------ KONTROLA ULOZENIA UDAJOV ---------------------------------------------------------------
-     checkEditedWebPage(I, randomNumber);
+     checkEditedWebPage(I, DTE, randomNumber);
      I.waitForElement('.toast-message', note, 15);
      I.clickCss('#pills-dt-datatableInit-basic-tab');
-     I.waitForValue('.dt-tree-container>.form-group>div>div.input-group>input.form-control', '/' + folder_name, 5);
+     I.waitForValue('.dt-tree-container>.form-group>div.input-group>input.form-control', '/' + folder_name, 5);
      I.seeInField('#DTE_Field_virtualPath', '/' + folder_name, 5);
      I.seeInField('#DTE_Field_editorFields-redactorNote', note);
-     I.dtEditorCancel();
+     DTE.cancel();
      I.click(DT.btn.tree_refresh_button);
      DT.waitForLoader();
 

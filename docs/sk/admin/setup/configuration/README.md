@@ -1,10 +1,23 @@
 # Konfigurácia
 
-Sekcia konfigurácia slúži na zobrazenie a správu jednotlivých konfiguračných premenných, ktoré sa odlišujú od prednastavených hodnôt.
+Sekcia konfigurácia slúži na zobrazenie a správu konfiguračných premenných. V ľavej časti sa nachádza strom, ktorý rozdeľuje premenné do nasledujúcich pohľadov:
+
+- **Zmenené** - premenné, ktorých hodnota je uložená v databáze. Tento pohľad je zvolený po otvorení stránky.
+- **Zákaznícke** - premenné uložené iba v databáze bez definície v `Constants`/`ConstantsV9` alebo premenné, ktorých názov sa začína aktuálnou hodnotou `Constants.getInstallName()` (napríklad `aceintegration_test`).
+- **Všetky** - všetky evidované premenné vrátane ich predvolených hodnôt a vlastných premenných uložených iba v databáze.
+- **Moduly** - hierarchické skupiny, napríklad `apps.gallery` alebo `security.oauth2`. Výber rodičovského uzla zobrazí aj premenné zo všetkých jeho poduzlov. Jedna premenná môže byť zaradená vo viacerých vetvách.
+
+Vo všetkých pohľadoch sú premenné predvolene zoradené podľa názvu od A po Z. Ak kliknutím na hlavičku stĺpca zvolíte iné radenie, prehliadač si ho zapamätá pre celý strom. K abecednému radeniu sa môžete vrátiť cez **Nastavenia** nad tabuľkou → **Zobrazenie stĺpcov** → **Obnoviť**.
+
+Strom je možné prehľadávať. Názvy modulov sú technické názvy a neprekladajú sa. Vo vybranom module je možné existujúcu premennú upraviť, ale nie vytvoriť novú ani spustiť import, pretože vlastná databázová premenná nemá informáciu o zaradení do modulu.
+
+Tlačidlom **Nastavenia** nad stromom môžete zmeniť pomer šírky stromu a tabuľky alebo nastaviť pevnú šírku stromu v pixeloch. Predvolená šírka je 200px. Vlastná voľba sa uloží pre prihláseného používateľa samostatne pre konfiguráciu.
 
 ![](page.png)
 
 V sekcii inštalácia je zoznam [najpoužívanejších konfiguračných premenných](../../../install/config/README.md).
+
+Pozadie a označenie prostredia v administrácii opisuje [Konfigurácia úvodnej obrazovky](dashboard.md).
 
 ## Pridávanie konfiguračných premenných
 
@@ -34,11 +47,21 @@ Môžu nastať 3 situácie:
   - ak zmenený názov, za názov **existujúcej** konfiguračnej premennej, tak sa **vykoná úprava**
   - ak zmenený názov, za názov **neexistujúcej** konfiguračnej premennej, tak sa **vykoná pridanie** novej premennej
 
+V editore môžete zobraziť históriu premennej a zrušiť jej naplánovanú zmenu, kým nenastane čas vykonania.
+
+## Dočasné nastavenie hodnoty
+
+Ak potrebujete zmeniť hodnotu konfiguračnej premennej iba na overenie jej správania, v editore zapnite možnosť **Nastaviť dočasne**. Hodnota sa nastaví iba v pamäti aktuálneho uzla, neuloží sa do databázy ani sa neprenesie na ostatné uzly klastra. Po reštarte aplikačného servera sa opäť použije hodnota uložená v databáze.
+
+Pri dočasnom nastavení nie je možné hodnotu zašifrovať ani naplánovať jej zmenu, preto sa polia **Šifrovať** a **Zmeniť od** v editore skryjú.
+
+Ak sa aktuálna hodnota na uzle líši od uloženej hodnoty, v stĺpci **Hodnota** sa zobrazia obe hodnoty vo formáte "aktuálna hodnota / uložená hodnota". Druhá hodnota je zobrazená tlmenou farbou a po umiestnení kurzora sa označí ako momentálne neaktívna. Môže ísť o hodnotu uloženú v databáze alebo o predvolenú hodnotu pri premennej bez databázového záznamu. Pri opätovnom otvorení editora sa do poľa **Hodnota** načíta uložená, nie dočasná hodnota.
+
 ## Vymazanie konfiguračných položiek
 
-Pri vymazaní konfiguračnej premennej môžu nastať 2 situácie:
+Vymazanie znamená reset databázovej hodnoty. Môžu nastať 2 situácie:
 
-- vymažeme hodnotu z tabuľky a **existuje prednastavená hodnota** k tejto konfiguračnej premennej, ktorá sa začne využívať (premenná stále existuje)
-- vymažeme hodnotu z tabuľky a **neexistuje prednastavená hodnota** k tejto konfiguračnej premennej (premenná už nebude existovať)
+- ak **existuje prednastavená hodnota**, začne sa používať a premenná zostane zobrazená v pohľade **Všetky** a v príslušných moduloch; z pohľadu **Zmenené** zmizne,
+- ak **neexistuje prednastavená hodnota**, vlastná databázová premenná po resete prestane existovať.
 
-!>**Upozornenie:** oproti vytváraniu/editácii, pri vymazaní sa nastaví prázdna hodnota. Ak má konfiguračná premenná prednastavenú hodnotu, tá sa prejaví **až po reštartovaní** aplikačného servera.
+Premennú, ktorá nemá databázovú hodnotu, nie je možné vymazať.

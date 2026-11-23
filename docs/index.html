@@ -12,24 +12,13 @@
 
   <link rel="icon" type="image/x-icon" href="/assets/images/favicon-cms.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="stylesheet" href="/style.css">
 
 </head>
 <body>
   <div id="app">Loading...</div>
 
-  <div id="search" style="display: none;">
-    <div class="search">
-      <div class="input-wrap">
-        <div class="gcse-search"></div>
-        <div class="deepwiki-badge">
-          <span id="ai-search-alternate">Alebo</span> <a href="https://deepwiki.com/webjetcms/webjetcms" target="_blank"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
+    var version = 7;
     var basePath = "/latest/";
         if (
             window.location.href.indexOf("127.0.0.1") > -1
@@ -63,6 +52,97 @@
         '/': '/_404.md'
       },
       relativePath: false, //otherwise history routing will not work
+      plugins: [function (hook, vm) {
+        let firstRender = true;
+        let cancelPosition = function () {};
+
+        hook.beforeEach(function (content) {
+          cancelPosition();
+          return content;
+        });
+        hook.mounted(function () {
+          document.dispatchEvent(new Event('documentation-mounted'));
+        });
+        hook.doneEach(function () {
+          // Forward lifecycle events to the asynchronously loaded search.
+          document.dispatchEvent(new Event('documentation-rendered'));
+
+          const revealSidebar = firstRender;
+          firstRender = false;
+          const id = vm.route.query.id;
+          const section = id ? document.getElementById(id) : null;
+          if (!section && !revealSidebar) return;
+
+          const controller = new AbortController();
+          const options = { signal: controller.signal, passive: true };
+          let frame;
+          let settled = false;
+          let animationFinished = false;
+          const route = window.location.href;
+          cancelPosition = function () {
+            controller.abort();
+            clearTimeout(timer);
+            cancelAnimationFrame(frame);
+          };
+
+          // Stop restoring as soon as the reader interacts or changes the route.
+          ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(function (event) {
+            document.addEventListener(event, cancelPosition, options);
+          });
+          window.addEventListener('popstate', cancelPosition, options);
+          window.addEventListener('hashchange', cancelPosition, options);
+
+          function restorePosition() {
+            if (!animationFinished || controller.signal.aborted) return;
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(function () {
+              if (window.location.href !== route) return cancelPosition();
+              if (section && section.isConnected) {
+                const top = section.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo({ top: top - (Number(vm.config.topMargin) || 0), behavior: 'instant' });
+              }
+              if (revealSidebar) {
+                const sidebar = document.querySelector('.sidebar');
+                const links = sidebar ? Array.from(sidebar.querySelectorAll('.sidebar-nav a')) : [];
+                const current = new URL(route);
+                const active = links.find(function (link) {
+                  const url = new URL(link.href);
+                  return url.pathname === current.pathname && url.searchParams.get('id') === (id || null);
+                }) || (sidebar && sidebar.querySelector('li.active > a'));
+                if (active) {
+                  const bounds = sidebar.getBoundingClientRect();
+                  const item = active.getBoundingClientRect();
+                  sidebar.scrollTop += item.top - bounds.top - (sidebar.clientHeight - item.height) / 2;
+                }
+              }
+              if (settled) cancelPosition();
+            });
+          }
+
+          // Docsify's anchor animation lasts 500 ms and uses the pre-image offset.
+          const timer = setTimeout(function () {
+            animationFinished = true;
+            restorePosition();
+          }, 550);
+          const images = section ? Array.from(document.querySelectorAll('.markdown-section img')).filter(function (image) {
+            return !image.complete && (image.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING);
+          }) : [];
+          const loaded = images.map(function (image) {
+            return new Promise(function (resolve) {
+              function complete() {
+                restorePosition();
+                resolve();
+              }
+              image.addEventListener('load', complete, { signal: controller.signal, once: true });
+              image.addEventListener('error', complete, { signal: controller.signal, once: true });
+            });
+          });
+          Promise.all(loaded.concat(document.fonts.ready)).then(function () {
+            settled = true;
+            restorePosition();
+          });
+        });
+      }],
       tabs: {
         persist: false,
         sync: false,
@@ -104,6 +184,10 @@
         pathNamespaces: ['/sk', '/en'],
       },*/
     }
+    var stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = basePath + "style.css?v=" + version;
+    document.head.appendChild(stylesheet);
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
@@ -220,20 +304,6 @@
           return link;
       }
 
-      //move #search element into aside.sidebar after h1 element
-      var search = document.getElementById("search");
-      var sidebar = document.getElementsByClassName("sidebar")[0];
-      var h1 = sidebar.getElementsByTagName("h1")[0];
-      if (h1) {
-        h1.parentNode.insertBefore(search, h1.nextSibling);
-      }
-      search.style.display = "block";
-
-      if (window.location.href.indexOf("/en/")!=-1) {
-        document.getElementById("ai-search-alternate").innerText = "Or";
-      } else if (window.location.href.indexOf("/cs/")!=-1) {
-        document.getElementById("ai-search-alternate").innerText = "Nebo";
-      }
     });
     function handleExternalClick(link, event) {
       event.preventDefault();
@@ -242,17 +312,14 @@
       window.open(link.href, '_blank');
     }
 
-    var cx = "340da4568aa0d44ca";
-    if (window.location.href.indexOf("/en/")!=-1) cx = "44ede7df6984c4a20";
-    else if (window.location.href.indexOf("/cs/")!=-1) cx = "250b24ddabe5640e4";
-
-    //append this before body end '<script async src="">
+    // Load semantic search without blocking documentation rendering.
     var tag = document.createElement("script");
-    tag.src = "https://cse.google.com/cse.js?cx="+cx;
+    tag.src = basePath + "assets/semantic-search.js?v=" + version;
     tag.async = "async";
     document.getElementsByTagName("body")[0].appendChild(tag);
 
-    if (window.location.pathname==basePath) {
+    //detect language and redirect accordingly
+    if (window.location.pathname==basePath || window.location.pathname==basePath+"index.html") {
       try {
           var language = navigator.languages
               ? navigator.languages[0]

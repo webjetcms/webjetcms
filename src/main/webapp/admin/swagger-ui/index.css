@@ -14,3 +14,20 @@ body {
     margin: 0;
     background: #fafafa;
 }
+
+/* Swagger UI 5.32.15 adds a button that overflows the collapsed copy control. */
+.swagger-ui .opblock .opblock-summary:not(:hover):not(:focus-within) .view-line-link.copy-to-clipboard {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.swagger-ui .opblock .opblock-summary:focus-within .view-line-link.copy-to-clipboard {
+    margin: 0 5px;
+    width: 24px;
+}
+
+.swagger-ui .opblock .opblock-summary .view-line-link.copy-to-clipboard button {
+    background-image: none;
+    min-width: 0;
+    padding: 0;
+}

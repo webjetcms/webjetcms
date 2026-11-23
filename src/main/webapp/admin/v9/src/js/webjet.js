@@ -1,5 +1,8 @@
 import {Tools} from "./libs/tools/tools";
 import { Base64 } from 'js-base64';
+import {initTextareaLineNumbers} from './textarea-line-numbers';
+import {initSelectPicker} from './select-picker';
+import {getDocumentationUrl} from './documentation-links';
 
 const WJ = (() => {
 
@@ -39,11 +42,7 @@ const WJ = (() => {
     }
 
     function showHelpWindow(link=null) {
-        var url = "http://docs.webjetcms.sk/latest/"+window.userLng;
-        if (typeof link != "undefined" && link != null) url += link;
-        else if (typeof window.helpLink != "undefined") url += window.helpLink;
-        else url += "/";
-        window.open(url, '_blank');
+        window.open(getDocumentationUrl(link ?? window.helpLink ?? '/'), '_blank', 'noopener');
     }
 
     function changeDomainImpl(domainName) {
@@ -435,7 +434,7 @@ const WJ = (() => {
                     }
                 });
             } catch (e) {}
-            if (found === true) return;
+            if (found === true) return true;
         }
 
         const options = {
@@ -500,12 +499,15 @@ const WJ = (() => {
     }
 
     /**
-     * @param {{title: string: string, message: string, btnCancelText: string, btnOkText: string, success: function, cancel: function}} options
+     * @param {{title?: string, message?: string, btnCancelText?: string, btnOkText?: string, success?: function, cancel?: function, onHidden?: function}} options
      */
     function confirm(options) {
         const title = options.title ? options.title : '';
         const message = options.message ? `<div class="toastr-message">${options.message}</div>` : '';
         const btnId = (new Date()).getTime();
+        const titleId = `toastrTitle${btnId}`;
+        const messageId = `toastrMessage${btnId}`;
+        const previouslyFocusedElement = document.activeElement;
         //TODO: preklady
         const btnCancelText = options.btnCancelText ? options.btnCancelText : WJ.translate('button.cancel');
         const btnOkText = options.btnOkText ? options.btnOkText : WJ.translate('button.submit');
@@ -540,6 +542,63 @@ const WJ = (() => {
                 allowHtml: true,
                 onShown: () => {
                     //console.log("onshow, toastrInstance=", toastrInstance);
+                    const $title = toastrInstance.find('.toast-title');
+                    const $message = toastrInstance.find('.toastr-message');
+                    const $cancelButton = $('#confirmationNo' + btnId);
+                    const $promptInput = $('#toastrPromptInput' + btnId);
+
+                    toastrInstance.attr({
+                        'role': 'dialog',
+                        'aria-modal': 'true'
+                    }).removeAttr('aria-live');
+
+                    if ($title.length > 0) {
+                        $title.attr({
+                            'id': titleId,
+                            'role': 'heading',
+                            'aria-level': '2'
+                        });
+                        toastrInstance.attr('aria-labelledby', titleId);
+                    } else {
+                        toastrInstance.attr('aria-label', btnOkText);
+                    }
+
+                    if ($message.length > 0) {
+                        $message.attr('id', messageId);
+                        toastrInstance.attr('aria-describedby', messageId);
+                    }
+
+                    toastrInstance.on('keydown.wjConfirmA11y', event => {
+                        if (event.key === 'Escape') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            toastrInstance.find('button.toast-close-button').click();
+                            return;
+                        }
+
+                        if (event.key !== 'Tab') return;
+
+                        const focusableElements = toastrInstance.find(
+                            'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+                        ).filter(':visible').toArray();
+
+                        if (focusableElements.length === 0) {
+                            event.preventDefault();
+                            return;
+                        }
+
+                        const firstFocusableElement = focusableElements[0];
+                        const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+                        if (event.shiftKey && document.activeElement === firstFocusableElement) {
+                            event.preventDefault();
+                            lastFocusableElement.focus();
+                        } else if (!event.shiftKey && document.activeElement === lastFocusableElement) {
+                            event.preventDefault();
+                            firstFocusableElement.focus();
+                        }
+                    });
+
                     $('#confirmationYes' + btnId).on('click', () => {
                         //console.log('Yes'+btnId+' clicked');
                         if (typeof options.success === 'function') {
@@ -559,9 +618,23 @@ const WJ = (() => {
                         }
                         toastrInstance.find('button.toast-close-button').click();
                     });
+
+                    if (typePrompt === true) {
+                        $promptInput.trigger('focus');
+                    } else {
+                        $cancelButton.trigger('focus');
+                    }
+                },
+                onHidden: () => {
+                    toastrInstance.off('.wjConfirmA11y');
+                    if (typeof options.onHidden === 'function') options.onHidden();
+                    if (previouslyFocusedElement && document.contains(previouslyFocusedElement)) {
+                        WJ.focusWithoutTooltip(previouslyFocusedElement);
+                    }
                 },
                 positionClass: 'toast-container toast-top-right',
-                containerId: 'toast-container-webjet'
+                containerId: 'toast-container-webjet',
+                closeHtml: '<button class="btn btn-close toast-close-button" aria-label="'+WJ.translate('button.close')+'"><i class="ti ti-x" aria-hidden="true"></i></button>'
             }
         );
     }
@@ -734,10 +807,7 @@ const WJ = (() => {
         //console.log('originalCallback=', originalCallback);
         options.okclick = () => {
             /** @type {string} */
-            let link = $('#modalIframeIframeElement').contents().find('div.inputs').find('.row:not(.template)').find('input').val();
-            if (typeof link == "undefined") {
-                link = $('#modalIframeIframeElement').contents().find('div.inputs').find('input.elfinder-url-input').val();
-            }
+            let link = $('#modalIframeIframeElement').contents().find('#file').val();
             //console.log('elfinder ok click link=', link, 'callback=', originalCallback);
             if (typeof originalCallback === 'function') {
                 originalCallback(link);
@@ -845,9 +915,8 @@ const WJ = (() => {
                     text = text.replace(regexB, "/");
                 }
             });
-
-            return text;
         }
+        return text;
     }
 
     function _formatTime(timestamp, format) {
@@ -988,9 +1057,12 @@ const WJ = (() => {
         let $headerTitle = $(".header-title");
         $headerTitle.text(title);
 
-        let pipeIndex = document.title.indexOf("|");
-        if (pipeIndex==-1) document.title = title + " | " + document.title;
-        else document.title = title + " " + document.title.substring(pipeIndex);
+        const environment = document.querySelector(".md-environment")?.dataset.environmentName;
+        const prefix = environment ? `[${environment}] ` : "";
+        $headerTitle.attr("aria-label", prefix + title.trim());
+        const currentTitle = prefix && document.title.startsWith(prefix) ? document.title.substring(prefix.length) : document.title;
+        const pipeIndex = currentTitle.indexOf("|");
+        document.title = prefix + title + (pipeIndex === -1 ? " | " + currentTitle : " " + currentTitle.substring(pipeIndex));
     }
 
     /**
@@ -1018,10 +1090,10 @@ const WJ = (() => {
     function breadcrumb(config) {
 
         //console.log("navbar, config=", config);
-        let breadcrumb = $("div.ly-content div.ly-container.container div.md-breadcrumb");
+        let breadcrumb = $("div.ly-content main.ly-container.container div.md-breadcrumb");
         if (breadcrumb.length === 0) {
             breadcrumb = $("<div class='md-breadcrumb'></div>");
-            $("div.ly-content div.ly-container.container").prepend(breadcrumb);
+            $("div.ly-content main.ly-container.container").prepend(breadcrumb);
         }
 
         //default is hidden, show it
@@ -1287,6 +1359,38 @@ const WJ = (() => {
             else htmlText += "\n\n";
         }
 
+        // Parse pipe tables before replacing line breaks, leaving fenced code untouched.
+        const lines = htmlText.replace(/\r\n?/g, '\n').split('\n');
+        const cells = line => line.trim().replace(/^\|/, '').replace(/(?<!\\)\|$/, '')
+            .split(/(?<!\\)\|/).map(cell => cell.trim().replace(/\\\|/g, '|'));
+        let fence = null;
+        for (let index = 0; index < lines.length - 1; index++) {
+            const marker = lines[index].match(/^\s*(`{3,}|~{3,})/);
+            if (marker) {
+                if (fence == null) fence = marker[1];
+                else if (marker[1][0] === fence[0] && marker[1].length >= fence.length) fence = null;
+                continue;
+            }
+            if (fence || !lines[index].includes('|')) continue;
+            const header = cells(lines[index]);
+            const separator = cells(lines[index + 1]);
+            if (header.length !== separator.length || !separator.every(cell => /^:?-{3,}:?$/.test(cell))) continue;
+            const row = (values, tag) => '<tr>' + header.map((_, column) => {
+                let alignment = '';
+                if (separator[column].endsWith(':')) alignment = separator[column].startsWith(':') ? 'text-center' : 'text-end';
+                else if (separator[column].startsWith(':')) alignment = 'text-start';
+                return `<${tag}${alignment ? ` class="${alignment}"` : ''}>${values[column] || ''}</${tag}>`;
+            }).join('') + '</tr>';
+            let end = index + 2;
+            const rows = [];
+            while (end < lines.length && lines[end].trim() && lines[end].includes('|') && !/^\s*(`{3,}|~{3,})/.test(lines[end])) {
+                rows.push(row(cells(lines[end]), 'td'));
+                end++;
+            }
+            lines.splice(index, end - index, '<table><thead>' + row(header, 'th') + '</thead><tbody>' + rows.join('') + '</tbody></table>');
+        }
+        htmlText = lines.join('\n');
+
         htmlText = htmlText.replace(/^### (.*$)/gim, '<h3>$1</h3>')
 
             //headings
@@ -1326,6 +1430,10 @@ const WJ = (() => {
             //fix BR tag before H1-H6 tag
             .replace(/<br \/><h([1-6])>/gim, '<h$1>')
             .replace(/<br \/><h([1-6])>/gim, '<h$1>')
+
+            // Tables provide their own block spacing.
+            .replace(/(?:<br \/>)+(<table>)/g, '$1')
+            .replace(/(<\/table>)(?:<br \/>)+/g, '$1')
             ;
 
         if (typeof options != "undefined") {
@@ -1379,11 +1487,13 @@ const WJ = (() => {
             var tooltipText = $el.attr("title");
 
             var conf = {
-                placement: 'top',
-                trigger: 'hover',
-                delay: { "show": 300, "hide": 0 }
+                placement: $el.attr('data-bs-placement') || 'top',
+                trigger: 'hover focus',
+                customClass: customClass == null ? 'wj-tooltip-hoverable' : customClass + ' wj-tooltip-hoverable',
+                delay: { "show": 300, "hide": 150 }
             };
-            if (customClass != null) conf.customClass = customClass;
+            // PageBuilder controls belong to an iframe, while WJ runs in the administration window.
+            if (el.ownerDocument !== document) conf.container = el.ownerDocument.body;
 
             if (typeof tooltipText != "undefined" && tooltipText.length > 0) {
                 //console.log("Tooltiptext=", tooltipText);
@@ -1395,7 +1505,59 @@ const WJ = (() => {
             } else {
                 $el.tooltip(conf);
             }
+
+            $el.off('.wjTooltipA11y')
+                .on('show.bs.tooltip.wjTooltipA11y', function(event) {
+                    // A delayed hover can finish after the modal starts closing.
+                    if ($el.parents('.modal:not(.show)').length > 0) event.preventDefault();
+                })
+                .on('keydown.wjTooltipA11y', function(event) {
+                    const tooltipId = $el.attr('aria-describedby');
+                    const tooltip = tooltipId ? el.ownerDocument.getElementById(tooltipId) : null;
+                    if (event.key === 'Escape' && tooltip?.classList.contains('show')) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        $el.tooltip('hide');
+                    }
+                })
+                .on('inserted.bs.tooltip.wjTooltipA11y shown.bs.tooltip.wjTooltipA11y', function() {
+                    var tooltipId = $el.attr('aria-describedby');
+                    var $tooltip = tooltipId ? $(el.ownerDocument.getElementById(tooltipId)) : $();
+                    $tooltip.off('.wjTooltipA11y')
+                        .on('mouseenter.wjTooltipA11y', function() {
+                            $el.trigger('mouseenter');
+                        })
+                        .on('mouseleave.wjTooltipA11y', function() {
+                            $el.trigger('mouseleave');
+                        });
+                });
         });
+    }
+
+    /**
+     * Restores focus without opening a tooltip until focus leaves or the pointer moves over it.
+     * @param {HTMLElement} element The control that should receive focus.
+     */
+    function focusWithoutTooltip(element) {
+        const $element = $(element);
+        const tooltip = window.bootstrap.Tooltip.getInstance(element);
+        $element.off('.wjFocusWithoutTooltip');
+
+        if (tooltip != null) {
+            // Keep the tooltip disabled beyond Bootstrap's delayed focus trigger.
+            tooltip.disable();
+            tooltip.hide();
+            $element.on('focusout.wjFocusWithoutTooltip mousemove.wjFocusWithoutTooltip', function(event) {
+                // Removing a modal can fire mouseenter under a stationary pointer.
+                if (event.type === 'mousemove' && event.originalEvent == null) return;
+
+                $element.off('.wjFocusWithoutTooltip');
+                tooltip.enable();
+                if (event.type === 'mousemove') tooltip.show();
+            });
+        }
+
+        element.focus({preventScroll: true});
     }
 
     /**
@@ -1569,6 +1731,7 @@ const WJ = (() => {
     }
 
     return {
+        getDocumentationUrl,
         showHelpWindow: (link) => {
             return showHelpWindow(link);
         },
@@ -1587,6 +1750,8 @@ const WJ = (() => {
             }
             return translate(key);
         },
+        initTextareaLineNumbers,
+        initSelectPicker,
         openPopupDialog: (url, width, height) => {
             return openPopupDialog(url, width, height);
         },
@@ -1747,6 +1912,9 @@ const WJ = (() => {
         },
         initTooltip: ($el, customClass = null) => {
             return initTooltip($el, customClass);
+        },
+        focusWithoutTooltip: (element) => {
+            return focusWithoutTooltip(element);
         },
         getAdminSetting: (key) => {
             return getAdminSetting(key);

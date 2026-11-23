@@ -556,6 +556,8 @@ public class RegUserAction extends WebJETActionBean
 
 			userIdentity.setPosition(usr.getPosition());
 			userIdentity.setParentId(usr.getParentId());
+			//redis trigger session update
+			LogonTools.setUserToSession(getSession(), userIdentity);
 		}
 	}
 
@@ -582,7 +584,7 @@ public class RegUserAction extends WebJETActionBean
 			errors.add("spamError", new SimpleError(prop.getText("checkform.fail_probablySpamBot")));
 
 		if	(!Captcha.validateResponse(getRequest(), getRequest().getParameter("g-recaptcha-response"), "userform"))
-			errors.add("captchaError", new SimpleError(prop.getText("captcha.nie.je.spravna")));
+			errors.add("captchaError", new SimpleError(prop.getText("captcha.textNotCorrect")));
 
 
 		String validateMethod = pageParams.getValue("validateMethod", null);

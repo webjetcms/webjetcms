@@ -12,11 +12,7 @@ block content
             let url = "/admin/rest/prex_groups";
             let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.perex_groups.PerexGroupsEntity")})];
 
-            var tabs = [
-                { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                { id: 'translates', title: '[[\#{perex_groups.tab.translates}]]' },
-                { id: 'fields', title: '[[\#{editor.tab.fields}]]' }
-            ];
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.perex_groups.PerexGroupsEntity')})];
 
             perexDataTable = WJ.DataTable({
                 url: url,

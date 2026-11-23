@@ -17,10 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormColumns;
-import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
-import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.components.forms.FormsDeletionService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -35,17 +33,13 @@ import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 public class FormsArchiveController extends DatatableRestControllerV2<FormsArchiveEntity, Long> {
 
     private final FormsArchiveServiceImpl formsService;
-    private final FormStepsRepository formStepsRepository;
-    private final FormItemsRepository formItemsRepository;
-    private final FormSettingsRepository formSettingsRepository;
+    private final FormsDeletionService formsDeletionService;
 
     @Autowired
-    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService, FormStepsRepository formStepsRepository, FormItemsRepository formItemsRepository, FormSettingsRepository formSettingsRepository) {
+    public FormsArchiveController(FormsArchiveRepository formsRepository, FormsArchiveServiceImpl formsService, FormsDeletionService formsDeletionService) {
         super(formsRepository);
         this.formsService = formsService;
-        this.formStepsRepository = formStepsRepository;
-        this.formItemsRepository = formItemsRepository;
-        this.formSettingsRepository = formSettingsRepository;
+        this.formsDeletionService = formsDeletionService;
     }
 
     @Override
@@ -94,7 +88,11 @@ public class FormsArchiveController extends DatatableRestControllerV2<FormsArchi
 
     @Override
     public boolean deleteItem(FormsArchiveEntity entity, long id) {
-        return formsService.deleteItem(entity, id, formStepsRepository, formItemsRepository, formSettingsRepository);
+        FormsDeletionService.DeletionResult result = formsDeletionService.delete(id, true);
+        NotifyBean notification = result.notification(getProp());
+        if (notification != null) addNotify(notification);
+        if (result.definition()) setForceReload(true);
+        return result.deleted();
     }
 
     @Override

@@ -36,6 +36,7 @@ import 'jstree';
 //import * as dtConfig from '../js/datatables-config.js';
 import Ninja from '../js/global-functions.js'; //NOSONAR
 import AutoCompleter from '../js/autocompleter.js';
+import { AiChat } from './ai/ai-chat';
 
 import numeral from 'numeral';
 import numeralsk from 'numeral/locales/sk'; //NOSONAR
@@ -58,6 +59,7 @@ window.WJ = WJ;
 window.Quill = Quill;
 window.toastr = toastr;
 window.AutoCompleter = AutoCompleter;
+window.WjAiChat = AiChat;
 window.webjetTranslationService = new Translator();
 
 //import WjPasswordStrength from '../js/passwdstrength.js';
@@ -126,6 +128,11 @@ $.fn.tooltip = bootstrap.Tooltip.jQueryInterface;
 //require('bootstrap-select/js/bootstrap-select');
 //https://gist.github.com/mattymatty76/c996d3b77f298b2ec133be59992df9d4/revisions
 require('./plugins/bootstrap-select-v1.14.0-gamma1')
+Object.assign($.fn.selectpicker.Constructor.DEFAULTS, {
+    showTick: true,
+    iconBase: 'ti',
+    tickIcon: 'ti-check',
+});
 import 'bootstrap-select/dist/css/bootstrap-select.css';
 
 //not used anymore
@@ -138,6 +145,9 @@ window.WebjetJsTree = WebjetJsTree;
 window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
 window.jsTreeFolderOpener = new JsTreeFolderOpener();
 
+import { JstreeSettings } from './libs/js-tree-extends/jstreesettings';
+window.JstreeSettings = JstreeSettings;
+
 import * as JSZip from 'jszip';
 window.JSZip = JSZip;
 
@@ -146,10 +156,18 @@ window.WJ.DataTable = dataTableInit;
 import { CellVisibilityService } from './libs/data-tables-extends/';
 window.dataTableCellVisibilityService = new CellVisibilityService();
 
-/* VUE */
-import { VueTools } from './libs/tools/vuetools'
-VueTools.setup();
-window.VueTools = VueTools;
+/* WEB COMPONENTS */
+import { showFeedbackDialog } from './feedback';
+WJ.showFeedbackDialog = showFeedbackDialog;
+import { getReleaseNews } from './release-news';
+WJ.getReleaseNews = getReleaseNews;
+import { initHelpMenu } from './help-menu';
+WJ.initHelpMenu = initHelpMenu;
+import { initUserMenu } from './user-menu';
+WJ.initUserMenu = initUserMenu;
+import './web-components/webjet-overview-dashboard';
+import './web-components/webjet-server-monitoring';
+import './web-components/webjet-image-area-selector';
 
 /* DYNAMIC IMPORTS */
 const createImageEditor = () => {

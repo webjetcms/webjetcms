@@ -1,5 +1,21 @@
 # Formuláre
 
+## Validácia pri opustení poľa
+
+Kontrola textových polí pri strate fokusu je predvolene zapnutá. Konfiguračná premenná `multistepform_validateOnBlur` má predvolenú hodnotu `true`; nastavením na `false` kontrolu vypnete. Nastavenie platí pre všetky viackrokové formuláre.
+
+Kontrola používa nastavenie **Povinné pole** a pred validáciou oreže úvodné a koncové medzery podľa nastavenia **Orezať medzery**. **Povolená hodnota** označuje [regulárne výrazy](../../../redactor/apps/form/regexps.md) vybrané v editore konkrétnej položky. Zadaná hodnota musí vyhovieť všetkým vybraným pravidlám. Ak nie je vybrané žiadne pravidlo, formát hodnoty sa touto kontrolou neoveruje.
+
+Chyba sa zobrazí pri poli. Kontrola neukladá údaje ani nevolá spracovateľa. Úplná validácia vrátane podmienok prebehne pri odoslaní kroku.
+
+## Rozpracované údaje pri návrate
+
+Tlačidlo **Späť** dočasne uloží hodnoty aktuálneho kroku do HTTP session, oddelene od potvrdených odpovedí. Zachovajú sa aj neúplné hodnoty, skryté polia, zrušené výbery a dokončené nahrávania. Toto uloženie nevyžaduje úspešnú validáciu a funguje aj pri vypnutej kontrole pri opustení poľa.
+
+Pri návrate do kroku majú rozpracované hodnoty prednosť pred staršími potvrdenými odpoveďami. Prechod dopredu skontroluje a potvrdí hodnoty viditeľných polí. Ak dočasné uloženie zlyhá, aktuálny krok zostane otvorený. Rozpracované údaje sa odstránia po dokončení formulára, definitívnom ukončení pokusu alebo zániku session; po obnovení stránky sa neobnovia.
+
+## Vlastné spracovanie formulára
+
 V niektorých prípadoch je potrebné vykonať zložitejšie operácie, alebo validácie formulárov. Pre tento účel je vo viackrokových formulároch možné nastaviť Java triedu v poli Spracovateľ formulárov. Ide o špeciálnu triedu, ktorá slúži na spracovanie krokov formuláru a umožňuje:
 
 - validáciu kroku
@@ -33,6 +49,29 @@ Rozhranie [`FormProcessorInterface`](../../../../../src/main/java/sk/iway/iwcm/c
 - `validateStep` - metóda sa vyvolá pri validácií kroku (pred uložením). V tejto metóde je možné vykonať akúkoľvek validáciu, ktorá je potrebná pre daný krok.
 - `runStepInterceptor` - metóda sa vyvolá po validácií kroku, ale pred uložením. V tejto metóde je možné spustiť akýkoľvek interceptor, ktorý je potrebný pre daný krok. Napríklad sa môže jednať odoslanie emailu/SMS s kódom, ktorý je potrebné zadať v ďalšom kroku.
 - `handleFormSave` - metóda sa vyvolá celkovom ukladaní formuláru. V tejto metóde je možné vlastné uloženie formuláru, napríklad odoslaním do `CRM` systému. Metóda vracia `boolean` hodnotu, ktorá určuje, či sa má vyvolať aj klasické `WebJET` uloženie formuláru.
+
+Všetky tri metódy dostanú za `formName` parameter `FormSettingsEntity formSettings`. Ide o nastavenia už načítané pre spracovávaný formulár a aktuálnu doménu; vo validátore ich nemusíte znova vyhľadávať podľa mena.
+
+```java
+@Override
+public void validateStep(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    String expectedValue = formSettings.getFieldA();
+    if (Tools.isNotEmpty(expectedValue) && !expectedValue.equals(stepData.optString("reference"))) {
+        errors.put("reference", "Zadaná referencia nezodpovedá nastaveniu formulára.");
+    }
+}
+
+@Override
+public void runStepInterceptor(String formName, FormSettingsEntity formSettings,
+        FormStepEntity stepEntity, JSONObject stepData,
+        HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    // Use the provided settings when processing the submitted step.
+}
+```
+
+**Prelomová zmena:** vlastné implementácie `validateStep` a `runStepInterceptor` musia doplniť druhý parameter `FormSettingsEntity formSettings` a znova sa skompilovať. Staré podpisy nie sú podporované. Podpis `handleFormSave` sa nemení.
 
 Bližšie informácie o fungovaní jednotlivých metód a ich parametrov je popísané priamo v súbore.
 

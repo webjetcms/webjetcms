@@ -8,6 +8,7 @@ block content
     script(type="text/javascript", src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/js/fck_dialog_common.jsp")
 
     script.
+        window.helpLink = "/redactor/webpages/working-in-editor/README";
         var lastDocId = -1;
         var lastGroupId = -1;
         var lastVirtualPath = "";
@@ -35,7 +36,7 @@ block content
             'forward', 'getfile', 'help', 'home', 'info', 'mkdir', 'mkfile', 'netmount',
             'open', 'paste', 'quicklook', 'reload', 'rename', 'resize', 'rm',
             'sort', 'up', 'upload', 'view',
-            'wjedit', 'wjfilearchive', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
+            'wjedit', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
         ];
 
         let files = [
@@ -83,8 +84,8 @@ block content
                     var ip=6;
                     try
                     {
-                        // Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
-                        var fixedSizeRegex = /fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-true)?/gi;
+                        // Format: fixedSize-w-h-ip[-color][-true][-qQuality] where color is hex without # or c prefix
+                        var fixedSizeRegex = /fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-(true))?(?:-q(\d+))?/gi;
                         var matched = fixedSizeRegex.exec(classNames);
                         //console.log(matched);
                         if (matched != null && matched.length >= 3)
@@ -96,7 +97,7 @@ block content
                             if ("0"==actualHeight || 0==actualHeight) actualHeight="";
                         }
                     } catch (e) {}
-                    if (urlPath.indexOf("http")!=0 && (urlPath.indexOf(".jpg")>0 || urlPath.indexOf(".jpeg")>0 || urlPath.indexOf(".png")>0 || urlPath.indexOf(".gif")>0 || urlPath.indexOf(".webp")>0))
+                    if (urlPath.indexOf("http")!=0 && (urlPath.indexOf(".jpg")>0 || urlPath.indexOf(".jpeg")>0 || urlPath.indexOf(".png")>0 || urlPath.indexOf(".gif")>0 || urlPath.indexOf(".webp")>0 || urlPath.indexOf(".avif")>0))
                     {
                         if (urlPath.indexOf("/thu"+"mb")==-1) urlPath = "/thu"+"mb" + urlPath;
                         urlPath = WJ.urlUpdateParam(urlPath, "w", actualWidth);
@@ -107,9 +108,18 @@ block content
                         var noipMatch = /fixedSize-\d+-\d+(?:-\d+)?(?:-[a-fA-F0-9]{6})?-true/.exec(classNames);
                         if (colorMatch && colorMatch[1]) {
                             urlPath = WJ.urlUpdateParam(urlPath, "c", colorMatch[1]);
+                        } else {
+                            urlPath = WJ.urlRemoveParam(urlPath, "c");
                         }
                         if (noipMatch) {
                             urlPath = WJ.urlUpdateParam(urlPath, "noip", "true");
+                        } else {
+                            urlPath = WJ.urlRemoveParam(urlPath, "noip");
+                        }
+                        if (matched && matched[6]) {
+                            urlPath = WJ.urlUpdateParam(urlPath, "q", matched[6]);
+                        } else {
+                            urlPath = WJ.urlRemoveParam(urlPath, "q");
                         }
                     }
                 }

@@ -239,7 +239,7 @@ export class DatatableOpener {
 
             //console.log("bindEvents 2, id=", id, "settings=", settings, "aids=", settings?.aIds, "property=", !settings.aIds.hasOwnProperty(id));
 
-            if (Tools.empty(settings?.aIds) && !settings.aIds.hasOwnProperty(id)) {
+            if (settings?.aIds == null) {
                 return;
             }
             /**

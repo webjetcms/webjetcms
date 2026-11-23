@@ -30,6 +30,12 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
 
   //custom id
   int invisibleCaptchaCounter = Tools.getIntValue((String) request.getAttribute("invisibleCaptchaCounter"), 1);
+  String idPrefix = "";
+  String multistepFormPrefix = (String) request.getAttribute("multistepFormPrefix");
+  if (Tools.isNotEmpty(multistepFormPrefix)) {
+    idPrefix = multistepFormPrefix;
+  }
+  String invisibleCaptchaId = idPrefix + "submitWithCaptcha" + invisibleCaptchaCounter;
 
   request.setAttribute("invisibleCaptchaCounter", "" + invisibleCaptchaCounter);
   request.setAttribute("loadAfterFocus" , Constants.getBoolean("captchaLoadAfterFocus"));
@@ -47,9 +53,9 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
           });
       },
       verifyCallback = function(id, response) {
-          var el = $('#' + id),
+          var el = $(document.getElementById(id)),
               form  = el.closest('form').length != 0 ? el.closest('form') : el.closest('.md-online-form'),
-              submit = form.find('input:submit');
+              submit = form.find('input:submit, button:submit').first();
 
           /*
           console.log(el);
@@ -60,6 +66,9 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
 
           if (form.hasClass('md-online-form')) {
               generateSmsCode();
+          }
+          else if (form.hasClass('multistep-form')) {
+              form[0].dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
           }
           else if (submit.data('onclick') != null) {
               eval(submit.data('onclick'));
@@ -79,12 +88,16 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
             id = el.prop('id');
 
             el.data('recaptcha-loaded', true);
-            var render = renderGrecaptcha(id);
+            var render = renderGrecaptcha(el[0], id);
             form.data('recaptcha-id', render);
+            if (form.data('recaptcha-execute-pending') === true) {
+              form.removeData('recaptcha-execute-pending');
+              grecaptcha.execute(render);
+            }
         }
 
-        function renderGrecaptcha(id) {
-          return grecaptcha.render(id, {
+        function renderGrecaptcha(element, id) {
+          return grecaptcha.render(element, {
             'sitekey': '<%=Constants.getString("reCaptchaSiteKey")%>', 'badge': 'inline', 'callback': function (response) {
               verifyCallback(id, response);
             }
@@ -113,6 +126,9 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
 
               var id = 'invisible-captcha-script';
               if ($('#' + id).length != 0) {
+                  if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+                      onloadCallback();
+                  }
                   return;
               }
 
@@ -121,30 +137,41 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
           }
 
           var forms = $('.submitWithCaptcha').closest('form');
-          forms.find('input:submit').each(function(){
-              var el = $(this);
+          forms.each(function () {
+              var form = $(this);
+              if (form.data('invisible-captcha-handler-bound') === true) return;
+              form.data('invisible-captcha-handler-bound', true);
 
-              if (el.attr("onclick") != null) {
-                  el.data('onclick', el.attr("onclick").replace('return ', ''));
-                  el.removeAttr("onclick");
-              }
-          });
+              form.find('input:submit, button:submit').each(function(){
+                  var el = $(this);
 
-          forms.find('input:submit').click(function (e) {
-              var form = $(this).closest('form'),
-                isValid = checkForm.checkImpl(form[0], true, null) == false ? false : true;
+                  if (el.attr("onclick") != null) {
+                      el.data('onclick', el.attr("onclick").replace('return ', ''));
+                      el.removeAttr("onclick");
+                  }
+              });
 
-              if (isValid) {
-                  grecaptcha.execute(form.data('recaptcha-id'));
-              }
+              form.find('input:submit, button:submit').on('click.invisibleCaptcha', function () {
+                  var isValid = checkForm.checkImpl(form[0], true, null) == false ? false : true;
 
-              return false;
+                  if (isValid) {
+                      var recaptchaId = form.data('recaptcha-id');
+                      if (window.grecaptcha && typeof window.grecaptcha.execute === 'function' && recaptchaId != null) {
+                          grecaptcha.execute(recaptchaId);
+                      } else {
+                          form.data('recaptcha-execute-pending', true);
+                          includeScript.call(this);
+                      }
+                  }
+
+                  return false;
+              });
           });
       });
   </script>
 </c:if>
 
 <div>
-  <input id="submitWithCaptcha<%=invisibleCaptchaCounter%>" class="submitWithCaptcha hidden" style="display: none;" name="Submit" type="button" />
+  <input id="<%=invisibleCaptchaId%>" class="submitWithCaptcha hidden" style="display: none;" name="Submit" type="button" />
 </div>
 <% request.setAttribute("invisibleCaptchaCounter", "" + (invisibleCaptchaCounter + 1)); %>

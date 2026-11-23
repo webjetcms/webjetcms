@@ -2,6 +2,7 @@ Feature('apps.gallery.gallery-access');
 
 const DT = require("../../../pages/DT");
 const DTE = require("../../../pages/DTE");
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
 
 var randomNumber,
      mainFolder,
@@ -31,11 +32,14 @@ Before(({ I }) => {
 // pridanie prav uzivatelovi - zaklad
 function openUserSettingsDialog(I) {
      I.click(locate('.btn.btn-sm.btn-outline-secondary.js-profile-toggler').withText(userName));
-     I.click(locate("a.dropdown-item").withText('Profil'));
+     I.click(locate(".dropdown-item").withText('Profil'));
      I.switchTo("#modalIframeIframeElement");
      I.waitForText(userLogin, 60);
+     // Permission selection is applied on WJ.DTE.opened, after the form fields appear.
+     DTE.waitForEditor();
      I.waitForElement("#pills-dt-datatableInit-rightsTab-tab", 10);
      I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
+     I.waitForVisible('#perms_menuGallery a', 10);
 }
 
 // skontroluj ci mam prava na galeriu
@@ -61,7 +65,7 @@ async function allowAllFolders(I) {
      let failsafe = 0;
      while (numVisible > 0 && failsafe++ < 10) {
           I.say("numVisible: " + numVisible);
-          I.click(locate('#editorAppDTE_Field_editorFields-writableFolders button.btn-vue-jstree-item-remove'));
+          I.click(locate('#editorAppDTE_Field_editorFields-writableFolders button.btn-webjet-jstree-item-remove'));
           I.wait(0.5);
           numVisible = await I.grabNumberOfVisibleElements("#editorAppDTE_Field_editorFields-writableFolders input.form-control");
      }
@@ -94,9 +98,9 @@ function openJstree(I, folder) {
 
 // vyber priecinok, na ktory mi budu pridelene prava
 function limitFolderAccess(I, allowedFolder) {
-     I.clickCss("#editorAppDTE_Field_editorFields-writableFolders button.btn-vue-jstree-add"); // nahravanie suborov do adresarov
-     I.waitForElement("#custom-modal-id", 10);
-     I.waitForVisible('#jsTree', 10);
+     I.clickCss("#editorAppDTE_Field_editorFields-writableFolders button.btn-webjet-jstree-add"); // nahravanie suborov do adresarov
+     I.waitForElement(WebjetDteJsTree.modal, 10);
+     I.waitForVisible(WebjetDteJsTree.tree, 10);
      openJstree(I, "images");
      openJstree(I, "gallery");
      openJstree(I, mainFolder);
@@ -300,6 +304,13 @@ Scenario('Zakazany priecinok v galerii', async ({ I }) => {
 Scenario("Delete folders 1", async ({ I }) => {
      await resetGalleryAccess(I)
      I.amOnPage('/admin/v9/apps/gallery/');
+     I.waitForVisible('#SomStromcek a.jstree-anchor', 20);
+     I.jstreeWaitForLoader();
+     // A failed setup may never create the fixture; do not report it again as a cleanup failure.
+     if (await I.grabNumberOfVisibleElements(locate('#SomStromcek a.jstree-anchor').withText(mainFolder)) === 0) {
+          I.say('The test folder was not created; nothing to delete.');
+          return;
+     }
 
      // vymaz subfolder2 + hlavny priecinok autotestfolder
      I.say('Vymaz subfolder2 + hlavny priecinok autotestfolder');
@@ -310,10 +321,10 @@ Scenario("Delete folders 1", async ({ I }) => {
 Scenario('Duplikovanie suboru v galerii - drag&drop', async ({ I }) => {
      // skontroluj ci mam prava na vsetky priecinky v galerii
      I.say('Skontroluj ci mam prava na vsetky priecinky v galerii');
+     I.amOnPage('/admin/v9/');
      await allowAllFolders(I);
 
      I.amOnPage('/admin/v9/apps/gallery/');
-     I.refreshPage();
 
      // vytvor hlavny priecinok + podpriecinky autotest_subfolder1 a autotest_subfolder2
      I.say('Vytvaram hlavny priecinok + podpriecinky do priecinka galeria');
@@ -389,4 +400,17 @@ Scenario("Delete folders 2", async ({ I }) => {
      I.relogin("admin");
      I.amOnPage('/admin/v9/apps/gallery/');
      deleteFolder(I, mainFolder);
+});
+
+Scenario('Restore tester3 gallery permissions', async ({ I }) => {
+     await resetGalleryAccess(I);
+
+     // A fresh login must load the restored permissions saved by the cleanup.
+     I.relogin(userLogin);
+     I.amOnPage('/admin/v9/');
+     openUserSettingsDialog(I);
+     I.waitForVisible('#perms_menuGallery a.jstree-clicked', 10);
+     I.dontSeeElement('#editorAppDTE_Field_editorFields-writableFolders input.form-control');
+     I.switchTo();
+     I.logout();
 });

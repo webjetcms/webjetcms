@@ -4,48 +4,57 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.webjetcms.ai.EmbeddingInputType;
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.ProviderCallException;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
-import sk.iway.iwcm.rag.embedding.EmbeddingProvider;
+import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.indexing.DocDetailsContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
 import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
 import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
-import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
+import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /**
  * Core service for semantic indexing of documents.
- * Orchestrates: content extraction -> chunking -> embedding -> vector storage.
+ * Orchestrates content extraction, chunking, embedding, and vector storage.
+ * Processes the shared queue and delegates Markdown items to {@link MarkdownIndexService}.
  */
 @Service
 public class SemanticIndexService {
 
     private final DocDetailsContentExtractor contentExtractor;
     private final SlidingWindowChunker chunker;
-    private final EmbeddingProvider embeddingProvider;
-    private final PgVectorStore vectorStore;
+    private final EmbeddingService embeddingService;
+    private final VectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
     private final EmbeddingChunkRepository embeddingChunkRepository;
+    private final MarkdownIndexService markdownIndexService;
 
     private final IndexQueueRepository queueRepository;
 
@@ -54,42 +63,31 @@ public class SemanticIndexService {
     @Autowired
     public SemanticIndexService(DocDetailsContentExtractor contentExtractor,
                                 SlidingWindowChunker chunker,
-                                EmbeddingProvider embeddingProvider,
-                                PgVectorStore vectorStore,
+                                EmbeddingService embeddingService,
+                                VectorStore vectorStore,
                                 IndexQueueRepository queueRepository,
                                 RagEmbeddingStatService ragEmbeddingStatService,
-                                EmbeddingChunkRepository embeddingChunkRepository) {
+                                EmbeddingChunkRepository embeddingChunkRepository,
+                                MarkdownIndexService markdownIndexService) {
         this.contentExtractor = contentExtractor;
         this.chunker = chunker;
-        this.embeddingProvider = embeddingProvider;
+        this.embeddingService = embeddingService;
         this.vectorStore = vectorStore;
 
         this.queueRepository = queueRepository;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
         this.embeddingChunkRepository = embeddingChunkRepository;
+        this.markdownIndexService = markdownIndexService;
     }
 
     /**
-     * Process all pending items in the RAG indexing queue.
-     * Items are fetched in batches of 500 and processed sequentially.
+     * Processes queue items up to the highest ID captured at the start of the run.
+     * Items are fetched in ascending-ID batches of 500 and attempted once per run.
+     * Entries added after the snapshot are deferred to the next run.
      * Uses a cache-based flag to prevent concurrent execution.
      * Failed items remain in the queue and are retried on the next run.
      */
     public void processQueue() {
-
-        if (vectorStore.isAvailable() == false) {
-            // If vector store is not available (not allowed or available)
-            Logger.error(SemanticIndexService.class, "Vector store NOT available, skipping queue processing");
-            return; // cannot do this
-        } else if(vectorStore.isAvailableAndInitialized() == false) {
-            // Vector store is available but not initialized, we can try to initialize it
-            if(vectorStore.initializeSchema() == false) {
-                // Inicialization failed, error will be logged by vector store, we cannot do this
-                Logger.error(SemanticIndexService.class, "Vector store available BUT initialization failed, skipping queue processing");
-                return;
-            }
-        }
-
         Cache cache = Cache.getInstance();
 
         // Prevent concurrent execution from another thread/scheduler invocation
@@ -102,10 +100,18 @@ public class SemanticIndexService {
 
         try {
             List<IndexQueueEntity> items;
+            Set<Integer> readyDomains = new HashSet<>();
+            long lastAttemptedQueueId = 0;
+            Long runMaxQueueId = queueRepository.findMaxId();
+            if (runMaxQueueId == null) return;
 
             do {
-                items = queueRepository.findTop500ByOrderByCreateDateAsc();
+                items = queueRepository.findTop500ByIdGreaterThanAndIdLessThanEqualOrderByIdAsc(
+                    lastAttemptedQueueId,
+                    runMaxQueueId
+                );
                 if (items.isEmpty()) break;
+                lastAttemptedQueueId = items.get(items.size() - 1).getId();
 
                 List<Long> processedItemIds = new ArrayList<>(items.size());
 
@@ -116,7 +122,7 @@ public class SemanticIndexService {
 
                 for (IndexQueueEntity item : items) {
                     try {
-                        processEntity(item.getAction(), item.getEntityType(), item.getEntityId());
+                        processEntity(item, readyDomains);
                         processedItemIds.add(item.getId());
                     } catch (Exception e) {
                         Logger.error(SemanticIndexService.class, "Error processing queue item " + item.getId() +
@@ -139,6 +145,7 @@ public class SemanticIndexService {
                         }
                     }
                 }
+
             } while (items.size() == 500);
         } finally {
             cache.removeObject(PROCESSING_QUEUE_KEY);
@@ -146,59 +153,178 @@ public class SemanticIndexService {
     }
 
     /**
-     * Route a queue item to the appropriate handler based on entity type and action.
-     * @param action the action to perform (INDEX or DELETE)
-     * @param entityType the type of entity being processed
-     * @param entityId the ID of the entity
+     * Routes a queue item to the handler for its entity type and action.
+     *
+     * The queue item's domain owns the operation and its token usage, including shared Markdown indexing.
+     *
+     * @param item queue item to process
+     * @param readyDomains domains whose vector-store readiness was already verified in this run
+     * @throws IllegalArgumentException if the queue item, entity type, or action is invalid
      */
-    private void processEntity(RagIndexAction action, RagEntityType entityType, int entityId) {
-        if (entityType == RagEntityType.DOCUMENT) {
-            if (action == RagIndexAction.DELETE) {
-                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, (long) entityId, CloudToolsForCore.getDomainId());
-            } else if(action == RagIndexAction.INDEX) {
-                indexDocument(entityId);
-            } else {
-                Logger.error(SemanticIndexService.class, "Unsupported rag index action: " + action);
-            }
+    private void processEntity(IndexQueueEntity item, Set<Integer> readyDomains) {
+        if (item == null || item.getDomainId() == null || item.getDomainId() < 1) {
+            throw new IllegalArgumentException("RAG queue item has invalid domainId");
+        }
+        if (item.getEntityId() == null || item.getEntityId() < 1) {
+            throw new IllegalArgumentException("RAG queue item has invalid entityId");
+        }
+        if (item.getEntityType() == RagEntityType.MARKDOWN) {
+            markdownIndexService.processQueueItem(item);
+            return;
+        }
+        if (item.getEntityType() != RagEntityType.DOCUMENT) {
+            throw new IllegalArgumentException("Unsupported RAG entity type: " + item.getEntityType());
+        }
+
+        int domainId = item.getDomainId();
+        int entityId = Math.toIntExact(item.getEntityId());
+        if (item.getAction() == RagIndexAction.DELETE) {
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
+                DocDetailsContentExtractor.ENTITY_TYPE,
+                (long) entityId,
+                domainId
+            );
+        } else if (item.getAction() == RagIndexAction.INDEX) {
+            indexDocument(entityId, domainId, readyDomains);
         } else {
-            Logger.error(SemanticIndexService.class, "Unsupported entity type: " + entityType);
+            throw new IllegalArgumentException("Unsupported RAG index action: " + item.getAction());
         }
     }
 
     /**
-     * Index a document from a DocDetails object.
+     * Indexes the document identified by a queue item within its authoritative domain.
+     *
+     * Stale embeddings are removed when the document no longer exists or belongs to another domain. The vector store
+     * is prepared before document content is indexed.
+     *
+     * @param docId document ID to index
+     * @param queueDomainId authoritative domain ID stored in the queue item
+     * @param readyDomains domains whose vector-store readiness was already verified in this run
+     * @throws IllegalStateException if the document domain cannot be resolved or indexing cannot proceed
      */
-    private void indexDocument(int docId) {
+    private void indexDocument(int docId, int queueDomainId, Set<Integer> readyDomains) {
         DocDetails doc = DocDB.getInstance().getDoc(docId);
         if (doc == null) {
-            Logger.debug(SemanticIndexService.class, "Document " + docId + " not found, skipping indexing");
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
+                DocDetailsContentExtractor.ENTITY_TYPE,
+                (long) docId,
+                queueDomainId
+            );
+            Logger.debug(
+                SemanticIndexService.class,
+                "Document " + docId + " not found, removed stale embeddings from domain " + queueDomainId
+            );
             return;
         }
 
+        String domainName = DocDB.getInstance().getDomain(docId);
+        try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(domainName)) {
+            int documentDomainId = GroupsDB.getDomainId(domainName);
+            if (documentDomainId < 1) {
+                boolean multiDomainMode = InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir");
+                if (multiDomainMode) {
+                    throw new IllegalStateException(
+                        "Cannot resolve domain for RAG document " + docId + ": domainName=" + domainName
+                    );
+                }
+                documentDomainId = 1;
+            }
+            if (documentDomainId != queueDomainId) {
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
+                    DocDetailsContentExtractor.ENTITY_TYPE,
+                    (long) docId,
+                    queueDomainId
+                );
+                Logger.debug(
+                    SemanticIndexService.class,
+                    "RAG queue/document domain mismatch for doc " + docId +
+                    ": removed stale domain " + queueDomainId + ", current domain is " + documentDomainId
+                );
+                return;
+            }
+
+            ensureVectorStoreReady(queueDomainId, readyDomains);
+            indexDocument(doc, domainName, queueDomainId);
+        }
+    }
+
+    /**
+     * Verifies vector-store availability and initializes the shared schema when necessary.
+     *
+     * @param domainId domain currently being processed
+     * @param readyDomains domains already verified during this queue run
+     * @throws IllegalStateException if the vector store is unavailable or schema initialization fails
+     */
+    private void ensureVectorStoreReady(int domainId, Set<Integer> readyDomains) {
+        if (readyDomains.contains(domainId)) return;
+        if (vectorStore.isAvailable() == false) {
+            throw new IllegalStateException("Vector store is not available for domain " + domainId);
+        }
+        if (vectorStore.isAvailableAndInitialized() == false) {
+            // The schema is shared by all domains, so its dimensions, indexes and legacy
+            // migration defaults must never depend on which tenant happens to run first.
+            try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(null)) {
+                if (vectorStore.initializeSchema() == false) {
+                    throw new IllegalStateException("Vector store initialization failed for domain " + domainId);
+                }
+            }
+        }
+        readyDomains.add(domainId);
+    }
+
+    /**
+     * Rebuilds a document's chunks for the current provider and model.
+     *
+     * Content is extracted and chunked, unchanged embeddings are reused by content hash, changed chunks are embedded,
+     * and chunk rows and vectors are replaced. If indexing fails before chunk rows are stored, a document-level error
+     * marker is persisted before the failure is rethrown. Provider-call failures preserve existing chunks for retry.
+     *
+     * @param doc document to index
+     * @param domainName domain used to resolve provider configuration
+     * @param domainId domain ID stored with generated chunks and statistics
+     * @throws IllegalStateException if extraction, embedding, persistence, or vector update fails
+     */
+    private void indexDocument(DocDetails doc, String domainName, int domainId) {
         String entityType = DocDetailsContentExtractor.ENTITY_TYPE.name();
         long entityId = doc.getDocId();
+        String provider = normalizeProviderId(Constants.getString("ragEmbeddingProvider"));
+        String model = Constants.getString("ragEmbeddingModel");
+        int dimensions = embeddingService.getDimensions();
+        boolean chunkRowsSaved = false;
 
         try {
             // Step 1: Extract text
             String text = contentExtractor.extractText(doc);
             if (Tools.isEmpty(text)) {
                 // Empty document, remove any existing embeddings
-                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, CloudToolsForCore.getDomainId());
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, domainId);
                 return;
             }
 
             // Step 2: Chunk
             List<String> chunks = chunker.chunk(text);
             if (chunks.isEmpty()) {
-                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, CloudToolsForCore.getDomainId());
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, domainId);
                 return;
             }
 
-            // Step 2.5: Check existing chunks to reuse unchanged embeddings
-            String model = embeddingProvider.getDefaultModel();
-            int dimensions = embeddingProvider.getDimensions(model);
+            AssistantDefinitionEntity embeddingAssistant = ragEmbeddingStatService.getIndexingAssistant(domainId);
+            if (embeddingAssistant == null) {
+                throw new IllegalStateException("RAG indexing embedding assistant is not available");
+            }
+            if (Tools.isEmpty(embeddingAssistant.getProvider())) {
+                throw new IllegalStateException("RAG indexing embedding assistant has no provider configured");
+            }
+            if (Tools.isEmpty(embeddingAssistant.getModel())) {
+                throw new IllegalStateException("RAG indexing embedding assistant has no model configured");
+            }
 
-            Map<String, float[]> existingEmbeddingsByHash = vectorStore.getExistingEmbeddingsByHash(entityType, entityId, model);
+            provider = normalizeProviderId(embeddingAssistant.getProvider());
+            model = embeddingAssistant.getModel();
+            dimensions = embeddingService.getDimensions();
+
+            // Step 2.5: Check existing chunks to reuse unchanged embeddings
+            Map<String, float[]> existingEmbeddingsByHash = vectorStore.getExistingEmbeddingsByHash(entityType, entityId, provider, model, domainId);
 
             // Compute hashes for all new chunks and separate into reusable vs needs-embedding
             List<String> chunkHashes = new ArrayList<>();
@@ -226,27 +352,35 @@ public class SemanticIndexService {
 
             // Step 3: Embed only changed chunks
             if (chunksToEmbedTexts.isEmpty() == false) {
-                EmbeddingBatchResult embeddingResult = embeddingProvider.embedWithUsage(chunksToEmbedTexts, model);
+                EmbeddingBatchResult embeddingResult = embeddingService.embedWithUsage(
+                    chunksToEmbedTexts,
+                    embeddingAssistant,
+                    domainName,
+                    EmbeddingInputType.DOCUMENT
+                );
 
                 List<float[]> newEmbeddings = embeddingResult.getEmbeddings();
                 if (newEmbeddings.size() != chunksToEmbedTexts.size()) {
                     throw new IllegalStateException("Embedding count mismatch for doc " + entityId + ": expected " + chunksToEmbedTexts.size() + ", got " + newEmbeddings.size());
                 }
 
-                ragEmbeddingStatService.recordIndexingTokens(embeddingResult.getUsedTokens());
+                ragEmbeddingStatService.recordIndexingTokens(embeddingAssistant, embeddingResult.getUsedTokens(), domainId);
 
                 for (int i = 0; i < chunksToEmbedIndices.size(); i++) {
                     resolvedEmbeddings[chunksToEmbedIndices.get(i)] = newEmbeddings.get(i);
                 }
             }
 
-            // Step 4: Delete old chunks via repository and save new entities
-            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, CloudToolsForCore.getDomainId());
+            // Step 4: Replace only chunks created by the current provider and model.
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingProviderAndEmbeddingModelAndDomainId(
+                DocDetailsContentExtractor.ENTITY_TYPE,
+                entityId,
+                provider,
+                model,
+                domainId
+            );
 
             String language = GroupMirroringServiceV9.getLanguage(doc.getGroup());
-            String domainName = DocDB.getInstance().getDomain(docId);
-            int domainId = GroupsDB.getDomainId(domainName);
-            if (domainId < 1) domainId = 1; // for non multi domain web GroupDB returns -1 as domainId, but CloudToolsForCore returns 1
 
             Date now = new Date();
             List<EmbeddingChunkEntity> chunksToStore = new ArrayList<>(chunks.size());
@@ -257,12 +391,13 @@ public class SemanticIndexService {
                 chunk.setChunkIndex(i);
                 chunk.setChunkText(chunks.get(i));
                 chunk.setContentHash(chunkHashes.get(i));
+                chunk.setEmbeddingProvider(provider);
                 chunk.setEmbeddingModel(model);
                 chunk.setDimensions(dimensions);
                 chunk.setLanguage(language);
                 chunk.setDomainId(domainId);
                 chunk.setGroupId(doc.getGroupId());
-                chunk.setStatus(EmbeddingChunkStatus.COMPLETED);
+                chunk.setStatus(EmbeddingChunkStatus.PENDING);
                 chunk.setCreateDate(now);
 
                 //Set root groups
@@ -276,6 +411,7 @@ public class SemanticIndexService {
 
             // Save entities via JPA (without embedding vector)
             List<EmbeddingChunkEntity> savedChunks = embeddingChunkRepository.saveAllAndFlush(chunksToStore);
+            chunkRowsSaved = true;
 
             // Update embedding vectors via native SQL
             List<Long> savedIds = new ArrayList<>(savedChunks.size());
@@ -291,38 +427,50 @@ public class SemanticIndexService {
             Adminlog.add(Adminlog.TYPE_SEARCH, "Error indexing doc " + e.getMessage(), entityId, null);
             Logger.error(SemanticIndexService.class, "Error indexing doc " + entityId + ": " + e.getMessage());
 
-            // Try get domain id
-            int domainId = -1;
-            GroupDetails group = doc.getGroup();
-            if(group != null && Tools.isNotEmpty(group.getDomainName()) ) domainId = GroupsDB.getDomainId(group.getDomainName());
-            if(domainId < 1) domainId = CloudToolsForCore.getDomainId();
+            try {
+                if (chunkRowsSaved == false && (e instanceof ProviderCallException) == false) {
+                    // No chunk rows exist yet, so store one document-level error marker.
+                    embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingProviderAndEmbeddingModelAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, provider, model, domainId);
 
-            String model = embeddingProvider.getDefaultModel();
+                    String truncatedMessage = e.getMessage() != null && e.getMessage().length() > 500
+                        ? e.getMessage().substring(0, 500) : e.getMessage();
 
-            // Delete existing chunks for this entity/model and save error marker via repository
-            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndEmbeddingModelAndDomainId(DocDetailsContentExtractor.ENTITY_TYPE, entityId, model, domainId);
+                    EmbeddingChunkEntity errorChunk = new EmbeddingChunkEntity();
+                    errorChunk.setEntityType(DocDetailsContentExtractor.ENTITY_TYPE);
+                    errorChunk.setEntityId(entityId);
+                    errorChunk.setChunkIndex(0);
+                    errorChunk.setChunkText("ERROR");
+                    errorChunk.setContentHash("ERROR");
+                    errorChunk.setEmbeddingProvider(provider);
+                    errorChunk.setEmbeddingModel(model);
+                    errorChunk.setDimensions(dimensions);
+                    errorChunk.setDomainId(domainId);
+                    errorChunk.setStatus(EmbeddingChunkStatus.ERROR);
+                    errorChunk.setErrorMessage(truncatedMessage);
+                    errorChunk.setCreateDate(new java.util.Date());
+                    embeddingChunkRepository.save(errorChunk);
+                }
+            } catch (Exception markerException) {
+                e.addSuppressed(markerException);
+                Logger.error(SemanticIndexService.class, "Error storing indexing failure for doc " + entityId + ": " + markerException.getMessage());
+            }
 
-            String truncatedMessage = e.getMessage() != null && e.getMessage().length() > 500
-                ? e.getMessage().substring(0, 500) : e.getMessage();
-
-            EmbeddingChunkEntity errorChunk = new EmbeddingChunkEntity();
-            errorChunk.setEntityType(DocDetailsContentExtractor.ENTITY_TYPE);
-            errorChunk.setEntityId(entityId);
-            errorChunk.setChunkIndex(0);
-            errorChunk.setChunkText("ERROR");
-            errorChunk.setContentHash("ERROR");
-            errorChunk.setEmbeddingModel(model);
-            errorChunk.setDimensions(Constants.getInt("ragEmbeddingDimensions"));
-            errorChunk.setDomainId(domainId);
-            errorChunk.setStatus(EmbeddingChunkStatus.ERROR);
-            errorChunk.setErrorMessage(truncatedMessage);
-            errorChunk.setCreateDate(new java.util.Date());
-            embeddingChunkRepository.save(errorChunk);
+            throw new IllegalStateException("Failed to index document " + entityId, e);
         }
     }
 
+    private static String normalizeProviderId(String provider) {
+        return Tools.isEmpty(provider) ? "openai" : provider.trim().toLowerCase(Locale.ROOT);
+    }
+
     /**
-     * Compute SHA-256 hash of text for deduplication.
+     * Computes a hash used to identify reusable chunk content.
+     *
+     * SHA-256 is preferred; if the algorithm is unavailable, the hexadecimal Java string hash is returned as a
+     * fallback.
+     *
+     * @param text text to hash
+     * @return hexadecimal content hash
      */
     private static String sha256(String text) {
         try {

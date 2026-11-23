@@ -5,6 +5,12 @@ In [cluster](README.md#cluster) mode, you can increase security for a publicly a
 - `clusterMyNodeType` - ​​set to `public` to make this node run without administration and restrict some table writes.
 - `monitoringEnableCountUsersOnAllNodes` - ​​set to `false` to prevent writing to the configuration table. More in [server monitoring](../../sysadmin/monitoring/README.md).
 
+## Multi-step forms
+
+On a node with the `clusterMyNodeType=public` setting, WebJET does not write auxiliary counters for views and submit attempts to the `form_settings` table, nor does it write item validation error counters to the `form_items` table. This allows a database user with limited rights to maintain form display, validation, and submission without the need to enable writing to these tables.
+
+Responses are still stored in the `forms` table, so the public node database user must have `INSERT` and `UPDATE` privileges, as shown in the examples below. Public node visits are not counted in [multistep form statistics running counters](../../redactor/apps/multistep-form/stat.md#summary-statistics).
+
 ## Table rights
 
 Example of setting permissions for user `WEB_WJ_APP` with read-only permissions for an Oracle database. User `WEB_WJ` is a full-privileged user and the owner of the schema with the data.

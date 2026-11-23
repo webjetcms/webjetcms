@@ -2,6 +2,37 @@ extends ../../partials/layout
 
 block content
 
+    style.
+        .configuration-value__inactive {
+            color: var(--wj-dark-60);
+        }
+
+        .configuration-value__inactive[tabindex] {
+            cursor: help;
+            text-decoration-line: underline;
+            text-decoration-style: dotted;
+            text-underline-offset: 2px;
+        }
+
+        .configuration-value__inactive[tabindex]:focus-visible {
+            border-radius: 2px;
+            outline: 2px solid currentColor;
+            outline-offset: 2px;
+        }
+
+        tbody > tr.selected .configuration-value__inactive,
+        tbody > tr > td.selected .configuration-value__inactive {
+            color: white;
+        }
+
+        tbody > tr.dte-highlight .configuration-value,
+        tbody > tr.dte-highlight .configuration-value__inactive {
+            color: var(--wj-secondary);
+        }
+        .configuration-value-tooltip {
+            pointer-events: auto;
+        }
+
     script.
         window.helpLink = "/admin/setup/configuration/README";
 
@@ -21,6 +52,16 @@ block content
             });
         }
 
+        function updateTemporaryFieldsVisibility() {
+            if (configurationDatatable.EDITOR.field("temporary").val()[0] == true) {
+                configurationDatatable.EDITOR.field("encrypt").hide();
+                configurationDatatable.EDITOR.field("datePrepared").hide();
+            } else {
+                configurationDatatable.EDITOR.field("encrypt").show();
+                configurationDatatable.EDITOR.field("datePrepared").show();
+            }
+        }
+
         function exportDialogCustomCallback(type, TABLE) {
             window.open("/admin/conf_export.jsp");
             return true;
@@ -33,39 +74,300 @@ block content
 
         window.domReady.add(function () {
 
-            var order = [];
-            order.push([5, 'desc']);
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.configuration.model.ConfDetailsDto')})];
 
-            var tabs = [
-                { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                { id: 'advanced', title: '[[\#{editor.planned_changes}]]' },
-                { id: 'history', title: '[[\#{editor.tab.history}]]', hideOnCreate: true }
-            ];
-
-            let url = "/admin/rest/settings/configuration";
+            const configurationBaseUrl = "/admin/rest/settings/configuration";
+            let url = configurationBaseUrl + "?view=changed";
             let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.configuration.model.ConfDetailsDto')})];
+            const order = [];
+            order.push([columns.findIndex(column => column.data === "name"), 'asc']);
+            const databaseValueInactiveTooltip = "[[\#{admin.conf_editor.database_value_inactive}]]";
+            const defaultValueInactiveTooltip = "[[\#{admin.conf_editor.default_value_inactive}]]";
+
+            WJ.DataTable.mergeColumns(columns, {
+                name: "value",
+                render: function(data, type, row) {
+                    let displayValue = row.displayValue;
+                    if (displayValue == null) displayValue = data;
+                    if (displayValue == null) displayValue = "";
+                    let databaseValue = data;
+                    if (databaseValue == null) databaseValue = "";
+                    let renderedValue = displayValue;
+                    if (row.runtimeValueDifferent === true) renderedValue += " / " + databaseValue;
+
+                    if (type === "display") {
+                        if (row.runtimeValueDifferent !== true) {
+                            return '<div class="datatable-column-width">' + WJ.escapeHtml(displayValue) + '</div>';
+                        }
+
+                        const databaseValuePresent = row.databaseValuePresent === true;
+                        const inactiveValueClass = databaseValuePresent ? "configuration-value__database" : "configuration-value__default";
+                        const inactiveValueType = databaseValuePresent ? "database-inactive" : "default-inactive";
+                        const inactiveValueTooltip = databaseValuePresent ? databaseValueInactiveTooltip : defaultValueInactiveTooltip;
+
+                        return '<div class="datatable-column-width configuration-value">' +
+                            '<span class="configuration-value__current" data-conf-value="current">' +
+                                WJ.escapeHtml(displayValue) +
+                            '</span>' +
+                            '<span aria-hidden="true"> / </span>' +
+                            '<span class="configuration-value__inactive ' + inactiveValueClass + '" data-conf-value="' + inactiveValueType + '" data-bs-toggle="tooltip" tabindex="0" title="' + WJ.escapeHtml(inactiveValueTooltip) + '">' +
+                                WJ.escapeHtml(databaseValue) +
+                            '</span>' +
+                        '</div>';
+                    }
+                    if (type === "filter") {
+                        let filterValue = renderedValue
+                            .replaceAll("&", "&amp;")
+                            .replaceAll("<", "&lt;")
+                            .replaceAll(">", "&gt;")
+                            .replaceAll('"', "&quot;");
+                        return $.fn.DataTable.util.diacritics(filterValue);
+                    }
+                    if (type === "sort") return renderedValue;
+                    return data;
+                }
+            });
 
             configurationDatatable = WJ.DataTable({
                 url: url,
                 serverSide: false,
+                reloadRowKey: "name",
                 columns: columns,
                 tabs: tabs,
                 id: "configurationDatatable",
                 order: order,
-                idAutoOpener: false
+                autoWidth: false,
+                idAutoOpener: false,
+                fetchOnCreate: true,
+                fetchOnEdit: true
             });
 
-            WJ.notifyInfo("[[\#{text.warning}]]", "[[\#{admin.conf_editor.warningText}]]", 5000);
+            const configurationTableElement = document.getElementById("configurationDatatable");
+            const inactiveValueTooltipSelector = ".configuration-value__inactive[data-bs-toggle='tooltip']";
+            const inactiveValueTooltipClass = "configuration-value-tooltip";
+            let activeInactiveValueTooltipTrigger = null;
+            let inactiveValueTooltipShowTimeout = null;
+            let inactiveValueTooltipHideTimeout = null;
+
+            function clearInactiveValueTooltipTimeouts() {
+                window.clearTimeout(inactiveValueTooltipShowTimeout);
+                window.clearTimeout(inactiveValueTooltipHideTimeout);
+                inactiveValueTooltipShowTimeout = null;
+                inactiveValueTooltipHideTimeout = null;
+            }
+
+            function disposeInactiveValueTooltip(trigger) {
+                clearInactiveValueTooltipTimeouts();
+                bootstrap.Tooltip.getInstance(trigger)?.dispose();
+                trigger.removeAttribute("aria-describedby");
+                if (activeInactiveValueTooltipTrigger === trigger) activeInactiveValueTooltipTrigger = null;
+            }
+
+            function showInactiveValueTooltip(trigger, delay) {
+                clearInactiveValueTooltipTimeouts();
+                if (activeInactiveValueTooltipTrigger === trigger && trigger.hasAttribute("aria-describedby")) return;
+                if (activeInactiveValueTooltipTrigger != null && activeInactiveValueTooltipTrigger !== trigger) {
+                    bootstrap.Tooltip.getInstance(activeInactiveValueTooltipTrigger)?.dispose();
+                    activeInactiveValueTooltipTrigger.removeAttribute("aria-describedby");
+                }
+                activeInactiveValueTooltipTrigger = trigger;
+
+                const showTooltip = function () {
+                    inactiveValueTooltipShowTimeout = null;
+                    if (!trigger.isConnected || (document.activeElement !== trigger && !trigger.matches(":hover"))) {
+                        activeInactiveValueTooltipTrigger = null;
+                        return;
+                    }
+                    bootstrap.Tooltip.getOrCreateInstance(trigger, {
+                        container: "body",
+                        customClass: inactiveValueTooltipClass,
+                        placement: "top",
+                        trigger: "manual"
+                    }).show();
+                };
+
+                if (delay > 0) inactiveValueTooltipShowTimeout = window.setTimeout(showTooltip, delay);
+                else showTooltip();
+            }
+
+            function hideInactiveValueTooltip(trigger) {
+                window.clearTimeout(inactiveValueTooltipShowTimeout);
+                window.clearTimeout(inactiveValueTooltipHideTimeout);
+                inactiveValueTooltipShowTimeout = null;
+                if (activeInactiveValueTooltipTrigger !== trigger) return;
+
+                inactiveValueTooltipHideTimeout = window.setTimeout(function () {
+                    inactiveValueTooltipHideTimeout = null;
+                    const tooltipId = trigger.getAttribute("aria-describedby");
+                    const tooltipElement = tooltipId == null ? null : document.getElementById(tooltipId);
+                    if (document.activeElement === trigger || trigger.matches(":hover") || tooltipElement?.matches(":hover")) return;
+
+                    disposeInactiveValueTooltip(trigger);
+                }, 300);
+            }
+
+            $(configurationTableElement)
+                .on("mouseenter.configurationValueTooltip", inactiveValueTooltipSelector, function () {
+                    showInactiveValueTooltip(this, 300);
+                })
+                .on("focusin.configurationValueTooltip", inactiveValueTooltipSelector, function () {
+                    showInactiveValueTooltip(this, 0);
+                })
+                .on("mouseleave.configurationValueTooltip focusout.configurationValueTooltip", inactiveValueTooltipSelector, function () {
+                    hideInactiveValueTooltip(this);
+                });
+
+            $(document.body)
+                .on("mouseenter.configurationValueTooltip", "." + inactiveValueTooltipClass, function () {
+                    window.clearTimeout(inactiveValueTooltipHideTimeout);
+                    inactiveValueTooltipHideTimeout = null;
+                })
+                .on("mouseleave.configurationValueTooltip", "." + inactiveValueTooltipClass, function () {
+                    if (activeInactiveValueTooltipTrigger != null) hideInactiveValueTooltip(activeInactiveValueTooltipTrigger);
+                });
+
+            $(document).on("keydown.configurationValueTooltip", function (event) {
+                if (event.key === "Escape" && activeInactiveValueTooltipTrigger != null) {
+                    disposeInactiveValueTooltip(activeInactiveValueTooltipTrigger);
+                }
+            });
+
+            function disposeAllInactiveValueTooltips() {
+                clearInactiveValueTooltipTimeouts();
+                configurationTableElement.querySelectorAll(inactiveValueTooltipSelector).forEach(function (element) {
+                    bootstrap.Tooltip.getInstance(element)?.dispose();
+                    element.removeAttribute("aria-describedby");
+                });
+                activeInactiveValueTooltipTrigger = null;
+            }
+
+            configurationDatatable.on("preDraw.dt", function () {
+                disposeAllInactiveValueTooltips();
+            });
+            configurationDatatable.on("destroy.dt", function () {
+                disposeAllInactiveValueTooltips();
+                $(configurationTableElement).off(".configurationValueTooltip");
+                $(document.body).off(".configurationValueTooltip");
+                $(document).off(".configurationValueTooltip");
+            });
+
+            function updateResetButtonState() {
+                const selectedRows = configurationDatatable.rows({ selected: true }).data().toArray();
+                const canReset = selectedRows.length > 0 && selectedRows.every(function (row) {
+                    return row.databaseValuePresent === true;
+                });
+                configurationDatatable.button(".buttons-remove").enable(canReset);
+            }
+
+            configurationDatatable.on("select.dt deselect.dt draw.dt", updateResetButtonState);
+            updateResetButtonState();
+
+            function applyConfigurationTreeNode(node) {
+                if (node == null || node.original == null) return;
+
+                const nodeType = node.original.typeCustom;
+                let view = null;
+                let modulePath = null;
+
+                if (nodeType === "configuration-changed") view = "changed";
+                else if (nodeType === "configuration-custom") view = "custom";
+                else if (nodeType === "configuration-all") view = "all";
+                else if (nodeType === "configuration-module") {
+                    view = "module";
+                    modulePath = node.original.virtualPath;
+                }
+
+                if (view == null || (view === "module" && !modulePath)) return;
+
+                let requestedUrl = WJ.urlUpdateParam(configurationBaseUrl, "view", view);
+                if (modulePath != null) requestedUrl = WJ.urlUpdateParam(requestedUrl, "module", modulePath);
+
+                if (view === "module") {
+                    configurationDatatable.hideButton("create");
+                    configurationDatatable.hideButton("import");
+                    configurationDatatable.hideButton("duplicate");
+                } else {
+                    configurationDatatable.showButton("create");
+                    configurationDatatable.showButton("import");
+                    configurationDatatable.showButton("duplicate");
+                }
+
+                if (configurationDatatable.getAjaxUrl() === requestedUrl) return;
+                configurationDatatable.setAjaxUrl(requestedUrl);
+                configurationDatatable.ajax.reload();
+            }
+
+            $("#SomStromcek").on("changed.jstree", function (event, data) {
+                if (data.action !== "select_node" && data.action !== "ready") return;
+
+                const node = data.node || data.instance.get_node(data.selected[0]);
+                applyConfigurationTreeNode(node);
+            });
+
+            $("#SomStromcek").on("refresh.jstree", function (event, data) {
+                const selectedNodes = data.instance.get_selected(true);
+                if (selectedNodes.length > 0) applyConfigurationTreeNode(selectedNodes[0]);
+            });
+
+            configurationDatatable.EDITOR.on("open", function () {
+                $("#DTE_Field_temporary_0")
+                    .off("change.temporary")
+                    .on("change.temporary", updateTemporaryFieldsVisibility);
+                updateTemporaryFieldsVisibility();
+            });
+
+            configurationDatatable.EDITOR.on("submitSuccess.configurationReset", function (event, json, data, action) {
+                if (action === "remove" && json?.forceReload !== true) configurationDatatable.ajax.reload();
+            });
         });
 
-    <table id="configurationDatatable" class="datatableInit table"></table>
+    div.row
+        div.col-md-4.tree-col
+            div.dt-header-row.clearfix
+                div.row
+                    div.col-auto
+                        div.dt-buttons
+                            button.btn.btn-sm.btn-outline-secondary.buttons-jstree-settings.buttons-right(
+                                type="button"
+                                data-toggle="tooltip"
+                                data-th-title="\#{datatables.button.settings.js}"
+                                data-th-aria-label="\#{datatables.button.settings.js}"
+                            )
+                                span
+                                    i.ti.ti-adjustments-horizontal(aria-hidden="true")
+                            button.btn.btn-sm.btn-outline-secondary.buttons-refresh(
+                                type="button"
+                                data-toggle="tooltip"
+                                data-th-title="\#{admin.conf_editor.tree.reload}"
+                                data-th-aria-label="\#{admin.conf_editor.tree.reload}"
+                                aria-controls="SomStromcek"
+                            )
+                                span
+                                    i.ti.ti-refresh(aria-hidden="true")
 
-    div#datatableExportModalCustomOptions.hidden
-        div.form-check
-            input.form-check-input(type="radio" name="dt-settings-extend" id="dt-settings-extend-custom" value="custom" data-hide="#datatableExportModal .file-name,#pills-export-advanced-tab")
-            label.form-check-label(for="dt-settings-extend-custom") [[\#{admin.conf_editor.custom-xml-export}]]
+            p#configuration-tree-description.visually-hidden [[\#{admin.conf_editor.tree.description}]]
+            div#SomStromcek.hide-while-loading(
+                data-settings-key="jstreeSettings_configuration"
+                data-default-tree-width="200"
+                data-rest-url="/admin/rest/settings/configuration/tree"
+                data-rest-param-name="id"
+                data-single-select="true"
+                data-th-data-search-label="\#{admin.conf_editor.tree.search_label}"
+                data-th-aria-label="\#{admin.conf_editor.tree.label}"
+                aria-describedby="configuration-tree-description"
+            )
 
-    div#datatableImportModalCustomOptions.hidden
-        div.form-check
-            input.form-check-input(type="radio" name="dt-settings-extend" id="dt-settings-import-extend-custom" value="custom" data-hide="#datatableImportModal .file-name,#import-settings")
-            label.form-check-label(for="dt-settings-import-extend-custom") [[\#{admin.conf_editor.custom-xml-export}]]
+        div.col-md-8.datatable-col
+            table#configurationDatatable.datatableInit.table.dt-hide-id
+
+            div#datatableExportModalCustomOptions.hidden
+                div.form-check
+                    input.form-check-input(type="radio" name="dt-settings-extend" id="dt-settings-extend-custom" value="custom" data-hide="#datatableExportModal .file-name,#pills-export-advanced-tab")
+                    label.form-check-label(for="dt-settings-extend-custom") [[\#{admin.conf_editor.custom-xml-export}]]
+
+            div#datatableImportModalCustomOptions.hidden
+                div.form-check
+                    input.form-check-input(type="radio" name="dt-settings-extend" id="dt-settings-import-extend-custom" value="custom" data-hide="#datatableImportModal .file-name,#import-settings")
+                    label.form-check-label(for="dt-settings-import-extend-custom") [[\#{admin.conf_editor.custom-xml-export}]]
+
+    div(data-th-include="admin/v9/dist/views/includes/tree-width-settings.html" data-th-remove="tag")

@@ -1,19 +1,52 @@
+let autocompleteAssetsPromise;
+
+/**
+ * Details emitted with the `WJ.multistepForm.stepShown` window event.
+ *
+ * @typedef {Object} MultistepFormStepShownDetail
+ * @property {HTMLElement} wrapper - Root element of the multistep form instance.
+ * @property {HTMLElement} stepElement - Element containing the rendered step.
+ * @property {HTMLFormElement|null} form - Form element rendered for the step.
+ * @property {string} formName - Backend form identifier.
+ * @property {string|number} stepId - Identifier of the rendered step.
+ * @property {string} language - Language used to render the step.
+ * @property {string} domIdPrefix - Instance-specific prefix used by form controls.
+ * @property {boolean} isInitialStep - Whether this is the first step shown by the controller instance.
+ */
+
+/**
+ * A field comparison shared by visibility and requirement rules.
+ *
+ * @typedef {Object} MultistepFormCondition
+ * @property {string} fieldId - Logical identifier of the field whose value is compared.
+ * @property {string} [operator="equals"] - Comparison operator accepted by `_evaluateOperator`.
+ * @property {string} [value=""] - Value to compare against.
+ * @property {boolean} [caseInsensitive=false] - Whether text comparison ignores case.
+ * @property {string} [joinOperator="AND"] - Connects this result to the next condition; `OR` selects disjunction.
+ */
+
 /**
  * Multistep Form application controller.
  *
  * Renders the shell, loads individual steps from server, submits data,
- * and handles success/error UI states.
+ * and handles success/error UI states. After rendering each step it dispatches
+ * `WJ.multistepForm.stepShown` as a non-bubbling, non-cancelable `CustomEvent` on `window`,
+ * with a {@link MultistepFormStepShownDetail} object in `detail`.
  */
 export class MultistepForm {
 
     /**
-     * Create a new MultistepForm instance.
-     * @param {Object} [options] - Initialization options.
-     * @param {string} [options.container] - CSS selector of the mount container (preferred).
-     * @param {string} [options.mountSelector] - Alternative mount selector; defaults to Bootstrap container/body.
+     * Initialize form state and append alerts and a step holder to the existing CSRF-specific wrapper.
+     * The page must contain an element with ID `multistep-form-wrapper-` followed by the CSRF token.
+     * @param {Object} [options={}] - Initialization options.
+     * @param {string} [options.container] - Legacy selector stored as `mountSelector`; does not select the wrapper.
+     * @param {string} [options.mountSelector] - Alternative stored selector when `container` is empty.
      * @param {string} [options.formName] - Form identifier used by the backend.
      * @param {string|number} [options.stepId] - Initial step identifier to load.
      * @param {string} [options.csrf] - CSRF token added to POST requests.
+     * @param {string} [options.language] - Language code appended to backend requests.
+     * @param {string} [options.successMessage] - Success message; defaults to "Operation completed successfully." when empty.
+     * @param {string} [options.errorMessage] - Error message; defaults to "An error occurred while saving the step." when empty.
      */
     constructor(options = {}) {
         // Preferred container selector; defaults to body > article > div.container
@@ -22,6 +55,7 @@ export class MultistepForm {
         this.formName = options.formName || '';
         this.stepId = options.stepId || '';
         this.csrf = options.csrf || '';
+        this.language = options.language || '';
 
         // Localized messages provided by the page (preferred), with safe fallbacks
         this.successMessage = options.successMessage || 'Operation completed successfully.';
@@ -29,6 +63,14 @@ export class MultistepForm {
 
         // Store submitted field values from previous steps for cross-step visibility conditions
         this.submittedValues = {};
+
+        // Maps logical form item IDs used by metadata/data to instance-specific DOM IDs.
+        this.domIdPrefix = '';
+
+        this._hasShownStep = false;
+        this._isNavigating = false;
+        this._fieldValidationRequests = new Map();
+        this._invalidFields = new Set();
 
         // Centralized map: element -> array of conditions (parsed once from data-visibility-condition attributes)
         this.visibilityConditions = new Map();
@@ -44,10 +86,29 @@ export class MultistepForm {
     /**
      * Start the flow by loading the configured form and step.
      */
-    start() { this.loadStep(this.formName, this.stepId); }
+    start() { this._runNavigation(() => this.loadStep(this.formName, this.stepId)); }
 
     /**
-     * Render the application shell (alerts + content holder) and mount it.
+     * Run one navigation or submission at a time, including any subsequent step load.
+     * @param {() => Promise<void>} action - Navigation or submission to perform.
+     * @returns {Promise<void>} Resolves when finished, or immediately if another action is running.
+     */
+    async _runNavigation(action) {
+        if (this._isNavigating) return;
+        this._isNavigating = true;
+        this._cancelFieldValidation();
+        const buttons = this.wrapper.querySelectorAll('button[type="submit"]:enabled, input[type="submit"]:enabled, [data-multistep-back-step]:enabled');
+        buttons.forEach(button => { button.disabled = true; });
+        try {
+            await action();
+        } finally {
+            buttons.forEach(button => { button.disabled = false; });
+            this._isNavigating = false;
+        }
+    }
+
+    /**
+     * Append alerts and a content holder to the existing CSRF-specific wrapper.
      * Creates `this.wrapper` for subsequent DOM operations.
      */
     _renderShell() {
@@ -91,14 +152,17 @@ export class MultistepForm {
      * Load and render a step's HTML from the backend.
      * @param {string} formName - The form name to query.
      * @param {string|number} stepId - The step identifier to load.
-     * @returns {Promise<void>} Resolves when the step content is injected.
+     * @param {boolean} [scrollToForm=false] - Whether to scroll to the newly rendered form.
+     * @returns {Promise<void>} Resolves after rendering and dispatching the step-shown event, reporting a load error,
+     * or skipping a load with a missing form name or step ID. Widget initialization may finish later.
      */
-    async loadStep(formName, stepId) {
+    async loadStep(formName, stepId, scrollToForm = false) {
         if (!formName || !stepId) {
             console.warn('Missing formName or stepId; skipping load.');
             return;
         }
-        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}`;
+        this._cancelFieldValidation();
+        const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}&language=${encodeURIComponent(this.language || '')}`;
         try {
             const r = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', "X-CSRF-Token": this.csrf } });
             if (!r.ok) {
@@ -112,8 +176,13 @@ export class MultistepForm {
             }
             const json = await r.json();
             const html = json.html || '';
+            this.domIdPrefix = typeof json.domIdPrefix === 'string' ? json.domIdPrefix : '';
             const visibilityConditions = json.visibilityConditions || {};
             const requirementConditions = json.requirementConditions || {};
+            const savedValues = json.savedValues || {};
+            const savedFiles = json.savedFiles || {};
+            const draftValues = json.draftValues || {};
+            const draftFiles = json.draftFiles || {};
 
             // hide previous errors
             this.hideErrors();
@@ -121,22 +190,56 @@ export class MultistepForm {
             // inject HTML (exec any inline scripts) using jQuery when available
             const holder = this.wrapper.querySelector('.multistepStepContent');
             if (holder) {
+                this._disposeStep(holder);
                 if (window.$) {
                     $(holder).html(html);
                 } else {
                     holder.innerHTML = html;
                 }
+
+                formTooltip.init(holder);
             }
 
             // attach submit
             const form = this.wrapper.querySelector('.multistepStepContent > form');
-            if (form) form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
+            if (form) {
+                this._restoreStepValues(form, { ...savedValues, ...draftValues }, { ...savedFiles, ...draftFiles });
+                this._initFieldErrors(form);
+                Object.assign(this.submittedValues, savedValues);
+
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    await this._runNavigation(() => this.doValidationAndSave(event));
+                });
+
+                const backButton = form.querySelector('[data-multistep-back-step]');
+                if (backButton) {
+                    backButton.addEventListener('click', async () => {
+                        const previousStepId = backButton.dataset.multistepBackStep;
+                        if (previousStepId) await this._runNavigation(async () => {
+                            if (await this._saveStepDraft(form)) await this.loadStep(formName, previousStepId, true);
+                        });
+                    });
+                }
+            }
+
+            // Initialize remote autocomplete inputs rendered in this step
+            this._initAutocompleteFields();
 
             // Initialize conditional field visibility from server-provided map
             this._initConditionalVisibility(visibilityConditions);
 
             // Initialize conditional field requirement from server-provided map
             this._initConditionalRequirement(requirementConditions);
+
+            const isInitialStep = this._hasShownStep === false;
+            this.formName = formName;
+            this.stepId = stepId;
+            this._hasShownStep = true;
+            if (form && json.validateOnBlur === true) this._initFieldValidation(form);
+            if (holder) this._dispatchStepShown(holder, form, isInitialStep);
+
+            if (scrollToForm && form) this._focusStep(form);
 
             // init cleditor if needed
             window.setTimeout(() => {
@@ -150,42 +253,438 @@ export class MultistepForm {
             }, 100);
         } catch (err) {
             console.warn('Failed to load step:', err);
+            await this.showGlobalErr({});
         }
     }
 
     /**
-     * Validate and submit the current step form via AJAX.
-     * Collects all input/select/textarea values and posts JSON to the server.
-     * @param {SubmitEvent} event - The submit event from the step form.
-     * @returns {Promise<void>} Resolves after handling response actions.
+     * Dispose widgets before removing a step, including Dropzone inputs appended to the document body.
+     * @param {HTMLElement} holder - Container of the step being removed.
      */
-    async doValidationAndSave(event) {
-        event.preventDefault();
-        const form = event.currentTarget;
-        const url = form.action;
+    _disposeStep(holder) {
+        this._cancelFieldValidation();
+        formTooltip.dispose(holder);
+        holder.querySelectorAll('.wjdropzone').forEach(element => {
+            const dropzone = element.dropzone;
+            if (!dropzone) return;
 
+            // Teardown must not run file-removal callbacks or alter saved upload metadata.
+            dropzone.off();
+            dropzone.destroy();
+        });
+    }
+
+    /**
+     * Focus and reveal a newly rendered step after navigation.
+     * The step header is preferred so assistive technology announces the new context.
+     * @param {HTMLFormElement} form - Newly rendered step form.
+     */
+    _focusStep(form) {
+        const firstControl = form.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href]');
+        const focusTarget = form.querySelector('.step-header') || firstControl || form;
+        const needsTemporaryTabIndex = focusTarget.matches('input, select, textarea, button, a[href], [tabindex]') === false;
+
+        if (needsTemporaryTabIndex) focusTarget.setAttribute('tabindex', '-1');
+        focusTarget.focus({ preventScroll: true });
+        if (needsTemporaryTabIndex) {
+            focusTarget.addEventListener('blur', () => focusTarget.removeAttribute('tabindex'), { once: true });
+        }
+
+        form.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    /** @returns {boolean} true when the user requested reduced motion. */
+    _prefersReducedMotion() {
+        return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    /**
+     * Restore confirmed or draft values for this step, including explicit empty selections.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     * @param {Object<string,string|string[]>} savedValues - Scalar values or selected options keyed by logical field ID.
+     * @param {Object<string,Object>} savedFiles - Dropzone metadata keyed by logical field ID.
+     */
+    _restoreStepValues(form, savedValues, savedFiles) {
+        const controls = Array.from(form.querySelectorAll('input, textarea, select'));
+
+        Object.entries(savedValues).forEach(([fieldId, rawValue]) => {
+            const matchingControls = controls.filter(control => {
+                const grouped = control.type === 'checkbox' || control.type === 'radio';
+                const domKey = grouped ? (control.name || control.id) : (control.id || control.name);
+                return domKey && this._toLogicalFieldId(domKey) === fieldId;
+            });
+
+            const groupedControls = matchingControls.filter(control => control.type === 'checkbox' || control.type === 'radio');
+            if (groupedControls.length > 0) {
+                const selectedValues = this._getSavedGroupValues(rawValue, groupedControls);
+                groupedControls.forEach(control => { control.checked = selectedValues.includes(control.value); });
+                return;
+            }
+
+            const value = rawValue == null ? '' : String(rawValue);
+            matchingControls.forEach(control => {
+                if (control.type !== 'file') control.value = value;
+            });
+        });
+
+        Object.entries(savedFiles).forEach(([fieldId, fileMetadata]) => {
+            const dropzoneId = this._toDomFieldId(fieldId) + '-dropzone';
+            const dropzone = Array.from(form.querySelectorAll('.wjdropzone')).find(element => element.id === dropzoneId);
+            if (!dropzone) return;
+
+            const uploadedObjectsInfo = dropzone.querySelector('input.uploadedObjectsInfo');
+            if (uploadedObjectsInfo) uploadedObjectsInfo.value = JSON.stringify(fileMetadata);
+        });
+    }
+
+    /**
+     * Convert the session representation of a radio/checkbox value back to selected options.
+     * @param {string|string[]|null|undefined} rawValue - Saved scalar value or exact selected options.
+     * @param {HTMLInputElement[]} controls - Controls belonging to the group.
+     * @returns {string[]} selected option values.
+     */
+    _getSavedGroupValues(rawValue, controls) {
+        if (Array.isArray(rawValue)) return rawValue.map(value => String(value));
+
+        const value = rawValue == null ? '' : String(rawValue);
+        if (value === '') return [];
+        if (controls.some(control => control.value === value)) return [value];
+        return value.split(',');
+    }
+
+    /** Notify public-page integrations that a form step is available in the DOM.
+     *
+     * @param {HTMLElement} stepElement - Element containing the rendered step.
+     * @param {HTMLFormElement|null} form - Form element rendered for the step.
+     * @param {boolean} isInitialStep - Whether this is the first rendered step.
+     */
+    _dispatchStepShown(stepElement, form, isInitialStep) {
+        const detail = {
+            wrapper: this.wrapper,
+            stepElement,
+            form,
+            formName: this.formName,
+            stepId: this.stepId,
+            language: this.language,
+            domIdPrefix: this.domIdPrefix,
+            isInitialStep
+        };
+
+        window.dispatchEvent(new CustomEvent('WJ.multistepForm.stepShown', { detail }));
+    }
+
+    /**
+     * Bind remote autocomplete inputs using the standard data-ac-* attributes.
+     * The jQuery UI JavaScript dependency is loaded only when the current step contains such a field.
+     * @returns {Promise<void>} Resolves after initialization, or after skipping absent inputs or a failed dependency load.
+     */
+    async _initAutocompleteFields() {
+        const inputs = Array.from(this.wrapper.querySelectorAll('input.form-control[data-ac-url]'));
+        if (inputs.length === 0) return;
+
+        try {
+            await this._ensureAutocompleteAssets();
+        } catch (error) {
+            console.warn('Failed to initialize autocomplete:', error);
+            return;
+        }
+
+        inputs.forEach(input => {
+            if (input.dataset.acInitialized === 'true' || input.isConnected === false || this.wrapper.contains(input) === false) return;
+
+            const $input = $(input);
+            const minLength = Number.parseInt(input.dataset.acMinLength || '1', 10);
+            const maxRows = Number.parseInt(input.dataset.acMaxRows || '30', 10);
+            const openOnFocus = input.dataset.acSelect === 'true';
+            const sourceUrl = input.dataset.acUrl;
+
+            $input.autocomplete({
+                appendTo: this.wrapper,
+                source: (request, response) => {
+                    const url = new URL(sourceUrl, window.location.origin);
+                    url.searchParams.set('form-name', this.formName);
+                    url.searchParams.set('term', request.term === '*' ? '%' : request.term);
+
+                    fetch(url.toString(), {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-Token': this.csrf
+                        }
+                    })
+                    .then(result => result.ok ? result.json() : [])
+                    .then(options => response(Array.isArray(options) ? options.slice(0, maxRows) : []))
+                    .catch(() => response([]));
+                },
+                delay: 800,
+                minLength: Number.isNaN(minLength) ? 1 : minLength,
+                open: () => $input.autocomplete('widget').outerWidth($input.outerWidth()),
+                position: { my: 'left top+2', at: 'left bottom', collision: 'flipfit' }
+            });
+
+            const autocompleteInstance = $input.autocomplete('instance');
+            autocompleteInstance.liveRegion.appendTo(this.wrapper);
+
+            input.dataset.acInitialized = 'true';
+
+            if (openOnFocus) {
+                $input.on('focus.multistepAutocomplete', () => {
+                    window.setTimeout(() => $input.autocomplete('search', '*'), 50);
+                });
+            }
+        });
+    }
+
+    /**
+     * Load jQuery UI autocomplete once per page.
+     * @returns {Promise<void>} Resolves when autocomplete is available; rejects when jQuery is missing or loading fails.
+     */
+    _ensureAutocompleteAssets() {
+        if (window.$ && typeof $.fn?.autocomplete === 'function') return Promise.resolve();
+        if (!window.$) return Promise.reject(new Error('jQuery is not available.'));
+
+        if (!autocompleteAssetsPromise) {
+            autocompleteAssetsPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = '/components/_common/javascript/jqui/jquery-ui-core.min.js';
+                script.dataset.multistepAutocomplete = 'true';
+                script.onload = () => typeof $.fn?.autocomplete === 'function' ? resolve() : reject(new Error('Autocomplete is not available.'));
+                script.onerror = () => reject(new Error('Could not load autocomplete assets.'));
+                document.head.appendChild(script);
+            });
+        }
+
+        return autocompleteAssetsPromise;
+    }
+
+    /**
+     * Enable blur validation for text inputs and plain textareas in the current step.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     */
+    _initFieldValidation(form) {
+        const cancelFieldValidation = event => {
+            const fieldId = this._toLogicalFieldId(event.target.id || event.target.name);
+            this._fieldValidationRequests.get(fieldId)?.abort();
+            this._fieldValidationRequests.delete(fieldId);
+        };
+        form.addEventListener('input', cancelFieldValidation);
+        form.addEventListener('change', cancelFieldValidation);
+        form.addEventListener('focusout', event => {
+            const input = event.target;
+            if (!input.matches('input, textarea') || input.matches(':disabled') || input.readOnly) return;
+            if (!['text', 'search', 'email', 'url', 'tel', 'password', 'number', 'date', 'datetime-local', 'month', 'week', 'time', 'textarea'].includes(input.type)) return;
+            if (input.matches('.formsimple-wysiwyg, .captcha, [name="wjcaptcha"], [name="g-recaptcha-response"]')) return;
+            if (input.closest('.wjdropzone, .form-group-captcha, .g-recaptcha, .cleditorMain')) return;
+            if (input.getClientRects().length === 0 || this._isFieldHidden(input.closest('.form-group') || input.parentElement)) return;
+            this._validateFieldOnBlur(form, input);
+        });
+    }
+
+    /** Cancel requests whose values or step context are no longer current. */
+    _cancelFieldValidation() {
+        this._fieldValidationRequests.forEach(controller => controller.abort());
+        this._fieldValidationRequests.clear();
+    }
+
+    /**
+     * Validate one field without changing saved values, focus, or navigation.
+     * @param {HTMLFormElement} form - Form containing the field.
+     * @param {HTMLInputElement|HTMLTextAreaElement} input - Control that lost focus.
+     * @returns {Promise<void>} Resolves after displaying a current response or ignoring a stale one.
+     */
+    async _validateFieldOnBlur(form, input) {
+        if (this._isNavigating) return;
+        const fieldId = this._toLogicalFieldId(input.id || input.name);
+        if (!fieldId) return;
+
+        this._fieldValidationRequests.get(fieldId)?.abort();
+        const controller = new AbortController();
+        this._fieldValidationRequests.set(fieldId, controller);
+        const value = input.value;
+        const url = new URL('/rest/multistep-form/validate-field', window.location.origin);
+        url.searchParams.set('form-name', this.formName);
+        url.searchParams.set('step-id', this.stepId);
+        url.searchParams.set('field-id', fieldId);
+        url.searchParams.set('language', this.language || '');
+
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': this.csrf
+                },
+                body: JSON.stringify({ [fieldId]: value }),
+                signal: controller.signal
+            });
+            const result = await response.json();
+            if (controller.signal.aborted || this._isNavigating || !this.wrapper.contains(form)) return;
+            if (value !== input.value || !form.contains(input)) return;
+            if (response.ok && result.fieldErrors) {
+                this._showFieldError(fieldId, result.fieldErrors[fieldId] || '');
+            } else if (response.status === 400 && result.err_msg) {
+                this._showFieldError(fieldId, result.err_msg);
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') console.warn('Failed to validate form field:', error);
+        } finally {
+            if (this._fieldValidationRequests.get(fieldId) === controller) this._fieldValidationRequests.delete(fieldId);
+        }
+    }
+
+    /**
+     * Prepare empty live regions before asynchronous validation can update them.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     */
+    _initFieldErrors(form) {
+        form.querySelectorAll('.cs-error').forEach((container, index) => {
+            if (!container.id) container.id = `${this.wrapper.id}-error-${index}`;
+            container.setAttribute('aria-live', 'polite');
+            container.setAttribute('aria-atomic', 'true');
+        });
+    }
+
+    /**
+     * Render or clear field errors and update the associated controls' accessible state.
+     * @param {string} fieldId - Logical field identifier.
+     * @param {string} errorMessage - Localized messages separated by newlines, or empty to clear.
+     */
+    _showFieldError(fieldId, errorMessage) {
+        const containers = this.wrapper.getElementsByClassName('cs-error-' + this._toDomFieldId(fieldId));
+        const errorId = containers[0]?.id;
+        this._getFieldElements(fieldId).forEach(input => {
+            if (errorId) {
+                const descriptions = new Set((input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+                descriptions.add(errorId);
+                input.setAttribute('aria-describedby', [...descriptions].join(' '));
+            }
+            input.setAttribute('aria-invalid', errorMessage ? 'true' : 'false');
+            if (errorMessage) this._invalidFields.add(input);
+            else this._invalidFields.delete(input);
+        });
+        for (const container of containers) {
+            container.innerHTML = errorMessage
+                ? `<ul class="mf-error-list">${String(errorMessage).split('\n').map(message => `<li>${message}</li>`).join('')}</ul>`
+                : '';
+        }
+    }
+
+    /** Focus and reveal the first visible error in this form's document order after submission. */
+    _focusFirstError() {
+        const firstError = Array.from(this.wrapper.querySelectorAll('.alert-danger, .cs-error'))
+            .find(element => element.textContent.trim() && element.getClientRects().length > 0
+                && window.getComputedStyle(element).visibility !== 'hidden');
+        if (!firstError) return;
+
+        if (!firstError.hasAttribute('tabindex')) firstError.setAttribute('tabindex', '-1');
+        firstError.focus({ preventScroll: true });
+        firstError.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    /**
+     * Collect step values, synchronizing rich text and retaining empty draft selections.
+     * @param {HTMLFormElement} form - Current step form.
+     * @param {boolean} [includeHidden=false] - Include hidden fields for draft preservation.
+     * @returns {{result: Object<string, string|string[]>, stepFieldIds: Set<string>}} Values and all current-step identifiers.
+     */
+    _collectStepValues(form, includeHidden = false) {
+        form.querySelectorAll('textarea.formsimple-wysiwyg').forEach(area => {
+            const editor = window.$ ? $(area).data('cleditor') : null;
+            if (editor && !editor.sourceMode()) editor.updateTextArea();
+        });
         const result = {};
+        const stepFieldIds = new Set();
         form.querySelectorAll('input, textarea, select').forEach(el => {
-            if (!el.name) return;
+            if (el.type === 'file' || el.classList.contains('uploadedObjectsInfo')) return;
+            if (includeHidden && (el.matches('.captcha, [name="wjcaptcha"], [name="wjcaptcha1"], [name="g-recaptcha-response"]') || el.closest('.form-group-captcha, .g-recaptcha'))) return;
+
+            // Checkbox/radio options of a group share one name but have unique ids
+            // (id="${id}-${value}"), so collect them by name to keep grouped values
+            // together. Other fields are matched by id after the NAME->ID change, with
+            // a name fallback for id-less elements (e.g. the multiupload dropzone inputs).
+            const isGrouped = el.type === 'checkbox' || el.type === 'radio';
+            const isCaptchaResponse = el.name === 'g-recaptcha-response';
+            const domKey = isGrouped || isCaptchaResponse ? (el.name || el.id) : (el.id || el.name);
+            if (!domKey) return;
+            const key = this._toLogicalFieldId(domKey);
+            stepFieldIds.add(key);
             // Skip fields hidden by visibility conditions
-            if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
+            if (!includeHidden && this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
+                if (includeHidden && !Object.hasOwn(result, key)) result[key] = [];
                 if (!el.checked) return;
             }
             const value = el.value;
-            if (Object.hasOwn(result, el.name)) {
-                if (Array.isArray(result[el.name])) {
-                    result[el.name].push(value);
+            if (Object.hasOwn(result, key)) {
+                if (Array.isArray(result[key])) {
+                    result[key].push(value);
                 } else {
-                    result[el.name] = [result[el.name], value];
+                    result[key] = [result[key], value];
                 }
             } else {
-                result[el.name] = value;
+                result[key] = value;
             }
         });
+        return { result, stepFieldIds };
+    }
+
+    /**
+     * Save all current values before navigating back, without triggering field validation or CAPTCHA.
+     * @param {HTMLFormElement} form - Current step form.
+     * @returns {Promise<boolean>} Whether the draft was saved and navigation may continue.
+     */
+    async _saveStepDraft(form) {
+        const url = new URL('/rest/multistep-form/save-draft', window.location.origin);
+        url.searchParams.set('form-name', this.formName);
+        url.searchParams.set('step-id', this.stepId);
+        url.searchParams.set('language', this.language || '');
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': this.csrf
+                },
+                body: JSON.stringify(this._collectStepValues(form, true).result)
+            });
+            const result = await response.json();
+            if (response.ok && result.success === true) return true;
+            await this.showGlobalErr(result);
+        } catch (error) {
+            console.warn('Failed to save step draft:', error);
+            await this.showGlobalErr({});
+        }
+        return false;
+    }
+
+    /**
+     * Validates and submits visible values using the existing form action.
+     * @param {SubmitEvent} event - The submit event from the step form.
+     * @returns {Promise<void>} Resolves after handling submission and any subsequent navigation.
+     */
+    async doValidationAndSave(event) {
+        event.preventDefault();
+        this._cancelFieldValidation();
+        const form = event.currentTarget;
+
+        // Generate reCaptcha V3 token only for an actual submission.
+        const recaptchaInput = form.querySelector('input[name="g-recaptcha-response"][data-type="V3"]');
+        if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
+            await new Promise((resolve) => {
+                window.wjFormSubmit(form, resolve, recaptchaInput);
+            });
+        }
+
+        const url = new URL(form.getAttribute('action'), window.location.origin);
+        url.searchParams.set('language', this.language || '');
+        const { result, stepFieldIds } = this._collectStepValues(form);
 
         try {
-            const resp = await fetch(url, {
+            const resp = await fetch(url.toString(), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -201,30 +700,37 @@ export class MultistepForm {
             try { parsed = JSON.parse(text); } catch (_) { parsed = { raw: text }; }
 
             if (resp.ok === true) {
-                // Store submitted values for cross-step visibility conditions
-                Object.assign(this.submittedValues, result);
+                if (!parsed.fieldErrors || Object.keys(parsed.fieldErrors).length === 0) {
+                    // Replace this step's cache, including fields cleared or hidden after going back.
+                    stepFieldIds.forEach(key => { delete this.submittedValues[key]; });
+                    Object.assign(this.submittedValues, result);
+                }
                 await this.postSaveAction(parsed);
             } else {
+                if (this._showForwardContent(parsed.errorHtml, 'multistep-error-container')) return;
                 const errRedirect = parsed.err_redirect || null;
                 if (errRedirect) {
                     window.location.href = errRedirect;
                     return;
                 }
-                const endTry = parsed.end_try || false;
-                if (endTry) {
+                if (parsed.end_try === true) {
                     const holder = this.wrapper.querySelector('.multistepStepContent');
-                    if (holder) holder.innerHTML = '';
+                    if (holder) {
+                        this._disposeStep(holder);
+                        holder.replaceChildren();
+                    }
                 }
                 await this.showGlobalErr(parsed);
             }
         } catch (err) {
             console.error('Network/JS error submitting form', err);
+            await this.showGlobalErr({});
         }
     }
 
     /**
      * Show a global success alert with a message.
-     * @param {string} [message] - Message to display; default is a generic text.
+     * @param {string} [message] - Message to display as HTML; defaults to the configured success message when empty.
      * @returns {Promise<void>} Resolves after the UI is updated.
      */
     async showGlobalSuccess(message) {
@@ -251,21 +757,52 @@ export class MultistepForm {
         if (p) p.textContent = this.errorMessage;
         const ul = danger.querySelector('ul');
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
+        this._focusFirstError();
     }
 
     /**
      * Hide and clear any field/global error messages in the UI.
      */
     hideErrors() {
-        if (window.$) {
-            $(this.wrapper).find('div.cs-error').text('');
-        }
+        this.wrapper.querySelectorAll('div.cs-error').forEach(container => { container.textContent = ''; });
+        this._invalidFields.forEach(input => { input.setAttribute('aria-invalid', 'false'); });
+        this._invalidFields.clear();
         const danger = this.wrapper.querySelector('div.alert.alert-danger');
         if (danger) {
             const ul = danger.querySelector('ul');
             if (ul) ul.innerHTML = '';
             danger.style.display = 'none';
         }
+    }
+
+    /**
+     * Map a logical form item ID to the ID/name rendered for this form instance.
+     * @param {string} logicalId - Unprefixed form item identifier.
+     * @returns {string} Instance-specific DOM identifier.
+     */
+    _toDomFieldId(logicalId) {
+        if (!logicalId || !this.domIdPrefix) return logicalId;
+        return this.domIdPrefix + logicalId;
+    }
+
+    /**
+     * Map an instance-specific DOM ID/name back to its logical form item ID.
+     * @param {string} domId - Rendered form item identifier.
+     * @returns {string} Unprefixed logical identifier.
+     */
+    _toLogicalFieldId(domId) {
+        if (!domId || !this.domIdPrefix || !domId.startsWith(this.domIdPrefix)) return domId;
+        return domId.substring(this.domIdPrefix.length);
+    }
+
+    /**
+     * Find DOM elements belonging to a logical form item ID.
+     * @param {string} logicalId - Unprefixed form item identifier.
+     * @returns {NodeListOf<Element>} Matching form controls.
+     */
+    _getFieldElements(logicalId) {
+        const domId = this._toDomFieldId(logicalId);
+        return this.wrapper.querySelectorAll(`[name="${domId}"], [id="${domId}"]`);
     }
 
     /**
@@ -277,10 +814,11 @@ export class MultistepForm {
     _resolveFieldWrapper(itemFormId) {
         if (!itemFormId) return null;
 
-        const input = this.wrapper.querySelector(`[name="${itemFormId}"], [id="${itemFormId}"]`);
+        const domId = this._toDomFieldId(itemFormId);
+        const input = this.wrapper.querySelector(`[name="${domId}"], [id="${domId}"]`);
         if (input) return input.closest('.form-group') || input.parentElement;
 
-        const label = this.wrapper.querySelector(`label[for="${itemFormId}"]`);
+        const label = this.wrapper.querySelector(`label[for="${domId}"]`);
         if (label) return label.closest('.form-group') || label.parentElement;
 
         return null;
@@ -291,8 +829,8 @@ export class MultistepForm {
      * Uses the server-provided visibilityConditions map (itemFormId -> {conditions, hidden})
      * instead of parsing from DOM attributes.
      * Attaches change listeners to referenced fields on the same step.
-     * Conditions are AND logic - all must be met for the field to be visible.
-     * @param {Object} visibilityConditionsMap - Map of itemFormId to {conditions: [{fieldId, operator, value}], hidden: boolean}
+     * Conditions are evaluated in order using the preceding condition's AND/OR join operator.
+     * @param {Object<string, {conditions: MultistepFormCondition[], hidden: boolean}>} visibilityConditionsMap - Conditions and initial hidden state keyed by logical field ID.
      */
     _initConditionalVisibility(visibilityConditionsMap) {
         // Clear conditions from any previous step
@@ -326,9 +864,7 @@ export class MultistepForm {
                 if (!fieldId) return;
 
                 // Find the referenced input/select/textarea on the current step
-                const referencedElements = this.wrapper.querySelectorAll(
-                    `[name="${fieldId}"], [id="${fieldId}"]`
-                );
+                const referencedElements = this._getFieldElements(fieldId);
 
                 referencedElements.forEach(el => {
                     const eventType = (el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input';
@@ -347,8 +883,8 @@ export class MultistepForm {
 
     /**
      * Evaluate all conditions for a conditional field and show/hide it.
-     * @param {HTMLElement} field - The field wrapper element with data-visibility-condition.
-     * @param {Array} conditions - Array of condition objects [{fieldId, operator, value, joinOperator}].
+     * @param {HTMLElement} field - The field wrapper element controlled by the conditions.
+     * @param {MultistepFormCondition[]} conditions - Ordered comparisons joined by the preceding condition's AND/OR operator.
      */
     _evaluateConditions(field, conditions) {
         let combinedResult = null;
@@ -389,7 +925,7 @@ export class MultistepForm {
     /**
      * Initialize conditional requirement for fields in the current step.
      * Uses the server-provided requirementConditions map (itemFormId -> {conditions, required}).
-     * @param {Object} requirementConditionsMap - Map of itemFormId to {conditions: [{fieldId, operator, value}], required: boolean}
+     * @param {Object<string, {conditions: MultistepFormCondition[], required: boolean}>} requirementConditionsMap - Conditions and initial required state keyed by logical field ID.
      */
     _initConditionalRequirement(requirementConditionsMap) {
         // Clear conditions from any previous step
@@ -418,9 +954,7 @@ export class MultistepForm {
                 const fieldId = cond.fieldId;
                 if (!fieldId) return;
 
-                const referencedElements = this.wrapper.querySelectorAll(
-                    `[name="${fieldId}"], [id="${fieldId}"]`
-                );
+                const referencedElements = this._getFieldElements(fieldId);
 
                 referencedElements.forEach(el => {
                     const eventType = (el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input';
@@ -439,7 +973,7 @@ export class MultistepForm {
     /**
      * Evaluate all requirement conditions for a field and toggle its required state.
      * @param {HTMLElement} field - The field wrapper element.
-     * @param {Array} conditions - Array of condition objects [{fieldId, operator, value, joinOperator}].
+     * @param {MultistepFormCondition[]} conditions - Ordered comparisons joined by the preceding condition's AND/OR operator.
      */
     _evaluateRequirementConditions(field, conditions) {
         let combinedResult = null;
@@ -487,11 +1021,19 @@ export class MultistepForm {
         if (!field) return;
 
         const transitionDurationMs = 260;
+        const shouldAnimate = animate && this._prefersReducedMotion() === false;
         const currentlyHidden = this._isFieldHidden(field);
+        const fieldColumn = field.parentElement?.classList.contains('col') ? field.parentElement : null;
 
         // Avoid replaying animations when visibility state has not changed.
-        if (visible && !currentlyHidden) return;
-        if (!visible && currentlyHidden) return;
+        if (visible && !currentlyHidden) {
+            fieldColumn?.classList.remove('mf-field-column-hidden');
+            return;
+        }
+        if (!visible && currentlyHidden) {
+            fieldColumn?.classList.add('mf-field-column-hidden');
+            return;
+        }
 
         if (field._visibilityTimeoutId) {
             window.clearTimeout(field._visibilityTimeoutId);
@@ -499,10 +1041,11 @@ export class MultistepForm {
         }
 
         if (visible) {
+            fieldColumn?.classList.remove('mf-field-column-hidden');
             field.style.display = '';
             field.classList.remove('mf-hide', 'mf-collapsed', 'mf-hidden');
 
-            if (!animate) {
+            if (!shouldAnimate) {
                 field.classList.remove('mf-enter', 'mf-collapsed');
                 field.style.maxHeight = '';
                 return;
@@ -531,11 +1074,12 @@ export class MultistepForm {
             return;
         }
 
-        if (!animate || field.style.display === 'none') {
+        if (!shouldAnimate || field.style.display === 'none') {
             field.style.display = 'none';
             field.classList.remove('mf-hide', 'mf-enter');
             field.classList.add('mf-collapsed');
             field.style.maxHeight = '0px';
+            fieldColumn?.classList.add('mf-field-column-hidden');
             return;
         }
 
@@ -553,6 +1097,7 @@ export class MultistepForm {
             field.classList.remove('mf-hide');
             field.classList.add('mf-hidden');
             field.style.maxHeight = '0px';
+            fieldColumn?.classList.add('mf-field-column-hidden');
             if (field._visibilityTimeoutId) {
                 window.clearTimeout(field._visibilityTimeoutId);
                 field._visibilityTimeoutId = null;
@@ -564,8 +1109,8 @@ export class MultistepForm {
 
     /**
      * Determine whether a field should be treated as hidden.
-     * @param {HTMLElement} field - The field wrapper element.
-     * @returns {boolean} true if hidden or in hide transition.
+     * @param {HTMLElement|null} field - The field wrapper element, if present.
+     * @returns {boolean} true if missing, hidden, or in a collapsed transition state.
      */
     _isFieldHidden(field) {
         if (!field) return true;
@@ -597,16 +1142,9 @@ export class MultistepForm {
                 mark.className = 'requirement-mark';
                 mark.textContent = ' * ';
                 mark.style.color = 'red';
-                const popoverLink = label.querySelector('i.popover-link');
                 if (!existingMark) {
-                    if (popoverLink) {
-                        popoverLink.before(mark);
-                    } else {
-                        label.appendChild(mark);
-                    }
-                } else if (popoverLink && mark.nextSibling !== popoverLink) {
-                    popoverLink.before(mark);
-                } else if (!popoverLink && label.lastChild !== mark) {
+                    label.appendChild(mark);
+                } else if (label.lastChild !== mark) {
                     label.appendChild(mark);
                 }
             } else if (existingMark) {
@@ -617,7 +1155,7 @@ export class MultistepForm {
 
     /**
      * Evaluate a single condition operator.
-     * @param {string} operator - The operator (equals, not_equals, contains, not_contains, empty, not_empty).
+     * @param {string} operator - The operator (equals, not_equals, contains, not_contains, empty, not_empty, starts_with, ends_with).
      * @param {string} actualValue - The actual field value.
      * @param {string} requiredValue - The expected/required value.
      * @param {boolean} [caseInsensitive=false] - Whether text comparison should ignore case.
@@ -660,8 +1198,10 @@ export class MultistepForm {
      * @returns {string} The current value of the field.
      */
     _getFieldValue(fieldId) {
-        // Check radio buttons first
-        const radios = this.wrapper.querySelectorAll(`input[type="radio"][name="${fieldId}"]`);
+        const domId = this._toDomFieldId(fieldId);
+
+        // Check radio buttons first (radios share name, IDs are unique per option)
+        const radios = this.wrapper.querySelectorAll(`input[type="radio"][name="${domId}"]`);
         if (radios.length > 0) {
             for (const radio of radios) {
                 if (radio.checked) return radio.value;
@@ -669,8 +1209,8 @@ export class MultistepForm {
             return '';
         }
 
-        // Check checkboxes
-        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][name="${fieldId}"]`);
+        // Check checkboxes (checkboxes share name, IDs are unique per option)
+        const checkboxes = this.wrapper.querySelectorAll(`input[type="checkbox"][name="${domId}"]`);
         if (checkboxes.length > 0) {
             const checked = [];
             checkboxes.forEach(cb => { if (cb.checked) checked.push(cb.value); });
@@ -678,7 +1218,7 @@ export class MultistepForm {
         }
 
         // Standard input/select/textarea
-        const el = this.wrapper.querySelector(`[name="${fieldId}"], [id="${fieldId}"]`);
+        const el = this.wrapper.querySelector(`[name="${domId}"], [id="${domId}"]`);
         if (el) return el.value || '';
 
         // Fallback to stored values from previous steps
@@ -690,10 +1230,43 @@ export class MultistepForm {
     }
 
     /**
+     * Replace the form with a managed result page and move focus to its content.
+     * Embedded scripts run when jQuery is available.
+     * @param {string|undefined} html - Rendered success or error page body.
+     * @param {string} className - CSS class for the result container.
+     * @returns {boolean} Whether non-blank content was displayed.
+     */
+    _showForwardContent(html, className) {
+        if (typeof html !== 'string' || html.trim() === '') return false;
+        this.hideErrors();
+        const holder = this.wrapper.querySelector('.multistepStepContent');
+        if (holder) {
+            this._disposeStep(holder);
+            holder.remove();
+        }
+        const content = document.createElement('div');
+        content.className = className;
+        content.tabIndex = -1;
+        // jQuery executes embedded scripts only after the container is attached.
+        this.wrapper.appendChild(content);
+        if (window.$) {
+            $(content).html(html);
+        } else {
+            content.innerHTML = html;
+        }
+        content.focus({ preventScroll: true });
+        content.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+        return true;
+    }
+
+    /**
      * Handle server response after a successful POST.
-     * Can redirect, render field errors, or load the next step.
+     * Redirects, displays field errors, loads the next step, or replaces the completed form with confirmation content.
+     * Inline confirmation content receives focus and is scrolled into view; embedded scripts run when jQuery is available.
+     * Missing or blank confirmation content uses the configured success message.
      * @param {Object} response - Parsed JSON from the server.
      * @param {string} [response.forward] - URL to redirect to on success.
+     * @param {string} [response.thankYouHtml] - Managed page content to display when the form is complete.
      * @param {Object<string,string>} [response.fieldErrors] - Map of fieldName to error message(s).
      * @param {string} [response['form-name']] - Current form name.
      * @param {string|number} [response['step-id']] - Next step id; -1 means finished.
@@ -701,8 +1274,6 @@ export class MultistepForm {
      */
     async postSaveAction(response) {
         this.hideErrors();
-
-        //debugger;
 
         const forwardUrl = response.forward;
         if (forwardUrl) {
@@ -713,16 +1284,9 @@ export class MultistepForm {
         const fieldErrors = response.fieldErrors || {};
         if (fieldErrors && Object.keys(fieldErrors).length > 0) {
             for (const [fieldName, errorMsg] of Object.entries(fieldErrors)) {
-                if (window.$) {
-                    const errDiv = $(this.wrapper).find('div.cs-error-' + fieldName);
-                    const errorMsgArr = String(errorMsg).split('\n');
-                    errDiv.html('');
-                    let html = "<ul class='mf-error-list'>";
-                    for (const msg of errorMsgArr) html += `<li>${msg}</li>`;
-                    html += '</ul>';
-                    errDiv.html(html);
-                }
+                this._showFieldError(fieldName, errorMsg);
             }
+            this._focusFirstError();
             return;
         }
 
@@ -730,14 +1294,408 @@ export class MultistepForm {
         const stepId = response['step-id'];
         if (formName && (stepId !== undefined && stepId !== null)) {
             if (stepId === -1 || stepId === '-1') {
+                if (this._showForwardContent(response.thankYouHtml, 'multistep-thankyou-container')) return;
                 const holder = this.wrapper.querySelector('.multistepStepContent');
-                if (holder) holder.remove();
+                if (holder) {
+                    this._disposeStep(holder);
+                    holder.remove();
+                }
                 await this.showGlobalSuccess();
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');
                 if (danger) danger.style.display = 'none';
-                await this.loadStep(formName, stepId);
+                await this.loadStep(formName, stepId, true);
             }
         }
     }
 }
+
+
+/**
+ * Manages accessible Bootstrap tooltips rendered by multistep forms.
+ */
+export class FormTooltip {
+
+    static EVENT_NAMESPACE = '.wjFormTooltip';
+    static INITIALIZED_ATTRIBUTE = 'data-wj-form-tooltip-initialized';
+    static DESCRIPTION_ID_ATTRIBUTE = 'data-wj-form-tooltip-description-id';
+    static TRIGGER_SELECTOR = ".popover-link[data-toggle='tooltip'], .popover-link[data-bs-toggle='tooltip']";
+    static CONFIG = {
+        trigger: 'hover focus',
+        html: true,
+        delay: { show: 0, hide: 150 }
+    };
+
+    /**
+     * Initialize per-trigger tooltip state and bind the instance's Escape-key handler for later registration.
+     */
+    constructor() {
+        this.adapters = new WeakMap();
+        this.tooltipElements = new WeakMap();
+        this.activationBindings = new WeakSet();
+        this.nativeLifecycleBindings = new WeakSet();
+        this.hoverBindings = new WeakSet();
+        this.forcedHideTriggers = new WeakSet();
+        this.escapeHandlerBound = false;
+        this._hideActiveTooltips = this._hideActiveTooltips.bind(this);
+    }
+
+    /**
+     * Return the native Bootstrap Tooltip class when available.
+     * @returns {Function|null} Bootstrap Tooltip class.
+     */
+    _getNativeTooltipClass() {
+        const Tooltip = window.bootstrap?.Tooltip;
+        return typeof Tooltip === 'function' ? Tooltip : null;
+    }
+
+    /**
+     * Return jQuery when its Bootstrap tooltip plugin is available.
+     * @returns {Function|null} jQuery factory function, or null when the legacy plugin is unavailable.
+     */
+    _getLegacyTooltipJQuery() {
+        const jQueryInstance = window.jQuery || window.$;
+        if (!jQueryInstance || !jQueryInstance.fn || typeof jQueryInstance.fn.tooltip !== 'function') return null;
+        return jQueryInstance;
+    }
+
+    /**
+     * Resolve the Bootstrap tooltip currently associated with a trigger.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @returns {HTMLElement|null} Generated tooltip element.
+     */
+    _getTooltipElement(trigger) {
+        const rememberedTooltip = this.tooltipElements.get(trigger);
+        if (rememberedTooltip?.isConnected) return rememberedTooltip;
+        this.tooltipElements.delete(trigger);
+
+        const stableDescriptionId = trigger.getAttribute(FormTooltip.DESCRIPTION_ID_ATTRIBUTE);
+        const tooltipIds = (trigger.getAttribute('aria-describedby') || '').trim().split(/\s+/).filter(Boolean);
+        for (const tooltipId of tooltipIds) {
+            const tooltip = trigger.ownerDocument.getElementById(tooltipId);
+            if (tooltipId !== stableDescriptionId && tooltip?.matches('.tooltip[role="tooltip"]')) return tooltip;
+        }
+        return null;
+    }
+
+    /**
+     * Restore the field-specific description that must remain available before and after display.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _restoreDescription(trigger) {
+        const descriptionId = trigger.getAttribute(FormTooltip.DESCRIPTION_ID_ATTRIBUTE);
+        if (descriptionId && trigger.ownerDocument.getElementById(descriptionId)) {
+            trigger.setAttribute('aria-describedby', descriptionId);
+        }
+    }
+
+    /**
+     * Remember Bootstrap's generated visual tooltip before restoring the stable description relation.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _captureTooltipElement(trigger) {
+        const descriptionId = trigger.getAttribute(FormTooltip.DESCRIPTION_ID_ATTRIBUTE);
+        const tooltipIds = (trigger.getAttribute('aria-describedby') || '').trim().split(/\s+/).filter(Boolean);
+        for (const tooltipId of tooltipIds) {
+            const tooltip = trigger.ownerDocument.getElementById(tooltipId);
+            if (tooltipId !== descriptionId && tooltip?.matches('.tooltip[role="tooltip"]')) {
+                this.tooltipElements.set(trigger, tooltip);
+                break;
+            }
+        }
+        this._restoreDescription(trigger);
+    }
+
+    /**
+     * Check whether Bootstrap's generated tooltip is currently visible.
+     * @param {HTMLElement|null} tooltip - Generated tooltip element.
+     * @returns {boolean} True when the tooltip is rendered and visible.
+     */
+    _isTooltipVisible(tooltip) {
+        if (!tooltip?.isConnected) return false;
+        const style = tooltip.ownerDocument.defaultView.getComputedStyle(tooltip);
+        return style.display !== 'none' && style.visibility !== 'hidden' && parseFloat(style.opacity || '1') > 0;
+    }
+
+    /**
+     * Dispatch a native mouse transition consumed by both older and newer Bootstrap versions.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @param {string} type - Mouse event type.
+     * @param {EventTarget|null} relatedTarget - Element related to the transition.
+     */
+    _dispatchMouseTransition(trigger, type, relatedTarget) {
+        const ownerDocument = trigger.ownerDocument;
+        const view = ownerDocument.defaultView || window;
+        let event;
+
+        try {
+            event = new view.MouseEvent(type, {
+                bubbles: true,
+                cancelable: true,
+                relatedTarget
+            });
+        } catch (error) {
+            event = ownerDocument.createEvent('MouseEvents');
+            event.initMouseEvent(type, true, true, view, 0, 0, 0, 0, 0, false, false, false, false, 0, relatedTarget);
+        }
+
+        trigger.dispatchEvent(event);
+    }
+
+    /**
+     * Keep an open tooltip visible while the pointer moves from its trigger to its content.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _makeTooltipHoverable(trigger) {
+        const tooltip = this._getTooltipElement(trigger);
+        if (!tooltip) return;
+
+        tooltip.classList.add('wj-form-tooltip-hoverable');
+        tooltip.style.pointerEvents = 'auto';
+
+        if (this.hoverBindings.has(tooltip)) return;
+
+        tooltip.addEventListener('mouseenter', () => {
+            this._dispatchMouseTransition(trigger, 'mouseover', tooltip);
+        });
+        tooltip.addEventListener('mouseleave', event => {
+            this._dispatchMouseTransition(trigger, 'mouseout', event.relatedTarget || tooltip);
+        });
+        this.hoverBindings.add(tooltip);
+    }
+
+    /**
+     * Prevent Bootstrap's delayed hide while the pointer is over the tooltip content.
+     * @param {Event|jQuery.Event} event - Bootstrap hide event.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _keepHoveredTooltipVisible(event, trigger) {
+        if (this.forcedHideTriggers.has(trigger)) return;
+
+        const tooltip = this._getTooltipElement(trigger);
+        if (tooltip?.matches(':hover')) event.preventDefault();
+    }
+
+    /**
+     * Check whether a key event should activate a non-native button.
+     * @param {KeyboardEvent|jQuery.Event} event - Keyboard event.
+     * @returns {boolean} True for Enter and Space.
+     */
+    _isActivationKey(event) {
+        return event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.which === 13 || event.which === 32;
+    }
+
+    /**
+     * Create a common adapter for native Bootstrap 5 and legacy jQuery tooltips.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @returns {Object|null} Tooltip adapter or null when neither API is available.
+     */
+    _createAdapter(trigger) {
+        const Tooltip = this._getNativeTooltipClass();
+        if (Tooltip) {
+            const instance = typeof Tooltip.getOrCreateInstance === 'function'
+                ? Tooltip.getOrCreateInstance(trigger, FormTooltip.CONFIG)
+                : (typeof Tooltip.getInstance === 'function' && Tooltip.getInstance(trigger)) || new Tooltip(trigger, FormTooltip.CONFIG);
+            return {
+                kind: 'native',
+                show: () => instance.show(),
+                hide: () => instance.hide(),
+                dispose: () => instance.dispose()
+            };
+        }
+
+        const jQueryInstance = this._getLegacyTooltipJQuery();
+        if (!jQueryInstance) return null;
+
+        const $trigger = jQueryInstance(trigger);
+        $trigger.tooltip(FormTooltip.CONFIG);
+        return {
+            kind: 'jquery',
+            $trigger,
+            show: () => $trigger.tooltip('show'),
+            hide: () => $trigger.tooltip('hide'),
+            dispose: () => {
+                try {
+                    $trigger.tooltip('dispose');
+                } catch (error) {
+                    $trigger.tooltip('destroy');
+                }
+            }
+        };
+    }
+
+    /**
+     * Activate a tooltip through a non-native key press or a keyboard-generated native button click.
+     * @param {KeyboardEvent|MouseEvent} event - Activation event.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     */
+    _activate(event, trigger) {
+        const isNativeButton = trigger.tagName.toLowerCase() === 'button';
+        const tooltip = this._getTooltipElement(trigger);
+
+        if (isNativeButton) {
+            if (event.type !== 'click' || event.detail !== 0 || this._isTooltipVisible(tooltip)) return;
+            event.preventDefault();
+            this.adapters.get(trigger)?.show();
+            return;
+        }
+
+        if (trigger.getAttribute('role') !== 'button' || !this._isActivationKey(event)) return;
+
+        event.preventDefault();
+        if (!this._isTooltipVisible(tooltip)) this.adapters.get(trigger)?.show();
+    }
+
+    /**
+     * Bind tooltip lifecycle events for either the native or jQuery Bootstrap API.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @param {Object} adapter - Tooltip API adapter.
+     */
+    _bindLifecycle(trigger, adapter) {
+        if (!this.activationBindings.has(trigger)) {
+            trigger.addEventListener('keydown', event => this._activate(event, trigger));
+            if (trigger.tagName.toLowerCase() === 'button') {
+                trigger.addEventListener('click', event => this._activate(event, trigger));
+            }
+            this.activationBindings.add(trigger);
+        }
+
+        if (adapter.kind === 'native') {
+            if (this.nativeLifecycleBindings.has(trigger)) return;
+            const captureAndMakeHoverable = () => {
+                this._captureTooltipElement(trigger);
+                this._makeTooltipHoverable(trigger);
+            };
+            const restoreDescription = () => {
+                this.tooltipElements.delete(trigger);
+                this._restoreDescription(trigger);
+            };
+            trigger.addEventListener('inserted.bs.tooltip', captureAndMakeHoverable);
+            trigger.addEventListener('shown.bs.tooltip', captureAndMakeHoverable);
+            trigger.addEventListener('hide.bs.tooltip', event => this._keepHoveredTooltipVisible(event, trigger));
+            trigger.addEventListener('hidden.bs.tooltip', restoreDescription);
+            this.nativeLifecycleBindings.add(trigger);
+            return;
+        }
+
+        adapter.$trigger.off(FormTooltip.EVENT_NAMESPACE)
+            .on(`inserted.bs.tooltip${FormTooltip.EVENT_NAMESPACE} shown.bs.tooltip${FormTooltip.EVENT_NAMESPACE}`, () => {
+                this._captureTooltipElement(trigger);
+                this._makeTooltipHoverable(trigger);
+            })
+            .on(`hide.bs.tooltip${FormTooltip.EVENT_NAMESPACE}`, event => this._keepHoveredTooltipVisible(event, trigger))
+            .on(`hidden.bs.tooltip${FormTooltip.EVENT_NAMESPACE}`, () => {
+                this.tooltipElements.delete(trigger);
+                this._restoreDescription(trigger);
+            });
+    }
+
+    /**
+     * Initialize one form tooltip trigger.
+     * @param {HTMLElement} trigger - Tooltip trigger element.
+     * @returns {boolean} True when a supported Bootstrap tooltip API is available.
+     */
+    _initializeTrigger(trigger) {
+        this._restoreDescription(trigger);
+        const adapter = this._createAdapter(trigger);
+        if (!adapter) return false;
+
+        this.adapters.set(trigger, adapter);
+        trigger.setAttribute(FormTooltip.INITIALIZED_ATTRIBUTE, 'true');
+        trigger.classList.add('wj-form-tooltip-trigger');
+        this._bindLifecycle(trigger, adapter);
+        this._makeTooltipHoverable(trigger);
+        return true;
+    }
+
+    /**
+     * Dismiss every visible initialized form tooltip when Escape is pressed.
+     * @param {KeyboardEvent} event - Captured keyboard event.
+     */
+    _hideActiveTooltips(event) {
+        const isEscape = event.key === 'Escape' || event.key === 'Esc' || event.which === 27;
+        if (!isEscape) return;
+
+        const activeTriggers = [];
+        document.querySelectorAll(FormTooltip.TRIGGER_SELECTOR).forEach(trigger => {
+            if (trigger.getAttribute(FormTooltip.INITIALIZED_ATTRIBUTE) !== 'true') return;
+            const tooltip = this._getTooltipElement(trigger);
+            if (tooltip?.getAttribute('role') === 'tooltip' && this._isTooltipVisible(tooltip)) activeTriggers.push(trigger);
+        });
+
+        if (activeTriggers.length === 0) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        activeTriggers.forEach(trigger => {
+            this.forcedHideTriggers.add(trigger);
+            try {
+                this.adapters.get(trigger)?.hide();
+            } catch (error) {
+                console.warn('Failed to hide form tooltip:', error);
+            } finally {
+                this.forcedHideTriggers.delete(trigger);
+            }
+        });
+    }
+
+    /**
+     * Initialize accessible Bootstrap tooltips below the supplied root.
+     * @param {Document|Element|jQuery} [root=document] - Root to scan.
+     * @returns {boolean} True when the Bootstrap tooltip plugin is available.
+     */
+    init(root = document) {
+        const rootElement = root?.jquery ? root[0] : root;
+        if (!rootElement) return false;
+
+        const triggers = [];
+        if (rootElement.matches?.(FormTooltip.TRIGGER_SELECTOR)) triggers.push(rootElement);
+        triggers.push(...rootElement.querySelectorAll(FormTooltip.TRIGGER_SELECTOR));
+
+        let tooltipApiAvailable = Boolean(this._getNativeTooltipClass() || this._getLegacyTooltipJQuery());
+        triggers.forEach(trigger => {
+            try {
+                tooltipApiAvailable = this._initializeTrigger(trigger) || tooltipApiAvailable;
+            } catch (error) {
+                console.warn('Failed to initialize form tooltip:', error);
+            }
+        });
+
+        if (tooltipApiAvailable && !this.escapeHandlerBound) {
+            document.addEventListener('keydown', this._hideActiveTooltips, true);
+            this.escapeHandlerBound = true;
+        }
+
+        return tooltipApiAvailable;
+    }
+
+    /**
+     * Dispose initialized Bootstrap tooltip instances below the supplied root before its DOM is replaced.
+     * @param {Document|Element|jQuery} [root=document] - Root containing tooltip triggers.
+     */
+    dispose(root = document) {
+        const rootElement = root?.jquery ? root[0] : root;
+        if (!rootElement) return;
+
+        const triggers = [];
+        if (rootElement.matches?.(FormTooltip.TRIGGER_SELECTOR)) triggers.push(rootElement);
+        triggers.push(...rootElement.querySelectorAll(FormTooltip.TRIGGER_SELECTOR));
+
+        triggers.forEach(trigger => {
+            const adapter = this.adapters.get(trigger);
+            try {
+                adapter?.dispose?.();
+            } catch (error) {
+                console.warn('Failed to dispose form tooltip:', error);
+            }
+            this.adapters.delete(trigger);
+            this.tooltipElements.delete(trigger);
+        });
+    }
+}
+
+export const formTooltip = new FormTooltip();
+
+window.WebJETFormTooltip = window.WebJETFormTooltip || {};
+window.WebJETFormTooltip.init = root => formTooltip.init(root);
+window.WebJETFormTooltip.dispose = root => formTooltip.dispose(root);

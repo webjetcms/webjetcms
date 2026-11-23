@@ -24,6 +24,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name = "perex_groups")
@@ -31,6 +33,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_PEREX_GROUP_UPDATE)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "translates", title = "perex_groups.tab.translates"),
+    @DataTableTab(id = "fields", title = "editor.tab.fields")
+})
 public class PerexGroupsEntity implements Serializable {
 
     @PreUpdate

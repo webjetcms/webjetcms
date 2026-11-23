@@ -1,10 +1,23 @@
 # Configuration
 
-The configuration section is used to display and manage individual configuration variables that differ from the default values.
+The configuration section is used to view and manage configuration variables. On the left side there is a tree that divides the variables into the following views:
+
+- **Changed** - variables whose value is stored in the database. This view is selected after opening the page.
+- **Custom** - variables stored only in the database without definition in `Constants` /`ConstantsV9` or variables whose name starts with the current value `Constants.getInstallName()` (for example `aceintegration_test`).
+- **All** - all registered variables, including their default values ​​and custom variables stored only in the database.
+- **Modules** - hierarchical groups, for example `apps.gallery` or `security.oauth2`. Selecting a parent node will also display variables from all its subnodes. One variable can be included in multiple branches.
+
+In all views, variables are sorted by name from A to Z by default. If you click on a column header to choose a different sort, the browser remembers it for the entire tree. You can return to alphabetical sorting via **Settings** above the table → **Column display** → **Reset**.
+
+The tree can be searched. Module names are technical names and are not translated. In the selected module, it is possible to edit an existing variable, but not to create a new one or to start an import, because the database variable itself does not have information about being included in the module.
+
+You can change the ratio of the tree and table widths by clicking the **Settings** button above the tree, or set a fixed width for the tree in pixels. The default width is 200px. The custom choice is saved for the logged in user separately for configuration.
 
 ![](page.png)
 
 The installation section contains a list of [most commonly used configuration variables](../../../install/config/README.md).
+
+The background and labeling of the environment in the administration is described in [Homescreen Configuration](dashboard.md).
 
 ## Adding configuration variables
 
@@ -34,11 +47,19 @@ The change usually takes effect immediately after the add/edit action. However, 
   - if the changed name is the name of an **existing** configuration variable, then the **edit** is performed
   - if the changed name is for the name of a **non-existent** configuration variable, then a new variable will be **added**
 
+## Temporary value setting
+
+If you need to change the value of a configuration variable only to verify its behavior, enable the **Set temporarily** option in the editor. The value is set only in memory on the current node, and is not stored in the database or propagated to other nodes in the cluster. After the application server is restarted, the value stored in the database is used again.
+
+When set temporarily, the value cannot be encrypted or scheduled to change, so the **Encrypt** and **Change from** fields in the editor are hidden.
+
+If the current value on the node differs from the saved value, the **Value** column displays both values ​​in the format "current value / saved value". The second value is displayed in a dimmed color and is marked as currently inactive when the cursor is placed. This can be the value stored in the database or the default value for a variable without a database entry. When the editor is reopened, the saved, not temporary, value is loaded into the **Value** field.
+
 ## Deleting configuration items
 
-When deleting a configuration variable, 2 situations can occur:
+Deleting means resetting the database value. There can be 2 situations:
 
-- we delete the value from the table and **there is a default value** for this configuration variable, which will be used (the variable still exists)
-- we delete the value from the table and **there is no default value** for this configuration variable (the variable will no longer exist)
+- if **a preset value exists**, it will be used and the variable will remain displayed in the **All** view and in the relevant modules; it will disappear from the **Changed** view,
+- if **there is no preset value**, the custom database variable will cease to exist after reset.
 
-!>**Warning:** Unlike creation/editing, deleting sets an empty value. If a configuration variable has a preset value, it will take effect **only after restarting** the application server.
+A variable that does not have a database value cannot be deleted.

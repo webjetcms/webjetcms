@@ -139,6 +139,8 @@ public class InitServlet extends HttpServlet
 
 			UpdateDatabase.updateWithSpringInitialized();
 
+			clusterRefresher = new ClusterRefresher();
+
 			SpringAppInitializer.dtDiff("WebJET INIT DONE");
 
 			setWebjetInitialized();
@@ -401,7 +403,7 @@ public class InitServlet extends HttpServlet
 				{
 					Logger.println(InitServlet.class,"Verifying license, please wait...");
 					String pDocRoot = URLEncoder.encode(servletContext.getRealPath("/")+";"+dbName+";"+getInitParameter("installName", databaseValues, servletContext), "windows-1250");
-					String urlStr = "http://license.interway.sk/verify.do?id=" + num + "&sdt=" + l_now + "&docRoot=" + pDocRoot;
+					String urlStr = "https://license.interway.sk/verify.do?id=" + num + "&sdt=" + l_now + "&docRoot=" + pDocRoot;
 					//System.out.println(urlStr);
 					URL url = new URL(urlStr);
 
@@ -881,10 +883,6 @@ public class InitServlet extends HttpServlet
 		logMessage.append("version: ").append(getActualVersionLong());
 		Adminlog.add(Adminlog.TYPE_INIT, logMessage.toString(), -1, -1);
 
-		clusterRefresher = new ClusterRefresher();
-
-		dt.diff("after cluster refresher");
-
 		//Logger.println(InitServlet.class,"---------------- INIT DONE --------------");
 
 		dt.diff("Init done");
@@ -1126,13 +1124,6 @@ public class InitServlet extends HttpServlet
 				Constants.setBoolean("adminRequireSSL", param);
 			}
 
-			param = getInitParameter("exportFlash", databaseValues, servletContext);
-			skipValues.put("exportFlash", "true");
-			if (param != null && param.length() > 0)
-			{
-				Constants.setBoolean("exportFlash", param);
-			}
-
 			param = getInitParameter("exportDocsHtml", databaseValues, servletContext);
 			skipValues.put("exportDocsHtml", "true");
 			if (param != null && param.length() > 0)
@@ -1262,7 +1253,9 @@ public class InitServlet extends HttpServlet
 		String serverName = Tools.getServerName(request, false);
 
 		//default allowed domains
-		if (serverName.equals("iwcm.interway.sk") || serverName.equals("neweb.interway.sk") || serverName.equals("localhost") ||
+		if (serverName.equals("iwcm.interway.sk") || serverName.equals("iwcm8443.interway.sk") || serverName.equals("iwcm9443.interway.sk") ||
+			serverName.equals("iwcm8080.interway.sk") || serverName.equals("iwcm9080.interway.sk") ||
+			serverName.equals("neweb.interway.sk") || serverName.equals("localhost") ||
 			serverName.endsWith(".iway.sk") || serverName.endsWith(".iway.local") || serverName.endsWith(".iwcp.dev") || serverName.endsWith("npp.int-dev.iway"))
 		{
 			return (true);
@@ -1498,19 +1491,7 @@ public class InitServlet extends HttpServlet
 	public static String getActualVersionLong()
 	{
 		StringBuilder ver = new StringBuilder(actualVersion);
-
-		String wjVersion = Constants.getString("wjVersion");
-		if ("E".equals(wjVersion) && "zaskis".equals(Constants.getInstallName())) ver.append(" Unlimited");
-		else if ("E".equals(wjVersion) && "zsr".equals(Constants.getInstallName())) ver.append(" Unlimited");
-		else if ("E".equals(wjVersion)) ver.append(" Enterprise");
-		else if ("P".equals(wjVersion)) ver.append(" Professional");
-		else if ("D".equals(wjVersion)) ver.append(" MSG");
-		else if ("I".equals(wjVersion)) ver.append(" NET");
-		else if ("C".equals(wjVersion)) ver.append(" Cestovka");
-		else if ("M".equals(wjVersion) && "cloud".equals(Constants.getInstallName())) ver.append(" Cloud");
-		else if ("M".equals(wjVersion)) ver.append(" MultiWeb");
-		else if ("O".equals(wjVersion)) ver.append(" Community (Open Source)");
-		else ver.append(" Basic");
+		ver.append(' ').append(getProductEdition());
 
 		String nodeName = Constants.getString("clusterMyNodeName");
 		if (Tools.isNotEmpty(nodeName)) ver.append(" (").append(nodeName).append(" / ").append(Constants.getString("clusterMyNodeType")).append(')');
@@ -1519,6 +1500,27 @@ public class InitServlet extends HttpServlet
 		if (Tools.isNotEmpty(tomcat)) ver.append(" server: ").append(tomcat);
 
 		return(ver.toString());
+	}
+
+	/**
+	 * Returns the product edition label used by the administration logo and help menu.
+	 *
+	 * @return display label for the configured edition and installation
+	 */
+	public static String getProductEdition()
+	{
+		String wjVersion = Constants.getString("wjVersion");
+		if ("E".equals(wjVersion) && "zaskis".equals(Constants.getInstallName())) return "Unlimited";
+		if ("E".equals(wjVersion) && "zsr".equals(Constants.getInstallName())) return "Unlimited";
+		if ("E".equals(wjVersion)) return "Enterprise";
+		if ("P".equals(wjVersion)) return "Professional";
+		if ("D".equals(wjVersion)) return "MSG";
+		if ("I".equals(wjVersion)) return "NET";
+		if ("C".equals(wjVersion)) return "Cestovka";
+		if ("M".equals(wjVersion) && "cloud".equals(Constants.getInstallName())) return "Cloud";
+		if ("M".equals(wjVersion)) return "MultiWeb";
+		if ("O".equals(wjVersion)) return "Community (Open Source)";
+		return "Basic";
 	}
 
     /**

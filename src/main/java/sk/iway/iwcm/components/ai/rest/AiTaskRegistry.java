@@ -6,12 +6,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
+
+import com.webjetcms.ai.AiCancellationToken;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
@@ -19,13 +25,35 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
+import sk.iway.iwcm.components.ai.rest.AiChatStore.Scope;
 import sk.iway.iwcm.users.UsersDB;
 
 @Component
-public class AiTaskRegistry {
+public class AiTaskRegistry implements DisposableBean {
 
     private static final String PREFIX = "ai_task_";
+    private static final int MAX_CONCURRENT_TASKS = 32;
     private final ConcurrentMap<String, Future<AssistantResponseDTO>> futuresMap = new ConcurrentHashMap<>();
+    private final ExecutorService executor;
+
+    public AiTaskRegistry() {
+        this(new ThreadPoolExecutor(
+            MAX_CONCURRENT_TASKS,
+            MAX_CONCURRENT_TASKS,
+            60L,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(),
+            task -> {
+                Thread thread = new Thread(task, "webjet-ai-task");
+                thread.setDaemon(true);
+                return thread;
+            }
+        ));
+    }
+
+    AiTaskRegistry(ExecutorService executor) {
+        this.executor = executor;
+    }
 
     // store a future with ID
     public final void put(Long assistantId, Long timestamp, Future<AssistantResponseDTO> future, HttpServletRequest request) {
@@ -52,7 +80,37 @@ public class AiTaskRegistry {
         futuresMap.remove( getTaskId(assistantId, timestamp, request) );
     }
 
+    /**
+     * Registers a cancellable task before dispatch and propagates the caller's domain context.
+     *
+     * @param task assistant operation, including any sequential provider calls
+     * @param inputData input receiving a fresh server-owned cancellation token
+     * @param request authenticated request used to identify the task owner
+     * @return completed response, or a structured cancellation result when the task is cancelled
+     * @throws ProviderCallException if the assistant operation fails
+     */
     public final AssistantResponseDTO runAssistantTask(Callable<AssistantResponseDTO> task, InputDataDTO inputData, HttpServletRequest request) throws ProviderCallException {
+        String taskId = getTaskId(inputData.getAssistantId(), inputData.getTimestamp(), request);
+        return runTask(taskId, task, inputData);
+    }
+
+    /** Scopes client-supplied thread IDs by owner and domain, independently of the browser session. */
+    public AssistantResponseDTO runChatTask(String threadId, Scope scope, Callable<AssistantResponseDTO> task, InputDataDTO inputData) throws ProviderCallException {
+        return runTask(getChatTaskId(threadId, scope), task, inputData);
+    }
+
+    public void cancelChatTask(String threadId, Scope scope) {
+        Future<AssistantResponseDTO> future = futuresMap.get(getChatTaskId(threadId, scope));
+        if (future != null) future.cancel(true);
+    }
+
+    private static String getChatTaskId(String threadId, Scope scope) {
+        return "ai_chat_" + scope.userId() + "_" + scope.domainId() + "_" + scope.domainName() + "_" + threadId;
+    }
+
+    private AssistantResponseDTO runTask(String taskId, Callable<AssistantResponseDTO> task, InputDataDTO inputData) throws ProviderCallException {
+        AiCancellationToken cancellation = new AiCancellationToken();
+        inputData.setCancellationToken(cancellation);
         // Capture current RequestBean (thread-local) from caller thread
         RequestBean captured = SetCharacterEncodingFilter.getCurrentRequestBean();
 
@@ -60,10 +118,13 @@ public class AiTaskRegistry {
         Callable<AssistantResponseDTO> contextTask = () -> {
             RequestBean previous = SetCharacterEncodingFilter.getCurrentRequestBean();
             try {
+                if (cancellation.isCancelled()) throw new CancellationException();
                 if (captured != null) {
                     SetCharacterEncodingFilter.setCurrentRequestBean(captured);
                 }
-                return task.call();
+                AssistantResponseDTO result = task.call();
+                if (cancellation.isCancelled()) throw new CancellationException();
+                return result;
             } finally {
                 // Restore previous (avoid leaking context into pooled thread)
                 if (previous != null || captured != null) {
@@ -72,38 +133,61 @@ public class AiTaskRegistry {
             }
         };
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
-        // submit task
-        Future<AssistantResponseDTO> future = executor.submit(contextTask);
-
-        //store it
-        put(inputData.getAssistantId(), inputData.getTimestamp(), future, request);
+        FutureTask<AssistantResponseDTO> future = new CancellableTask(contextTask, cancellation);
+        if (futuresMap.putIfAbsent(taskId, future) != null) {
+            throw new IllegalStateException("An AI task with this identifier is already running");
+        }
 
         try {
+            executor.execute(future);
             // Return resposne
             return future.get();
         } catch (CancellationException e) {
-            // Task was cancelled - Its OK
-            return null;
+            return AssistantResponseDTO.fromError(e);
         } catch (ExecutionException e) {
-            //Remove it from map
-            remove(inputData.getAssistantId(), inputData.getTimestamp(), request);
-
             // unwrap cause
             Throwable cause = e.getCause();
+            if (cause instanceof CancellationException) return AssistantResponseDTO.fromError(cause);
+            if (cause instanceof ProviderCallException providerException) throw providerException;
             if (cause instanceof RuntimeException runtimeException) {
                 throw runtimeException;
             } else {
                 throw new ProviderCallException(cause);
             }
         } catch (InterruptedException e) {
-            //Remove it from map
-            remove(inputData.getAssistantId(), inputData.getTimestamp(), request);
-
+            future.cancel(true);
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Thread interrupted", e);
+            return AssistantResponseDTO.fromError(new CancellationException("AI request cancelled"));
+        } catch (RuntimeException e) {
+            future.cancel(true);
+            throw e;
+        } finally {
+            futuresMap.remove(taskId, future);
         }
+    }
+
+    /** Couples cancellation through the registry or its exposed Future to the provider request. */
+    private static final class CancellableTask extends FutureTask<AssistantResponseDTO> {
+        private final AiCancellationToken cancellation;
+
+        private CancellableTask(Callable<AssistantResponseDTO> task, AiCancellationToken cancellation) {
+            super(task);
+            this.cancellation = cancellation;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            cancellation.cancel();
+            return super.cancel(mayInterruptIfRunning);
+        }
+    }
+
+    @Override
+    public void destroy() {
+        executor.shutdown();
+        futuresMap.values().forEach(future -> future.cancel(true));
+        futuresMap.clear();
+        executor.shutdownNow();
     }
 
     private final String getTaskId(Long assistantId, Long timestamp, HttpServletRequest request) throws IllegalStateException {
@@ -111,7 +195,11 @@ public class AiTaskRegistry {
         if(timestamp == null || timestamp < 1L) throw new IllegalStateException("Invalid param timestamp");
 
         Identity currentUser = UsersDB.getCurrentUser(request);
+        int userId = 0;
+        if(currentUser != null) {
+            userId = currentUser.getUserId();
+        }
 
-        return PREFIX + currentUser.getUserId() + "_" + assistantId + "_" + timestamp;
+        return PREFIX + userId + "_" + assistantId + "_" + timestamp;
     }
 }

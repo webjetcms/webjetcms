@@ -20,21 +20,27 @@ So we know two types of users:
 
 ## Filter by folder
 
-The page contains an external filter for sections (sub-folders) in the upper left corner, which allows filtering the displayed articles only for the selected blog section (folder). The default value **All sections** will display all articles from all sections (sub-folders).
+The left panel displays a folder tree, the right panel displays a list of articles. The default entry **All sections** displays articles from all available sections of the blog. Selecting a specific folder displays only its articles.
 
-The section selection itself is arranged as a tree structure, where deeper nested sections are lower. The user sees the full path to the section, and the main folder has the same name as their **login**, which in the example in the image is `bloggerPerm`.
+You can expand, search by name, and refresh folders using the button above the tree. Shared parent folders, such as **Applications** and **Blog**, maintain the hierarchy. If they are for navigation only, they have a different icon and cannot be selected as a section. The full path is displayed when you hover over the folder name.
+
+You can change the ratio of the tree width to the table width or set a fixed width of the tree in pixels using the **Settings** button above the tree. The setting is saved for the logged in user separately for this application.
+
+The blogger sees his folders, the blogger administrator the folders of bloggers in the current domain. The tree also respects the permission to display hidden folders. The section selection is preserved when searching, refreshing the tree, and reopening the address with the folder ID after the `#` character. On a narrow screen, the list of articles is displayed below the tree.
+
+If no folders are available, an informational message is displayed and adding articles and sections is disabled.
 
 ![](groupFilter_allValues.png)
 
 ## Adding an article
 
-You can create a new article using the ![](add_article.png ":no-zoom" button). Working with articles is similar to working with [regular web pages](../../webpages/README.md).
+Create a new article using the button <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button> Working with articles is similar to working with [regular web pages](../../webpages/README.md).
 
 ![](editor-text.png)
 
-For a new article, the placement in the tree structure is preset according to the value in the external section filter (e.g. /Applications/Blog/bloggerPerm).
+For a new article, the placement in the tree structure is preset according to the folder selected in the tree (e.g. /Applications/Blog/bloggerPerm).
 
-!>**Warning:** if you try to create a new article without selecting a section in the external filter (with its value **All sections**) the Uncategorized section will be set, or the first folder to which the blogger has rights. You can change the section in the editor on the Basic tab by setting the Parent folder value.
+!>**Warning:** if you try to create a new article with **All sections** selected, the Uncategorized section will be set, or the first folder the blogger has rights to. You can change the section in the editor on the Basic tab by setting the Parent folder value.
 
 The article title will be displayed in the article list. If you want to also display a short introduction in the list, enter it in the Annotation field in the article editor in the Perex tab. We recommend also entering an illustrative image in the Image field in the Perex tab.
 
@@ -46,19 +52,17 @@ On the web page, the article will be displayed according to the defined design t
 
 ## Adding a section
 
-You can create a new section using the ![](add_folder.png ":no-zoom") button.
+Create a new section using the button above the tree. <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button> .
 
-If you try to create a new section without selecting a target folder in the external filter, you will be prompted to select one.
+If you try to create a new section without selecting a destination folder in the tree, you will be prompted to select one.
 
 ![](adding_folder_warning.png)
 
-After selecting a folder and pressing the ![](add_folder.png ":no-zoom") button, you will be prompted to enter a name for the new section (sub-folder).
+After selecting a folder and pressing the button <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button> The **Add Section** dialog opens. It displays the selected parent folder and the required **Folder Name** field.
 
 ![](adding_folder_info.png)
 
-You start the process by confirming the action with the ![](adding_folder_info_button.png ":no-zoom") button.
-
-If a name for the new section is not entered, or an error occurs, the section creation process will be interrupted and you will be informed via notification.
+An empty name, a name containing only spaces, or the name of an existing section in the same folder cannot be saved. An error will be displayed next to the field and the dialog will remain open so you can correct the name.
 
 ![](adding_folder_error.png)
 
@@ -66,6 +70,6 @@ If the section is successfully created, you will be notified.
 
 ![](adding_folder_success.png)
 
-Immediately after the section is successfully created, its value is automatically filled into the external filter.
+After successfully creating a section, the tree will automatically refresh. You will find the new section under the selected parent folder.
 
 ![](groupFilter_allValues_withNew.png)

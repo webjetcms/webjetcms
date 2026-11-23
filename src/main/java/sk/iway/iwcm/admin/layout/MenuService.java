@@ -20,6 +20,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ModuleInfo;
@@ -51,6 +52,11 @@ public class MenuService {
 
     //mapovanie starej a novej URL
     static final Map<String, String> menuLinkReplaces;
+
+    //Permissions for pages that do not have a menu entry.
+    private static final Map<String, String> pagePermissions = Map.of(
+        "/admin/v9/settings/stat-browser-migration/", "modUpdate|users.edit_admins"
+    );
 
     static {
         groupsMap = new HashMap<>();
@@ -190,6 +196,8 @@ public class MenuService {
         }
         String[][] linkReplaces = {
             //{ "", ""},
+            //static assets
+            { "/components/grideditor/support/font-awesome-4.7.0/css/font-awesome.min.css", "/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css?v=4.7.0"},
             //welcome
             { "/admin/", "/admin/v9/"},
             //apps
@@ -202,7 +210,8 @@ public class MenuService {
             { "/components/qa/admin_list.jsp", "/apps/qa/admin/"},
             { "/components/export/admin_list.jsp", "/apps/export-dat/admin/"},
             { "/components/enumerations/admin_enum_list.jsp", "/apps/enumeration/admin/"},
-            { "/components/enumerations/admin_enum_type_list.jsp", "/apps/enumeration/admin/enumeration-type/"},
+            { "/components/enumerations/admin_enum_type_list.jsp", "/apps/enumeration/admin/"},
+            { "/apps/enumeration/admin/enumeration-type/", "/apps/enumeration/admin/"},
             { "/components/banner/banner_stat.jsp", "/apps/banner/admin/banner-stat/"},
             { "/components/proxy/admin_list.jsp", "/apps/proxy/admin/"},
             { "/components/news/admin_news_list.jsp", "/apps/news/admin/"},
@@ -612,6 +621,9 @@ public class MenuService {
         Prop prop = Prop.getInstance();
 
         List<ModuleInfo> allModules = Modules.getInstance().getAvailableModules();
+        if (UserDetailsService.isUsersSplitByDomain()) {
+            allModules = Modules.filterDomain(allModules, CloudToolsForCore.getDomainName());
+        }
         sortModules(allModules);
 
         //ziskaj zoznam skupin prav a sprav hashtabulku CSS tried
@@ -783,6 +795,10 @@ public class MenuService {
         if (normalized.startsWith("/")==false) normalized = "/"+normalized;
         normalized = Tools.replace(normalized, "//", "/");
         normalized = Tools.replace(normalized, "/dist/views/", "/");
+
+        String pageUrl = normalized.endsWith("/") ? normalized : normalized + "/";
+        String perms = pagePermissions.get(pageUrl.toLowerCase(Locale.ROOT));
+        if (perms != null) return perms;
 
         List<ModuleInfo> allModules = Modules.getInstance().getModules();
         for (ModuleInfo m : allModules) {

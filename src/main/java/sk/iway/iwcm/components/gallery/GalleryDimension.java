@@ -23,11 +23,18 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_GALLERY)
 @Table(name = "gallery_dimension")
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "sizes", title = "components.carousel_slider.sliderDimensions"),
+    @DataTableTab(id = "watermark", title = "components.gallery.watermark")
+})
 public class GalleryDimension {
 
     @PreUpdate

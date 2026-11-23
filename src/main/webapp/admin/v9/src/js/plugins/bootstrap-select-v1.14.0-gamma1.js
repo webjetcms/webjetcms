@@ -1223,7 +1223,7 @@
                 :
                 ' placeholder="' + htmlEscape(this.options.liveSearchPlaceholder) + '"'
               ) +
-              ' role="combobox" aria-label="Search" aria-controls="' + this.selectId + '" aria-autocomplete="list">' +
+              ' role="combobox" aria-label="' + htmlEscape(this.options.liveSearchPlaceholder || 'Search') + '" aria-controls="' + this.selectId + '" aria-autocomplete="list">' +
           '</div>';
       }
 

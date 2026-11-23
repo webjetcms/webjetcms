@@ -12,9 +12,19 @@ let originalImageLocation = "/images/gallery/test/editor/";
 let openAiId = "OpenAI";
 let geminiId = "Gemini";
 let openRouterId = "OpenRouter";
+let localTextId = "Lokálny model na generovanie textu";
+let localTranslateId = "Lokálny prekladový model";
+
+// The pipeline deploys these bundles under WEB-INF on the application server.
+const localTextModelBundle = "/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip";
+const localTranslateModelBundle = "/WEB-INF/local-ai-models/m2m100-418m-int8.zip";
+const localAssistantPrefix = "local-ai-autotest";
+const localTextAssistant = localAssistantPrefix + "-text";
+const localTranslateAssistant = localAssistantPrefix + "-translate";
 
 let defaultValue = "TO CHANGE TEXT";
 let containerAiContent = "#toast-container-ai-content";
+const finishedToast = "#toast-container-ai.ai-status-success, #toast-container-ai.ai-status-error";
 let btnAiAction = "button.btn-ai-action";
 let btnAiAssistants = "button.btn-ai[aria-label='AI asistent']";
 
@@ -82,13 +92,50 @@ Scenario('ai_assistants editor logic', async ({I, DTE}) => {
 
         DTE.selectOption("provider", openAiId);
         I.seeElement("#DTE_Field_model");
-        let optionsD = ["gpt-4.1", "gpt-4.1-nano", "gpt-4.1-mini"];
-        checkAutocomplete(I, "DTE_Field_model", "gpt-4.1", null, optionsD);
+        await checkModelAutocomplete(I, "gpt");
 
         DTE.selectOption("provider", geminiId);
         I.seeElement("#DTE_Field_model");
-        let optionsE = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite"];
-        checkAutocomplete(I, "DTE_Field_model", "gemini-2.5", null, optionsE);
+        await checkModelAutocomplete(I, "gemini");
+});
+
+Scenario('AI instructions textarea preserves shared gutter and keyboard behavior', async ({I, DT, DTE}) => {
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
+    const textarea = "#datatableInit_modal #DTE_Field_instructions";
+    const gutter = "#datatableInit_modal .DTE_Field_Name_instructions .md-textarea-editor__lines";
+    const source = "autotest instructions\nSecond instruction";
+    let initialValue;
+
+    for (let opening = 0; opening < 2; opening++) {
+        I.clickCss("#datatableInit_wrapper button.buttons-create");
+        DTE.waitForEditor();
+        try {
+            I.clickCss("#pills-dt-datatableInit-instructions-tab");
+            I.waitForVisible(textarea, 10);
+            I.assertEqual(await I.grabNumberOfVisibleElements(gutter), 1, "Opening the editor must create exactly one gutter");
+            const value = await I.grabValueFrom(textarea);
+            if (opening === 0) initialValue = value;
+            else I.assertEqual(value, initialValue, "Cancelling must discard instruction changes");
+
+            I.fillField(textarea, source);
+            I.assertEqual(await I.grabTextFrom(gutter), "1\n2", "Typing must update logical line numbers");
+            I.pressKey("End");
+            I.pressKey("Tab");
+            I.assertEqual(await I.grabValueFrom(textarea), source + "\t", "The AI editor must retain its Tab indentation shortcut");
+            const focusedField = await I.executeScript(() => document.activeElement.id);
+            I.assertEqual(focusedField, "DTE_Field_instructions", "Tab indentation must keep focus in the AI instructions textarea");
+
+            I.doubleClick(textarea);
+            I.waitForInvisible(gutter, 10);
+            const wrappedWhitespace = await I.grabCssPropertyFrom(textarea, "white-space");
+            I.assertEqual(wrappedWhitespace, "break-spaces", "Double-click must retain the instructions wrapping toggle");
+            I.doubleClick(textarea);
+            I.waitForVisible(gutter, 10);
+        } finally {
+            DTE.cancel();
+        }
+    }
 });
 
 Scenario('ai buttons usage', async ({I, DTE}) => {
@@ -130,18 +177,51 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
     });
 
     I.say("Test image values for generation");
-    I.click( locate(btnAiAction).withText("Vytvoriť nový obrázok") );
-    within(containerAiContent, () => {
-        I.seeElement("textarea#ai-user-prompt");
-
-        I.say("Test that openai bonus content is here");
-        I.seeElement( locate("div.bonus-content").find("input#bonusContent-imageCount") );
-        I.seeElement( locate("div.bonus-content").find("select#bonusContent-imageSize") );
-        I.seeElement( locate("div.bonus-content").find("select#bonusContent-imageQuality") );
+    I.click(
+        locate(btnAiAction)
+            .withText("Vytvoriť nový obrázok")
+            .withChild(locate("span.provider").withText(openAiId))
+    );
+    I.seeElement(locate(containerAiContent).find("textarea#ai-user-prompt"));
+    await checkImageOptions(I, {
+        count: true,
+        size: true,
+        quality: true,
+        ratio: false
     });
 });
 
-/* !!! LOCAL AI sa sa nedá otestovať, nakoľko server beží na Linuxe !!! */
+Scenario('local models return text', async ({I, DT, DTE, Document}) => {
+    Document.setConfigValue("ai_localTextModelBundlePath", localTextModelBundle);
+    Document.setConfigValue("ai_localTranslateModelBundlePath", localTranslateModelBundle);
+
+    await deleteLocalAssistants(I, DT);
+    createLocalAssistant(
+        I,
+        DT,
+        DTE,
+        localTextAssistant,
+        localTextId,
+        "Reply with one short word related to the input text."
+    );
+    createLocalAssistant(
+        I,
+        DT,
+        DTE,
+        localTranslateAssistant,
+        localTranslateId,
+        'Translator: {"sourceLanguage":"en","targetLanguage":"sk"}'
+    );
+
+    await assertLocalAssistantReturnsText(I, DTE, localTextAssistant, localTextId, "A green forest");
+    await assertLocalAssistantReturnsText(I, DTE, localTranslateAssistant, localTranslateId, "Good morning");
+});
+
+Scenario('cleanup local model assistants', async ({I, DT, Document}) => {
+    await deleteLocalAssistants(I, DT);
+    Document.setConfigValue("ai_localTextModelBundlePath", "");
+    Document.setConfigValue("ai_localTranslateModelBundlePath", "");
+});
 
 
 let testUsersArray = ["tester", "tester4", "tester3", "webjet"];
@@ -195,6 +275,8 @@ async function textAnswerTest(I, DTE, aiProviderId) {
         I.assertEqual(defaultValue, valueB);
 
     I.say("TRY the TEXT answer WITH stream");
+        I.clickCss('#toast-container-ai .toast-close-button');
+        I.waitForInvisible('#toast-container-ai', 10);
         I.clickCss("#pills-dt-datatableInit-perex-tab");
         I.fillField("#DTE_Field_htmlData", defaultValue);
 
@@ -215,7 +297,7 @@ Scenario('test OpenAI AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openAiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openAiId, "ti.ti-photo-x");
-    waiToEndImage(I);
+    waitForImageResponse(I);
     checkImages(I, 1);
     checkImageInfo(I);
 
@@ -246,7 +328,7 @@ Scenario('test Gemini AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", geminiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", geminiId, "ti.ti-photo-x");
-    waiToEndImage(I);
+    waitForImageResponse(I);
     checkImages(I, 1, false);
     checkImageInfo(I);
 });
@@ -257,7 +339,7 @@ Scenario('test OpenRouter AI image answers - no user input', async ({I, DTE}) =>
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openRouterId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openRouterId, "ti.ti-photo-x");
-    waiToEndImage(I);
+    waitForImageResponse(I);
     checkImages(I, 1, false);
     checkImageInfo(I);
 });
@@ -272,22 +354,49 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
 
     I.say("CHECK user input");
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
-
-    I.seeElement( locate(containerAiContent).find( locate(".bonus-content > div:nth-child(1) > label").withText("Počet obrázkov") ) );
-    I.seeElement( locate(containerAiContent).find(".bonus-content > div:nth-child(1) > input#bonusContent-imageCount") );
-    I.seeElement( locate(containerAiContent).find( locate(".bonus-content > div:nth-child(2) > label").withText("Rozmer") ) );
-    I.seeElement( locate(containerAiContent).find(".bonus-content > div:nth-child(2) > select#bonusContent-imageSize") );
-    I.seeElement( locate(containerAiContent).find( locate(".bonus-content > div:nth-child(3) > label").withText("Kvalita") ) );
-    I.seeElement( locate(containerAiContent).find(".bonus-content > div:nth-child(3) > select#bonusContent-imageQuality") );
+    await checkImageOptions(I, {
+        count: true,
+        size: ["auto", "1024x1024", "1024x1536", "1536x1024", "2048x2048", "2048x1152", "3840x2160", "2160x3840"],
+        quality: ["auto", "low", "medium", "high"],
+        ratio: false
+    });
 
     I.say("Request 2 images of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
     I.fillField(locate(containerAiContent).find("input#bonusContent-imageCount"), 2);
     I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
-    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openAiId, "ti.ti-photo-ai", true);
-    waiToEndImage(I, true);
+    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openAiId, "ti.ti-photo-ai");
+    waitForImageResponse(I);
     checkImages(I, 2);
+});
+
+Scenario('Image HTTP errors leave the working state and allow another request', async ({I, DTE}) => {
+    const routePattern = '**/admin/rest/ai/assistant/response-image/';
+    const errorText = 'autotest image gateway failure';
+    let requests = 0;
+    await I.mockRoute(routePattern, route => {
+        requests++;
+        return route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: errorText }) });
+    });
+    try {
+        openPageAndPerexTab(I, DTE);
+        startAssistant(I, "perexImage", "Vytvoriť nový obrázok", geminiId);
+        I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "autotest image");
+        for (let attempt = 0; attempt < 2; attempt++) {
+            I.click(locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")));
+            await I.waitForVisible('#toast-container-ai.ai-status-error', 10);
+            I.assertEqual(requests, attempt + 1, 'Retry must send a new request');
+            I.see(errorText, containerAiContent);
+            I.dontSeeElement('#toast-container-ai.ai-status-working');
+            I.dontSeeElement('#toast-container-ai .btn-ai-stop');
+            I.dontSeeElement('.DTE_Field_Name_perexImage.ai-loading');
+        }
+        I.clickCss('#toast-container-ai .toast-close-button');
+        DTE.cancel();
+    } finally {
+        await I.stopMockingRoute(routePattern);
+    }
 });
 
 Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
@@ -298,15 +407,19 @@ Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
 
     I.say("CHECK user input");
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
-
-    // GEMINI do not have image settings like OpenAI .. aka count, quality and size
+    await checkImageOptions(I, {
+        count: false,
+        size: false,
+        quality: false,
+        ratio: true
+    });
 
     I.say("Request image of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
     I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
-    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", geminiId, "ti.ti-photo-ai", true);
-    waiToEndImage(I, true);
+    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", geminiId, "ti.ti-photo-ai");
+    waitForImageResponse(I);
     checkImages(I, 1);
 });
 
@@ -318,15 +431,19 @@ Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) 
 
     I.say("CHECK user input");
     I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
-
-    // OpenRouter have image settings like OpenAI ... BUT we do not implement them
+    await checkImageOptions(I, {
+        count: true,
+        size: false,
+        quality: false,
+        ratio: true
+    });
 
     I.say("Request image of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
     I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
-    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openRouterId, "ti.ti-photo-ai", true);
-    waiToEndImage(I, true);
+    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openRouterId, "ti.ti-photo-ai");
+    waitForImageResponse(I);
     checkImages(I, 1, false);
 });
 
@@ -459,6 +576,80 @@ Scenario('logout', ({ I }) => {
 
 /* Support functions */
 
+function createLocalAssistant(I, DT, DTE, name, provider, instructions) {
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor();
+
+    I.fillField("#DTE_Field_name", name);
+    I.fillField("#DTE_Field_description", name);
+
+    I.clickCss("#pills-dt-datatableInit-action-tab");
+    DTE.selectOption("action", "Vygenerovať text");
+    I.fillField("#DTE_Field_className", "sk.iway.iwcm.doc.DocDetails");
+    I.fillField("#DTE_Field_fieldFrom", "fieldS");
+    I.fillField("#DTE_Field_fieldTo", "fieldS");
+
+    I.clickCss("#pills-dt-datatableInit-provider-tab");
+    DTE.selectOption("provider", provider);
+
+    I.clickCss("#pills-dt-datatableInit-instructions-tab");
+    I.fillField("#DTE_Field_instructions", instructions);
+    DTE.save();
+}
+
+async function assertLocalAssistantReturnsText(I, DTE, assistantName, provider, inputText) {
+    openPageAndPerexTab(I, DTE);
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
+    I.fillField("#DTE_Field_fieldS", inputText);
+
+    startAssistant(I, "fieldS", assistantName, provider);
+    I.waitForText(
+        "Hotovo! Nepoužil sa žiadny token.",
+        180,
+        containerAiContent + " > .current-status > span"
+    );
+    I.waitForVisible(containerAiContent + " button.btn-ai-undo", 5);
+
+    const outputText = await I.grabValueFrom("#DTE_Field_fieldS");
+    I.assertNotEqual(outputText.trim(), "");
+    I.assertNotEqual(outputText, inputText);
+}
+
+async function deleteLocalAssistants(I, DT) {
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
+    DT.filterContains("name", localAssistantPrefix);
+
+    const matchingRows = await I.grabNumberOfVisibleElements(
+        locate("#datatableInit tbody td").withText(localAssistantPrefix)
+    );
+    if (matchingRows > 0) {
+        DT.deleteAll();
+        DT.waitForLoader();
+    }
+}
+
+/** Checks real provider suggestions without depending on a fixed model catalogue. */
+async function checkModelAutocomplete(I, term) {
+    const field = "#DTE_Field_model";
+    // Scope assertions to this field's menu and let its initial focus search finish first.
+    const menuId = await I.executeScript(() => window.jQuery("#DTE_Field_model").autocomplete("widget").attr("id"));
+    const menu = "#" + menuId;
+    I.click(field);
+    I.waitForVisible(menu, 10);
+    I.fillField(field, term);
+    I.waitForText(term, 10, menu);
+    // The open menu can still contain the previous query during autocomplete's debounce.
+    await I.retry({ retries: 10, minTimeout: 500, maxTimeout: 500 }).seeNumberOfElements(
+        menu + ' li.ui-menu-item:not(:has-text("' + term + '"))', 0);
+    const suggestions = await I.grabTextFromAll(menu + " li.ui-menu-item");
+    I.assertAbove(suggestions.length, 0, "The provider must return matching models");
+    I.click(locate(menu + " li.ui-menu-item").first());
+    I.seeInField(field, suggestions[0].trim());
+}
+
 function checkAutocomplete(I, id, value, valueToSelect, options) {
     I.fillField("#" + id, value);
     I.waitForVisible('ul.dt-autocomplete-select:not([style*="display: none"])');
@@ -492,47 +683,33 @@ function startAssistant(I, field, assistantName, provider) {
     I.waitForVisible("div.toast.toast-info");
 }
 
-function checkBaseWaitDialog(I, assistantName, provider, icon, hasContainer = false) {
-    I.say("checkBaseWaitDialog, " + assistantName + ", " + provider + ", " + icon + ", " + hasContainer);
+function checkBaseWaitDialog(I, assistantName, provider, icon) {
+    I.say("checkBaseWaitDialog, " + assistantName + ", " + provider + ", " + icon);
 
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > button").withText("Späť") );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > i." + icon) );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span").withText(assistantName) );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span.provider").withText("(" + provider + ")") );
 
-    if ("Vytvoriť zoznam kľúčových slov" === assistantName || "Generate ALT tag" === assistantName) {
-        return; //response is too fast, do not check AI working status
-    }
-
-    if(hasContainer === false) {
-        I.waitForElement( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 10 );
-        I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-exclamation-circle") );
-    } else {
-        I.waitForElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 10 );
-        I.seeElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span > i.ti.ti-exclamation-circle") );
-    }
+    // A fast provider can finish before the dialog header has been checked.
+    const workingIcon = containerAiContent + ' .current-status > span:has-text("AI už na tom pracuje...") > i.ti.ti-exclamation-circle';
+    I.waitForVisible(workingIcon + ", " + finishedToast, 10);
 }
 
 function waiToEndText(I) {
     I.say("waiToEndText");
 
     I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-    I.seeElement( locate(containerAiContent + " > .current-status > span").withText("Hotovo! Bolo použitých") );
+    // Include the provider's error text in the assertion when the request fails.
+    I.see("Hotovo! Bolo použitých", containerAiContent + " > .current-status > span");
     I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
 }
 
-function waiToEndImage(I, hasContainer = false) {
-    I.say("waiToEndImage");
-
-    if(hasContainer === false) {
-        I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
-        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
-    } else {
-        I.waitForInvisible( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 180 );
-        I.seeElement( locate(containerAiContent + "  > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
-        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
-    }
+function waitForImageResponse(I) {
+    I.waitForVisible(finishedToast, 180);
+    // Include the provider's message in the failure report for either prompt layout.
+    I.see("Hotovo! Bolo použitých", containerAiContent + " .current-status");
+    I.seeElement(containerAiContent + " > .chat-error-container > .current-status i.ti-circle-check");
 
     I.seeElement( locate(containerAiContent + " > div").withText("Názov obrázku") );
 
@@ -573,4 +750,50 @@ function checkImageInfo(I) {
 
     I.seeElement( locate(containerAiContent + " > .image-info > div:nth-child(2) > label").withText("Umiestnenie") );
     I.seeInField( locate(containerAiContent + " > .image-info > div:nth-child(2)").find("input.form-control"), originalImageLocation);
+}
+
+async function checkImageOptions(I, expected) {
+    I.say("checkImageOptions");
+
+    const controls = {
+        count: {
+            field: "imageCount",
+            selector: "input#bonusContent-imageCount",
+            label: "Počet obrázkov"
+        },
+        size: {
+            field: "imageSize",
+            selector: "select#bonusContent-imageSize",
+            label: "Rozmer"
+        },
+        quality: {
+            field: "imageQuality",
+            selector: "select#bonusContent-imageQuality",
+            label: "Kvalita"
+        },
+        ratio: {
+            field: "imageRatio",
+            selector: "select#bonusContent-imageRatio",
+            label: "Pomer strán"
+        }
+    };
+
+    for (const [name, control] of Object.entries(controls)) {
+        const selector = `${containerAiContent} ${control.selector}`;
+        const expectation = expected[name];
+        if (expectation === false) {
+            I.dontSeeElement(selector);
+            continue;
+        }
+
+        I.seeElement(selector);
+        I.seeElement(
+            locate(`${containerAiContent} label[for='bonusContent-${control.field}']`)
+                .withText(control.label)
+        );
+        if (Array.isArray(expectation)) {
+            const values = await I.grabAttributeFromAll(`${selector} option`, "value");
+            I.assertDeepEqual(values, expectation, `Unexpected ${name} image options`);
+        }
+    }
 }

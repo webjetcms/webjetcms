@@ -1,20 +1,26 @@
+.dropdown-menu {
+    --bs-dropdown-link-color: var(--wj-secondary);
+    --bs-dropdown-link-hover-color: var(--bs-dropdown-link-color);
+    --bs-dropdown-link-active-color: var(--bs-dropdown-link-color);
+    --bs-dropdown-link-active-bg: var(--wj-nice-gray);
+}
+
 .bootstrap-select {
     button.dropdown-toggle::after {
         //bs5 vznikala duplicita sipky pre otvorenie selectu
         display: none;
     }
     .dropdown-menu {
-        li.active a {
-            color: $white;
-            small {
-                color: $white !important;
-            }
-        }
-        a.dropdown-item:hover {
+        a.dropdown-item.active, a.dropdown-item:hover, a.dropdown-item:focus {
             background-color: $nice-gray;
         }
-        a.dropdown-item.active:hover {
-            background-color: $primary;
+        a.dropdown-item.active small {
+            color: inherit !important;
+            &.text-muted { color: var(--bs-secondary-color) !important; }
+        }
+        a.dropdown-item.selected {
+            background-color: $menu-selected-bg;
+            color: $menu-selected-color;
         }
     }
     .btn-outline-secondary:hover, .btn-outline-secondary.dropdown-toggle.show {
@@ -40,7 +46,7 @@
 .dropdown-item:hover, .dropdown-item:focus {
     background-color: $nice-gray;
 }
-div.dropdown ul.dropdown-menu li a {
+div.dropdown ul.dropdown-menu li .dropdown-item {
     //ked som klikol a drzal mys v hlavicke na dropdowne mena, alebo zmeny domeny zrazu bolo pismo biele
     color: $secondary;
 

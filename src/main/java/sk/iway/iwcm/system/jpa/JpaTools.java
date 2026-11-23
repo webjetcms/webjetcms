@@ -4,10 +4,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 
 import org.eclipse.persistence.expressions.Expression;
@@ -20,13 +22,17 @@ import org.eclipse.persistence.queries.ReadAllQuery;
 import org.eclipse.persistence.queries.ReportQuery;
 import org.eclipse.persistence.queries.ReportQueryResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.jpa.repository.JpaContext;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -34,6 +40,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.DataSource;
 import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
 import sk.iway.iwcm.utils.Pair;
 
 /**
@@ -52,6 +59,47 @@ public class JpaTools
 {
 	@Autowired
     private JpaContext jpaContext;
+
+    @Autowired
+    @Lazy
+    @Qualifier("ragPersistenceContext")
+    private ApplicationContext ragPersistenceContext;
+
+	/**
+	 * Builds a Criteria IN predicate with the same chunk limit as DB.getInCondition.
+	 * Null/empty collections produce false; null items retain SQL NULL semantics.
+	 * Callers that omit an empty filter must keep that guard before calling this method.
+	 */
+	public static <T> Predicate in(jakarta.persistence.criteria.Expression<T> field, Collection<? extends T> values, CriteriaBuilder builder)
+	{
+		return membership(field, values, builder, false);
+	}
+
+	/** Builds a chunked exclusion; null/empty collections produce true. */
+	public static <T> Predicate notIn(jakarta.persistence.criteria.Expression<T> field, Collection<? extends T> values, CriteriaBuilder builder)
+	{
+		return membership(field, values, builder, true);
+	}
+
+	private static <T> Predicate membership(jakarta.persistence.criteria.Expression<T> field, Collection<? extends T> values, CriteriaBuilder builder, boolean negated)
+	{
+		if (values == null || values.isEmpty()) return negated ? builder.conjunction() : builder.disjunction();
+		int maxItems = DB.getInClauseMaxItems();
+		List<Predicate> predicates = new ArrayList<>();
+		List<T> chunk = new ArrayList<>();
+		for (T value : values)
+		{
+			chunk.add(value);
+			if (chunk.size() == maxItems)
+			{
+				predicates.add(field.in(chunk));
+				chunk = new ArrayList<>();
+			}
+		}
+		if (chunk.isEmpty() == false) predicates.add(field.in(chunk));
+		Predicate predicate = predicates.size() == 1 ? predicates.get(0) : builder.or(predicates.toArray(new Predicate[0]));
+		return negated ? builder.not(predicate) : predicate;
+	}
 
 	/**
 	 * Vrati EntityManager pre zadany nazov DB spojenia (v povodnom JPA to je persistenceUnit)
@@ -496,12 +544,15 @@ public class JpaTools
 	}
 
 	/**
-	 * Urci, ci dane meno datasource je urcene pre JPA, je to len iwcm, alebo nazov obsahujuci jpa (je to takto kvoli rychlosti startu WJ a optimalizacii pamate)
+	 * Urci, ci dane meno datasource je urcene pre legacy JPA bootstrap. Je to iwcm
+	 * alebo nazov obsahujuci jpa, okrem rag_jpa, ktory ma samostatnu Spring konfiguraciu.
 	 * @param name
 	 * @return
 	 */
 	public static boolean isJPADatasource(String name)
 	{
+		// RAG has a dedicated Spring EntityManager configuration.
+		if ("rag_jpa".equals(name)) return false;
 		if ("iwcm".equals(name) || name.indexOf("jpa")!=-1) return true;
 		return false;
 	}
@@ -580,21 +631,25 @@ public class JpaTools
 			//remove predicates with name groupId
 			List<Predicate> predicatesToRemove = new ArrayList<>();
 			for (Predicate p : predicates) {
-				if (p instanceof CompoundExpressionImpl) {
-					CompoundExpressionImpl predicate = (CompoundExpressionImpl) p;
-					if (predicate.getChildExpressions().size()>0 && predicate.getChildExpressions().get(0) instanceof PathImpl) {
-						@SuppressWarnings("rawtypes")
-						PathImpl path = (PathImpl) predicate.getChildExpressions().get(0);
-						if (path.getCurrentNode().getName().equals(name)) {
-							predicatesToRemove.add(predicate);
-						}
-					}
-				}
+				if (isPredicateForField(p, name)) predicatesToRemove.add(p);
 			}
 			predicates.removeAll(predicatesToRemove);
 		} catch (Exception e) {
 			Logger.error(e);
 		}
+	}
+
+	/** Recognizes positive field predicates and their OR chunks, preserving exclusions and mixed filters. */
+	private static boolean isPredicateForField(jakarta.persistence.criteria.Expression<?> expression, String name)
+	{
+		if (expression instanceof CompoundExpressionImpl == false) return false;
+		List<jakarta.persistence.criteria.Expression<?>> children = ((CompoundExpressionImpl) expression).getChildExpressions();
+		if (children.isEmpty()) return false;
+		if (children.get(0) instanceof PathImpl)
+			return name.equals(((PathImpl<?>) children.get(0)).getCurrentNode().getName());
+		if (expression instanceof Predicate predicate && predicate.isNegated() == false && predicate.getOperator() == Predicate.BooleanOperator.OR)
+			return children.stream().allMatch(child -> isPredicateForField(child, name));
+		return false;
 	}
 
 	/**
@@ -603,6 +658,9 @@ public class JpaTools
      * @return
      */
     private JpaEntityManager getSpringEntityManagerImpl(Class<?> clazz) {
+        if (EmbeddingChunkEntity.class.isAssignableFrom(clazz)) {
+            return (JpaEntityManager) ragPersistenceContext.getBean(JpaContext.class).getEntityManagerByManagedType(clazz);
+        }
         return (JpaEntityManager) jpaContext.getEntityManagerByManagedType(clazz);
     }
 

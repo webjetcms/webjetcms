@@ -1,10 +1,15 @@
 package sk.iway.iwcm.system.elfinder;
 
+import java.util.Locale;
+
 import cn.bluejoe.elfinder.service.FsItem;
 import cn.bluejoe.elfinder.service.FsSecurityChecker;
 import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.file_archiv.FileArchivSupportMethodsService;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.users.UsersDB;
 
 public class FsSecurityCheckForAll implements FsSecurityChecker
@@ -23,7 +28,8 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isLocked(FsService fsService, FsItem fsi)
 	{
-		return _locked;
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(item.getFile().getVirtualPath())) return true;
+		return _locked || isFileArchiveReadOnly(fsService, fsi);
 	}
 
 	public boolean isReadable()
@@ -34,6 +40,13 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isReadable(FsService fsService, FsItem fsi)
 	{
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(item.getFile().getVirtualPath())) return false;
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
+            String path = item.getFile().getVirtualPath();
+            Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
+            String folder = item.getFile().isDirectory() ? path : path.substring(0, path.lastIndexOf('/') + 1);
+            return user != null && user.isAdmin() && user.isFolderWritable(folder);
+        }
 		return _readable;
 	}
 
@@ -45,6 +58,12 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	@Override
 	public boolean isWritable(FsService fsService, FsItem fsi)
 	{
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(item.getFile().getVirtualPath())) return false;
+        if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
+            return isReadable(fsService, fsi);
+        }
+		if (isFileArchiveReadOnly(fsService, fsi)) return false;
+
 		if (fsi.getVolume() instanceof IwcmActualPageFsVolume)
 		{
 			return ((IwcmActualPageFsVolume)fsi.getVolume()).isWritable(fsi);
@@ -72,6 +91,32 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 		return _writable;
 	}
 
+	private boolean isFileArchiveReadOnly(FsService fsService, FsItem fsi)
+	{
+		if (!(fsService instanceof sk.iway.iwcm.system.elfinder.FsService iwcmFsService)) return false;
+
+		int selectedType = iwcmFsService.getSelectedType();
+		if (selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_LINK &&
+			selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_IMAGES &&
+			selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_MULTIMEDIA &&
+			selectedType != sk.iway.iwcm.system.elfinder.FsService.TYPE_VIDEOS)
+		{
+			return false;
+		}
+
+		if (fsi.getVolume() instanceof IwcmArchivFsVolume) return true;
+		if (!(fsi instanceof IwcmFsItem iwcmFsItem)) return false;
+
+		String archivePath = FileArchivSupportMethodsService.normalizePath(FileArchivatorKit.getArchivPath());
+		String itemPath = FileArchivSupportMethodsService.normalizePath(iwcmFsItem.getFile().getVirtualPath());
+		return Tools.isNotEmpty(archivePath) && Tools.isNotEmpty(itemPath) && normalizePathForComparison(itemPath).startsWith(normalizePathForComparison(archivePath));
+	}
+
+	private String normalizePathForComparison(String path)
+	{
+		return path.toLowerCase(Locale.ROOT).replaceAll("[. ]+/", "/");
+	}
+
 	public void setLocked(boolean locked)
 	{
 		_locked = locked;
@@ -87,4 +132,4 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 		_writable = writable;
 	}
 
-} 
+}

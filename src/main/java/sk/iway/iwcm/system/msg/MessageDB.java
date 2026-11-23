@@ -45,7 +45,7 @@ public class MessageDB
 {
 	private static final String CONTEXT_NAME = "sk.iway.iwcm.system.msg.MessageDB";
 
-	public synchronized static MessageDB getInstance(boolean forceRefresh)
+	public static synchronized MessageDB getInstance(boolean forceRefresh)
 	{
 		//try to get it from server space
 		if (forceRefresh == false)
@@ -58,17 +58,17 @@ public class MessageDB
 				return (messageDB);
 			}
 		}
-		return (new MessageDB());
+		return (new MessageDB(forceRefresh));
 	}
 
-	private MessageDB()
+	private MessageDB(boolean forceRefresh)
 	{
 		//remove
 		Constants.getServletContext().removeAttribute(CONTEXT_NAME);
 		//save us to server space
 		Constants.getServletContext().setAttribute(CONTEXT_NAME, this);
 
-		ClusterDB.addRefresh(MessageDB.class);
+		if (forceRefresh) ClusterDB.addRefresh(MessageDB.class);
 	}
 
 	public boolean saveMessage(HttpSession session, AdminMessageBean msg)

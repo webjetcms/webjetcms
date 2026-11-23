@@ -63,6 +63,19 @@ body.modal-open {
             margin-bottom: 0;
         }
 
+        .webpage-http-headers pre {
+            font-size: 13px;
+            min-height: 2lh;
+
+            &[aria-busy="true"] {
+                opacity: 0.65;
+            }
+
+            @media (prefers-reduced-motion: no-preference) {
+                transition: opacity 150ms ease;
+            }
+        }
+
         hr+h5 {
             margin-top: 30px;
         }
@@ -145,6 +158,9 @@ body.modal-open {
                 .col-sm-7 { width: 99%; }
                 textarea { width: 100%; }
             }
+        }
+        .DTE_Field_Type_boolean {
+            padding-top: 5px;
         }
         .form-group.row.DTE_Field_Type_wysiwyg {
             margin-top: 0px;
@@ -395,6 +411,17 @@ body.modal-open {
                 }
             }
         }
+
+        .DTE_Field {
+            div.form-group-tooltip {
+                .btn-tooltip {
+                    &:hover, &:active, &:focus, &:focus-visible {
+                        background-color: $secondary;
+                        color: $white;
+                    }
+                }
+            }
+        }
     }
 
     &-header {
@@ -411,29 +438,8 @@ body.modal-open {
         }
 
         button.close, div.dialog-buttons button {
-            display: inline-block;
-            cursor: pointer;
-            color: $nice-gray-300;
-            font-size: 6px;
-
-            border: 1px solid $nice-gray-300;
-            border-radius: $border-radius;
-            padding: 5px 6px;
-
+            @include modal-window-button;
             margin-right: 4px;
-
-            .ti {
-                font-size: 18px;
-                color: $secondary;
-            }
-
-            &:hover {
-                color: $white;
-                background-color: $secondary;
-                .ti {
-                    color: $white;
-                }
-            }
         }
         button.close, div.dialog-buttons {
             position: absolute;
@@ -516,7 +522,7 @@ body.modal-open {
                 font-size: 20px;
                 vertical-align: text-bottom;
             }
-            div.DTE_Field_InputControl button.btn-outline-secondary {
+            div.DTE_Field_InputControl button.btn-outline-secondary:not(.close-custom-modal) {
                 i.ti {
                     font-size: 20px;
                     vertical-align: text-bottom;
@@ -854,7 +860,7 @@ div.DTE_Bubble_Background {
                         color: $secondary;
                     }
 
-                    &:hover {
+                    &:hover, &:active, &:focus, &:focus-visible {
                         color: $white;
                         background-color: $secondary;
                         .ti {
@@ -1261,6 +1267,9 @@ html.in-iframe-show-table {
             padding-top: 0px !important;
             padding-bottom: 0px !important;
             border: 0px;
+            div.dialog-buttons {
+                top: 0px;
+            }
             button {
                 z-index: 999;
                 position: absolute;
@@ -1362,6 +1371,10 @@ div.DTED.show[data-action=remove] {
 }
 
 //tootip MD format
+div.tooltip.wj-tooltip-hoverable {
+    pointer-events: auto;
+}
+
 div.tooltip.show {
     opacity: unset;
     div.tooltip-inner {

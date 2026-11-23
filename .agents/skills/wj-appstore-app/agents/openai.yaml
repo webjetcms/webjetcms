@@ -1,0 +1,4 @@
+interface:
+  display_name: "WJ AppStore App"
+  short_description: "Create a WebJET page component with guided intake"
+  default_prompt: "Use $wj-appstore-app to create a new WebJET CMS AppStore application."

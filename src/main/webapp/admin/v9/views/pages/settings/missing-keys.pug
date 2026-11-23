@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script.
+        window.helpLink = "/admin/settings/missing-keys/README";
         var missingKeysTable;
         window.domReady.add(function () {
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.MissingKeysDto')})];

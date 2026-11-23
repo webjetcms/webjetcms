@@ -111,7 +111,9 @@ public class TranslationKeyController extends DatatableRestControllerV2<Translat
         Map<String, String> searchMap = new HashMap<>();
 
         for (Map.Entry<String, String> paramsEntry : params.entrySet()) {
-            if (translationKeyService.checkSearchParam(paramsEntry.getKey())) {
+            if ("keyPrefix".equals(paramsEntry.getKey())) {
+                searchMap.put("keyPrefix", paramsEntry.getValue());
+            } else if (translationKeyService.checkSearchParam(paramsEntry.getKey())) {
                 String key = getCleanKey(paramsEntry.getKey());
                 String value = paramsEntry.getValue(); //getCleanValue(paramsEntry.getValue());
                 if ("updateDate".equals(key)) {

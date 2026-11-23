@@ -5,7 +5,7 @@ Součástí Page Builder je i vkládání připravených bloků. Jejich seznam s
 V kořenovém adresáři pro bloky můžete mít následující pod adresáře:
 
 - ```section``` - ​​pro bloky sekcí (modré označení v Page Builder)
-- ```container``` - ​​pro kontejnery (červené označení v Page Builder)
+- ```container``` - ​​pro kontejnery (růžové označení v Page Builder)
 - ```column``` - ​​pro sloupce (zelené označení v Page Builder)
 - ```content``` - ​​pro vkládané různé texty, tlačítka a podobně. Vkládají se pomocí ikony Bloky a žluté čáry, která se zobrazuje mezi bloky.
 
@@ -41,6 +41,8 @@ V každém z těchto podadresářů je třeba ještě vytvořit **skupiny bloků
     - big.jpg
     - contactus.html
 ```
+
+Nevkládejte do HTML bloků atribut `contenteditable`. Editovatelné oblasti spravuje Page Builder. Editor odstraňuje tento atribut bez ohledu na hodnotu (`true`, `false`, `plaintext-only` i prázdná hodnota) při načtení obsahu a před uložením, i když jej uživatel doplní v HTML režimu. Atributy potřebné během editování zůstávají v živém editoru, do databáze se neukládají.
 
 ## Název a značky bloku
 
@@ -190,7 +192,7 @@ Samotné karty nejsou tedy editovatelné, generují se automaticky. Editovateln�
 
 Atributy ID jednotlivých karet jsou generovány automaticky podle názvu karty. Pokud potřebujete použít specifický název je možné v HTML kódu nastavit hodnotu `data-title` na `.tab-pane` elementu.
 
-Všimněte si použití CSS třídy ```pb-not-container``` na hlavním kontejner elementu. To zajistí, že tento element nebude označen jako kontejner a za kontejnery budou považovány až jednotlivé karty. Každá karta používá CSS třídu ```pb-custom-container```, což zajistí zobrazení červeného rámu/nástrojové lišty kontejneru.
+Všimněte si použití CSS třídy ```pb-not-container``` na hlavním kontejner elementu. To zajistí, že tento element nebude označen jako kontejner a za kontejnery budou považovány až jednotlivé karty. Každá karta používá CSS třídu ```pb-custom-container```, což zajistí označení kontejneru růžovým rámečkem a zpřístupnění jeho nástrojů ve společné liště.
 
 Při zvolení možnosti přesunutí tabu (v nástrojové liště kontejneru) se automaticky zobrazí všechny karty, aby bylo možné snadno označit kartu, kde se má přesunout. To je zajištěno CSS stylem Page Builder.
 
@@ -510,11 +512,28 @@ Kompletní ukázka HTML kódu web stránky s ukázkovými sekcemi:
 </section>
 ```
 
+## Selektory struktury
+
+Page Builder a nabídka **Styly** v klasickém i Page Builder editoru používají čtyři společné konfigurační proměnné k rozpoznání sekce, kontejneru, řádku a sloupce. Pro vlastní grid nastavte příslušné CSS selektory přímo v těchto proměnných:
+
+| Konfigurační proměnná | Výchozí hodnota |
+| --- | --- |
+| `pageBuilderGridSectionSelector` | `section:not(.pb-not-section), div.pb-section` |
+| `pageBuilderGridContainerSelector` | `div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]` |
+| `pageBuilderGridRowSelector` | `div.row` |
+| `pageBuilderGridColumnSelector` | `div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]:not(.pb-not-column):not(.pb-column__content)` |
+
+Nabídka **Styly** v obou režimech čte selektory pouze z těchto čtyř proměnných. Stávající nastavení `pageBuilderGrid`, `pbCustomOptions` a `pbCustomSettings` zůstávají dostupná pro úpravu Page Buildera, ale nabídka **Styly** je automaticky nepřebírá. Pokud jimi měníte selektory, udržujte je shodné s uvedenými konfiguračními proměnnými.
+
+Vlastní selektor sloupce musí vyloučit i obal jeho obsahu (výchozí `.pb-column__content`), při vlastním prefixu použijte příslušnou třídu.
+
+Tyto čtyři proměnné mění pouze rozpoznávání prvků. Třídy přidávané při vložení nových bloků (`section_default_class`, `container_default_class`, `row_default_class`, `column_default_class`) a prefixy šířek sloupců (`me.column.valid_prefixes`) nastavujte nadále v `pbCustomSettings`, jako v následujícím příkladu.
+
 ## Podpůrný JavaScript kód
 
 Pokud potřebujete vlastní podpůrný JavaScript soubor (viz výše zmíněný `pagesupport.js`), můžete vytvořit soubor `/components/INSTALL_NAME/admin/pagesupport-custom.js`, který pokud existuje načte se po souboru `pagesupport.js`. Můžete tak doplnit vlastní funkce, nebo upravit standardní stávající funkce z [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
 
-Můžete také upravit některá nastavení, jako například seznam barev, upravit CSS selektory, nastavit šířku pro různá zařízení a podobně. Následující kód je pouze ukázkový, vložte jej do souboru `pagesupport-custom.js`:
+Můžete upravit například seznam barev, třídy nových bloků nebo šířku pro různá zařízení. Selektory řádků a sloupců pro vlastní grid nastavte přes `pageBuilderGridRowSelector` a `pageBuilderGridColumnSelector`. Následující kód je ukázkový, vložte jej do souboru `pagesupport-custom.js`:
 
 ```JavaScript
 window.pbCustomOptions = function(options) {
@@ -534,11 +553,10 @@ window.pbCustomOptions = function(options) {
 };
 
 window.pbCustomSettings = function(me) {
-    //redefine grid column content selector
+    // Configure row and column selectors through pageBuilderGridRowSelector and pageBuilderGridColumnSelector.
+    // Set classes for newly inserted blocks and column width prefixes.
     me.grid.section_default_class = 'section';
-    me.grid.row = 'div.grid, div[class*="pb-grid"]';
     me.grid.row_default_class = 'grid';
-    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
     me.grid.column_default_class = 'grid__col grid__col--12';
 
     me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']
@@ -600,6 +618,8 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 
 };
 ```
+
+Okno **Styl** zobrazuje vlastnosti v samostatně rozbalovacích skupinách. Funkce `pbBuildTabMenu` dostává původní konfiguraci `tabs` a `items`: `visible: false` skryje skupinu nebo všechny skupiny dané karty, `name` změní nadpis skupiny a vlastní pořadí položek se zachová. Pokud pořadí nezměníte, použije se nové výchozí pořadí začínající identifikací. Prázdné skupiny, například animace bez ovládacích prvků, se nezobrazují. Při otevření se rozbalí skupina `10` (Identifikace), případně první dostupná skupina.
 
 ## Vlastní funkce pro čištění HTML kódu
 

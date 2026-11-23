@@ -6,9 +6,45 @@ Analysis of the performance and load of the server, individual applications, dat
 
 The module provides the following options:
 
-- **Current values** - current values ​​of server load, memory and number of database connections.
+- **Current values** - current information about the server and the software used, server load values, memory, number of database connections and character encoding.
 
 ![](actual.png)
+
+The top section shows free disk space and continuously updated graphs of memory usage and CPU load. The data update interval can be changed using the selection box in the toolbar.
+
+### General information
+
+The section contains basic operational information about the WebJET CMS and application server. It displays the WebJET CMS version, license validity, current time, server startup date and uptime, network addresses, server language and country, number of processors, and the name of the current cluster node.
+
+### Information about the software on the server
+
+The section summarizes the versions and names of the software components used on the server. It includes information about the Java Runtime and JVM, Java version and vendor, Spring Core, Spring Data, and Spring Security versions, the application server name, and the operating system name and version.
+
+### Database connections
+
+This section displays the current state of the database connection stack. It lists the total number of connections and the numbers of active, idle, and pending connections, along with the type of database server being used.
+
+### Memory
+
+The section provides an overview of the memory allocated to the JVM, including total, free, used, and maximum memory. It also shows the number of cache entries and the number of open user sessions; in cluster mode, sessions are also broken down by node.
+
+### Character encoding
+
+In the **Current Values** section, the **Character Encoding** section is displayed with the HTTP response settings, JVM, and locale of the running application server process. The displayed values ​​come directly from the process in which WebJET CMS is running, so they may differ from the values ​​in the user's interactive terminal.
+
+The following values ​​are recommended for correct processing of diacritics in file content and names:
+
+| Value | Meaning | Recommended value |
+| --- | --- | --- |
+| `HTTP Response Encoding` | HTTP response encoding set in WebJET CMS. | `utf-8` |
+| `file.encoding` | The default JVM encoding for operations that do not have an encoding specified explicitly. | `UTF-8` |
+| `native.encoding` | Native operating system encoding detected when the JVM starts. | `UTF-8` |
+| `sun.jnu.encoding` | The encoding used by the JVM when communicating with the operating system, for example for file names. | `UTF-8` |
+| `LANG` | Default locale of the application server process. | UTF-8 locale, for example `C.UTF-8` or `sk_SK.UTF-8` |
+| `LC_ALL` | Optional locale override for all categories. | Empty value or UTF-8 locale |
+| `LC_CTYPE` | Optional locale override for character processing. | Empty value or UTF-8 locale |
+
+The case of the encoding designation is not important, the values ​​`utf-8` and `UTF-8` are equivalent. The empty values ​​`LC_ALL` and `LC_CTYPE` are correct if `LANG` contains a UTF-8 locale. If any of these variables are set, they must not override `LANG` with a locale value that does not support UTF-8. The value `sun.jnu.encoding` is especially important when diagnosing filenames.
 
 - **Recorded values** - a list of historical recorded values ​​of memory usage, ```sessions```, cache and database connections. To save historical values, you need to set the config variable ```serverMonitoringEnable``` to the value ```true```.
 

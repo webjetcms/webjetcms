@@ -2,19 +2,24 @@ package sk.iway.iwcm.components.multistep_form.jpa;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
+import sk.iway.iwcm.components.multistep_form.support.FormItemUsage;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -25,6 +30,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
+/**
+ * Defines a field or layout item within a multistep form in a specific domain.
+ * Stores rendering, validation, and statistics settings used by the form editor
+ * and submission services. Radio options can share a logical field identifier.
+ */
 @Entity
 @Table(name = "form_items")
 @Getter
@@ -36,6 +46,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
     @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
     @DataTableTab(id = MultistepFormsService.VISIBILITY_TAB, title = "components.form_items_condition.visibility_tab"),
     @DataTableTab(id = MultistepFormsService.REQUIREMENT_TAB, title = "components.form_items_condition.requirement_tab"),
+    @DataTableTab(id = "relations", title = "components.form_items.relations.tab"),
     @DataTableTab(id = "stat", title = "components.form_items.stat_tab")
 })
 public class FormItemEntity extends BaseEditorFields {
@@ -49,7 +60,7 @@ public class FormItemEntity extends BaseEditorFields {
 
     @Column(name = "step_id")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.form_items.step", hidden = true, tab = "advanced")
-    private Integer stepId;
+    private Long stepId;
 
     @Column(name = "sort_priority")
     @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER, title = "", className = "icon-only", filter = false, tab = "advanced")
@@ -68,6 +79,10 @@ public class FormItemEntity extends BaseEditorFields {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items.item_preview", hidden = true, hiddenEditor = true, className = "allow-html")
     private transient String generatedItem;
 
+    @Column(name = "item_form_id")
+    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "components.form_items.item_form_id", className = "ai-off", hidden = true, tab = "basic")
+    private String itemFormId;
+
     @Column(name = "field_type")
     @NotBlank
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.formsimple.fieldType", hidden = true, tab = "basic")
@@ -75,6 +90,10 @@ public class FormItemEntity extends BaseEditorFields {
 
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.formsimple.required", hidden = true, tab = "basic")
     private Boolean required;
+
+    @Column(name = "trim_value")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.form_items.trim_value", tab = "basic", hidden = true)
+    private Boolean trimValue;
 
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "components.form_items.regex_validation", hidden = true, tab = "basic")
@@ -85,6 +104,12 @@ public class FormItemEntity extends BaseEditorFields {
     @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String label;
 
+    @Lob
+    @Column(name = "hint")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.form_items.hint", hidden = true, tab = "basic", sortAfter = "label")
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    private String hint;
+
     @Column(name = "value")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.formsimple.value", hidden = true, tab = "advanced")
     private String value;
@@ -94,7 +119,7 @@ public class FormItemEntity extends BaseEditorFields {
     private Boolean useValueAsEnumeration;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "multistep_form.value_as_options",  hidden = true, tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.OPTIONS, title = "multistep_form.value_as_options",  hidden = true, tab = "advanced", className = "allowEmptyOption")
     private String valueAsOptions;
 
     @Transient
@@ -149,6 +174,11 @@ public class FormItemEntity extends BaseEditorFields {
     @Column(name = "regex_validation")
     private String regexValidation;
 
+    @Column(name = "custom_error")
+    @Size(max = 255)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.form_items.custom_error", hidden = true, tab = "advanced")
+    private String customError;
+
     @Transient
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title="&nbsp;",
         tab = "visibilityConditions", className = "hide-on-create",
@@ -181,9 +211,13 @@ public class FormItemEntity extends BaseEditorFields {
     )
     private List<FormItemsConditionEntity> requirementConditions;
 
-    @Column(name = "item_form_id")
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
-    private String itemFormId;
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<FormItemUsage> visibilityUsage = List.of();
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<FormItemUsage> requirementUsage = List.of();
 
     @Column(name = "error_count")
     private Integer errorCount;

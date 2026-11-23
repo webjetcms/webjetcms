@@ -9,6 +9,7 @@
   - [Welcome screen](/redactor/admin/welcome.md)
   - [Send message](/redactor/admin/send-message.md)
   - [Search](/redactor/admin/search/README.md)
+  - [Keyboard Shortcuts](/redactor/admin/keyboard-shortcuts.md)
 - Data tables
   - [Basics of working with data tables](/redactor/datatables/README.md)
   - [Export and import](/redactor/datatables/export-import.md)
@@ -16,6 +17,7 @@
   - [Basic work](/redactor/webpages/README.md)
   - [Webpage editing](/redactor/webpages/editor/README.md)
   - [Working in editor](/redactor/webpages/working-in-editor/README.md)
+  - [Planned publishing with protected files](/redactor/webpages/planned-publishing.md)
   - [Website folder](/redactor/webpages/group.md)
   - [History](/redactor/webpages/history.md)
   - [Recover from Trash](/redactor/webpages/recover.md)
@@ -39,6 +41,7 @@
 - AI assistant
   - [AI assistant](/redactor/ai/README.md)
   - [Using AI assistants](/redactor/ai/datatables/README.md)
+  - [AI Chat](/redactor/ai/chat/README.md)
   - [Settings](/redactor/ai/settings/README.md)
   - [Writing instructions](/redactor/ai/instructions/README.md)
   - [Statistics](/redactor/ai/stat/README.md)
@@ -68,6 +71,7 @@
     - [Payments](/redactor/apps/eshop/invoice/payments.md)
     - [Items](/redactor/apps/eshop/invoice/items.md)
     - [Product List](/redactor/apps/eshop/product-list/README.md)
+    - [Statistics](/redactor/apps/eshop/stats/README.md)
     - [Application Settings](/redactor/apps/basket/README.md)
     - [Payment methods](/redactor/apps/eshop/payment-methods/README.md)
     - [Delivery Methods](/redactor/apps/eshop/delivery-methods/README.md)
@@ -79,6 +83,7 @@
   - Forms
     - [List of forms](/redactor/apps/form/README.md)
     - [Form Items](/redactor/apps/multistep-form/README.md)
+    - [Form Encryption](/redactor/apps/form/encryption.md)
     - [Form Statistics](/redactor/apps/multistep-form/stat.md)
     - [Regular expressions](/redactor/apps/form/regexps.md)
   - Forum/Discussion

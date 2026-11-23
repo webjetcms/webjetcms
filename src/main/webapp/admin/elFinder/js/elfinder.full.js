@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-05-07)
+ * Version 2.1.65 (2026-10-24)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
@@ -4405,7 +4405,8 @@ var elFinder = function(elm, opts, bootCallback) {
 									job.reject();
 								};
 								wk.postMessage({
-									scripts: [self.options.cdns.sparkmd5, self.getWorkerUrl('calcfilehash.js')],
+									// Blob workers need absolute URLs for bundled libraries.
+									scripts: [new URL(self.options.cdns.sparkmd5, self.convAbsUrl(self.baseUrl)).href, self.getWorkerUrl('calcfilehash.js')],
 									data: { type: 'md5', bin: arrayBuffer }
 								});
 								dfd.fail(function() {
@@ -4446,7 +4447,7 @@ var elFinder = function(elm, opts, bootCallback) {
 											job.reject();
 										};
 										wk.postMessage({
-											scripts: [self.options.cdns.jssha, self.getWorkerUrl('calcfilehash.js')],
+											scripts: [new URL(self.options.cdns.jssha, self.convAbsUrl(self.baseUrl)).href, self.getWorkerUrl('calcfilehash.js')],
 											data: { type: v, bin: arrayBuffer, hashOpts: opts }
 										});
 										dfd.fail(function() {
@@ -6033,6 +6034,7 @@ elFinder.prototype = {
 			'image/xbm'                     : 'XBITMAP',
 			'image/pxm'                     : 'PXM',
 			'image/webp'                    : 'WEBP',
+			'image/avif'                    : 'AVIF',
 			'audio/mpeg'                    : 'AudioMPEG',
 			'audio/midi'                    : 'AudioMIDI',
 			'audio/ogg'                     : 'AudioOGG',
@@ -6234,10 +6236,20 @@ elFinder.prototype = {
 
 					var virtualPath = fm.cwd().virtualPath;
 					var useInternationalToEnglish = virtualPath.indexOf("/files") == 0 || virtualPath.indexOf("/images") == 0;
+					if (WJ.hasPermission("fbrowser_allow_diacritics")===true) useInternationalToEnglish = false;
 
 					names = $.map(files, function(file, i)
 					{
                         var name = file.name;
+
+                        // normalize NFD (macOS) to NFC so server-side names match
+                        try {
+                            if (name && name.normalize) {
+                                name = name.normalize('NFC');
+                            }
+                        } catch (e) {
+                            // ignore normalization errors
+                        }
 
                         if (useInternationalToEnglish) {
                             name = WJ.fixFileName(name);
@@ -11265,7 +11277,7 @@ elFinder.prototype.mimeTypes = {"application\/x-executable":"exe","application\/
  */
 elFinder.prototype._options = {
 	/**
-	 * URLs of 3rd party libraries CDN
+	 * URLs of 3rd party libraries
 	 * 
 	 * @type Object
 	 */
@@ -11285,15 +11297,16 @@ elFinder.prototype._options = {
 		dash       : 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.3/dash.all.min.js',
 		flv        : 'https://cdnjs.cloudflare.com/ajax/libs/flv.js/1.6.2/flv.min.js',
 		videojs    : 'https://cdnjs.cloudflare.com/ajax/libs/video.js/8.8.0',
-		prettify   : 'https://cdn.jsdelivr.net/gh/google/code-prettify@e006587b4a893f0281e9dc9a53001c7ed584d4e7/loader/run_prettify.js',
+		prettify   : 'js/worker/prettify.min.js',
 		psd        : 'https://cdnjs.cloudflare.com/ajax/libs/psd.js/3.4.0/psd.min.js',
 		rar        : 'https://cdn.jsdelivr.net/gh/nao-pon/rar.js@6cef13ec66dd67992fc7f3ea22f132d770ebaf8b/rar.min.js',
-		zlibUnzip  : 'https://cdn.jsdelivr.net/gh/imaya/zlib.js@0.3.1/bin/unzip.min.js', // need check unzipFiles() in quicklook.plugins.js when update
-		zlibGunzip : 'https://cdn.jsdelivr.net/gh/imaya/zlib.js@0.3.1/bin/gunzip.min.js',
+		zlibUnzip  : 'js/worker/unzip.min.js', // need check unzipFiles() in quicklook.plugins.js when update
+		zlibGunzip : 'js/worker/gunzip.min.js',
 		bzip2      : 'https://cdn.jsdelivr.net/gh/nao-pon/bzip2.js@0.8.0/bzip2.js',
 		marked     : 'https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.0/marked.min.js',
-		sparkmd5   : 'https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js',
-		jssha      : 'https://cdnjs.cloudflare.com/ajax/libs/jsSHA/3.3.1/sha.min.js',
+		// Bundled hash libraries; relative paths are resolved against baseUrl.
+		sparkmd5   : 'js/worker/spark-md5.min.js',
+		jssha      : 'js/worker/sha.min.js',
 		amr        : 'https://cdn.jsdelivr.net/gh/yxl/opencore-amr-js@dcf3d2b5f384a1d9ded2a54e4c137a81747b222b/js/amrnb.js',
 		tiff       : 'https://cdn.jsdelivr.net/gh/seikichi/tiff.js@545ede3ee46b5a5bc5f06d65954e775aa2a64017/tiff.min.js'
 	},
@@ -13255,6 +13268,7 @@ elFinder.prototype.resources = {
 	},
 	tpl : {
 		perms      : '<span class="elfinder-perms"></span>',
+		readonly   : '<span class="elfinder-read-only"></span>',
 		lock       : '<span class="elfinder-lock"></span>',
 		symlink    : '<span class="elfinder-symlink"></span>',
 		navicon    : '<span class="elfinder-nav-icon"></span>',
@@ -14309,13 +14323,12 @@ if (typeof elFinder === 'function' && elFinder.prototype.i18) {
             'cmdresize'    : 'Edit',
 			'wjSearchRecursive': 'In Subfolders',
 			'cmdwjeditswitch': 'Edit',
-			'cmdwjfilearchive': 'Document manager',
 			'cmdwjdirprops'  : 'Folder properties',
 			'cmdwjfileprops' : 'File properties',
 			'cmdwjmetadata' : 'Permissions',
 			'cmdwjfileupdate'  : 'Update file',
 			'wjfileupdate-onlyOneFileErr': 'Only one file can be selected when updating a file',
-			'wjfileupdate-typeMismatch': 'The type of the selected file must be the same as the type of the file to be updated, namely: ',
+			'wjfileupdate-typeMismatch': 'Wrong file type. Select a file of type ',
 			'wjsearch-title' : 'Search'
 		}
 	};
@@ -15392,6 +15405,7 @@ $.fn.elfindercwd = function(fm, options) {
 			},
 			
 			permsTpl = fm.res('tpl', 'perms'),
+			readOnlyTpl = fm.res('tpl', 'readonly'),
 			
 			lockTpl = fm.res('tpl', 'lock'),
 			
@@ -15457,7 +15471,7 @@ $.fn.elfindercwd = function(fm, options) {
 					return f.perm? fm.formatFileMode(f.perm, 'both') : '';
 				},
 				marker : function(f) {
-					return (f.alias || f.mime == 'symlink-broken' ? symlinkTpl : '')+(!f.read || !f.write ? permsTpl : '')+(f.locked ? lockTpl : '');
+					return (f.alias || f.mime == 'symlink-broken' ? symlinkTpl : '')+(!f.read || !f.write ? (fm.options.readOnlyMarker && fm.options.readOnlyMarker(f) ? readOnlyTpl : permsTpl) : '')+(f.locked ? lockTpl : '');
 				},
 				tooltip : function(f) {
 					var title = fm.formatDate(f) + (f.size > 0 ? ' ('+fm.formatSize(f.size)+')' : ''),
@@ -19611,6 +19625,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			dropover  = fm.res(c, 'adroppable'),
 			tpl       = fm.res('tpl', 'placedir'),
 			ptpl      = fm.res('tpl', 'perms'),
+			rtpl      = fm.res('tpl', 'readonly'),
 			spinner   = $(fm.res('tpl', 'navspinner')),
 			suffix    = opts.suffix? opts.suffix : '',
 			key       = 'places' + suffix,
@@ -19731,7 +19746,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 				return $(tpl.replace(/\{id\}/, hash2id(dir? dir.hash : hash))
 						.replace(/\{name\}/, fm.escape(dir? dir.i18 || dir.name : hash))
 						.replace(/\{cssclass\}/, dir? (fm.perms2class(dir) + (dir.notfound? ' elfinder-na' : '') + (dir.csscls? ' '+dir.csscls : '')) : '')
-						.replace(/\{permissions\}/, (dir && (!dir.read || !dir.write || dir.notfound))? ptpl : '')
+						.replace(/\{permissions\}/, dir && (!dir.read || !dir.write || dir.notfound) ? (fm.options.readOnlyMarker && fm.options.readOnlyMarker(dir) ? rtpl : ptpl) : '')
 						.replace(/\{title\}/, dir? (' title="' + fm.escape(fm.path(dir.hash, true) || dir.i18 || dir.name) + '"') : '')
 						.replace(/\{symlink\}/, '')
 						.replace(/\{style\}/, (dir && dir.icon)? fm.getIconStyle(dir) : ''));
@@ -21262,6 +21277,7 @@ $.fn.elfindertree = function(fm, opts) {
 			 * @type String
 			 */
 			ptpl = fm.res('tpl', 'perms'),
+			rtpl = fm.res('tpl', 'readonly'),
 			
 			/**
 			 * Lock marker html template
@@ -21319,7 +21335,7 @@ $.fn.elfindertree = function(fm, opts) {
 						return '';
 					}
 				},
-				permissions : function(dir) { return !dir.read || !dir.write ? ptpl : ''; },
+				permissions : function(dir) { return !dir.read || !dir.write ? (fm.options.readOnlyMarker && fm.options.readOnlyMarker(dir) ? rtpl : ptpl) : ''; },
 				symlink     : function(dir) { return dir.alias ? stpl : ''; },
 				style       : function(dir) { return dir.icon ? fm.getIconStyle(dir) : ''; }
 			},
@@ -26659,7 +26675,7 @@ elFinder.prototype.commands.hide = function() {
 			hashClass = 'elfinder-font-mono elfinder-info-hash',
 			getHashAlgorisms = [],
 			ndialog  = fm.ui.notify,
-			size, tmb, file, title, dcnt, rdcnt, path, hideItems, hashProg;
+			size, tmb, file, title, dcnt, rdcnt, path, hideItems, calculateFolderSize, hashProg;
 
 		if (ndialog.is(':hidden') && ndialog.children('.elfinder-notify').length) {
 			ndialog.elfinderdialog('open').height('auto');
@@ -26675,6 +26691,8 @@ elFinder.prototype.commands.hide = function() {
 		}
 		
 		hideItems = fm.storage('infohides') || fm.arrayFlip(o.hideItems, true);
+		// Some connectors cannot provide accurate recursive folder sizes.
+		calculateFolderSize = o.calculateFolderSize === true && !hideItems.size;
 
 		if (cnt === 1) {
 			file = files[0];
@@ -26688,16 +26706,17 @@ elFinder.prototype.commands.hide = function() {
 
 			tmb = fm.tmb(file);
 			
-			if (!file.read) {
-				size = msg.unknown;
-			} else if (file.mime != 'directory' || file.alias) {
-				size = fm.formatSize(file.size);
-			} else {
-				size = tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size');
-				count.push(file.hash);
+			if (file.mime !== 'directory' || calculateFolderSize) {
+				if (!file.read) {
+					size = msg.unknown;
+				} else if (file.mime != 'directory' || file.alias) {
+					size = fm.formatSize(file.size);
+				} else {
+					size = tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size');
+					count.push(file.hash);
+				}
+				!hideItems.size && content.push(row.replace(l, msg.size).replace(v, size));
 			}
-			
-			!hideItems.size && content.push(row.replace(l, msg.size).replace(v, size));
 			!hideItems.aleasfor && file.alias && content.push(row.replace(l, msg.aliasfor).replace(v, file.alias));
 			if (!hideItems.path) {
 				if (path = fm.path(file.hash, true)) {
@@ -26840,9 +26859,11 @@ elFinder.prototype.commands.hide = function() {
 				rdcnt = $.grep(files, function(f) { return f.mime === 'directory' && (! f.phash || f.isroot)? true : false ; }).length;
 				dcnt -= rdcnt;
 				content.push(row.replace(l, msg.kind).replace(v, (rdcnt === cnt || dcnt === cnt)? msg[rdcnt? 'roots' : 'folders'] : $.map({roots: rdcnt, folders: dcnt, files: cnt - rdcnt - dcnt}, function(c, t) { return c? msg[t]+' '+c : null; }).join(', ')));
-				!hideItems.size && content.push(row.replace(l, msg.size).replace(v, tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size')));
-				count = $.map(files, function(f) { return f.hash; });
-				
+				if (calculateFolderSize) {
+					content.push(row.replace(l, msg.size).replace(v, tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size')));
+					count = $.map(files, function(f) { return f.hash; });
+				}
+
 			}
 		}
 		
@@ -26904,7 +26925,7 @@ elFinder.prototype.commands.hide = function() {
 				replSpinner(msg.unknown, 'size');
 			});
 		}
-		
+
 		// call custom actions
 		if (customActions.length) {
 			$.each(customActions, function(i, action) {
@@ -29802,7 +29823,7 @@ elFinder.prototype.commands.quicklook.plugins = [
 	 * @param elFinder.commands.quicklook
 	 **/
 	function(ql) {
-				var mimes   = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-ms-bmp', 'image/webp'],
+				var mimes   = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/x-ms-bmp', 'image/webp', 'image/avif'],
 			getDimSize = ql.fm.returnBytes((ql.options.getDimThreshold || 0)),
 			preview = ql.preview,
 			WebP, flipMime;
@@ -31038,12 +31059,12 @@ elFinder.prototype.commands.quicklook.plugins = [
 										});
 									} else if (file.mime === 'application/zip') {
 										wk.postMessage({
-											scripts: [fm.options.cdns.zlibUnzip, fm.getWorkerUrl('quicklook.unzip.js')],
+											scripts: [new URL(fm.options.cdns.zlibUnzip, fm.convAbsUrl(fm.baseUrl)).href, fm.getWorkerUrl('quicklook.unzip.js')],
 											data: { type: 'zip', bin: data }
 										});
 									} else if (file.mime === 'application/x-gzip') {
 										wk.postMessage({
-											scripts: [fm.options.cdns.zlibGunzip, fm.getWorkerUrl('quicklook.unzip.js')],
+											scripts: [new URL(fm.options.cdns.zlibGunzip, fm.convAbsUrl(fm.baseUrl)).href, fm.getWorkerUrl('quicklook.unzip.js')],
 											data: { type: 'gzip', bin: data }
 										});
 
@@ -31588,6 +31609,7 @@ elFinder.prototype.commands.quicklook.plugins = [
 			},
 			prettify = function(node) {
 				if (fm.options.cdns.prettify) {
+					var url = new URL(fm.options.cdns.prettify, fm.convAbsUrl(fm.baseUrl)).href;
 					prettify = function(node) {
 						setTimeout(function() {
 							PRcheck(node);
@@ -31597,7 +31619,7 @@ elFinder.prototype.commands.quicklook.plugins = [
 					if (window.PR) {
 						_PR = window.PR;
 					}
-					fm.loadScript([fm.options.cdns.prettify + (fm.options.cdns.prettify.match(/\?/)? '&' : '?') + 'autorun=false'], function(wPR) {
+					fm.loadScript([url + (url.match(/\?/)? '&' : '?') + 'autorun=false'], function(wPR) {
 						PR = wPR || window.PR;
 						if (typeof PR === 'object') {
 							prettify = function() { return true; };
@@ -34972,7 +34994,8 @@ elFinder.prototype.commands.selectinvert = function() {
  * @author Naoki Sawada
  **/
 elFinder.prototype.commands.selectnone = function() {
-		var self = this,
+	"use strict";
+	var self = this,
 		fm = this.fm,
 		state = -1;
 	
@@ -35711,7 +35734,7 @@ elFinder.prototype.commands.upload = function() {
 		};
 		
 		dialog = $('<div class="elfinder-upload-dialog-wrapper"></div>')
-			.append(inputButton('multiple', 'selectForUpload'));
+			.append(inputButton(isFileToUpdateSet(fileToUpdate) ? '' : 'multiple', 'selectForUpload'));
 
 		if(isFileToUpdateSet(fileToUpdate) != true) {
 			if (! fm.UA.Mobile && (function(input) {
@@ -35720,7 +35743,7 @@ elFinder.prototype.commands.upload = function() {
 			}
 		}
 		
-		if (targetDir.dirs) {
+		if (!isFileToUpdateSet(fileToUpdate) && targetDir.dirs) {
 			
 			if (targetDir.hash === cwdHash || fm.navHash2Elm(targetDir.hash).hasClass('elfinder-subtree-loaded')) {
 				getSelector().appendTo(dialog);
@@ -35851,6 +35874,9 @@ function isInputValid(fm, input, fileToUpdate) {
 	if(isFileToUpdateSet(fileToUpdate) == true) {
 		//Soo its update - must be only 1 file and type must match
 		var fileList = input[0].files;
+		if(fileList.length === 0) {
+			return false;
+		}
 		if(fileList.length != 1) {
 			isInputValid = false;
 			errMsg = fm.i18n('wjfileupdate-onlyOneFileErr');
@@ -35867,6 +35893,7 @@ function isInputValid(fm, input, fileToUpdate) {
 			id : "customErrorDialog",
 			cnt : 0.5,
 			hideCnt: true,
+			progress: 0,
 			msg : errMsg,
 			cancel: function() {}
 		});
@@ -36034,7 +36061,7 @@ elFinder.prototype.commands.wjdirprops = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime == "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime == "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36442,7 +36469,7 @@ elFinder.prototype.commands.wjeditswitch = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36493,45 +36520,6 @@ elFinder.prototype.commands.wjeditswitch = function() {
         return dfrd;
     };
 };
-
-/*
- * File: /js/commands/wjfilearchive.js
- */
-
-/**
- * @class  elFinder command "paste"
- * Paste filesfrom clipboard into directory.
- * If files pasted in its parent directory - files duplicates will created
- *
- * @author Dmitry (dio) Levashov
- **/
-elFinder.prototype.commands.wjfilearchive = function() {
-    "use strict";
-    var fm = this.fm;
-
-    this.value          = fm.viewType;
-    this.alwaysEnabled  = true;
-    this.updateOnSelect = false;
-    this.options = { ui : 'viewbutton'};
-
-	this.getstate = function() {
-        return 0;
-	};
-
-    this.exec = function() {
-        var dfrd  = $.Deferred().fail(function(error) { error && fm.error(error); });
-
-        WJ.openIframeModalDatatable({
-			url: '/components/file_archiv/file_archiv_upload.jsp',
-			width: 850,
-			height: 500,
-			buttonTitleKey: "button.save"
-		});
-
-
-        return dfrd.resolve();
-    }
-}
 
 /*
  * File: /js/commands/wjfileopen.js
@@ -36593,7 +36581,7 @@ elFinder.prototype.commands.wjfileprops = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36647,7 +36635,7 @@ elFinder.prototype.commands.wjfileupdate = function() {
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
-		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory") {
+		if (sel.length == 1 && typeof sel[0].mime != "undefined" && sel[0].mime != "directory" && sel[0].write && !sel[0].locked) {
 			return 0;
 		}
 
@@ -36657,7 +36645,7 @@ elFinder.prototype.commands.wjfileupdate = function() {
 	this.exec = function(hashes) {
 		var dfrd  = $.Deferred().fail(function(error) { error && fm.error(error); });
 
-		if(hashes === null || hashes === undefined || hashes.length < 1) { 
+		if(hashes === null || hashes === undefined || hashes.length < 1) {
 			return dfrd.reject("Hashes are not valid.");
 		}
 
@@ -36705,7 +36693,11 @@ elFinder.prototype.commands.wjmetadata = function() {
             return result;
         }
 
-        var files = this.files(sel);
+        var files = this.files(sel),
+			cwd = this.fm.cwd();
+		if ($.grep(files, function(file) { return !file.write || file.locked; }).length || (!files.length && cwd && (!cwd.write || cwd.locked))) {
+			return result;
+		}
         if (this.isMetadataAllowed() && this.isRootFiles(files)) {
 			result = 0;
     	}
@@ -36819,7 +36811,7 @@ elFinder.prototype.commands.wjmetadata = function() {
 
         var self = this,
 			result = [];
-		
+
 		$.each(hashes, function(i, file) {
             if (self.isString(file)) {
 				file = self.fm.file(file);
@@ -36865,7 +36857,7 @@ elFinder.prototype.commands.wjmetadata = function() {
 		var fileUrl = file.url;
         fileUrl = fileUrl.replace(/\/$/, "");
         filesRoot = filesRoot.replace(/\/$/, "");
-		
+
         return fileUrl === filesRoot;
     };
 

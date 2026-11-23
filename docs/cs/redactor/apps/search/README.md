@@ -44,12 +44,12 @@ RAG odpověď není samostatný typ vyhledávání. Je to doplněk k sémantick�
 
 | | Databázové (`db`) | Lucene | Sémantické (`semantic`) | Hybridní (`hybrid`) |
 | --- | --- | --- | --- | --- |
-| Technologie | SQL LIKE / FULLTEXT | `Apache Lucene` | `OpenAI embeddings` + `pgvector` | `pgvector` + fulltext nad chunky |
+| Technologie | SQL LIKE / FULLTEXT | `Apache Lucene` | Embeddingy nastaveného AI poskytovatele + `pgvector` | `pgvector` + fulltext nad chunky |
 | Shoda | Klíčová slova | Klíčová slova + skloňování | Sémantický význam | Sémantický význam i přesná slova |
 | Výsledky bez shody slov | Ne | Částečně | Ano | Ano |
 | Vhodné pro krátké dotazy | Omezeno | Ano | Částečně | Ano |
-| Požadavky | Primární DB | Lucene index | `PostgreSQL` + `pgvector` + `OpenAI` | `PostgreSQL` + `pgvector` + `OpenAI` |
-| Cena | Zdarma | Zdarma | OpenAI API (placené) | OpenAI API (placené) |
+| Požadavky | Primární DB | Lucene index | `PostgreSQL` + `pgvector` + AI poskytovatel s podporou embeddingů | `PostgreSQL` + `pgvector` + AI poskytovatel s podporou embeddingů |
+| Cena | Zdarma | Zdarma | Podle zvoleného poskytovatele a modelu | Podle zvoleného poskytovatele a modelu |
 
 ## Zobrazení aplikace
 

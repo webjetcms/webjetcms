@@ -209,6 +209,11 @@ public class IwcmInputStream extends InputStream
 
 	private boolean loadFile() throws IOException //TODO:dynamicka velkost blokov
 	{
+		return loadFile(true);
+	}
+
+	private boolean loadFile(boolean allowRefresh) throws IOException
+	{
 		if (step >= IwcmFsDB.getBlockSize() || is == null)// uz sme precitali cely blok alebo este ziaden
 		{
 			String virtualPath = IwcmFsDB.getVirtualPath(file.getPath());
@@ -248,12 +253,13 @@ public class IwcmInputStream extends InputStream
 				{
 					if (!existsInDb(IwcmFsDB.getFatIdTable().get(virtualPath)))
 					{
+						if (!allowRefresh) throw new FileNotFoundException(virtualPath);
 						db_conn.close();
 						db_conn = null;
 
 						IwcmFsDB.loadHashTables(true);
 						nodeIds=null;
-						return loadFile();
+						return loadFile(false);
 					}
 					return false;
 				}

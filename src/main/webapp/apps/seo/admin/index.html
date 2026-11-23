@@ -1,4 +1,5 @@
 <script data-th-inline="javascript">
+    window.helpLink = "/redactor/apps/seo/README";
     let url = "/admin/rest/seo/bots";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.seo.jpa.BotsDTO")})]*/ '';
 </script>
@@ -23,6 +24,9 @@
         window.location.href="/apps/seo/admin/bots-details/?botId=" + botId + "&rootDir=" + $('#rootDir').val() + "&dayDate=" + ChartTools.getDateRange(null);
     }
 
+    var order = [];
+    order.push([2, 'desc']);
+
     window.domReady.add(function () {
         WJ.showLoader();
 
@@ -36,6 +40,7 @@
             columns: columns,
             id: "botsDataTable",
             idAutoOpener: false,
+            order: order,
             defaultSearch: ChartTools.getSearchCriteria(),
             autoHeight: false,
             onPreXhr: function(TABLE, e, settings, data) {

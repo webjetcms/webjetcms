@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
@@ -15,6 +14,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.structuremirroring.MirroringService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -131,7 +131,7 @@ public class GroupsService extends NotifyService {
 		DocHistoryRepository docHistoryRepository = Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class);
 
 		//List of doc id's that available should be updated (depend on history)
-		List<Integer> docIdsToChange = (new SimpleQuery()).forListInteger("SELECT doc_id FROM documents WHERE group_id IN (" + groups.toString() + ")");
+		List<Integer> docIdsToChange = (new SimpleQuery()).forListInteger("SELECT doc_id FROM documents WHERE " + DB.getInCondition("group_id", groups.toString()));
 
 		//History records
 		List<DocHistory> historyRecords = docHistoryRepository.findByDocIdInActual(docIdsToChange);
@@ -164,8 +164,8 @@ public class GroupsService extends NotifyService {
 		}
 
 		//Updatw doc's available status
-		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(true)+", sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableTrue, ",") + ")");
-		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(false)+", sync_status=1 WHERE doc_id IN (" + StringUtils.join(availableFalse, ",") + ")");
+		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(true)+", sync_status=1 WHERE " + DB.getInCondition("doc_id", availableTrue));
+		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute("UPDATE documents SET available="+DB.getBooleanSql(false)+", sync_status=1 WHERE " + DB.getInCondition("doc_id", availableFalse));
 
 		//aktualizuj FT stplce
 		DocDB.updateFileNameField(group.getGroupId());
@@ -252,7 +252,8 @@ public class GroupsService extends NotifyService {
 	 */
 	public static boolean canSyncTitle(Integer docId, Integer groupId) {
 
-		if(Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
+		// Preserve distinct source folder and page titles during cloning without disabling title sync globally.
+		if(MirroringService.isCloneAction() || Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
 
 		if(docId == null || docId.intValue() < 1) return true;
 
@@ -275,7 +276,8 @@ public class GroupsService extends NotifyService {
 	 */
 	public static boolean canSyncTitle(GroupDetails toSaveGroup) {
 
-		if(Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
+		// Preserve distinct source folder and page titles during cloning without disabling title sync globally.
+		if(MirroringService.isCloneAction() || Constants.getBoolean("syncGroupAndWebpageTitle")==false) return false;
 
 		if(toSaveGroup == null) return false;
 

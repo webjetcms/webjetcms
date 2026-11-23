@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileItemHeaders;
 import org.apache.commons.fileupload2.core.FileUploadException;
 import org.apache.commons.fileupload2.core.DiskFileItem;
 import org.apache.commons.fileupload2.core.DiskFileItemFactory;
@@ -21,6 +22,7 @@ import sk.iway.iwcm.IwcmRequest;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,7 +67,7 @@ public class DiskMultiPartRequestHandler
    {
 		DiskFileItemFactory factory = DiskFileItemFactory.builder().get();
 
-		JakartaServletFileUpload<DiskFileItem, DiskFileItemFactory> upload = new JakartaServletFileUpload<>(factory);
+		JakartaServletFileUpload<DiskFileItem, DiskFileItemFactory> upload = new UnicodeNormalizingFileUpload(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 
@@ -147,6 +149,19 @@ public class DiskMultiPartRequestHandler
 
 		return wrapped;
    }
+
+	static class UnicodeNormalizingFileUpload extends JakartaServletFileUpload<DiskFileItem, DiskFileItemFactory> {
+
+		UnicodeNormalizingFileUpload(DiskFileItemFactory factory) {
+			super(factory);
+		}
+
+		@Override
+		public String getFileName(FileItemHeaders headers) {
+			String fileName = super.getFileName(headers);
+			return fileName == null ? null : IwcmFsVolume.normalizeUnicode(fileName);
+		}
+	}
 
 	public Map<String, UploadedFile> getFileElements()
 	{

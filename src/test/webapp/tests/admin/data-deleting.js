@@ -16,7 +16,9 @@ Scenario("overenie prvotneho zoznamu", async ({ I, DT, DTE }) => {
   I.seeElement("div.toast-message");
   I.toastrClose();
   I.click({css: "#dateDependentEntriesTable_extfilter button.filtrujem"});
-  DT.waitForLoader();
+  // Counting records across all cleanup tables can exceed the generic 40-second wait on production data.
+  I.waitForInvisible("#dateDependentEntriesTable_processing", 90);
+  DT.waitForLoader("dateDependentEntriesTable");
   I.dontSeeElement("div.toast-message");
 
   //chybne stranky
@@ -30,14 +32,24 @@ Scenario("overenie prvotneho zoznamu", async ({ I, DT, DTE }) => {
   I.assertAbove(rows+1, 20, "Nedostatocny pocet zaznamov");
 });
 
-Scenario('cache-objects', ({ I, DT }) => {
+Scenario('cache-objects', async ({ I, DT }) => {
+  // A public request with its own User-Agent creates a fresh BrowserDetector cache entry.
+  const userAgent = 'cache-objects-autotest-' + I.getRandomText();
+  await I.sendGetRequest('/test-stavov/test_volnych_poli_sablony.html', {
+    'User-Agent': userAgent,
+    'x-auth-token': ''
+  });
+  I.seeResponseCodeIs(200);
   I.amOnPage("/admin/v9/settings/cache-objects/");
   I.waitForText('Čistenie databázy', 10);
   I.waitForText('Cache objekty', 10, '.nav-link.active');
-  DT.filterContains("name", "browser");
-  I.see("browserDetector-");
-  DT.filterContains("name", "welcome");
-  I.see("welcomeDataBackTimes-domainId=");
+  DT.filterContains("name", userAgent);
+  I.see(userAgent, "#datatableInit tbody td.dt-row-edit");
+  // Audit notification caches can be cleared by other tests and are not a fixture of this screen.
+  DT.filterContains("name", "missing-cache-autotest-" + I.getRandomText());
+  I.seeElement("#datatableInit tbody td.dt-empty");
+  DT.filterContains("name", userAgent);
+  I.see(userAgent, "#datatableInit tbody td.dt-row-edit");
 
   I.amOnPage("/admin/v9/settings/persistent-cache-objects/");
   I.waitForText('Persistent cache objekty', 10, '.nav-link.active');

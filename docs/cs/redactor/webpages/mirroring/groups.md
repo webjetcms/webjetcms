@@ -32,6 +32,18 @@ Jelikož provázané by měly být pouze složky se stejným obsahem pouze v jin
 
 Protože provázané by měly být stejné struktury, rozdílné hloubky provázaných složek indikují chybu mezi strukturami. Oproti **špatnému mapování** nemusí jít hned o chybu, taková provázání jsou označena pro lepší hledání případných chyb.
 
+### Upozornění ve stromové struktuře
+
+Stejné kontroly můžete zobrazit přímo v sekci **Web stránky**. V [nastavení stromové struktury](../README.md#nastavení-zobrazení-stromové-struktury) zapněte volbu **Zobrazit zrcadlení**.
+
+![](../jstree-settings.png)
+
+U složek s problémem se vpravo před jazykovými odkazy zobrazí červená ikona pro **Špatné mapování** nebo žlutá ikona pro **Nerovnoměrné vnoření**. Pokud má propojení oba problémy, zobrazí se červená ikona. Popis problému naleznete po podržení kurzoru nad ikonou upozornění.
+
+![](tree-problems.png)
+
+Volba je dostupná uživatelům s právem na **Zrcadlení struktury**. Ikona složky bez přístupu<i class="ti ti-folder-x" role="presentation"></i> se zachová. Klepnutím na upozornění otevřete přímo editor příslušného mapování na kartě **Složky**. Odkaz používá Sync ID mapování, nikoli ID složky.
+
 ## Vymazání/zrušení převázání
 
 Při vymazání/zrušení celého provázání zaniká existující synchronizační parametr `syncId`, protože už nemá co provázat. Pro každou složku, která byla provázána, se provede akce **rozvázání složky**.

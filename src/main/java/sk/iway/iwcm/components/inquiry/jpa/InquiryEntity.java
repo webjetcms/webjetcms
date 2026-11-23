@@ -25,6 +25,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 @Entity
@@ -33,6 +35,12 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INQUIRY)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "advanced", title = "components.banner.tab.advanced"),
+    @DataTableTab(id = "answers", title = "inquiry.answer2"),
+    @DataTableTab(id = "votes", title = "menu.stat", hideOnCreate = true, content = "<div class=\"statContainer\"><iframe id=\"statIframe\" src=\"about:blank\" width=\"100%\" height=\"500\"></iframe><div>")
+})
 public class InquiryEntity extends ActiveRecordRepository implements Serializable {
 
     @Id

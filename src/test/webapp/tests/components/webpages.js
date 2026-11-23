@@ -1,5 +1,6 @@
 Feature('components.webpages');
 const assert = require('assert');
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
 var randomNumber;
 var container = "div.tree-col";
 var containerPage = "#datatableInit_wrapper";
@@ -427,13 +428,13 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
     //prehladavat
     I.see("Newsletter", container);
     I.see("Testovaci newsletter", container);
-    //prepni prehladavat na ano
-    DT.filterSelect("searchable", "Áno");
+    // Show pages that allow indexing.
+    DT.filterSelect("searchable", "Povoliť vyhľadávanie cez vyhľadávače (index)");
     DT.waitForLoader();
     I.see("Newsletter", container);
     I.dontSee("Testovaci newsletter", container);
-    //prepni na nie
-    DT.filterSelect("searchable", "Nie");
+    // Show pages that disallow indexing.
+    DT.filterSelect("searchable", "Zakázať vyhľadávanie (noindex)");
     DT.waitForLoader();
     I.dontSee("Produktová stránka - B verzia", container);
     I.see("Testovaci newsletter", container);
@@ -716,7 +717,7 @@ Scenario('Overenie zobrazenia pola pre zadanie domeny', ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_editorFields\\.forceDomainNameChange");
 
     //zmen parent na /English
-    I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+    I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
     I.waitForElement("div.jsTree-wrapper");
     I.wait(1);
     I.waitForText('English', 5);
@@ -920,28 +921,27 @@ Scenario('Ukladanie cez CTRL+S', ({ I, DTE }) => {
     testSavePB(I, DTE);
 });
 
-Scenario('Nacitanie CSS do listy', ({ I, DTE, Browser }) => {
+Scenario('Nacitanie CSS do listy', ({ I, DTE }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=265");
     DTE.waitForEditor();
 
-    I.wait(4);
-    if (Browser.isFirefox()) I.wait(3);
+    DTE.waitForCkeditor();
 
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
     I.clickCss("#WebJETEditorBody");
     I.switchTo();
 
-    I.clickCss(".cke_combo__styles .cke_combo_button");
-
-    I.switchTo(".cke_panel_frame");
-    I.see("baretest1");
-    I.see("Bare TEST 02 bold");
-    I.see("Bare TEST 03");
-    I.see("Bare TEST 04");
-    I.see("more-info1");
-
-    I.switchTo();
+    I.clickCss(".cke_button__wjstyles");
+    I.waitForVisible(".wj-styles[role=dialog]", 10);
+    I.checkOption(".wj-styles__filters input");
+    // Search also expands categories, independently of the user's previous picker state.
+    for (const style of ["baretest1", "Bare TEST 02 bold", "Bare TEST 03", "Bare TEST 04", "more-info1"]) {
+        I.fillField(".wj-styles__search", style);
+        I.waitForText(style, 10, ".wj-styles__list");
+    }
+    I.pressKey('Escape');
+    I.waitForInvisible(".wj-styles", 10);
 });
 
 Scenario('BUG - editacia viacerych zaznamov naraz @singlethread', async ({ I, DT, DTE }) => {
@@ -1056,12 +1056,17 @@ Scenario('BUG - prepinanie kariet a zobrazenie stranok', ({ I, DT }) => {
     I.seeElement(locate("#SomStromcek a.jstree-anchor").withText("files"));
 });
 
-Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa refreshnut', ({ I, DT }) => {
+Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa refreshnut', async ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
-    I.wait(1);
+    I.waitForText("11 stránka v Adresári", 20, "#datatableInit_wrapper");
+    DT.waitForLoader();
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
-    //over, ze mame viac ako 10 riadkov
-    I.see("Záznamy 1 až 12 z", "#datatableInit_wrapper .dt-info");
+    I.waitForText("11 stránka v Adresári", 20, "#datatableInit_wrapper");
+    DT.waitForLoader();
+    // Other tests may add pages; the regression is truncation to ten rows, not an exact fixture count.
+    const visibleRows = await I.executeScript(() => webpagesDatatable.rows({ page: 'current' }).count());
+    I.assertAbove(visibleRows, 10, "The initial load must display more than ten pages without a refresh");
     I.see("11 stránka v Adresári", "#datatableInit_wrapper");
 });
 
@@ -1217,20 +1222,20 @@ function editGroup (I, DT, DTE, groupName) {
 function changeDocName(I, DTE, newDocName) {
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("#DTE_Field_title", newDocName);
-    DTE.save();
+    DTE.save("datatableInit", true);
 }
 
 function changeGroupMainDoc(I, arr, id) {
     within("#groups-datatable_modal > div.modal-dialog", () => {
-        I.waitForElement( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
-        I.click( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-vue-jstree-item-edit") );
+        I.waitForElement( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-webjet-jstree-item-edit") );
+        I.click( locate("#editorAppDTE_Field_editorFields-defaultDocDetails").find("button.btn-webjet-jstree-item-edit") );
     });
 
-    I.waitForElement("#jsTree");
+    I.waitForElement(WebjetDteJsTree.tree);
     for(let i = 0; i < arr.length; i++) {
-        I.click(locate('#jsTree .jstree-node.jstree-closed').withText(arr[i]).find('.jstree-icon.jstree-ocl'));
+        I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(arr[i]).find('.jstree-icon.jstree-ocl'));
         I.wait(1);
-        I.waitForInvisible("#jsTree li.jstree-loading");
+        I.waitForInvisible(WebjetDteJsTree.loading);
     }
     I.clickCss("#docId-" + id + "_anchor");
 }
@@ -1300,7 +1305,7 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.jstreeFilter('sveta');
     I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
     I.clickCss('#tree-folder-search-clear-button');
-    I.waitForInvisible("div.dt-processing", 40);
+    I.jstreeWaitForLoader();
     I.dontSeeInField('#tree-folder-search-input', pageName);
     I.seeElement(locate('.jstree-node.jstree-open').withText("Jet portal 4"));
 
@@ -1352,7 +1357,7 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.jstreeFilter('test');
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Kôš'));
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('System'));
-    I.seeElement(locate('.jstree-anchor.jstree-search').withText('subone-autotest'));
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('subone-autotest').first());
 });
 Scenario('Set default ordering setting before', ({ I }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/');
@@ -1511,4 +1516,3 @@ function assertIfSortedByCreationDate(items, ascending = true) {
 
     assert.deepStrictEqual(filteredItems, sortedItems, 'Items are not sorted by creation date');
 }
-

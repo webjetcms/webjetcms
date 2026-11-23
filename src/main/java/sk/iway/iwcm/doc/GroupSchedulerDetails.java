@@ -19,9 +19,9 @@ public class GroupSchedulerDetails extends GroupDetails
 	private int scheduleId;
 	private Date saveDate;
 	private int userId;
+	private String userFullName;
 	private Date whenToPublish;
-	
-	
+
 	public int getScheduleId() {
 		return scheduleId;
 	}
@@ -46,5 +46,11 @@ public class GroupSchedulerDetails extends GroupDetails
 	public void setWhenToPublish(Date whenToPublish) {
 		this.whenToPublish = whenToPublish;
 	}
-	
+	public String getUserFullName() {
+		return userFullName;
+	}
+	public void setUserFullName(String userFullName) {
+		this.userFullName = userFullName;
+	}
+
 }

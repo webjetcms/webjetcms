@@ -8,6 +8,7 @@ block content
     script(type="text/javascript", src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/js/fck_dialog_common.jsp")
 
     script.
+        window.helpLink = "/redactor/webpages/working-in-editor/README";
         var lastDocId = -1;
         var lastGroupId = -1;
         var lastVirtualPath = "";
@@ -22,6 +23,13 @@ block content
         let haveFileIndexerPerm = [(${haveFileIndexerPerm})];
         let elfinderMetadataEnabled = [(${elfinderMetadataEnabled})];
         let elfinderMetadataAutopopup = [(${elfinderMetadataAutopopup})];
+        let archivePath = "[(${archivPath})]".replace(/^\/+|\/+$/g, '').toLowerCase();
+        let archiveRoot = archivePath ? '/' + archivePath : '';
+
+        function isReadOnlyArchive(file) {
+            let path = file.virtualPath && file.virtualPath.replace(/[. ]+\//g, '/').replace(/\/+/g, '/').replace(/\/+$/, '').toLowerCase();
+            return file.read && !file.write && !file.notfound && archiveRoot && path && (path === archiveRoot || path.indexOf(archiveRoot + '/') === 0);
+        }
 
         var wjCkMapping = [
             {wj: 'txtUrl', tab:'info', ck:'url'},
@@ -32,7 +40,7 @@ block content
             'forward', 'getfile', 'help', 'home', 'info', 'mkdir', 'mkfile', 'netmount',
             'open', 'paste', 'quicklook', 'reload', 'rename', 'resize', 'rm',
             'sort', 'up', 'upload', 'view',
-            'wjedit', 'wjfilearchive', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
+            'wjedit', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
         ];
 
         let files = [
@@ -185,6 +193,7 @@ block content
                 rememberLastDir: false,
                 requestType: 'post',
                 customData: customData,
+                readOnlyMarker: isReadOnlyArchive,
                 //transport: new elFinderSupportVer1(),
                 getFileCallback: function(files, fm)
                 {

@@ -51,7 +51,8 @@ module.exports = {
       * Waits for the loading indicator to disappear
       */
      waitForLoader() {
-          let name = "div.DTE_Processing_Indicator";
+          // A hidden editor can precede the currently saving editor in the DOM.
+          let name = "div.DTE_Processing_Indicator:visible";
           I.waitForInvisible(name, 200);
           I.wait(0.2);
      },
@@ -60,9 +61,9 @@ module.exports = {
       * Saves the editor changes and waits for the result
       * @param {String} [name] - Optional modal name for the editor
       */
-     save(name) {
+     save(name, waitForClose=false) {
           var prefixSelector = "div";
-          if (typeof name != "undefined") prefixSelector = "#" + name + "_modal";
+          if (typeof name != "undefined" && name != null) prefixSelector = "#" + name + "_modal";
 
           //ideme cez slector, pretoze to moze byt Pridat (novy zaznam) alebo Ulozit (existujuci)
           I.click({ css: prefixSelector + ".DTED.show div.DTE_Footer.modal-footer button.btn.btn-primary" });
@@ -70,6 +71,11 @@ module.exports = {
           //cakaj na reload datatabulky, nevieme aka to je DT, takze radsej takto natvrdo
           //I.wait(3);
           DT.waitForLoader();
+
+          if (waitForClose) {
+               if (typeof name != "undefined") this.waitForModalClose(name+"_modal");
+               else this.waitForModalClose();
+          }
      },
 
      /**
@@ -84,7 +90,7 @@ module.exports = {
      },
 
      /**
-      * Cancels the editing process and closes the editor
+      * Cancels editing and waits for the modal to close and restore focus.
       * @param {String} [name] - Optional modal name to target
       * @param {Boolean} [clickTopButton=false] - Determines which close button to click (top or footer)
       */
@@ -100,6 +106,9 @@ module.exports = {
           }
 
           if (typeof name == "undefined") { name = "datatableInit"; }
+
+          //we can't use name here because often DTE.cancel is called without name, so this selector is bit relaxed...
+          I.waitForElement({ css: prefixSelector + '.DTED[data-dte-close-state="closed"]' }, 200);
           I.waitForInvisible("#" + name + "_modal", 200);
 
           //wait for fade animation
@@ -107,13 +116,12 @@ module.exports = {
      },
 
      /**
-      * Waits for the editor modal to be visible
+      * Waits for the editor modal to be visible and its default focus to be set
       * @param {String} [name] - Optional modal name
       */
      waitForEditor(name) {
           if (typeof name == "undefined") { name = "datatableInit"; }
-          I.waitForVisible("#" + name + "_modal", 200);
-          I.wait(0.2);
+          I.waitForVisible("#" + name + "_modal.DTED.show[data-dte-focus-state='ready']", 200);
      },
 
      /**
@@ -165,28 +173,32 @@ module.exports = {
      },
 
      /**
-      * Waits for the CKEditor to initialize
+      * Waits for CKEditor to initialize even when another editor tab is active.
       */
      waitForCkeditor() {
-          //pockaj na inicializaciu CK editora
-          I.waitForElement("span.cke_toolbox");
-          I.wait(2);
-          I.waitForElement('#trEditor', 10);
+          I.waitForElement('#trEditor', 20);
+          I.waitForFunction(() => {
+               const editor = window.ckEditorInstance;
+               if (editor?.status !== 'ready' || !editor.editable()?.$?.isConnected) return false;
+               const frame = document.getElementById('DTE_Field_data-pageBuilderIframe');
+               if (frame?.getClientRects().length) {
+                    return frame.contentWindow?.pageBuilderReady === true && frame.contentDocument?.body?.inert === false;
+               }
+               return true;
+          }, [], 20);
      },
 
      /**
-      * Fills value into the WYSIWYG editor Quill
+      * Sets CKEditor HTML and waits until its asynchronous dataReady callback completes.
       * @param {String} htmlCode - HTML code to set in the editor
       */
      async fillCkeditor(htmlCode) {
           this.waitForCkeditor();
           I.clickCss('#trEditor');
           I.pressKey('ArrowLeft');
-          await I.executeScript(function (html) {
-               window.ckEditorInstance.setData(html);
-               }, htmlCode
-          );
-          I.wait(1);
+          await I.executeScript(html => new Promise(resolve => {
+               window.ckEditorInstance.setData(html, resolve);
+          }), htmlCode);
      },
 
      /**

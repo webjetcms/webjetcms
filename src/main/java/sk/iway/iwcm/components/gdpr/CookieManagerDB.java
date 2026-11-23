@@ -4,10 +4,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.jpa.JpaTools.Condition;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
 /**
  *  CookieManagerDB.java
@@ -30,6 +36,47 @@ public class CookieManagerDB extends JpaDB<CookieManagerBean>
 		super(CookieManagerBean.class);
 	}
 
+	/**
+	 * Builds a cookie description key scoped to the current domain in MultiWeb and alias-enabled installations.
+	 *
+	 * @param cookieName cookie name
+	 * @param property description property: provider, purpouse or validity
+	 * @return translation key for the current domain
+	 */
+	public static String getTranslationKey(String cookieName, String property)
+	{
+		String key = "components.gdpr.cookies." + cookieName + "." + property;
+		if (Constants.isConstantsAliasSearch() || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir"))
+		{
+			RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+			if (requestBean != null && Tools.isNotEmpty(requestBean.getDomain()))
+			{
+				String prefix = MultiDomainFilter.getDomainAlias(requestBean.getDomain());
+				if (Tools.isEmpty(prefix)) prefix = requestBean.getDomain();
+				return prefix + "-" + key;
+			}
+		}
+		return key;
+	}
+
+	/**
+	 * Reads a domain-specific cookie description, falling back to the existing shared translation.
+	 *
+	 * @param prop translations in the requested language
+	 * @param cookieName cookie name
+	 * @param property description property: provider, purpouse or validity
+	 * @return translated description
+	 */
+	public static String getCookieText(Prop prop, String cookieName, String property)
+	{
+		String key = getTranslationKey(cookieName, property);
+		String sharedKey = "components.gdpr.cookies." + cookieName + "." + property;
+		if (key.equals(sharedKey)) return prop.getText(sharedKey, false, true);
+		String text = prop.getText(key, false, true);
+		if (key.equals(text)) return prop.getText(sharedKey, false, true);
+		return text;
+	}
+
 	public List<CookieManagerBean> findByNameAndProvider(String cookieName, String provider)
 	{
 		List<Condition> conditions = new ArrayList<JpaTools.Condition>();
@@ -39,93 +86,93 @@ public class CookieManagerDB extends JpaDB<CookieManagerBean>
 			conditions.add(CookieManagerDB.filterSubstringIgnoringCase("provider", provider));
 		return JpaTools.findBy(CookieManagerBean.class,  conditions.toArray(new Condition[]{}));
 	}
-		
+
 	public List<CookieManagerBean> findByDomainId(int domainId)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "domainId", domainId);
 	}
-	
+
 	public CookieManagerBean findFirstByDomainId(int domainId)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "domainId", domainId);
-	}	
+	}
 	public List<CookieManagerBean> findByUserId(int userId)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "userId", userId);
 	}
-	
+
 	public CookieManagerBean findFirstByUserId(int userId)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "userId", userId);
-	}	
+	}
 	public List<CookieManagerBean> findBySaveDate(Date saveDate)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "saveDate", saveDate);
 	}
-	
+
 	public CookieManagerBean findFirstBySaveDate(Date saveDate)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "saveDate", saveDate);
-	}	
+	}
 	public List<CookieManagerBean> findByCookieName(String cookieName)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "cookieName", cookieName);
 	}
-	
+
 	public CookieManagerBean findFirstByCookieName(String cookieName)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "cookieName", cookieName);
-	}	
+	}
 	public List<CookieManagerBean> findByDescription(String description)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "description", description);
 	}
-	
+
 	public CookieManagerBean findFirstByDescription(String description)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "description", description);
-	}	
+	}
 	public List<CookieManagerBean> findByProvider(String provider)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "provider", provider);
 	}
-	
+
 	public CookieManagerBean findFirstByProvider(String provider)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "provider", provider);
-	}	
+	}
 	public List<CookieManagerBean> findByPurpouse(String purpouse)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "purpouse", purpouse);
 	}
-	
+
 	public CookieManagerBean findFirstByPurpouse(String purpouse)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "purpouse", purpouse);
-	}	
+	}
 	public List<CookieManagerBean> findByValidity(String validity)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "validity", validity);
 	}
-	
+
 	public CookieManagerBean findFirstByValidity(String validity)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "validity", validity);
-	}	
+	}
 	public List<CookieManagerBean> findByType(String type)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "type", type);
 	}
-	
+
 	public CookieManagerBean findFirstByType(String type)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "type", type);
-	}	
+	}
 	public List<CookieManagerBean> findByClassification(String classification)
 	{
 		return JpaTools.findByMatchingProperty(CookieManagerBean.class, "classification", classification);
 	}
-	
+
 	public CookieManagerBean findFirstByClassification(String classification)
 	{
 		return JpaTools.findFirstByMatchingProperty(CookieManagerBean.class, "classification", classification);

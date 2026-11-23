@@ -145,6 +145,41 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 }
 ```
 
+## Filtrování podle domény
+
+Pokud Spring DATA repozitář implementuje rozhraní `DomainIdRepository`, třída `DatatableRestControllerV2` pracuje s hodnotou `domainId`. Při čtení se automatické filtrování aktivuje pro MultiWeb/Cloud instalaci nebo při zapnuté konfigurační proměnné `enableStaticFilesExternalDir`. Při zápisu se pro takový repozitář vždy doplní chybějící `domainId` a ověří se, že zaslaná hodnota odpovídá očekávané doméně.
+
+Očekávanou doménu vrací chráněná metoda `getDomainId()`. Její výchozí implementace používá aktuální doménu z `CloudToolsForCore.getDomainId()`. Hodnota se používá při standardním získání jednoho nebo všech záznamů, mazání, vyhledání záznamu přes `findItemBy`, výpočtu částek a při doplnění nebo kontrole `domainId` během uložení.
+
+Pokud má controller pracovat s jinou než aktuální doménou, přepište metodu `getDomainId()`. Stejnou metodu použijte i ve vlastních repozitářových dotazech controlleru:
+
+```java
+@Override
+protected int getDomainId() {
+    return DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+}
+```
+
+V příkladu controller spravuje pomocné záznamy `CustomFieldsEntity`, ale jejich doménový rozsah určuje `EnumerationDataBean`. Resolveru se proto předává anotovaná kontextová třída, ne nutně typ entity použité v repozitáři.
+
+Anotace [`@DomainIdCommon`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdCommon.java) označuje entitu, jejíž data jsou společná pro všechny domény. Je dostupná během běhu aplikace a vztahuje se i na podtřídy. Vyhodnocuje ji třída [`DomainIdScopeResolver`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdScopeResolver.java):
+
+- pro anotovanou třídu vrátí hodnotu konfigurační proměnné `domainIdCommon` ; pokud není nastavena na kladné číslo, použije doménu `1`,
+- pro neanotovanou nebo neznámou třídu vrátí aktuální doménu,
+- třídu lze zadat jako `Class<?>` nebo její úplné jméno (`FQDN`).
+
+Entitu označíte následovně:
+
+```java
+@Entity
+@DomainIdCommon
+public class EnumerationDataBean {
+    // ...
+}
+```
+
+Samotná anotace nemění databázové dotazy automaticky. Controller musí použít `DomainIdScopeResolver` v přepsané metodě `getDomainId()` a služby s vlastními dotazy musí použít výsledek resolveru explicitně. Označení proto používejte pouze pro data, která mají být skutečně sdílena a upravována ze všech domén.
+
 ## Metody pro manipulaci s daty
 
 Třídu můžete konstruovat is repozitářem ```NULL```, v takovém případě je třeba implementovat metody pro práci s daty:
@@ -296,6 +331,17 @@ Pokud potřebujete upravit data před uložením, nebo provést akci po uložen�
 	}
 
     /**
+	 * Called before duplicating an entity, with the ID of the source entity.
+	 * The default implementation preserves compatibility with controllers that
+	 * override {@link #beforeDuplicate(Object)}.
+	 * @param entity entity prepared for insertion
+	 * @param originalId ID of the source entity
+	 */
+	public void beforeDuplicate(T entity, Long originalId) {
+
+	}
+
+    /**
 	 * Metoda volana po duplikovanim danej entity,
 	 * da sa pouzit na dokopirovanie udajov, napr. media web stranky
 	 * @param entity - novo ulozena (zduplikovana) entita
@@ -427,13 +473,21 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Neexistující atributy v editoru
 
-Standardně z editoru nemusí přicházet všechny atributy entity, proto se před uložením spojují hodnoty stávající entity a údajů zaslaných z editoru. Standardně se přepíší všechny ne ```null``` atributy. To ale neumožňuje zadat prázdné datum (pokud již bylo jednou nastaveno). Proto jsou atributy anotované DataTableColumn typu ```Date``` přeneseny, i když mají hodnotu ```null```. Toto spojení se provádí v metodě ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
+Standardně z editoru nemusí přicházet všechny atributy entity, proto se před uložením spojují hodnoty stávající entity a dat zaslaných z editoru. Přepíší se všechny atributy s hodnotou odlišnou od ```null```.
+
+Automatický přenos hodnoty ```null``` se týká pouze atributů označených anotací ```@DataTableColumn```. V rámci těchto atributů se přenese pro Java typy ```java.util.Date```, ```java.sql.Date```, ```LocalDate```, ```LocalDateTime``` a objektová pole s ```inputType = DataTableColumnType.NUMBER```, která podporují ```null```, aby je bylo možné v editoru vyprázdnit. U atributů bez anotace ```@DataTableColumn``` se vstupní hodnota ```null``` ignoruje a zachová se původní hodnota entity, i když se jedná o datový typ. Primitivní číselné typy hodnotu ```null``` nepodporují.
+
+Při importu se hodnota ```null``` pro tyto datové atributy a ```NUMBER``` automaticky přenese pouze tehdy, když se jejich sloupec nachází v hlavičce importovaného Excel souboru. Společný seznam ```importedColumns``` se vytváří z hlavičky nezávisle na hodnotách v jednotlivých řádcích. Vynechaný sloupec zachová hodnotu existující entity; prázdná buňka nebo explicitní hodnota ```NULL``` v importovaném sloupci ji vynuluje. Povinná pole nadále podléhají validaci, například ```@NotNull```.
+
+Pro datum uložené v jiném typu, například ```Instant```, ```Timestamp``` nebo ```Long```, případně pro ```TEXT_NUMBER```, lze přenos ```null``` zapnout pomocí ```alwaysCopyProperties = { true }```. Toto nastavení vynutí přenos i při vynechaném sloupci importu. Hodnotou ```false``` se automatický přenos pro podporované datové typy a ```NUMBER``` vypne. Toto spojení se provádí v metodě ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
 
 ## Obnovení dat po uložení
 
 Voláním metody ```setForceReload(true);``` lze vynutit obnovení dat datatabulky po uložení.
 
 Je to nutné pokud se uložený objekt přesune do jiného adresáře a podobně. Ukázka je ve [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
+
+U datatabulky s `serverSide: false` se po úpravě jednoho záznamu zobrazí strana, na které se nachází podle aktuálního třídění a filtrování. Záznam se vyhledá podle pole `reloadRowKey`, ve výchozím nastavení podle `editorId`. Pokud po úpravě přestane vyhovovat filtru nebo již není v načtených údajích, zachová se původní strana, případně poslední platná strana. Rovněž se zachová strana při hromadné editaci a mazání. Pokud smazáním posledního řádku zanikne poslední strana, zobrazí se předchozí platná strana. Při prázdném seznamu se zobrazí první strana s prázdným stavem. Po vytvoření záznamu se vynuceným obnovením stránkování resetuje na první stranu.
 
 ## Číselníky pro select boxy
 
@@ -922,6 +976,51 @@ Pokud potřebujete speciálně kontrolovat práva (např. u webových stránek p
         return true;
     }
 ```
+
+## Kontrola rozsahu při změně pořadí
+
+Koncový bod `/row-reorder` načte z repozitáře celou požadovanou dávku a pro každý záznam zavolá `checkItemPerms`. Pokud je však seznam tabulky omezen také parametrem požadavku nebo nadřazeným záznamem, například `formName`, `stepId`, `parentId` nebo kategorií, samotná kontrola jednotlivých záznamů nemusí zaručit, že všechny patří do aktuálně zobrazeného rozsahu.
+
+V takovém kontroléru implementujte metodu:
+
+```java
+protected boolean checkRowReorderScope(HttpServletRequest request, List<T> entities)
+```
+
+Metoda se jmenuje po načtení kompletní dávky z repozitáře a před validací měněného pole nebo změnou entit. Parametr `entities` proto obsahuje uložené entity, nikoli hodnoty z těla požadavku. Výchozí implementace vrací `true`, aby zůstalo zachováno chování stávajících kontrolérů.
+
+Provádění musí postupovat bezpečně a při neplatném vstupu vrátit `false`:
+
+- ověřit přítomnost a platnost všech parametrů určujících rozsah,
+- porovnat tento rozsah s každou entitou v seznamu,
+- ověřit aktuální doménu, pokud ji daná entita používá,
+- ověřit existenci a vztah nadřazeného záznamu,
+- ověřit, že aktuální uživatel může daný rozsah upravovat.
+
+Například položky vícekrokového formuláře ověřují název formuláře, krok, doménu i oprávnění uživatele:
+
+```java
+@Override
+protected boolean checkRowReorderScope(HttpServletRequest request, List<FormItemEntity> entities) {
+    String formName = MultistepFormsService.getFormName(request);
+    int stepId = Tools.getIntValue(request.getParameter("stepId"), -1);
+    if (Tools.isEmpty(formName) || stepId < 1 || entities == null || entities.isEmpty() || getUser() == null) return false;
+
+    int domainId = CloudToolsForCore.getDomainId();
+    for (FormItemEntity entity : entities) {
+        if (entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+            entity.getStepId() == null || entity.getStepId().intValue() != stepId ||
+            entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
+    }
+
+    if (formStepsRepository.getValidStep(formName, Long.valueOf(stepId), domainId).isEmpty()) return false;
+    return formsService.isFormAccessible(formName, getUser());
+}
+```
+
+Klient při sestavení URL pro `/row-reorder` zachová parametry z `DATA.url`. Tyto parametry jsou však ovládány klientem, proto je nelze považovat za důkaz oprávnění. Stejně tak nestačí rozsah definovat pouze přes `addSpecSearch`, protože ten se na koncový bod `/row-reorder` automaticky neaplikuje.
+
+Pokud metoda vrátí `false`, celá operace se odmítne a nic se neuloží. `checkRowReorderScope` je kontrola celé dávky a nenahrazuje `checkItemPerms`, která se nadále používá pro oprávnění ke každému jednotlivému záznamu.
 
 ## Vyvolání chyby
 

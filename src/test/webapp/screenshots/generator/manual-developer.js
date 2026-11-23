@@ -1,5 +1,7 @@
 Feature('manual-developer');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -12,12 +14,12 @@ Scenario('field-json', async({ I, DTE, Document }) => {
     I.clickCss("#pills-dt-insertScriptTable-scriptPerms-tab");
 
     //Add group and webpage for screenshot
-    I.clickCss("#editorAppDTE_Field_groupIds > section > div.dt-tree-container-no-margin-top.form-group.row > div > button.btn-vue-jstree-add");
-    I.waitForElement("#jsTree");
+    I.clickCss("#editorAppDTE_Field_groupIds > webjet-dte-jstree > section > div.dt-tree-container-no-margin-top.form-group.row > div > button.btn-webjet-jstree-add");
+    I.waitForElement(WebjetDteJsTree.tree);
     I.click( locate(".jstree-anchor").withText("Newsletter") );
 
-    I.clickCss("#editorAppDTE_Field_docIds > section > div.dt-tree-container-no-margin-top.form-group.row > div > button.btn-vue-jstree-add");
-    I.waitForElement("#jsTree");
+    I.clickCss("#editorAppDTE_Field_docIds > webjet-dte-jstree > section > div.dt-tree-container-no-margin-top.form-group.row > div > button.btn-webjet-jstree-add");
+    I.waitForElement(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText('test').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText("Formular") );
 

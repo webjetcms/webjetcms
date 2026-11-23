@@ -4359,6 +4359,12 @@ public class InitServlet extends HttpServlet
 		files.add("/WEB-INF/classes/sk/iway/iwcm/editor/service/ApproveService.java");
 		files.add("/components/htmlbox/editor_toolbar.jsp");
 
+		//AspectJ is now woven at compile time; remove the obsolete load-time weaving descriptor
+		files.add("/WEB-INF/classes/META-INF/aop-ajc.xml");
+
+		// RAG JPA classes were moved to rag.vectorjpa; remove the old package after incremental updates.
+		files.add("/WEB-INF/classes/sk/iway/iwcm/rag/pgvector/");
+
 		for (String file : files)
 		{
 			File f = new File(sc.getRealPath(file));

@@ -18,6 +18,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -25,6 +27,10 @@ import sk.iway.iwcm.users.UsersDB;
 @Table(name = "_adminlog_")
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+	@DataTableTab(id = "description", title = "components.audit_log.description", selected = true, content = "<div></div>"),
+	@DataTableTab(id = "main", title = "datatable.tab.basic")
+})
 public class AuditLogEntity {
 
 	public AuditLogEntity() {

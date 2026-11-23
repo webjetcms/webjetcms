@@ -335,7 +335,7 @@ Scenario('Post publish, validation', async ({ I, DT, Document }) => {
         I.clickCss("button.buttons-select-all");
         I.clickCss("button.buttons-remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
-        DT.waiForLoader();
+        DT.waitForLoader();
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
     }
 });
@@ -381,6 +381,7 @@ function testPublishingAndValidity(I, DT, DTE, Document, toRedirectUrl, useCache
     I.say("Delete redirect and test it do not work");
         I.amOnPage("/admin/v9/settings/redirect/");
         DT.filterEquals("oldUrl", toRedirectUrl);
+        DT.waitForLoader();
 
         I.clickCss("td.dt-select-td.sorting_1");
         I.clickCss("button.buttons-remove");
@@ -477,6 +478,7 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
     I.say("Verify there are no unrelated redirect cleaning actions");
     I.amOnPage("/admin/v9/settings/redirect-cleaning/");
     DT.waitForLoader("redirectCleaningTable");
+    I.waitForEnabled(redirectCleaningWrapper + " button.buttons-analyze-redirects", 20);
     I.seeElement("#redirectCleaningIncludeUnnamed");
     I.dontSeeCheckboxIsChecked("#redirectCleaningIncludeUnnamed");
 
@@ -494,6 +496,7 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
 
     I.say("Create actionable and ignored redirects");
     I.amOnPage("/admin/v9/settings/redirect/");
+    I.waitForVisible("#redirectTable_wrapper button.buttons-create", 20);
     DT.waitForLoader();
     createRedirect(I, DTE, prefix + "-old", prefix + "-old-first");
     createRedirect(I, DTE, prefix + "-old", prefix + "-old-final");
@@ -510,6 +513,7 @@ Scenario('Redirect cleaning preview and execution @singlethread @screenshot', as
     I.say("Analyze and verify the read-only preview");
     I.amOnPage("/admin/v9/settings/redirect-cleaning/");
     DT.waitForLoader("redirectCleaningTable");
+    I.waitForEnabled(redirectCleaningWrapper + " button.buttons-analyze-redirects", 20);
     I.dontSeeElement(redirectCleaningWrapper + " button.buttons-create");
     I.clickCss(redirectCleaningWrapper + " button.buttons-analyze-redirects");
     I.waitForText(prefix + "-old-first", 40, redirectCleaningWrapper);

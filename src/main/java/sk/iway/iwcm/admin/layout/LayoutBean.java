@@ -10,6 +10,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.admin.DocumentationTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -23,6 +24,7 @@ public class LayoutBean {
 
     private Identity user;
     private HeaderBean header;
+    private SystemInfo systemInfo;
     //brand: cms, net, lms
     private String brand;
     //plna verzia WebJETu: Web JET admin verzia 8.7.979 18.03.2020 13:06:59 Enterprise
@@ -31,6 +33,7 @@ public class LayoutBean {
     private String lng;
     private String lngWebjet;
     private String csrfToken;
+    private String loginLocationUrl;
     private String nopermsCss;
     private String nopermsJavascript;
     //datum poslednej zmeny properties suborov pre efektivnejsie (ne)volanie REST sluzby pre ich aktualizaciu na FE
@@ -38,6 +41,22 @@ public class LayoutBean {
 
     private String customAdminCss = null;
     private String customAdminJavascript = null;
+
+    public String getDocumentationBaseUrl() {
+        return DocumentationTools.getBaseUrl();
+    }
+
+    public String getProductEdition() {
+        return InitServlet.getProductEdition();
+    }
+
+    public String getProductVersion() {
+        return InitServlet.getActualVersion();
+    }
+
+    public String getProductServer() {
+        return SystemInfo.getServer(user);
+    }
 
     public String getConstant(String name)
     {
@@ -47,6 +66,24 @@ public class LayoutBean {
     public String getConstant(String name, String defaultValue)
     {
         return Constants.getString(name, defaultValue);
+    }
+
+    /** Returns a configuration value with request and installation macros expanded. */
+    public String getConstantExecuteMacro(String name)
+    {
+        return Constants.getStringExecuteMacro(name);
+    }
+
+    /** Returns the environment detected from the request server name. */
+    public String getEnvironmentName()
+    {
+        return Constants.getEnvironmentName();
+    }
+
+    /** Returns the shared environment badge with the current request's configuration and macros. */
+    public EnvironmentBadge getEnvironmentBadge()
+    {
+        return new EnvironmentBadge();
     }
 
     public int getConstantInt(String name)

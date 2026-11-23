@@ -1,0 +1,350 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const test = require("node:test");
+
+const {
+  AUDIO_GREP,
+  runAudio,
+  validateAudioScenarioSource
+} = require("./audio_runner.js");
+
+const VALID_AUDIO_METADATA = `
+Scenario("ElevenLabs", ({ I }) => {
+  I.generateAudio(\`
+Valid narration.
+\`);
+}).tag("@audio");
+`;
+const VALID_AUDIO_SCENARIO = `Feature("video.scenario");\n${VALID_AUDIO_METADATA}`;
+
+function withFeature(source) {
+  return `Feature("video.invalid");\n${source}`;
+}
+
+function createWebappFixture() {
+  const webappRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wj-audio-runner-"));
+  const videoDirectory = path.join(webappRoot, "video");
+  fs.mkdirSync(videoDirectory);
+  fs.writeFileSync(path.join(videoDirectory, "scenario.js"), VALID_AUDIO_SCENARIO);
+  fs.writeFileSync(path.join(videoDirectory, "invalid.js"), "Feature(\"video.invalid\");");
+  fs.writeFileSync(path.join(videoDirectory, "scenario.txt"), "fixture");
+  fs.mkdirSync(path.join(videoDirectory, "directory.js"));
+  fs.writeFileSync(path.join(webappRoot, "outside.js"), "// fixture");
+  return webappRoot;
+}
+
+function runWithFixture(webappRoot, argv, overrides = {}) {
+  const errors = [];
+  let spawnCalls = 0;
+  let spawnArguments;
+  const status = runAudio(argv, {
+    webappRoot,
+    codeceptBin: path.join(webappRoot, "node_modules", "codeceptjs", "bin", "codecept.js"),
+    stderr: (message) => errors.push(message),
+    spawnSync: (...args) => {
+      spawnCalls++;
+      spawnArguments = args;
+      return { status: 0 };
+    },
+    ...overrides
+  });
+  return { errors, spawnArguments, spawnCalls, status };
+}
+
+test("runs local CodeceptJS for exactly one validated audio scenario", () => {
+  const webappRoot = createWebappFixture();
+  try {
+    const result = runWithFixture(webappRoot, ["video/scenario.js"]);
+    const scenarioPath = fs.realpathSync(path.join(webappRoot, "video", "scenario.js"));
+
+    assert.equal(result.status, 0);
+    assert.equal(result.spawnCalls, 1);
+    assert.equal(result.spawnArguments[0], process.execPath);
+    assert.deepEqual(result.spawnArguments[1], [
+      path.join(webappRoot, "node_modules", "codeceptjs", "bin", "codecept.js"),
+      "run",
+      "-c",
+      path.join(webappRoot, "codecept.audio.conf.js"),
+      "--steps",
+      "--grep",
+      AUDIO_GREP
+    ]);
+    assert.equal(result.spawnArguments[2].cwd, webappRoot);
+    assert.equal(result.spawnArguments[2].env.CODECEPT_AUDIO_FILE, scenarioPath);
+    assert.equal(result.spawnArguments[2].stdio, "inherit");
+    assert.deepEqual(result.errors, []);
+  } finally {
+    fs.rmSync(webappRoot, { recursive: true, force: true });
+  }
+});
+
+test("rejects missing and multiple scenario arguments before starting CodeceptJS", () => {
+  const webappRoot = createWebappFixture();
+  try {
+    const missing = runWithFixture(webappRoot, []);
+    const multiple = runWithFixture(webappRoot, ["video/scenario.js", "video/other.js"]);
+
+    assert.equal(missing.status, 1);
+    assert.equal(multiple.status, 1);
+    assert.equal(missing.spawnCalls, 0);
+    assert.equal(multiple.spawnCalls, 0);
+    assert.match(missing.errors[0], /Usage: npm run audio/);
+    assert.match(multiple.errors[0], /Usage: npm run audio/);
+  } finally {
+    fs.rmSync(webappRoot, { recursive: true, force: true });
+  }
+});
+
+test("rejects missing, non-JavaScript, non-file, and outside paths", () => {
+  const webappRoot = createWebappFixture();
+  try {
+    const cases = [
+      { argument: "video/missing.js", message: /does not exist/ },
+      { argument: "video/scenario.txt", message: /must be a \.js file/ },
+      { argument: "video/directory.js", message: /must be a file/ },
+      { argument: "outside.js", message: /inside the video directory/ }
+    ];
+
+    for (const item of cases) {
+      const result = runWithFixture(webappRoot, [item.argument]);
+      assert.equal(result.status, 1, item.argument);
+      assert.equal(result.spawnCalls, 0, item.argument);
+      assert.match(result.errors[0], item.message);
+    }
+  } finally {
+    fs.rmSync(webappRoot, { recursive: true, force: true });
+  }
+});
+
+test("rejects a video-directory symlink that resolves outside the directory", () => {
+  const webappRoot = createWebappFixture();
+  try {
+    fs.symlinkSync(
+      path.join(webappRoot, "outside.js"),
+      path.join(webappRoot, "video", "linked.js")
+    );
+
+    const result = runWithFixture(webappRoot, ["video/linked.js"]);
+    assert.equal(result.status, 1);
+    assert.equal(result.spawnCalls, 0);
+    assert.match(result.errors[0], /inside the video directory/);
+  } finally {
+    fs.rmSync(webappRoot, { recursive: true, force: true });
+  }
+});
+
+test("rejects an invalid audio scenario before starting CodeceptJS", () => {
+  const webappRoot = createWebappFixture();
+  try {
+    const result = runWithFixture(webappRoot, ["video/invalid.js"]);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.spawnCalls, 0);
+    assert.match(result.errors[0], /expected exactly one Scenario\("ElevenLabs"\)/);
+  } finally {
+    fs.rmSync(webappRoot, { recursive: true, force: true });
+  }
+});
+
+test("validates exactly one static ElevenLabs audio scenario", () => {
+  const validOverride = VALID_AUDIO_SCENARIO.replace(
+    "Valid narration.\n\`);",
+    "Valid narration.\n\`, { modelId: \"eleven_v3\", voiceId: \"voice-id\" });"
+  );
+  assert.doesNotThrow(() => validateAudioScenarioSource(validOverride, "valid.js"));
+
+  const cases = [
+    {
+      source: withFeature(
+        `Scenario("Other", ({ I }) => { I.generateAudio(\`Text\`); }).tag("@audio");`
+      ),
+      message: /exactly one Scenario\("ElevenLabs"\), found 0/
+    },
+    {
+      source: `${VALID_AUDIO_SCENARIO}\n${VALID_AUDIO_METADATA}`,
+      message: /exactly one Scenario\("ElevenLabs"\), found 2/
+    },
+    {
+      source: withFeature(
+        `Scenario("ElevenLabs", ({ I }) => { I.generateAudio(\`Text\`); });`
+      ),
+      message: /exactly one scenario tagged @audio, found 0/
+    },
+    {
+      source: `${VALID_AUDIO_SCENARIO}\nScenario("Other", ({ I }) => { I.say("Text"); }).tag("@audio");`,
+      message: /exactly one scenario tagged @audio, found 2/
+    },
+    {
+      source: withFeature(`
+        Scenario("ElevenLabs", ({ I }) => { I.generateAudio(\`Text\`); });
+        Scenario("Other", ({ I }) => { I.say("Text"); }).tag("@audio");
+      `),
+      message: /must be the scenario tagged @audio/
+    },
+    {
+      source: withFeature(`Scenario("ElevenLabs", ({ I }) => {
+        I.generateAudio(\`First\`);
+        I.generateAudio(\`Second\`);
+      }).tag("@audio");`),
+      message: /must contain only one I\.generateAudio call/
+    },
+    {
+      source: withFeature(
+        `Scenario("ElevenLabs", ({ I }) => { I.generateAudio(\`Text \${value}\`); }).tag("@audio");`
+      ),
+      message: /without interpolation/
+    },
+    {
+      source: `
+        Before(({ login }) => login("admin"));
+        ${VALID_AUDIO_SCENARIO}
+      `,
+      message: /Before hooks are not allowed/
+    },
+    {
+      source: VALID_AUDIO_SCENARIO.replace(
+        `Feature("video.scenario")`,
+        `Feature("video.scenario @audio")`
+      ),
+      message: /@audio must not appear in the Feature title or tags/
+    },
+    {
+      source: `${VALID_AUDIO_SCENARIO}\nScenario("Other @audio", ({ I }) => { I.say("Text"); });`,
+      message: /@audio must not appear in a Scenario title/
+    },
+    {
+      source: VALID_AUDIO_SCENARIO.replace(
+        `Feature("video.scenario")`,
+        `Feature("video.scenario").tag("@audio")`
+      ),
+      message: /@audio must not appear in the Feature title or tags/
+    },
+    {
+      source: `${VALID_AUDIO_SCENARIO}\nScenario.only("ElevenLabs", ({ I }) => {
+        I.generateAudio(\`Wrong narration\`);
+      }).tag("@audio");`,
+      message: /Only direct Feature and Scenario declarations are allowed/
+    },
+    {
+      source: `${VALID_AUDIO_SCENARIO}\nData(["wrong"]).Scenario("Wrong", ({ I }) => {
+        I.generateAudio(\`Wrong narration\`);
+      }).tag("@audio");`,
+      message: /Only direct Feature and Scenario declarations are allowed/
+    },
+    {
+      source: `${VALID_AUDIO_SCENARIO}\nif (true) {
+        Scenario.only("ElevenLabs", ({ I }) => { I.generateAudio(\`Wrong\`); }).tag("@audio");
+      }`,
+      message: /only static declarations and direct Feature or Scenario calls/
+    },
+    {
+      source: `${VALID_AUDIO_SCENARIO}\nconst duplicate = Scenario.only(
+        "ElevenLabs", ({ I }) => { I.generateAudio(\`Wrong\`); }
+      ).tag("@audio");`,
+      message: /only static declarations and direct Feature or Scenario calls/
+    },
+    {
+      source: `Scenario("ElevenLabs", ({ I }) => {`,
+      message: /JavaScript parsing failed/
+    }
+  ];
+
+  for (const item of cases) {
+    assert.throws(
+      () => validateAudioScenarioSource(item.source, "invalid.js"),
+      item.message
+    );
+  }
+});
+
+test("preserves the CodeceptJS exit status and reports launch failures", () => {
+  const webappRoot = createWebappFixture();
+  try {
+    const failedRun = runWithFixture(webappRoot, ["video/scenario.js"], {
+      spawnSync: () => ({ status: 7 })
+    });
+    const launchFailure = runWithFixture(webappRoot, ["video/scenario.js"], {
+      spawnSync: () => ({ error: new Error("spawn failed"), status: null })
+    });
+
+    assert.equal(failedRun.status, 7);
+    assert.equal(launchFailure.status, 1);
+    assert.match(launchFailure.errors[0], /Unable to start CodeceptJS: spawn failed/);
+  } finally {
+    fs.rmSync(webappRoot, { recursive: true, force: true });
+  }
+});
+
+test("preflights a static JSON plan without evaluating code or generating audio", () => {
+  const plan = { language: "sk", shots: [
+    { id: "intro", type: "manual", durationSeconds: 5, title: "Intro", "text-sk": "Narration.", "text-en": "English narration." }
+  ] };
+  const source = `Feature("video.plan");
+const videoPlan = ${JSON.stringify(plan)};
+Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan); }).tag("@audio");`;
+  assert.doesNotThrow(() => validateAudioScenarioSource(source));
+  assert.doesNotThrow(() => validateAudioScenarioSource(source.replace("generateAudio(videoPlan)", 'generateAudio(videoPlan, { language: "en" })')));
+  const invalid = [
+    [source.replace("const videoPlan", "let videoPlan"), /preceding const plan object/],
+    [source.replace('"Narration."', 'process.exit()'), /only static declarations/],
+    [source.replace('"Narration."', '`${process.exit()}`'), /only static declarations/],
+    [source.replace('"text-sk"', '"text-cs"'), /missing text-sk/],
+    [source.replace('"manual"', '"auto1"'), /type must be auto, manual or head/],
+    [source.replace("generateAudio(videoPlan)", 'generateAudio(videoPlan, { language: "en", language: "sk" })'), /must not be repeated/]
+  ];
+  for (const [input, message] of invalid) assert.throws(() => validateAudioScenarioSource(input), message);
+});
+
+test("preflights JavaScript plan metadata and skips inline shot and prepare function bodies", () => {
+  const source = `Feature("video.inline");
+const videoPlan = {
+  language: "sk",
+  shots: [{
+    id: "edit", type: "auto", durationSeconds: 10, title: "Edit",
+    "text-sk": \`Narration.\`, // Static template literals and trailing commas are allowed.
+    prepare: async ({ I }) => { throw new Error("Do not execute preparation"); },
+    shot: async ({ I, selector }) => { await I.videoClick(selector); },
+  }],
+};
+Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan); }).tag("@audio");`;
+  assert.doesNotThrow(() => validateAudioScenarioSource(source));
+  const invalid = [
+    [source.replace('title: "Edit"', 'title: dynamicTitle'), /static literal data/],
+    [source.replace('title: "Edit"', 'title: `${dynamicTitle}`'), /static literal data/],
+    [source.replace('title: "Edit"', 'get title() { throw new Error("Do not execute getters"); }'), /data properties/],
+    [source.replace('title: "Edit"', '["title"]: "Edit"'), /data properties/],
+    [source.replace('title: "Edit"', '...metadata'), /data properties/],
+    [source.replace('title: "Edit"', 'title'), /data properties/],
+    [source.replace('title: "Edit"', '__proto__: {}, title: "Edit"'), /data properties/],
+    [source.replace('title: "Edit"', 'title: () => "Edit"'), /only shot and prepare may be functions/],
+    [source.replace('title: "Edit"', 'title: "First", title: "Edit"'), /must not be repeated/],
+    [source.replace('prepare: async ({ I }) => { throw new Error("Do not execute preparation"); }', 'prepare: false'), /prepare must be an inline function/],
+    [source.replace('shot: async ({ I, selector }) => { await I.videoClick(selector); }', 'shot: savedCallback'), /shot must be an inline function/],
+    [source.replace('shot: async', 'prepare: async'), /must not be repeated/]
+  ];
+  for (const [input, message] of invalid) assert.throws(() => validateAudioScenarioSource(input), message);
+});
+
+test("preflights complete-shot splitting and rejects oversized shots before launching CodeceptJS", () => {
+  const plan = { language: "sk", shots: ["first", "second"].map(id => ({
+    id, type: "auto", title: id, durationSeconds: 10, "text-sk": "x".repeat(3000), "text-en": "x".repeat(5001)
+  })) };
+  const source = `Feature("video.long-plan");
+const videoPlan = ${JSON.stringify(plan)};
+Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan, { modelId: "eleven_v3" }); }).tag("@audio");`;
+  assert.doesNotThrow(() => validateAudioScenarioSource(source));
+  const translated = source.replace('modelId: "eleven_v3"', 'modelId: "eleven_v3", language: "en"');
+  assert.throws(() => validateAudioScenarioSource(translated), /Shot first has 5001 characters.*5000-character limit/);
+  assert.doesNotThrow(() => validateAudioScenarioSource(translated.replace('modelId: "eleven_v3"', 'modelId: "eleven_multilingual_v2"')));
+  const v4 = translated.replace('modelId: "eleven_v3"', 'modelId: "eleven_v4", languageCode: "en", voiceSettings: { stability: 0.3, similarityBoost: 0.5 }');
+  assert.doesNotThrow(() => validateAudioScenarioSource(v4));
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "stability: 30")), /voiceSettings.stability/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace('languageCode: "en"', 'languageCode: "English"')), /languageCode/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "stability: readStability()")), /static literal data/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "get stability() { return 0.3; }")), /data properties/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "stability: 0.3, stability: 0.5")), /must not be repeated/);
+  const legacy = withFeature(`Scenario("ElevenLabs", ({ I }) => { I.generateAudio(\`${"x".repeat(5001)}\`, { modelId: "eleven_v3" }); }).tag("@audio");`);
+  assert.throws(() => validateAudioScenarioSource(legacy), /Legacy narration has 5001 characters/);
+});

@@ -1,4 +1,5 @@
 <script>
+    window.helpLink = "/redactor/apps/forum/README";
     function appAfterInit(response, datatable, path, isInsert) {
         const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
             fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());

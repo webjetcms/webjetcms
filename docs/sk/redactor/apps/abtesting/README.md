@@ -1,6 +1,6 @@
 # AB testovanie
 
-Aplikácia AB testovanie vám umožňuje vykonať AB testovanie verzie stránok. Je možné vytvoriť B verziu stránky kliknutím na tlačítko Uložiť ako AB test. Vytvorí sa kópia stránky s upravenou URL adresou v ktorej môžete testovať B verziu stránky. WebJET následne automaticky zabezpečí zobrazovanie A a B verzie stránky na pôvodnej URL adrese v definovanom pomere. Návštevník teda stále vidí pôvodnú URL ale namiesto A verzie sa mu automaticky zobrazí B verzia stránky.
+Aplikácia AB testovanie vám umožňuje vykonať AB testovanie verzie stránok. Je možné vytvoriť B verziu stránky výberom **Ďalšie akcie → Uložiť ako AB test** v nástrojovej lište. Vytvorí sa kópia stránky s upravenou URL adresou v ktorej môžete testovať B verziu stránky. WebJET následne automaticky zabezpečí zobrazovanie A a B verzie stránky na pôvodnej URL adrese v definovanom pomere. Návštevník teda stále vidí pôvodnú URL ale namiesto A verzie sa mu automaticky zobrazí B verzia stránky.
 
 ## Čo je AB testovanie
 
@@ -61,7 +61,7 @@ Pripravte si hypotézu, ktorá by mala zlepšiť stav
 
 ## Vytvorenie testu
 
-B verziu stránky vytvoríte označením originálnej verzie stránky a kliknutím na ikonu <i class="ti ti-a-b"></i> Uložiť ako AB test. Následne sa vám vytvorí kópia stránky, ktorá v stĺpci Stav bude zobrazovať ikonu <i class="ti ti-a-b"></i>. V B verzii môžete upraviť text stránky, ktorým budete testovať dopad zmien.
+B verziu stránky vytvoríte označením originálnej verzie stránky a výberom **Ďalšie akcie → Uložiť ako AB test**. Následne sa vám vytvorí kópia stránky, ktorá v stĺpci Stav bude zobrazovať ikonu <i class="ti ti-a-b"></i>. V B verzii môžete upraviť text stránky, ktorým budete testovať dopad zmien.
 
 ![](datatable.png)
 

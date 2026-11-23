@@ -1,5 +1,7 @@
 Feature('webpages.mirroring');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 let randomNumber;
 const groupTable = "groupsMirroringTable";
 const docTable = "docsMirroringTable";
@@ -53,6 +55,7 @@ Scenario('Mirroring 1 - Structure prepare', async ({I, DT, DTE, Document}) => {
     I.say("Create subgroup of sk folder");
     I.jstreeNavigate([sk_mirroring]);
     addFolder(I, DT, DTE, sk_mirroring_child_A, false);
+    I.jstreeNavigate([sk_mirroring]);
     addFolder(I, DT, DTE, sk_mirroring_child_B, false);
 
     I.say("Check in mirroring that folders are not there");
@@ -200,7 +203,7 @@ Scenario('Mirroring 6 - DOCS edit logic', ({I, DT, DTE, Document}) => {
     selectAndOpen(I, DTE, docTable);
 
     I.say("remove error sync and test");
-    I.click( locate(".DTE_Field_Name_selectorB button.btn-vue-jstree-item-remove") );
+    I.click( locate(".DTE_Field_Name_selectorB button.btn-webjet-jstree-item-remove") );
     DTE.save();
 
     DT.checkTableRow(docTable, 1, ["", "", getAsPath([sk_mirroring, sk_mirroring_child_B], true), getAsPath([cz_mirroring, sk_mirroring_child_B], true), "", ""]);
@@ -211,8 +214,8 @@ Scenario('Mirroring 6 - DOCS edit logic', ({I, DT, DTE, Document}) => {
     DTE.waitForEditor(docTable);
 
     I.clickCss("button#add-sync-btn");
-    I.click( locate(".DTE_Field_Name_selectorC button.btn-vue-jstree-item-edit") );
-    I.waitForVisible("#jsTree");
+    I.click( locate(".DTE_Field_Name_selectorC button.btn-webjet-jstree-item-edit") );
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText(sk_mirroring_copy).find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText(sk_mirroring_child_B).find('.jstree-icon.jstree-ocl'));
     I.click( locate('.jstree-anchor').withText(sk_mirroring_child_B).withChild(".ti-star-filled") );
@@ -226,9 +229,9 @@ Scenario('Mirroring 6 - DOCS edit logic', ({I, DT, DTE, Document}) => {
     I.clickCss("button.buttons-edit");
     DTE.waitForEditor(docTable);
 
-    I.click( locate(".DTE_Field_Name_selectorA button.btn-vue-jstree-item-remove") );
-    I.click( locate(".DTE_Field_Name_selectorB button.btn-vue-jstree-item-remove") );
-    I.click( locate(".DTE_Field_Name_selectorC button.btn-vue-jstree-item-remove") );
+    I.click( locate(".DTE_Field_Name_selectorA button.btn-webjet-jstree-item-remove") );
+    I.click( locate(".DTE_Field_Name_selectorB button.btn-webjet-jstree-item-remove") );
+    I.click( locate(".DTE_Field_Name_selectorC button.btn-webjet-jstree-item-remove") );
     DTE.save();
 
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -246,7 +249,7 @@ Scenario('Mirroring 7 - GROUPS edit logic', ({I, DT, DTE}) => {
     selectAndOpen(I, DTE, groupTable);
 
     I.say("Remove bad sync and check status of group and doc");
-    I.click( locate(".DTE_Field_Name_selectorB button.btn-vue-jstree-item-remove") );
+    I.click( locate(".DTE_Field_Name_selectorB button.btn-webjet-jstree-item-remove") );
     DTE.save();
 
     DT.checkTableRow(groupTable, 1, ["", "", getAsPath([sk_mirroring, sk_mirroring_child_A]), getAsPath([cz_mirroring, sk_mirroring_child_A]), "", ""]);
@@ -264,8 +267,8 @@ Scenario('Mirroring 7 - GROUPS edit logic', ({I, DT, DTE}) => {
     I.clickCss("button.buttons-edit");
     DTE.waitForEditor(groupTable);
 
-    I.click( locate(".DTE_Field_Name_selectorA button.btn-vue-jstree-item-remove") );
-    I.click( locate(".DTE_Field_Name_selectorB button.btn-vue-jstree-item-remove") );
+    I.click( locate(".DTE_Field_Name_selectorA button.btn-webjet-jstree-item-remove") );
+    I.click( locate(".DTE_Field_Name_selectorB button.btn-webjet-jstree-item-remove") );
     DTE.save();
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -278,8 +281,8 @@ Scenario('Mirroring 8 - test delete logic', ({I, DT, DTE}) => {
 
     DT.filterEquals("fieldA", getAsPath([sk_mirroring]) + " " + getAsPath([sk_mirroring_copy]), groupsWrapperSelector);
 
-    I.clickCss("td.sorting_1");
-    I.clickCss("button.buttons-remove");
+    I.clickCss("#groupsMirroringTable tbody td.sorting_1");
+    I.clickCss(groupsWrapperSelector + " button.buttons-remove");
     DTE.waitForEditor(groupTable);
     I.click("Zmazať", "div.DTE_Action_Remove");
 
@@ -291,10 +294,10 @@ Scenario('Mirroring 8 - test delete logic', ({I, DT, DTE}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('Mirroring 9 - DELETE structure', ({I, DT, DTE}) => {
-    deleteGroup(I, DT, DTE, sk_mirroring, sk_mirroring_id);
-    deleteGroup(I, DT, DTE, cz_mirroring, cz_mirroring_id);
-    deleteGroup(I, DT, DTE, sk_mirroring_copy, sk_mirroring_copy_id);
+Scenario('Mirroring 9 - DELETE structure', async ({I, DT, DTE}) => {
+    await deleteGroup(I, DT, DTE, sk_mirroring);
+    await deleteGroup(I, DT, DTE, cz_mirroring);
+    await deleteGroup(I, DT, DTE, sk_mirroring_copy);
 });
 
 Scenario('odhlasenie', ({ I }) => {
@@ -302,12 +305,14 @@ Scenario('odhlasenie', ({ I }) => {
     I.logout();
 });
 
-function deleteGroup(I, DT, DTE, groupName, groupId) {
+async function deleteGroup(I, DT, DTE, groupName) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
     I.say("Select group to delete");
-    I.waitForElement(locate("a.jstree-anchor").withText(groupName), 10);
-    I.jstreeClick(groupName);
+    const groupNode = locate("#SomStromcek > ul > li").withChild(locate("a.jstree-anchor").withTextEquals(groupName));
+    I.waitForVisible(groupNode, 10);
+    const groupId = await I.grabAttributeFrom(groupNode, "id");
+    I.jstreeClick(groupName, true);
 
     I.say("Perform soft delete");
     I.click(DT.btn.tree_delete_button);
@@ -332,6 +337,7 @@ function deleteGroup(I, DT, DTE, groupName, groupId) {
     I.say("Perform hard delete");
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
+    I.see(groupName, "#groups-datatable_modal div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
 }
@@ -403,7 +409,11 @@ function addFolder(I, DT, DTE, name, isRoot, language = null) {
         DTE.selectOption('lng', language);
     }
 
-    DTE.save();
+    DTE.save("groups-datatable", true);
+    if (isRoot) {
+        // The tree refresh is scheduled after the editor finishes saving.
+        I.waitForVisible(locate("#SomStromcek > ul > li > a.jstree-anchor").withText(name), 20);
+    }
 }
 
 function checkTablesVisibility(I, groups, docs, conf) {
@@ -414,11 +424,11 @@ function checkTablesVisibility(I, groups, docs, conf) {
 }
 
 function checkShowedSelectors(I, alphabet, label, value) {
-    I.seeElement("div#DTE_Field_selector" + alphabet + ".vueComponent");
+    I.seeElement("div#DTE_Field_selector" + alphabet + ".webjet-component");
     I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " label").withText(label) );
-    I.seeElement("input[value='" + value + "']");
-    I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " button.btn-vue-jstree-item-edit") );
-    I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " button.btn-vue-jstree-item-remove") );
+    I.seeInField("#DTE_Field_selector" + alphabet + " input.form-control", value);
+    I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " button.btn-webjet-jstree-item-edit") );
+    I.seeElement( locate(".DTE_Field_Name_selector" + alphabet + " button.btn-webjet-jstree-item-remove") );
 }
 
 function checkAddButtonLogic(I, startAlphabet, endAlphabet) {

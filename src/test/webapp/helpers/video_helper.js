@@ -1,0 +1,600 @@
+const { Helper } = codeceptjs;
+const { getVideoSettings, getVideoShot } = require("./video_settings.js");
+const fs = require("node:fs/promises");
+const path = require("node:path");
+const { randomUUID } = require("node:crypto");
+const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
+const { validateVideoTitle, renderVideoTitle } = require("./video_thumbnail.js");
+
+const DEFAULT_CLICK_DELAY = 350;
+const DEFAULT_POST_CLICK_DELAY = 500;
+const DEFAULT_CURVE_STRENGTH = 1;
+const CURSOR_MIN_DURATION = 240;
+const CURSOR_MAX_DURATION = 900;
+const CURSOR_FRAME_DURATION = 25;
+
+function isCursorEnabled() {
+  return "true" === process.env.CODECEPT_VIDEO_CURSOR;
+}
+
+function getClickDelay() {
+  const value = Number.parseInt(process.env.CODECEPT_VIDEO_CLICK_DELAY || DEFAULT_CLICK_DELAY, 10);
+  if (Number.isNaN(value) || value < 0) return DEFAULT_CLICK_DELAY;
+  return Math.min(value, 2000);
+}
+
+function getPostClickDelay() {
+  const value = Number.parseInt(process.env.CODECEPT_VIDEO_POST_CLICK_DELAY || DEFAULT_POST_CLICK_DELAY, 10);
+  if (Number.isNaN(value) || value < 0) return DEFAULT_POST_CLICK_DELAY;
+  return Math.min(Math.max(value, DEFAULT_POST_CLICK_DELAY), 2000);
+}
+
+function getCurveStrength(value) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error("Video cursor curve strength must be a finite number greater than or equal to zero.");
+  }
+  return value;
+}
+
+function getDefaultCurveStrength() {
+  const configuredValue = process.env.CODECEPT_VIDEO_CURVE_STRENGTH;
+  if (configuredValue == null || configuredValue.trim() === "") return DEFAULT_CURVE_STRENGTH;
+  return getCurveStrength(Number(configuredValue));
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.min(Math.max(value, minimum), maximum);
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function createPseudoRandom(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randomBetween(random, minimum, maximum) {
+  return minimum + random() * (maximum - minimum);
+}
+
+function minimumJerk(progress) {
+  return progress * progress * progress * (10 + progress * (-15 + 6 * progress));
+}
+
+function getCursorDuration(distance, random) {
+  const duration = (230 + Math.sqrt(distance) * 18) * randomBetween(random, 0.92, 1.08);
+  return clamp(duration, CURSOR_MIN_DURATION, CURSOR_MAX_DURATION);
+}
+
+function normalizedBump(progress, peak, concentration) {
+  if (progress <= 0 || progress >= 1) return 0;
+  const startExponent = peak * concentration;
+  const endExponent = (1 - peak) * concentration;
+  const value = Math.pow(progress, startExponent) * Math.pow(1 - progress, endExponent);
+  const maximum = Math.pow(peak, startExponent) * Math.pow(1 - peak, endExponent);
+  return value / maximum;
+}
+
+function getNormalClearance(point, normal, direction, viewport, padding = 36) {
+  const distances = [];
+  const directionX = normal.x * direction;
+  const directionY = normal.y * direction;
+  const maximumX = Math.max(padding, viewport.width - padding);
+  const maximumY = Math.max(padding, viewport.height - padding);
+
+  if (directionX > 0) distances.push((maximumX - point.x) / directionX);
+  if (directionX < 0) distances.push((point.x - padding) / -directionX);
+  if (directionY > 0) distances.push((maximumY - point.y) / directionY);
+  if (directionY < 0) distances.push((point.y - padding) / -directionY);
+  return Math.max(0, Math.min(...distances));
+}
+
+function createNaturalCursorPlan(start, end, viewport, distance, random, curveStrength) {
+  const delta = { x: end.x - start.x, y: end.y - start.y };
+  const normal = { x: -delta.y / distance, y: delta.x / distance };
+  const primaryPeak = randomBetween(random, 0.22, 0.4);
+  const primaryBase = {
+    x: start.x + delta.x * primaryPeak,
+    y: start.y + delta.y * primaryPeak
+  };
+  const positiveClearance = getNormalClearance(primaryBase, normal, 1, viewport);
+  const negativeClearance = getNormalClearance(primaryBase, normal, -1, viewport);
+  const clearanceTotal = positiveClearance + negativeClearance;
+  const primaryDirection = clearanceTotal > 0 &&
+    random() * clearanceTotal < positiveClearance ? 1 : -1;
+  const primaryRatio = distance < 35
+    ? randomBetween(random, 0.03, 0.08)
+    : randomBetween(random, 0.08, 0.2);
+  const maximumPrimaryAmplitude = getNormalClearance(
+    primaryBase,
+    normal,
+    primaryDirection,
+    viewport
+  ) * 0.72;
+  const defaultPrimaryAmplitude = Math.min(
+    distance * primaryRatio,
+    120,
+    maximumPrimaryAmplitude
+  );
+  const primaryAmplitude = primaryDirection * Math.min(
+    defaultPrimaryAmplitude * curveStrength,
+    maximumPrimaryAmplitude
+  );
+
+  const secondaryPeak = randomBetween(random, 0.62, 0.78);
+  const secondaryBase = {
+    x: start.x + delta.x * secondaryPeak,
+    y: start.y + delta.y * secondaryPeak
+  };
+  const secondaryDirection = random() < 0.68 ? -primaryDirection : primaryDirection;
+  const secondaryAmplitude = secondaryDirection * Math.min(
+    Math.abs(primaryAmplitude) * randomBetween(random, 0.025, 0.08),
+    getNormalClearance(secondaryBase, normal, secondaryDirection, viewport) * 0.65
+  );
+
+  return {
+    delta,
+    normal,
+    primaryPeak,
+    primaryAmplitude,
+    primaryConcentration: randomBetween(random, 5, 7.5),
+    secondaryPeak,
+    secondaryAmplitude,
+    secondaryConcentration: randomBetween(random, 5, 7.5)
+  };
+}
+
+function naturalCursorPoint(start, end, plan, progress) {
+  if (progress >= 1) return end;
+  const primaryOffset = plan.primaryAmplitude * normalizedBump(
+    progress,
+    plan.primaryPeak,
+    plan.primaryConcentration
+  );
+  const secondaryOffset = plan.secondaryAmplitude * normalizedBump(
+    progress,
+    plan.secondaryPeak,
+    plan.secondaryConcentration
+  );
+  const normalOffset = primaryOffset + secondaryOffset;
+  return {
+    x: start.x + plan.delta.x * progress + plan.normal.x * normalOffset,
+    y: start.y + plan.delta.y * progress + plan.normal.y * normalOffset
+  };
+}
+
+async function getViewportSize(page) {
+  return page.evaluate(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
+}
+
+async function resolveVisibleClickableTarget(helper, locator) {
+  const elements = await helper._locateClickable(locator);
+  if (!Array.isArray(elements) || elements.length === 0) {
+    throw new Error(`Unable to locate video cursor target: ${String(locator)}`);
+  }
+  if (elements.length === 1) return elements[0];
+
+  for (const element of elements) {
+    if (await element.isVisible()) return element;
+  }
+  return elements[0];
+}
+
+async function getRenderedCursorPosition(page) {
+  return page.evaluate(() => {
+    const host = document.querySelector("#wj-video-cursor-host");
+    const x = Number(host?.dataset.cursorX);
+    const y = Number(host?.dataset.cursorY);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return { x, y };
+  });
+}
+
+function installVideoCursor(cursorScale = 1) {
+  if (window.__wjVideoCursorInstalled) return;
+  window.__wjVideoCursorInstalled = true;
+
+  const mount = () => {
+    let host, cursor, ring;
+    if (window === window.top) {
+      host = document.createElement("div");
+      host.id = "wj-video-cursor-host";
+      host.setAttribute("aria-hidden", "true");
+      Object.assign(host.style, {
+        position: "fixed",
+        left: "0",
+        top: "0",
+        width: "0",
+        height: "0",
+        overflow: "visible",
+        pointerEvents: "none",
+        zIndex: "2147483647"
+      });
+
+      const shadow = host.attachShadow({ mode: "open" });
+      cursor = document.createElement("div");
+      Object.assign(cursor.style, {
+        position: "absolute",
+        left: "0",
+        top: "0",
+        width: "30px",
+        height: "34px",
+        opacity: "0",
+        transform: `translate3d(-60px, -60px, 0) scale(${cursorScale})`,
+        transformOrigin: "0 0",
+        transition: "opacity 100ms linear",
+        willChange: "transform"
+      });
+
+      ring = document.createElement("span");
+      Object.assign(ring.style, {
+        position: "absolute",
+        left: "-11px",
+        top: "-11px",
+        width: "26px",
+        height: "26px",
+        border: "3px solid #00BE9F",
+        borderRadius: "50%",
+        boxSizing: "border-box",
+        opacity: "0"
+      });
+
+      const pointer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      pointer.setAttribute("width", "30");
+      pointer.setAttribute("height", "34");
+      pointer.setAttribute("viewBox", "0 0 30 34");
+      pointer.style.filter = "drop-shadow(0 1px 2px rgba(0, 0, 0, .55))";
+
+      const pointerPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      pointerPath.setAttribute("d", "M2 2 L2 25 L8.7 18.5 L13.8 30.5 L18.2 28.6 L13.1 16.8 L22.5 16.8 Z");
+      pointerPath.setAttribute("fill", "#ffffff");
+      pointerPath.setAttribute("stroke", "#111827");
+      pointerPath.setAttribute("stroke-width", "2");
+      pointerPath.setAttribute("stroke-linejoin", "round");
+      pointer.appendChild(pointerPath);
+
+      cursor.appendChild(ring);
+      cursor.appendChild(pointer);
+      shadow.appendChild(cursor);
+      document.documentElement.appendChild(host);
+    }
+
+    const showPointer = (point) => {
+      if (window !== window.top) {
+        window.parent.postMessage({ type: "wj-video-cursor", ...point }, "*");
+        return;
+      }
+      host.dataset.cursorX = String(point.x);
+      host.dataset.cursorY = String(point.y);
+      cursor.style.opacity = "1";
+      cursor.style.transform = `translate3d(${point.x}px, ${point.y}px, 0) scale(${cursorScale})`;
+      if (point.click) {
+        ring.getAnimations().forEach(animation => animation.cancel());
+        ring.animate([
+          { opacity: .95, transform: "scale(.35)" },
+          { opacity: 0, transform: "scale(1.8)" }
+        ], { duration: 450, easing: "ease-out" });
+      }
+    };
+
+    // Relay through direct parents to support nested and cross-origin iframe viewports.
+    window.addEventListener("message", (event) => {
+      const point = event.data;
+      if (point?.type !== "wj-video-cursor" || !Number.isFinite(point.x) ||
+        !Number.isFinite(point.y) || typeof point.click !== "boolean") return;
+      const frame = Array.from(document.querySelectorAll("iframe"))
+        .find(element => element.contentWindow === event.source);
+      if (!frame || frame.offsetWidth === 0 || frame.offsetHeight === 0) return;
+      const bounds = frame.getBoundingClientRect();
+      showPointer({
+        x: bounds.left + (frame.clientLeft + point.x) * bounds.width / frame.offsetWidth,
+        y: bounds.top + (frame.clientTop + point.y) * bounds.height / frame.offsetHeight,
+        click: point.click
+      });
+    });
+    const updatePosition = (event) => showPointer({
+      x: event.clientX, y: event.clientY, click: event.type === "mousedown"
+    });
+    document.addEventListener("mousemove", updatePosition, true);
+    document.addEventListener("mousedown", updatePosition, true);
+    if (window === window.top) {
+      window.addEventListener("blur", () => { cursor.style.opacity = "0"; });
+    }
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mount, { once: true });
+  } else {
+    mount();
+  }
+}
+
+class VideoHelper extends Helper {
+
+  /**
+   * Opens a documentation article and scrolls from top to bottom at 160 pixels per second.
+   * @param {string} url Documentation page URL, including an optional section anchor
+   * @returns {Promise<void>} Resolves when the bottom of the page is visible
+   */
+  async videoDocumentation(url) {
+    const helper = this.helpers.Playwright;
+    await helper.switchTo();
+    await helper.amOnPage(url);
+    await helper.waitForVisible("article h1", 20);
+    await this.videoScroll();
+  }
+
+  /**
+   * Scrolls the current top-level page from top to bottom at 160 pixels per second.
+   * @returns {Promise<void>} Resolves when the bottom of the page is visible
+   */
+  async videoScroll() {
+    await this.helpers.Playwright.page.evaluate(async () => {
+      await document.fonts.ready;
+      const scrollElement = document.scrollingElement || document.documentElement;
+      const scrollDistance = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      if (scrollDistance === 0) return;
+
+      const duration = scrollDistance / 160 * 1000;
+      const startedAt = performance.now();
+      await new Promise(resolve => {
+        const scrollStep = now => {
+          const progress = Math.min((now - startedAt) / duration, 1);
+          window.scrollTo({ top: scrollDistance * progress, behavior: "instant" });
+          if (progress < 1) requestAnimationFrame(scrollStep);
+          else resolve();
+        };
+        requestAnimationFrame(scrollStep);
+      });
+    });
+  }
+
+  /**
+   * Shows a two-second editing slate, or saves a thumbnail when a size/style is supplied or title mode is enabled.
+   * @param {string|object} title Legacy title or a resolved shot; manual/head shots show warnings with full notes or narration
+   * @param {number|string} [fontSize] Fixed font size in CSS pixels on the 1280 x 720 layout; omit for automatic fitting, or pass a legacy style
+   * @param {string} [style] Thumbnail style: glow (default in title mode), clean or bold
+   * @param {{fitScene?: boolean}} [options] Thumbnail screenshot framing
+   * @returns {Promise<void|string>} Thumbnail path, or nothing after the editing slate is removed
+   */
+  async videoTitle(title, fontSize, style, options) {
+    if (typeof fontSize === "string" && style === undefined) {
+      style = fontSize;
+      fontSize = undefined;
+    }
+    if (typeof title === "string" && (fontSize !== undefined || style !== undefined || this.config.titleMode === true)) {
+      return this._saveVideoTitle(title, fontSize, style, options);
+    }
+    const manual = typeof title === "object" && title.type === "manual";
+    const head = typeof title === "object" && title.type === "head";
+    const heading = typeof title === "string" ? title : `${manual ? "WARNING: manual steps | " : head ? "WARNING: head video | " : ""}Shot ${title.number}${title.total == null ? "" : `/${title.total}`}: ${title.id}`;
+    const excerpt = typeof title === "string" ? "" : manual
+      ? (typeof title.notes === "string" && title.notes.trim()) || "Add filming instructions to this shot's notes."
+      : head ? [title.narration, title.notes || "Generate this clip with npm run head and insert it during editing."].join("\n\n")
+      : Array.from(title.narration).slice(0, 200).join("");
+    const slateTiming = await this.helpers.Playwright.page.evaluate(async ({ heading, excerpt, manual }) => {
+      const host = document.createElement("div");
+      host.id = "wj-video-title-host";
+      host.setAttribute("aria-hidden", "true");
+      Object.assign(host.style, {
+        all: "initial",
+        position: "fixed",
+        inset: "0",
+        zIndex: "2147483647",
+        pointerEvents: "none"
+      });
+      const shadow = host.attachShadow({ mode: "open" });
+      const slate = document.createElement("div");
+      Object.assign(slate.style, {
+        position: "absolute",
+        inset: "0",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4vh",
+        alignItems: "center",
+        justifyContent: "center",
+        boxSizing: "border-box",
+        padding: "8vh 8vw",
+        background: "#000",
+        color: "#fff",
+        font: "700 clamp(24px, 4vw, 64px)/1.3 sans-serif",
+        textAlign: "center",
+        overflowWrap: "anywhere"
+      });
+      const label = document.createElement("div");
+      label.textContent = heading;
+      slate.appendChild(label);
+      if (excerpt !== "") {
+        const description = document.createElement("div");
+        description.setAttribute(manual ? "data-video-instructions" : "data-video-narration", "");
+        description.style.font = "400 clamp(16px, 2vw, 32px)/1.5 sans-serif";
+        description.style.whiteSpace = "pre-line";
+        description.textContent = excerpt;
+        slate.appendChild(description);
+      }
+      shadow.appendChild(slate);
+      let startTime, endTime;
+      document.documentElement.appendChild(host);
+      try {
+        // Start the presentation hold after the browser has painted the slate.
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        startTime = Date.now() / 1000;
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } finally {
+        endTime = Date.now() / 1000;
+        host.remove();
+      }
+      return { startTime, endTime };
+    }, { heading, excerpt, manual });
+    if (getVideoShot() && typeof title === "object") this.helpers.Playwright.videoShotSlate = slateTiming;
+  }
+
+  _test(test) {
+    this.videoTest = test;
+  }
+
+  /** Captures the prepared scene and atomically replaces only this scenario's selected thumbnail style. */
+  async _saveVideoTitle(title, fontSize, style, options) {
+    const text = process.env.VIDEO_TITLE_TEXT?.trim() || title;
+    style = process.env.VIDEO_TITLE_STYLE?.trim() || style || "glow";
+    validateVideoTitle(text, style, fontSize);
+    if (!this.videoTest?.file) throw new Error("Video thumbnails must run inside a scenario with a source file.");
+    const name = path.basename(this.videoTest.file, path.extname(this.videoTest.file));
+    const directory = this.config.featureVideoDirectory || FEATURE_VIDEO_DIRECTORY;
+    const output = path.resolve(directory, `${name}-title-${style}.jpg`);
+    const temporary = `${output}.${randomUUID()}.tmp`;
+    const page = this.helpers.Playwright.page;
+    // Wait for visible scene images and fonts, including the active editor iframe.
+    for (const frame of page.frames()) {
+      await frame.evaluate(async () => {
+        await document.fonts.ready;
+        await Promise.all(Array.from(document.images)
+          .filter(img => {
+            const rect = img.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 &&
+              rect.top < window.innerHeight && rect.left < window.innerWidth;
+          })
+          .map(img => img.decode()));
+      });
+    }
+    const screenshot = await page.screenshot({ type: "png", animations: "disabled",
+      style: "#wj-video-cursor-host, #wj-video-title-host { visibility: hidden !important; }" });
+    const jpeg = await renderVideoTitle(page.context().browser(), screenshot, text, style, fontSize, options);
+    await fs.mkdir(path.dirname(output), { recursive: true });
+    try {
+      await fs.writeFile(temporary, jpeg, { flag: "wx" });
+      await fs.rename(temporary, output);
+    } finally {
+      await fs.rm(temporary, { force: true });
+    }
+    this.videoTest.artifacts ||= {};
+    this.videoTest.artifacts[`title-${style}`] = output;
+    console.log(`[Video title] ${output} (1920x1080, ${Math.round(jpeg.length / 1024)} KB)`);
+    return output;
+  }
+
+  /**
+   * Installs one top-level cursor and mouse-event relays in every iframe document.
+   * Its size compensates for the native Chromium page zoom.
+   */
+  async _before(test) {
+    if (!isCursorEnabled() || this.config.titleMode === true) return;
+
+    const { browserContext, page } = this.helpers.Playwright;
+    const { zoom } = getVideoSettings();
+    const cursorScale = 1 / zoom;
+    const scenarioName = String(test?.title || "webjet-video");
+    const configuredSeed = process.env.CODECEPT_VIDEO_CURSOR_SEED || "default";
+    this.videoCursorPosition = null;
+    this.videoCursorPage = null;
+    this.videoCursorRandom = createPseudoRandom(hashString(`${scenarioName}:${configuredSeed}`));
+    await browserContext.addInitScript(installVideoCursor, cursorScale);
+    await page.evaluate(installVideoCursor, cursorScale);
+  }
+
+  async _moveCursorNaturally(element, locator, curveStrength) {
+    const helper = this.helpers.Playwright;
+    const page = helper.page;
+
+    await element.scrollIntoViewIfNeeded();
+    const box = await element.boundingBox();
+    if (box == null) throw new Error(`Video cursor target is not visible: ${String(locator)}`);
+
+    const viewport = await getViewportSize(page);
+    const renderedPosition = await getRenderedCursorPosition(page);
+    const rememberedPosition = this.videoCursorPage === page ? this.videoCursorPosition : null;
+    const fallbackPosition = { x: viewport.width / 2, y: viewport.height / 2 };
+    // The remembered position uses main-viewport coordinates even when the last target was in an iframe.
+    const rawStart = renderedPosition || rememberedPosition || fallbackPosition;
+    const maximumX = Math.max(0, viewport.width - 1);
+    const maximumY = Math.max(0, viewport.height - 1);
+    const start = {
+      x: clamp(rawStart.x, 0, maximumX),
+      y: clamp(rawStart.y, 0, maximumY)
+    };
+    const end = {
+      x: clamp(box.x + box.width / 2, 0, maximumX),
+      y: clamp(box.y + box.height / 2, 0, maximumY)
+    };
+
+    const deltaX = end.x - start.x;
+    const deltaY = end.y - start.y;
+    const distance = Math.hypot(deltaX, deltaY);
+    if (distance < 1) {
+      await page.mouse.move(end.x, end.y);
+      this.videoCursorPosition = end;
+      this.videoCursorPage = page;
+      return;
+    }
+
+    const random = this.videoCursorRandom || Math.random;
+    const plan = createNaturalCursorPlan(start, end, viewport, distance, random, curveStrength);
+    const duration = getCursorDuration(distance, random);
+    const steps = Math.max(12, Math.ceil(duration / CURSOR_FRAME_DURATION));
+    const frameDuration = duration / steps;
+
+    await page.mouse.move(start.x, start.y);
+    const movementStartedAt = Date.now();
+    for (let step = 1; step <= steps; step++) {
+      const progress = minimumJerk(step / steps);
+      const point = naturalCursorPoint(start, end, plan, progress);
+      await page.mouse.move(
+        clamp(point.x, 0, maximumX),
+        clamp(point.y, 0, maximumY)
+      );
+      if (step < steps) {
+        const nextFrameAt = movementStartedAt + step * frameDuration;
+        const remainingFrameTime = Math.max(0, nextFrameAt - Date.now());
+        if (remainingFrameTime > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainingFrameTime));
+        }
+      }
+    }
+
+    this.videoCursorPosition = end;
+    this.videoCursorPage = page;
+  }
+
+  /**
+   * Moves the synthetic cursor to a target, clicks it, and leaves editing room after the click.
+   * @param {*} locator CodeceptJS locator of the target element
+   * @param {number} [curveStrength] Finite non-negative curve multiplier; when omitted, the
+   * environment default is used, zero produces a straight path, and one uses the baseline curve
+   * @throws {Error} When curveStrength is negative, non-finite, or not a number
+   */
+  async videoClick(locator, curveStrength = getDefaultCurveStrength()) {
+    const helper = this.helpers.Playwright;
+    const resolvedCurveStrength = getCurveStrength(curveStrength);
+    const target = await resolveVisibleClickableTarget(helper, locator);
+    if (isCursorEnabled()) {
+      await this._moveCursorNaturally(target, locator, resolvedCurveStrength);
+      await new Promise((resolve) => setTimeout(resolve, getClickDelay()));
+    } else {
+      await target.hover();
+      await helper._waitForAction();
+    }
+    await target.click();
+    const result = await Promise.all([helper._waitForAction()]);
+    await new Promise((resolve) => setTimeout(resolve, getPostClickDelay()));
+    return result;
+  }
+}
+
+module.exports = VideoHelper;

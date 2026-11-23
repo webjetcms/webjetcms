@@ -1,5 +1,8 @@
 package sk.iway.iwcm.system.datatable;
 
+/**
+ * Defines the input and rendering presets available to DataTable column annotations.
+ */
 public enum DataTableColumnType {
     /**
      * Typ pola ID
@@ -99,6 +102,10 @@ public enum DataTableColumnType {
      */
     RADIO,
     /**
+     * Single-choice options displayed as a Bootstrap button group.
+     */
+    BUTTON_GROUP,
+    /**
      * Password
      */
     PASSWORD,
@@ -160,6 +167,7 @@ public enum DataTableColumnType {
 
     /**
      * Dynamic list of string options joined by | separator (with key:value pair, e.g. "key1:Value 1|key2:Value 2")
+     * Fields with the {@code allowEmptyOption} class name also let the user prepend an empty option.
      */
     OPTIONS,
 

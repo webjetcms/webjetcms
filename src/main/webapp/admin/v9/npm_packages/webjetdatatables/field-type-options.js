@@ -8,6 +8,7 @@ import { createOptionsFieldType } from "./field-type-options-base";
 export function typeOptions() {
     return createOptionsFieldType({
         prefix: "options",
+        allowEmptyOption: true,
 
         createHeader: function () {
             return `<div class="input-group mb-2 options-input-row-header">

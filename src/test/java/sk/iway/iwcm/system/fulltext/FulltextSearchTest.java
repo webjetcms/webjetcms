@@ -116,8 +116,7 @@ class FulltextSearchTest extends BaseWebjetTest
 		}
 		catch (Exception|AssertionError e)
 		{
-			//e.printStackTrace();
-			fail();
+			fail("Fulltext indexing failed", e);
 		}
 	}
 

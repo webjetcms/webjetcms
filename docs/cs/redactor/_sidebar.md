@@ -9,6 +9,7 @@
   - [Úvodní obrazovka](/redactor/admin/welcome.md)
   - [Poslat zprávu](/redactor/admin/send-message.md)
   - [Vyhledávání](/redactor/admin/search/README.md)
+  - [Klávesové zkratky](/redactor/admin/keyboard-shortcuts.md)
 - Datatabulky
   - [Základy práce s data tabulkami](/redactor/datatables/README.md)
   - [Export a import](/redactor/datatables/export-import.md)
@@ -16,6 +17,7 @@
   - [Základní práce](/redactor/webpages/README.md)
   - [Editace web stránky](/redactor/webpages/editor/README.md)
   - [Práce v editoru](/redactor/webpages/working-in-editor/README.md)
+  - [Plánované publikování s chráněnými soubory](/redactor/webpages/planned-publishing.md)
   - [Složka webové stránky](/redactor/webpages/group.md)
   - [Historie](/redactor/webpages/history.md)
   - [Obnovení z koše](/redactor/webpages/recover.md)
@@ -39,6 +41,7 @@
 - AI asistent
   - [AI asistent](/redactor/ai/README.md)
   - [Používání AI asistentů](/redactor/ai/datatables/README.md)
+  - [AI Čet](/redactor/ai/chat/README.md)
   - [Nastavení](/redactor/ai/settings/README.md)
   - [Psaní instrukcí](/redactor/ai/instructions/README.md)
   - [Statistika](/redactor/ai/stat/README.md)
@@ -68,6 +71,7 @@
     - [Platby](/redactor/apps/eshop/invoice/payments.md)
     - [Položky](/redactor/apps/eshop/invoice/items.md)
     - [Seznam produktů](/redactor/apps/eshop/product-list/README.md)
+    - [Statistiky](/redactor/apps/eshop/stats/README.md)
     - [Nastavení aplikace](/redactor/apps/basket/README.md)
     - [Způsoby platby](/redactor/apps/eshop/payment-methods/README.md)
     - [Způsoby doručení](/redactor/apps/eshop/delivery-methods/README.md)
@@ -79,6 +83,7 @@
   - Formuláře
     - [Seznam formulářů](/redactor/apps/form/README.md)
     - [Položky formuláře](/redactor/apps/multistep-form/README.md)
+    - [Šifrování formulářů](/redactor/apps/form/encryption.md)
     - [Statistiky formuláře](/redactor/apps/multistep-form/stat.md)
     - [Regulární výrazy](/redactor/apps/form/regexps.md)
   - Fórum/Diskuse

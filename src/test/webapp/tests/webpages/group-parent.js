@@ -1,5 +1,7 @@
 Feature('webpages.group-parent');
 
+const WebjetDteJsTree = require("../../pages/WebjetDteJsTree");
+
 var root1_name, subfolder_name, root2_name;
 
 Before(({ I, login }) => {
@@ -54,7 +56,7 @@ Scenario('4. vytvorenie noveho priecinka - ulozeneho do korenoveho adresara', ({
      I.waitForElement('.form-control', 5);
      I.fillField('#DTE_Field_groupName', root2_name);
      I.groupSetRootParent();
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
      I.waitForText('Koreňový priečinok', 5);
      I.clickCss('.jstree-icon.jstree-themeicon.ti.ti-home.jstree-themeicon-custom');
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', '/', 10);
@@ -72,19 +74,16 @@ Scenario('5a. overenie, ze sa nezobrazi v stromovej strukture aj web stranka', (
      DTE.waitForEditor("groups-datatable");
      I.waitForText(root1_name, '#DTE_Field_groupName');
 
-     // ked rozkliknem adresar nemal by som v nom vidiet web stranku (cize rovnake meno ako ma adresar)
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
-     I.waitForElement(".jsTree-wrapper", 5);
-     //I.click(locate('.jsTree-wrapper').find('.jstree-icon.jstree-ocl')); // rozklikne adresarovy strom
-     //I.wait(1);
-     I.waitForText(root1_name, 5);
-     I.click(locate('.jstree-node.jstree-closed').withText(root1_name).find('.jstree-icon.jstree-ocl')); //rozklikne adresar
-     I.wait(1);
-     I.waitForText(subfolder_name, 5);
-     within({css: "#custom-modal-id li.jstree-node.jstree-open ul li.jstree-node.jstree-open ul.jstree-children"}, () => {
-          //vidim subfolder
+     // A page with the same name as the folder must not appear in this folder tree.
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
+     I.waitForElement(WebjetDteJsTree.tree, 5);
+     I.waitForText(root1_name, 5, WebjetDteJsTree.anchors);
+     I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(root1_name).find('.jstree-icon.jstree-ocl'));
+     I.waitForText(subfolder_name, 5, WebjetDteJsTree.anchors);
+     within({css: WebjetDteJsTree.tree + " li.jstree-node.jstree-open ul li.jstree-node.jstree-open ul.jstree-children"}, () => {
+          // The subfolder is visible.
           I.see(subfolder_name);
-          //nevidim web stranku s rovnakym menom ako aktualny adresar
+          // The page with the same name as the current folder is hidden.
           I.dontSee(root1_name);
      });
 
@@ -100,39 +99,34 @@ Scenario('5b. test negativnych/chybnych ciest - na priecinku z 1. kroku', ({ I, 
      I.waitForText(root1_name, '#DTE_Field_groupName');
 
      I.say('ako Nadradeny priecinok nie je mozne vybrat sameho seba');
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
-     I.waitForElement(".jsTree-wrapper", 5);
-     //I.click(locate('.jsTree-wrapper').find('.jstree-icon.jstree-ocl')); // rozklikne adresarovy strom
-     I.waitForText(root1_name, 5, '.jsTree-wrapper');
-     I.wait(2);
-     I.click(locate('.jstree-node.jstree-closed').withText(root1_name).find('a.jstree-anchor')); // vyberie totozny priecinok
-     I.wait(1);
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
+     I.waitForElement(WebjetDteJsTree.tree, 5);
+     I.waitForText(root1_name, 5, WebjetDteJsTree.anchors);
+     I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(root1_name).find('a.jstree-anchor'));
+     I.waitForInvisible(WebjetDteJsTree.tree, 10);
      DTE.save();
      I.waitForText('Priečinok nemôže byť súčasne zvolený ako svoj nadradený priečinok', 5);
      I.waitForText('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).', 5);
 
      I.say('ako Nadradeny priecinok nie je mozne vybrat podpriecinok sameho seba');
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
-     I.waitForElement(".jsTree-wrapper", 5);
-     //I.click(locate('.jsTree-wrapper').find('.jstree-icon.jstree-ocl')); // rozklikne adresarovy strom
-     I.waitForText(root1_name, 5, '.jsTree-wrapper');
-     I.click(locate('.jsTree-wrapper').find('.jstree-node.jstree-closed').withText(root1_name).find('.jstree-icon.jstree-ocl')); // zobrazi podadresar
-     I.wait(1);
-     I.waitForText(subfolder_name, 5, '.jsTree-wrapper');
-     I.click(locate('.jsTree-wrapper').find('.jstree-node.jstree-leaf').withText(subfolder_name).find('a.jstree-anchor'));
-     I.wait(1);
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
+     I.waitForElement(WebjetDteJsTree.tree, 5);
+     I.waitForText(root1_name, 5, WebjetDteJsTree.anchors);
+     I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-closed').withText(root1_name).find('.jstree-icon.jstree-ocl'));
+     I.waitForText(subfolder_name, 5, WebjetDteJsTree.anchors);
+     I.click(locate(WebjetDteJsTree.tree + ' .jstree-node.jstree-leaf').withText(subfolder_name).find('a.jstree-anchor'));
+     I.waitForInvisible(WebjetDteJsTree.tree, 10);
      I.waitForText('Priečinok nemôže byť súčasne zvolený ako svoj nadradený priečinok', 5);
      DTE.save();
      I.waitForText('Nadradený priečinok nemôže byť vybraný zo svojho potomka', 5);
      I.waitForText('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).', 5);
 
      I.say('upravenie nadradeneho priecinka na korenovy adresar');
-     I.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit');
-     I.waitForText('Koreňový priečinok', 5);
-     I.clickCss('.jstree-icon.jstree-themeicon.ti.ti-home.jstree-themeicon-custom');
-     I.wait(1);
+     I.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit');
+     I.waitForText('Koreňový priečinok', 5, WebjetDteJsTree.anchors);
+     I.clickCss(WebjetDteJsTree.tree + ' .jstree-icon.jstree-themeicon.ti.ti-home.jstree-themeicon-custom');
+     I.waitForInvisible(WebjetDteJsTree.tree, 10);
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', '/', 10);
-     I.wait(1);
      DTE.save();
      I.waitForText('Webové stránky', 5);
      I.dontSee('Priečinok nemôže byť súčasne zvolený ako svoj nadradený priečinok');

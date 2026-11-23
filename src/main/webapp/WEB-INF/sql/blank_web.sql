@@ -77,6 +77,7 @@ INSERT INTO _db_ VALUES("38", "2004-05-01", "id a stav synchronizacie (status: 0
 INSERT INTO _db_ VALUES("39", "2004-05-02", "konfiguracia custom modulov");
 INSERT INTO _db_ VALUES("40", "2004-05-03", "modul posielania SMS sprav");
 INSERT INTO _db_ VALUES("41", "2004-05-09", "vyzadovanie schvalovania registracie, doc_id pre zasielany email");
+INSERT INTO _db_ VALUES("42", "2026-09-14", "08.09.2026 [lbalat] browser identifier migration including stat_error");
 
 
 #

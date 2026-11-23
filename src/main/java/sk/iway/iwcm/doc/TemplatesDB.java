@@ -66,7 +66,7 @@ public class TemplatesDB extends DB
 		{
 			if (forceRefresh)
 			{
-				TemplatesDB tempDB = new TemplatesDB();
+				TemplatesDB tempDB = new TemplatesDB(forceRefresh);
 				//	remove
 				Constants.getServletContext().removeAttribute(Constants.A_TEMP_DB);
 				//save us to server space
@@ -80,7 +80,7 @@ public class TemplatesDB extends DB
 				TemplatesDB tempDB = (TemplatesDB) Constants.getServletContext().getAttribute(Constants.A_TEMP_DB);
 				if (tempDB == null)
 				{
-					tempDB = new TemplatesDB();
+					tempDB = new TemplatesDB(forceRefresh);
 					//	remove
 					Constants.getServletContext().removeAttribute(Constants.A_TEMP_DB);
 					//save us to server space
@@ -98,7 +98,7 @@ public class TemplatesDB extends DB
 	 * @param servletContext Description of the Parameter
 	 * @param serverName     Description of the Parameter
 	 */
-	private TemplatesDB() {
+	private TemplatesDB(boolean forceRefresh) {
 		DebugTimer dt = new DebugTimer("TempDB: constructor [" + Constants.getInstallName() + "]");
 
 		try {
@@ -108,7 +108,7 @@ public class TemplatesDB extends DB
 			Logger.error(TemplatesDB.class, ex);
 		}
 
-		ClusterDB.addRefresh(TemplatesDB.class);
+		if (forceRefresh) ClusterDB.addRefresh(TemplatesDB.class);
 
 		dt.diff("done");
 	}
@@ -170,6 +170,7 @@ public class TemplatesDB extends DB
 
 				tmpDetails.setTemplateInstallName(getDbString(rs, "template_install_name"));
 				tmpDetails.setDisableSpamProtection(rs.getBoolean("disable_spam_protection"));
+				tmpDetails.setUrlRemoveSpojkyMode(rs.getInt("url_remove_spojky_mode"));
 				tmpDetails.setMoveStyleToHead(rs.getInt("move_style_to_head"));
 
 				// tmpDetails.setPocetPouziti(rs.getInt("doc_count"));
@@ -587,10 +588,10 @@ public class TemplatesDB extends DB
 
 			TemplateDetails oldTemplate = t_form.getTempId() > 0 ? getTemplate(t_form.getTempId()) : null;
 
-			sql = "INSERT INTO templates (temp_name, forward, header_doc_id, footer_doc_id, menu_doc_id, after_body_data, css, lng, right_menu_doc_id, base_css_path, object_a_doc_id, object_b_doc_id, object_c_doc_id, object_d_doc_id, available_groups, template_install_name, disable_spam_protection, move_style_to_head, templates_group_id, inline_editing_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			sql = "INSERT INTO templates (temp_name, forward, header_doc_id, footer_doc_id, menu_doc_id, after_body_data, css, lng, right_menu_doc_id, base_css_path, object_a_doc_id, object_b_doc_id, object_c_doc_id, object_d_doc_id, available_groups, template_install_name, disable_spam_protection, move_style_to_head, templates_group_id, inline_editing_mode, url_remove_spojky_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			if (t_form.getTempId() > 0)
-				sql = "UPDATE templates SET temp_name=?, forward=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, after_body_data=?, css=?, lng=?, right_menu_doc_id=?, base_css_path=?, object_a_doc_id=?, object_b_doc_id=?, object_c_doc_id=?, object_d_doc_id=?, available_groups=?, template_install_name=?, disable_spam_protection=?, move_style_to_head=?, templates_group_id=?, inline_editing_mode=? WHERE temp_id=?";
+				sql = "UPDATE templates SET temp_name=?, forward=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, after_body_data=?, css=?, lng=?, right_menu_doc_id=?, base_css_path=?, object_a_doc_id=?, object_b_doc_id=?, object_c_doc_id=?, object_d_doc_id=?, available_groups=?, template_install_name=?, disable_spam_protection=?, move_style_to_head=?, templates_group_id=?, inline_editing_mode=?, url_remove_spojky_mode=? WHERE temp_id=?";
 
 			ps = db_conn.prepareStatement(sql);
 			ps.setString(1, t_form.getTempName());
@@ -615,10 +616,11 @@ public class TemplatesDB extends DB
 			if (t_form.getTemplatesGroupId()!=null) tempGroupId = t_form.getTemplatesGroupId();
 			ps.setLong(19, tempGroupId);
 			ps.setString(20, t_form.getInlineEditingMode());
+			ps.setInt(21, Tools.getIntValue(t_form.getUrlRemoveSpojkyMode(), 0));
 
 			if (t_form.getTempId() > 0)
 			{
-				ps.setInt(21, t_form.getTempId());
+				ps.setInt(22, t_form.getTempId());
 			}
 			ps.execute();
 			ps.close();
@@ -675,7 +677,7 @@ public class TemplatesDB extends DB
 		StringBuilder log = new StringBuilder();
 		if (oldTemplate != null)
 		{
-			log.append("Zmenena sablona: ").append(t_form.getTempName());
+			log.append("UPDATE:\nid: ").append(t_form.getTempId()).append("\ntempName: ").append(t_form.getTempName());
 		   BeanDiff diff = new BeanDiff().setNew(t_form).setOriginal(oldTemplate).
 		   	blacklist("footerDocData", "pocetPouziti", "headerDocData", "menuDocData", "objectADocData", "objectBDocData", "objectCDocData", "objectDDocData");
 		   log.append('\n').append(new BeanDiffPrinter(diff));
@@ -684,7 +686,7 @@ public class TemplatesDB extends DB
 		}
 		else
 		{
-			log.append("Vytvorena sablona: ").append(t_form.getTempName());
+			log.append("CREATE:\nid: ").append(t_form.getTempId()).append("\ntempName: ").append(t_form.getTempName());
 			Adminlog.add(Adminlog.TYPE_TEMPLATE_INSERT, log.toString(), t_form.getTempId(), 0);
 		}
 	}
@@ -764,7 +766,7 @@ public class TemplatesDB extends DB
                ps.execute();
                ps.close();
 
-               Adminlog.add(Adminlog.TYPE_TEMPLATE_DELETE, "Delete template :" + " name= " + temp1.getTempName(), temp1.getTempId(), -1);
+               Adminlog.add(Adminlog.TYPE_TEMPLATE_DELETE, "DELETE:\nid: " + temp1.getTempId() + "\ntempName: " + temp1.getTempName(), temp1.getTempId(), -1);
                return true;
            }
        } catch (Exception ex) {

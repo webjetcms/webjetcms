@@ -76,9 +76,9 @@ public class TemplatesController extends DatatableRestControllerAvailableGroups<
 
         page.addOptions("lng", ls.getLanguages(false, true), "label", "value", false);
         page.addOptions("templatesGroupId", templateGroupsService.getTemplateGroups(getUser()), "name", "templatesGroupId", false);
-        page.addOptions("headerDocId,footerDocId", headerFooterDocs, "title", "docId", false);
-        page.addOptions("menuDocId,rightMenuDocId", menuDocs, "title", "docId", false);
-        page.addOptions("objectADocId,objectBDocId,objectCDocId,objectDDocId", ws.addEmptyDoc(headerFooterMenuDocs, -1), "title", "docId", false);
+        WebpagesService.addDocOptions(page, "headerDocId,footerDocId", headerFooterDocs);
+        WebpagesService.addDocOptions(page, "menuDocId,rightMenuDocId", menuDocs);
+        WebpagesService.addDocOptions(page, "objectADocId,objectBDocId,objectCDocId,objectDDocId", ws.addEmptyDoc(headerFooterMenuDocs, -1));
 
         List<LabelValueDetails> inlineEditingModes = new ArrayList<>();
         inlineEditingModes.add(new LabelValueDetails(getProp().getText("template.inline_editing_mode.byTemplateGroup"), ""));

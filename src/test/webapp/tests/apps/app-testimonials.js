@@ -19,7 +19,8 @@ Scenario("Odporúčania - test zobrazovania", async ({ I }) => {
 });
 
 Scenario("Editor test", ({ I, login, Apps }) => {
-    login('admin');
+    I.closeOtherTabs();
+    I.relogin('admin');
 
     Apps.openAppEditor(77773);
 
@@ -36,9 +37,11 @@ Scenario("Editor test", ({ I, login, Apps }) => {
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    I.waitForNumberOfTabs(2, 30);
     I.switchToNextTab();
 
-    I.seeElement("#testImonials1");
+    I.waitInUrl("/admin/webpages/preview/?docid=77773", 30);
+    I.waitForVisible("#testImonials1", 30);
 
     I.seeElement("#testImonials1 div.testimonials_content:nth-child(1) span div.testimonials-text");
     I.seeElement( locate("#testImonials1 div.testimonials_content:nth-child(1) span div.testimonials-text p").withText("WebJET CMS je bezpečný a spoľahlivý systém, vysoko ho odporúčam pre všetkých.") );

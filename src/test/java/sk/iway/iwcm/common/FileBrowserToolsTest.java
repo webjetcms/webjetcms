@@ -1,6 +1,8 @@
 package sk.iway.iwcm.common;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import sk.iway.iwcm.test.BaseWebjetTest;
 
@@ -21,6 +23,36 @@ public class FileBrowserToolsTest extends BaseWebjetTest {
         //loaded from constants
         assertTrue(FileBrowserTools.hasForbiddenSymbol("file#name"));
         assertTrue(FileBrowserTools.hasForbiddenSymbol("file@name"));
-        assertTrue(FileBrowserTools.hasForbiddenSymbol("file(name"));
+        assertFalse(FileBrowserTools.hasForbiddenSymbol("file(name"));
+    }
+
+    /** Allows parentheses in ordinary file names and directory paths. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "report (final).png", "file)name.pdf", "Draft B · 08 · System notifications (B11a–c).png",
+        "/files/reports (2026)/report (final).pdf"
+    })
+    void shouldAllowParentheses(String name) {
+        assertFalse(FileBrowserTools.hasForbiddenSymbol(name));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "Name$subname.class", "Name$1.class", "Name$Nested$Inner.class",
+        "/WEB-INF/classes/example/Name$subname.class", "example\\Name$subname.class"
+    })
+    void shouldAllowDollarSignsInClassFileNames(String path) {
+        assertFalse(FileBrowserTools.hasForbiddenSymbol(path));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "Name$subname.txt", "Name$subname.class.zip", "Name$subname.class/",
+        "folder$/Name.class", "folder$/Name$subname.class", "folder$\\Name.class",
+        "../Name$subname.class", "Name$subname;.class", "Name$subname.java.class",
+        "Name$subname@2x.class"
+    })
+    void shouldKeepOtherForbiddenNamesBlocked(String path) {
+        assertTrue(FileBrowserTools.hasForbiddenSymbol(path));
     }
 }

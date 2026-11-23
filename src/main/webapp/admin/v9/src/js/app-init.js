@@ -1,6 +1,7 @@
 import Scrollbar from 'smooth-scrollbar';
 import Ninja from '../js/global-functions.js';
 import WJ from './webjet.js';
+import { initQuickSearch } from './quick-search';
 import {EditorAi} from '../../npm_packages/webjetdatatables/editor-ai'
 
 window.domReady.add(initClosure, 1, true);
@@ -55,6 +56,9 @@ window.initSubmenuTabsClick = function() {
 }
 
 function initClosure() {
+    initQuickSearch();
+    WJ.initHelpMenu();
+    WJ.initUserMenu();
 
     // =======================
     // In iframe dialog view
@@ -270,24 +274,7 @@ function initClosure() {
     // SELECTPICKER INIT
     // =======================
 
-    $.fn.selectpicker.Constructor.BootstrapVersion = '5';
-
-    $('select').each(function() {
-        let $this = $(this);
-        if ($this.hasClass("no-picker")) return;
-        let options = {
-            container: "body",
-            style: "dropdown bootstrap-select btn-outline-secondary",
-            liveSearch: true,
-            showSubtext: true,
-            noneSelectedText: '\xa0', //nbsp
-            iconBase: 'ti',
-        }
-        let liveSearch = $this.data("live-search");
-        //console.log("liveSearch=", liveSearch);
-        if (typeof liveSearch !== "undefined") options.liveSearch = liveSearch;
-        $this.selectpicker(options);
-    });
+    WJ.initSelectPicker(document);
 
     // =======================
     // JSTREE INIT
@@ -296,7 +283,11 @@ function initClosure() {
     var somStromcek = $('#SomStromcek');
     var jsTreeMoveUrl = somStromcek.data("rest-move-url");
     var jsTreeParamName = somStromcek.data("rest-param-name");
+    var jsTreeSearchLabel = somStromcek.data("search-label") || WJ.translate('editor.directory_name');
+    var jsTreeSingleSelect = somStromcek.data("single-select") === true;
+    var jsTreeStateBeforeSearch = null;
     var treeInitialJsonFired = false;
+    const searchTextTemplate = document.createElement("template");
 
     function getJstreeUrl() {
         if (typeof window.getJstreeUrl=="function") return window.getJstreeUrl();
@@ -306,6 +297,7 @@ function initClosure() {
     $.jstree.defaults.core.dblclick_toggle = false;
     window.jstree = somStromcek.jstree({
         'core': {
+            'multiple': !jsTreeSingleSelect,
             'check_callback': function (operation, node, parent, position, more) {
                 if (operation === 'copy_node') {
                     return false;
@@ -461,8 +453,14 @@ function initClosure() {
         "search": {
             "show_only_matches": true,
             "search_callback": function(word, node) {
+                let text = node.text || "";
+                if (text.includes("&") || text.includes("<")) {
+                    // Decode rendered labels using one reusable, inert template.
+                    searchTextTemplate.innerHTML = text;
+                    text = searchTextTemplate.content.textContent || "";
+                }
                 word = WJ.internationalToEnglish(word).toLowerCase();
-                if (WJ.internationalToEnglish(node.text || "").toLowerCase().indexOf(word) >= 0) {
+                if (WJ.internationalToEnglish(text).toLowerCase().indexOf(word) >= 0) {
                     return true;
                 }
                 return false;
@@ -514,13 +512,13 @@ function initClosure() {
         '<table class="table datatableInit dataTable no-footer" data-server-side="true" style="margin-left: 0px;" id="jstreeSearchTable">' +
             '<thead>' +
                 '<tr>' +
-                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="datatableInit" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${WJ.translate('editor.directory_name')}</th>` +
+                    `<th id="tree-folder-search-label" class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="jstreeSearchTable" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${jsTreeSearchLabel}</th>` +
                 '</tr>' +
                 '<tr>' +
                     '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +
                         '<div class="input-group">' +
                             select +
-                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-label="'+WJ.translate("datatables.defaults.search.js")+'" />' +
+                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input" aria-labelledby="tree-folder-search-label" />' +
                             '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search" aria-label="'+WJ.translate("datatables.defaults.search.js")+'"><i class="ti ti-search"></i></button>' +
                             '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;" aria-label="'+WJ.translate("button.reset")+'"><i class="ti ti-circle-x"></i></button>' +
                         '</div>' +
@@ -558,12 +556,18 @@ function initClosure() {
                 //EMPTY SEARCH
                 cancelSearch();
             } else {
+                let tree = somStromcek.jstree(true);
+                let currentState = tree.get_state();
+                if (WJ.urlGetParam("treeSearchValue", getJstreeUrl()) === null || currentState.core.selected.length > 0) {
+                    jsTreeStateBeforeSearch = currentState;
+                }
+
                 // Update url with search string - fire refresh
                 let url = WJ.urlUpdateParam( getJstreeUrl() , "treeSearchValue", searchString);
                 url = WJ.urlUpdateParam( url , "treeSearchType", $('#tree-folder-search-type').val());
 
                 somStromcek.data('rest-url', url);
-                somStromcek.jstree(true).refresh();
+                tree.refresh();
             }
         }
     });
@@ -584,6 +588,7 @@ function initClosure() {
         } else {
             //NEEDS to be there - clear search after change of tabs
             somStromcek.jstree(true).search("");
+            jsTreeStateBeforeSearch = null;
         }
         // Hide loader
         WJ.hideLoader();
@@ -605,11 +610,21 @@ function initClosure() {
             // Cancel search
             somStromcek.jstree(true).search("");
 
+            let tree = somStromcek.jstree(true);
+            let stateToRestore = null;
+            if (WJ.urlGetParam("treeSearchValue", getJstreeUrl()) !== null) {
+                let currentState = tree.get_state();
+                stateToRestore = currentState.core.selected.length > 0 ? currentState : jsTreeStateBeforeSearch;
+            }
+            jsTreeStateBeforeSearch = null;
+
             // Clean url - fire refresh
-            let url = getJstreeUrl().replace(/&treeSearchValue=[^&]*/g, '');
-            url = url.replace(/&treeSearchType=[^&]*/g, '');
+            let url = WJ.urlRemoveParam(getJstreeUrl(), "treeSearchValue");
+            url = WJ.urlRemoveParam(url, "treeSearchType");
             somStromcek.data('rest-url', url);
-            somStromcek.jstree(true).refresh();
+            if (somStromcek.data("search-restore-state") === false) tree.refresh(false, true);
+            else if (stateToRestore === null) tree.refresh();
+            else tree.refresh(false, function () { return stateToRestore; });
         }
     }
 
@@ -773,13 +788,13 @@ function initClosure() {
     // =======================
     window.addEventListener('beforeunload', (event) => {
         try {
-            // Nezobraziť varovanie pre image-editor iFrame
-            if (window.location.pathname.indexOf('/apps/image-editor') >= 0) {
+            // Nezobraziť varovanie pre image-editor a app component
+            if (window.location.pathname.indexOf('/apps/image-editor') >= 0 || window.location.pathname.indexOf('/admin/v9/webpages/component/') >= 0) {
                 return;
             }
 
             //console.log("Beforeunload event, modal.length=", $("div.modal.DTED.show").length);
-            if ($("div.modal.DTED.show").length>0 && window.currentUser.login.indexOf("tester")!=0) {
+            if ($("div.modal.DTED.show:visible").length>0 && window.currentUser.login.indexOf("tester")!=0) {
                 var confirmationMessage = WJ.translate("admin.confirmExitMessage.js");
 
                 //console.log("confirmationMessage=", confirmationMessage);
@@ -820,7 +835,9 @@ function initClosure() {
                             "click": "window.location.href=$('.js-logout-toggler').attr('href')"
                         }
                     ]);
-                    WJ.closeIframeModal();
+                    setTimeout(function() {
+                        WJ.closeIframeModal();
+                    }, 300);
                 });
                 iframeWindow.addEventListener("WJ.DTE.open", function(event) {
                     iframeWindow.$("#modalIframeLoader").css("display", "none");

@@ -21,17 +21,52 @@ block content
             let haveFileIndexerPerm = [(${haveFileIndexerPerm})];
             let volumes = "[(${volumes})]";
             var actualFile = "[(${actualFile})]";
+            let archiveRoot = '/' + "[(${archivPath})]".replace(/^\/+|\/+$/g, '');
+            let lastArchiveUrl = null;
+            let archiveSelectionChanged = false;
 
             $("#file").ready( function() {
                 $('#file').val(actualFile);
             });
+
+            /** Copies an archive selection into the field returned by the file picker. */
+            function selectFileArchiveLink(link) {
+                let value = ('/' + link).replace(/\/+/g, '/');
+                $('#file').val(value).trigger('change');
+                lastArchiveUrl = value;
+                archiveSelectionChanged = true;
+            }
+
+            /** Opens the archive at the selected file's folder when the picker value changes. */
+            function openFileArchive() {
+                let iframe = document.getElementById('fileArchiveIframe');
+                let value = $('#file').val();
+                if (lastArchiveUrl !== value) {
+                    let url = '/apps/file-archive/admin/';
+                    if (value.indexOf(archiveRoot + '/') === 0) {
+                        let path = value.split(/[?#]/)[0];
+                        url += '?dir=' + encodeURIComponent(path.substring(0, path.lastIndexOf('/')));
+                    }
+                    iframe.src = url;
+                    lastArchiveUrl = value;
+                }
+            }
+
+            function fileDialogTabClick(name) {
+                elfinderTabClick(name);
+                if ((name === 'file' || name === 'tools') && archiveSelectionChanged && elFinderInstance) {
+                    archiveSelectionChanged = false;
+                    openElfinderInFolder($('#file').val());
+                }
+                setElfinderHeight();
+            }
 
             let commands = [
                 'archive', 'back', 'copy', 'cut', 'download', 'duplicate', 'edit', 'extract',
                 'forward', 'getfile', 'help', 'home', 'info', 'mkdir', 'mkfile', 'netmount',
                 'open', 'paste', 'quicklook', 'reload', 'rename', 'resize', 'rm',
                 'sort', 'up', 'upload', 'view',
-                'wjedit', 'wjfilearchive', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
+                'wjedit', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
             ];
 
             let files = [
@@ -60,8 +95,7 @@ block content
                 ['download'],
                 ['quicklook', 'info'],
                 ['wjeditswitch', 'duplicate', 'rm', 'rename'],
-                ['extract', 'archive'],
-                ['wjfilearchive']
+                ['extract', 'archive']
             ];
 
             if(elfinderMetadataEnabled === true) {
@@ -115,12 +149,10 @@ block content
                     requestType: 'post',
                     handlers: {
                         select: function(event, elfinderInstance) {
-                            // file, directory, fileDirectory, files, directories, filesDirectories
+                            if ($('#fileArchive').is(':visible')) return;
+                            // Supported selection modes: file, directory, fileDirectory.
                             var selectMode = "[(${selectMode})]";
                             var selected = event.data.selected;
-                            var inputs = $('div.inputs');
-                            var rows = [];
-                            var completed = 0;
 
                             if ((selectMode == 'file' || selectMode == 'directory' || selectMode == 'fileDirectory') && selected.length > 0)
                             {
@@ -128,78 +160,15 @@ block content
                                 //v nazve musi byt znak bodka - prevencia pred vybratim adresara klikanim v strome
                                 if (files.length == 1 && (files[0].hash.indexOf("_doc_group")!=-1 || files[0].virtualPath.indexOf(".")!=-1))
                                 {
-                                    var row = inputs.find('.row.template');
-                                    var input = row.find('input');
+                                    var input = $('#file');
                                     var val = files[0].virtualPath;
                                     //remove multiple slashes
                                     val = val.replace(/\/+/g, '/')
                                     input.val(val);
-                                    htmlCompleted();
                                 }
-                            }
-                            else if ((selectMode == 'files' || selectMode == 'directories' || selectMode == 'filesDirectories') && selected.length > 0) {
-                                $.each(selected, function(i, v){
-                                    getData(v, function(data){
-                                        completed++;
-                                        if (isDataOk(data)) {
-                                            var row = inputs.find('.row.template');
-                                            var input = row.find('input');
-                                            var val = data.cwd.virtualPath;
-                                            val = val.replace("////", "/");
-                                            val = val.replace("///", "/");
-                                            val = val.replace("//", "/");
-                                            input.val(val);
-                                        }
-                                        if (completed == selected.length) {
-                                            htmlCompleted();
-                                        }
-                                    });
-                                });
                             }
                             else if (selected.length > 0) {
                                 console.warn('SelectMode ' + selectMode + ' not defined');
-                            }
-
-                            function htmlCompleted() {
-                                if (rows.length > 0) {
-                                    $.each(rows, function(i, v){
-                                        var label = v.find('label');
-                                        var input = v.find('input');
-                                        if (rows.length > 1) {
-                                            label.attr('for', 'file' + i).text(label.text() + ' ' + (i + 1));
-                                            input.attr('id', 'file' + i);
-                                        }
-                                    })
-                                }
-                            }
-
-                            function isDataOk(data) {
-                                if (data.cwd == null || data.cwd.mime == null) {
-                                    return false;
-                                }
-                                if ((selectMode == 'file' || selectMode == 'files') && data.cwd.mime == 'directory') {
-                                    return false;
-                                }
-                                if ((selectMode == 'directory' || selectMode == 'directories') && data.cwd.mime != 'directory') {
-                                    return false;
-                                }
-                                return true;
-                            }
-
-                            function getData(target, callback) {
-                                var data = {
-                                    cmd: 'open',
-                                    target: target,
-                                    '_': new Date().getTime()
-                                }
-                                $.ajax({
-                                    url: '/admin/elfinder-connector/',
-                                    data: data,
-                                    dataType: 'json',
-                                    success: function(data){
-                                        callback(data);
-                                    }
-                                });
                             }
                         },
                         upload: function (event) {
@@ -374,7 +343,7 @@ block content
                 elFinderInstance.bind('lazydone', function(event) {
                     if (!toolbarFixApplied) {
                         toolbarFixApplied = true;
-                        elfinderTabClick("file");
+                        fileDialogTabClick($('#fileArchiveTab').hasClass('active') ? 'fileArchive' : 'file');
                         var actualUrl = $("#file").val();
                         if (actualUrl != "") {
                             setTimeout(function() {
@@ -404,25 +373,16 @@ block content
                 var result = false;
                 if (callback != '') {
                     if (typeof window.parent.opener[callback] != 'undefined') {
-                        var inputs = $('div.inputs');
                         var results = [];
-                        $.each(inputs.find('.row:not(.template)'), function(i,v){
-                            results.push($(this).find('input').val());
-                        });
-                        if (results.length==0)
-                        {
-                            var val = $("#file").val();
-                            if ("" != val) results.push(val);
-                        }
+                        var val = $("#file").val();
+                        if ("" != val) results.push(val);
                         window.parent.opener[callback](results);
                         result = true;
                     }
                 }
                 if (form != "" && elementName != "")
                 {
-                    var val = $('div.inputs').find('.row:not(.template)').find('input').val();
-                    //aby bolo mozne do inputu priamo napisat www.webjet.sk
-                    if (typeof val == "undefined") val = $("#file").val();
+                    var val = $("#file").val();
                     if ("ckEditorDialog"==form)
                     {
                         var dialog = null;
@@ -463,7 +423,7 @@ block content
             .md-tabs
                 ul.nav( role='tablist')
                     li.nav-item(role='presentation')
-                        a.nav-link.active(onclick="elfinderTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')
+                        a.nav-link.active(onclick="fileDialogTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')
                             span(data-th-switch="${param.volumes != null ? param.volumes[0] : ''}" data-th-remove="tag")
                                 span(data-th-case="'videos'" data-th-text="#{elfinder.images.video}" data-th-remove="tag")
                                 span(data-th-case="'images'" data-th-text="#{elfinder.images}" data-th-remove="tag")
@@ -471,19 +431,31 @@ block content
             #finder [[\#{divpopup-blank.wait_please}]]
             #pixabay(style='display: none;')
                 iframe#wjImagePixabayIframeElement(style='width: 100%; height: 480px; border: 0px;' src='/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp' border='0')
-        #linkInput.inputs.container-fluid
-            .row.template
-                .form-group.col-sm-12.cke_dialog_ui_input_text
-                    label.control-label.block(for='file') [[\#{editor.media.link}]]
-                    input#file.form-control.elfinder-url-input.ai-field(name='file' data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet" data-ai-render-format="dt-format-image")
+            #fileArchive(style='display: none;' role='tabpanel' aria-labelledby='fileArchiveTab' data-th-if="${layout.hasPermission('cmp_file_archiv') && (volumes == 'link' || volumes == 'files' || volumes == 'all') && selectMode != 'directory' && selectMode != 'directories'}")
+                iframe#fileArchiveIframe(style='display: block; width: 100%; border: 0;' data-th-title='\#{components.file_archiv.name}')
+        #linkInput.innerPadding.inputs
+            style(type='text/css').
+                table.urlFormTable { width: 100%; }
+            table.urlFormTable
+                tr
+                    td(style='width: 80px;' data-th-title='\#{elfinder.image.urlTitle}').cke_dialog_ui_vbox_child
+                        label.cke_dialog_ui_labeled_label(for='file') [[\#{components.groupEdit.url_info}]]:
+                    td.cke_dialog_ui_vbox_child
+                        div.cke_dialog_ui_input_text
+                            input#file.form-control.cke_dialog_ui_input_text.elfinder-url-input.ai-field(name='file' data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet" data-ai-render-format="dt-format-image")
 
     script.
+        window.helpLink = "/redactor/files/fbrowser/README";
         let tabs = $(".tabbable > .md-tabs > ul.nav");
         if( [(${pixabayEnabled})] == true) {
-            tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
-            tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'pixabay\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor.photobank}]]</a></li>' );
+            tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"fileDialogTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
+            tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"fileDialogTabClick(\'pixabay\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor.photobank}]]</a></li>' );
         } else {
-            tabs.append( '<li class=\"nav-item last\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
+            tabs.append( '<li class=\"nav-item last\"><a class=\"nav-link\" onclick=\"fileDialogTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
+        }
+        if ($('#fileArchive').length > 0) {
+            tabs.find('li.last').removeClass('last');
+            tabs.append('<li class="nav-item last" role="presentation"><a id="fileArchiveTab" class="nav-link" href="#fileArchive" role="tab" aria-controls="fileArchive" aria-selected="false" data-bs-toggle="tab" onclick="fileDialogTabClick(\'fileArchive\')">[[\#{components.file_archiv.name}]]</a></li>');
         }
 
     style(type="text/css").

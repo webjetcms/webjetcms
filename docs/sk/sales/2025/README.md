@@ -14,7 +14,7 @@ Unikátnou vlastnosťou je **AI v prehliadači** — využitie modelov priamo na
 
 **AI asistenti sú plne konfigurovateľní** — administrátor môže vytvárať vlastných asistentov s presnými inštrukciami pre konkrétne polia a entity. Každý asistent sa dá priradiť ku konkrétnemu poľu v systéme, takže redaktor vždy vidí len relevantných asistentov. Systém umožňuje definovať inštrukcie, vybrať model, nastaviť streamovanie odpovede a požadovať vstup od používateľa — všetko bez potreby programovania.
 
-V nástroji **PageBuilder** funguje aj **režim chat**, kde AI dokáže generovať kompletné bloky webovej stránky, upravovať existujúce sekcie alebo navrhovať celú štruktúru stránky na základe požiadavky redaktora. Redaktor môže postupne zadávať požiadavky a doladiť výsledok bez manuálneho kódovania.
+V nástroji **PageBuilder** funguje aj **režim četu**, kde AI dokáže generovať kompletné bloky webovej stránky, upravovať existujúce sekcie alebo navrhovať celú štruktúru stránky na základe požiadavky redaktora. Redaktor môže postupne zadávať požiadavky a doladiť výsledok bez manuálneho kódovania.
 
 Súčasťou riešenia je aj **podrobná štatistika využívania** AI asistentov — grafy najpoužívanejších asistentov, spotreba tokenov v čase, identifikácia používateľov s najvyššou spotrebou. To umožňuje organizácii **kontrolovať náklady**, optimalizovať inštrukcie a vyhodnotiť návratnosť investície do AI nástrojov.
 
@@ -25,7 +25,7 @@ Súčasťou riešenia je aj **podrobná štatistika využívania** AI asistentov
 - **Nulové náklady s AI v prehliadači**: Lokálne spracovanie bez API volaní znamená žiadne poplatky za bežné úlohy ako sumarizácia, preklad alebo úprava textu.
 - **Plná konfigurovateľnosť bez programovania**: Administrátor vytvára vlastných asistentov, definuje inštrukcie a priraďuje ich k poliam — žiadne zásahy do kódu.
 - **Generovanie a úprava obrázkov**: AI vie vytvoriť ilustračné obrázky z textového popisu, odstrániť pozadie alebo upraviť existujúce fotografie priamo v CMS.
-- **Chat režim pre PageBuilder**: Kompletné generovanie a úprava štruktúry webových stránok vrátane blokov, textov a rozloženia cez konverzáciu s AI.
+- **Četový režim pre PageBuilder**: Kompletné generovanie a úprava štruktúry webových stránok vrátane blokov, textov a rozloženia cez konverzáciu s AI.
 - **Kontrola nákladov**: Podrobné štatistiky spotreby tokenov podľa asistentov, používateľov a dní umožňujú optimalizáciu a predvídateľné rozpočtovanie.
 - **Bezpečnosť a súkromie**: Možnosť šifrovania API kľúčov, lokálne AI v prehliadači a podrobné oprávnenia zabezpečujú súlad s bezpečnostnými politikami organizácie.
 - **Funkcia vrátenia zmien**: Každý výsledok AI je možné jedným kliknutím vrátiť späť, čo odstraňuje obavy z nesprávnych úprav.

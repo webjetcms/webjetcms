@@ -163,9 +163,12 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
     I.clickCss('#pills-dt-campaingsDataTable-receivers-tab');
     DT.waitForLoader();
     DT.filterContains('recipientEmail', 'autotest');
+    I.wait(1);
     I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.buttons-select-all');
+    I.wait(1);
     I.click(DT.btn.recipients_delete_button);
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForEditor("datatableFieldDTE_Field_recipientsTab");
+    I.click("Zmazať", "#datatableFieldDTE_Field_recipientsTab_modal div.DTE_Action_Remove");
     I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 30);
     DTE.save('campaingsDataTable');
 

@@ -1114,3 +1114,9 @@ body.is-edit-mode section .container:hover {
 svg.icon {
 	cursor: pointer;
 }
+
+.cke-wj-delete-highlight {
+	outline: 1px solid #F7CA18 !important;
+	outline-offset: 1px;
+	box-shadow: 0 0 12px 3px rgba(224, 136, 0, 0.7);
+}

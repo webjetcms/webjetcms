@@ -28,6 +28,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name = "emails_campain")
@@ -35,6 +37,14 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "preview", title = "editor.preview", content = "<div class=\"previewContainer\"><iframe id=\"emailPreviewIframe\" src=\"about:blank\" width=\"100%\" height=\"500\"></iframe><div>"),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "receivers", title = "components.dmail.campaings.tab.receivers"),
+    @DataTableTab(id = "opens", title = "components.dmail.campaings.tab.opens", className = "hide-on-duplicate"),
+    @DataTableTab(id = "clicks", title = "components.dmail.campaings.tab.clicks", className = "hide-on-duplicate")
+})
 public class CampaingsEntity implements Serializable {
 
     //Set entity domain id

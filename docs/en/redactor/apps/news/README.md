@@ -6,14 +6,22 @@ The News application inserts a list of web pages in a specified folder into a pa
 
 ## News list
 
-The news list in the administration is similar to the website list, but does not have a tree structure. It is located in the Posts/News menu. At the top, you can select a folder to display in the table.
+The list of news in the administration is located in the Posts/News menu. A folder tree is displayed on the left, and a table of news from the selected folder is displayed on the right. You can expand folders and select their subfolders. The tree is used to select a folder; the folders themselves are managed in the Web page section.
 
 ![](admin-dt.png)
 
-The values ​​in the section selection field in the header are generated:
+News folders are determined by:
 
-- automatically - if the config variable `newsAdminGroupIds` is set to an empty value, a list of news folder IDs is obtained by searching for the expression `!INCLUDE(/components/news/` in the body of the pages and finding the set folder ID `groupIds`.
+- automatically - if the config variable `newsAdminGroupIds` is set to an empty value, a list of news folder IDs is obtained by searching for the term `!INCLUDE(/components/news/` in the body of the pages and finding the set folder ID `groupIds`. The blogger root folders and their subfolders are omitted.
 - according to the conf. variable `newsAdminGroupIds`, where it is possible to enter a comma-separated list of folder IDs, e.g. `17,23*,72`, and if the folder ID ends with the character `*`, news (web pages) from subfolders will also be loaded when selected.
+
+The tree also shows their common parent folders, for example `Aplikácie → Novinky → 2026`. Parent folders that are not part of the set news list or its subfolders have a white folder icon and are used only to expand branches. Selecting them does not change the news list and you cannot create a news item in them. Other folders outside the set range are not displayed.
+
+Above the tree you can search for folders by name, including subfolders that have not yet been expanded. The refresh button loads the current structure. Only the available folders of the current domain are displayed according to the user's rights.
+
+By button <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-adjustments-horizontal"></i></span></button> above the tree you can change the ratio of the width of the tree and the table or set a fixed width of the tree in pixels. The setting is saved for the logged in user separately for this application.
+
+When selecting a folder with the setting `*`, the news list, including subfolders, is preserved. Selecting a specific subfolder will only display its news, unless it also has an explicit setting of `*`. A new news item is created in the selected folder. The selection is preserved in the page link, for example `/apps/news/admin/#23*`. If no folder is available, an empty list is displayed and news creation is disabled.
 
 Clicking on the news title will open an editor identical to the [page editor](../../webpages/editor/README.md).
 
@@ -84,7 +92,7 @@ In the filter tab, you can define advanced options for displaying news according
 
 ### News
 
-The news tab displays a list of news items that are loaded according to the selected directories from the Application Parameters tab. This way, you can see a list of news items and easily edit existing news items (edit the headline, photo, or text of the news item). You can also create a new news item.
+The news tab displays a folder tree and a list of news items. The root folders are loaded according to the selected directories from the Application Parameters tab; you can also select their subfolders in the tree. This way, you can see a list of news items and easily edit existing news items (edit the headline, photo, or text of the news item). You can also create a new news item.
 
 ![](editor-dialog-newslist.png)
 

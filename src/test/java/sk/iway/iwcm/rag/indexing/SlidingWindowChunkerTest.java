@@ -1,149 +1,215 @@
 package sk.iway.iwcm.rag.indexing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mockStatic;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
 
-import sk.iway.iwcm.test.BaseWebjetTest;
+import sk.iway.iwcm.Constants;
 
-class SlidingWindowChunkerTest extends BaseWebjetTest {
+/** Verifies bounded chunk sizes, sentence boundaries, overlap, and complete content coverage. */
+class SlidingWindowChunkerTest {
 
-    private SlidingWindowChunker chunker;
+    private static final String TEXT = "Alpha is ready. Bravo is ready. Charlie is ready. Delta is ready. Echo is ready.";
+    private final SlidingWindowChunker chunker = new SlidingWindowChunker();
 
-    @BeforeEach
-    void setUp() {
-        chunker = new SlidingWindowChunker();
+    /** Empty inputs never produce empty chunks. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" \n\t "})
+    void ignoresEmptyInput(String text) {
+        assertEquals(List.of(), chunker.chunk(text, 31, 16));
     }
 
-    @Test
-    void testEmptyText() {
-        List<String> chunks = chunker.chunk("");
-        assertTrue(chunks.isEmpty());
+    /** Disabled splitting and a target larger than the text retain the normalized document. */
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 1000, Integer.MAX_VALUE})
+    void returnsShortOrUnsplitText(int size) {
+        assertEquals(List.of("First sentence.\nSecond sentence."),
+            chunker.chunk(" \r\nFirst sentence.\r\nSecond sentence.\r\n ", size, 10));
     }
 
+    /** The configured overload uses the same sentence-aware chunking and overlap as explicit parameters. */
     @Test
-    void testNullText() {
-        List<String> chunks = chunker.chunk(null);
-        assertTrue(chunks.isEmpty());
-    }
+    void usesConfiguredSizeAndOverlap() {
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class)) {
+            constants.when(() -> Constants.getInt("ragEmbeddingChunkSize")).thenReturn(31);
+            constants.when(() -> Constants.getInt("ragEmbeddingChunkOverlap")).thenReturn(16);
 
-    @Test
-    void testShortText() {
-        String text = "Short text that fits in one chunk.";
-        List<String> chunks = chunker.chunk(text);
-        assertEquals(1, chunks.size());
-        assertEquals(text, chunks.get(0));
-    }
-
-    @Test
-    void testChunkingWithOverlap() {
-        // Create text longer than chunk size
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 100; i++) {
-            sb.append("Word").append(i).append(" ");
-        }
-        String text = sb.toString().trim();
-
-        // Use small chunk size for testing
-        List<String> chunks = chunker.chunk(text, 50, 10);
-
-        assertTrue(chunks.size() > 1, "Text should be split into multiple chunks");
-
-        // Verify overlap still preserves context across neighboring chunks.
-        for (int i = 0; i < chunks.size() - 1; i++) {
-            assertFalse(chunks.get(i).isEmpty(), "Chunk should not be empty");
-            assertTrue(hasSharedContext(chunks.get(i), chunks.get(i + 1), 6), "Chunk " + i + " must share context with chunk " + (i + 1));
+            assertEquals(chunker.chunk(TEXT, 31, 16), chunker.chunk(TEXT));
         }
     }
 
+    /** Sentence boundaries remain intact when overlap is zero, negative, or too small to repeat a sentence. */
+    @ParameterizedTest
+    @ValueSource(ints = {-10, 0, 1})
+    void adjustsChunkSizeToWholeSentences(int overlap) {
+        assertEquals(List.of(
+            "Alpha is ready. Bravo is ready.",
+            "Charlie is ready. Delta is ready.",
+            "Echo is ready."
+        ), chunker.chunk(TEXT, 31, overlap));
+    }
+
+    /** Normal and excessive overlap repeat whole sentences while each chunk advances. */
+    @ParameterizedTest
+    @ValueSource(ints = {15, 16, 30, 31, 1000})
+    void overlapsWholeSentences(int overlap) {
+        assertEquals(List.of(
+            "Alpha is ready. Bravo is ready.",
+            "Bravo is ready. Charlie is ready.",
+            "Charlie is ready. Delta is ready.",
+            "Delta is ready. Echo is ready."
+        ), chunker.chunk(TEXT, 31, overlap));
+    }
+
+    /** Repeated overlapping passages retain their distinct offsets after newline and edge normalization. */
     @Test
-    void testAllChunksContainText() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 200; i++) {
-            sb.append("Word").append(i).append(" ");
+    void preservesOffsetsForRepeatedOverlappingPassages() {
+        String sentence = "Alpha is ready.";
+        String normalized = String.join(" ", sentence, sentence, sentence, sentence);
+        List<SlidingWindowChunker.Chunk> chunks = chunker.chunkWithOffsets(" \r\n" + normalized + "\r\n ", 31, 16);
+
+        assertEquals(List.of(0, 16, 32), chunks.stream().map(SlidingWindowChunker.Chunk::startOffset).toList());
+        assertEquals(List.of(sentence + " " + sentence, sentence + " " + sentence, sentence + " " + sentence),
+            chunks.stream().map(SlidingWindowChunker.Chunk::text).toList());
+        for (SlidingWindowChunker.Chunk chunk : chunks) {
+            assertEquals(chunk.text(), normalized.substring(chunk.startOffset(), chunk.startOffset() + chunk.text().length()));
         }
+    }
 
-        List<String> chunks = chunker.chunk(sb.toString().trim(), 100, 20);
+    /** Sentences, paragraphs, and tokens within the 50% allowance remain intact. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "This sentence is much longer than the requested chunk size and must remain complete.",
+        "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron",
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+    })
+    void preservesUnitsWithinAllowance(String text) {
+        assertEquals(List.of(text), chunker.chunk(text, 60, 12));
+    }
 
+    /** Large unpunctuated passages split at words without losing content or exceeding the default cap. */
+    @ParameterizedTest
+    @ValueSource(ints = {0, 200, 999})
+    void boundsLargePassages(int overlap) {
+        String text = IntStream.range(0, 12_000).mapToObj(i -> "word" + i).collect(Collectors.joining(" "));
+        assertBoundedCoverage(text, chunker.chunk(text, 1000, overlap), 1500);
+    }
+
+    /** Overlap shrinks when keeping a preceding sentence would make the next chunk exceed the cap. */
+    @Test
+    void boundsChunksIncludingOverlap() {
+        String first = "A".repeat(598) + ".";
+        String second = "B".repeat(598) + ".";
+        String third = "C".repeat(1399) + ".";
+
+        assertEquals(List.of(first + " " + second, third),
+            chunker.chunk(first + " " + second + " " + third, 1000, 900));
+    }
+
+    /** Tokens longer than the cap are split without dropping characters. */
+    @Test
+    void splitsOversizedTokens() {
+        String text = "a".repeat(3500);
+        List<String> chunks = chunker.chunk(text, 1000, 0);
+
+        assertTrue(chunks.stream().allMatch(chunk -> chunk.length() <= 1500));
+        assertEquals(text, String.join("", chunks));
+    }
+
+    /** A word longer than the target remains intact when its end still fits inside the cap. */
+    @ParameterizedTest
+    @ValueSource(ints = {1200, 1500})
+    void preservesWordsWithinCap(int wordLength) {
+        String word = "x".repeat(wordLength);
+        String text = word + " tail".repeat(100);
+        List<String> chunks = chunker.chunk(text, 1000, 0);
+
+        assertEquals(word, chunks.get(0));
+        assertTrue(chunks.stream().allMatch(chunk -> chunk.length() <= 1500));
+        assertEquals(text, String.join(" ", chunks));
+    }
+
+    /** Hard boundaries never separate the UTF-16 units of a supplementary character, even with a tiny target. */
+    @ParameterizedTest
+    @CsvSource({"1, 2", "3, 4", "1000, 1500"})
+    void preservesSurrogatePairs(int size, int maximumSize) {
+        String text = "a😀".repeat(600);
+        List<String> chunks = chunker.chunk(text, size, 0);
+
+        assertEquals(text, String.join("", chunks));
         for (String chunk : chunks) {
-            assertFalse(chunk.isEmpty(), "Each chunk should contain text");
-            assertTrue(chunk.length() <= 100 || chunks.size() == 1, "Chunk should not exceed max size");
+            assertTrue(chunk.length() <= maximumSize);
+            assertTrue(Character.isLowSurrogate(chunk.charAt(0)) == false);
+            assertTrue(Character.isHighSurrogate(chunk.charAt(chunk.length() - 1)) == false);
         }
     }
 
-    /**
-     * Verifies that chunking prefers paragraph breaks when a suitable boundary is available.
-     */
+    /** Very long whitespace runs cannot create empty chunks or hide the following sentence. */
     @Test
-    void testPrefersParagraphBoundary() {
-        String text = "First paragraph has enough words to make it a useful chunk.\n\nSecond paragraph should start a new chunk cleanly.";
-
-        List<String> chunks = chunker.chunk(text, 70, 10);
-
-        assertEquals(2, chunks.size());
-        assertTrue(chunks.get(0).endsWith("useful chunk."));
-        assertTrue(chunks.get(1).contains("Second paragraph"));
+    void skipsEmptyChunksInLongWhitespace() {
+        String text = "First sentence." + " ".repeat(2000) + "Next sentence.";
+        assertEquals(List.of("First sentence.", "Next sentence."), chunker.chunk(text, 1000, 0));
     }
 
-    /**
-     * Verifies that chunking prefers sentence punctuation before splitting inside a sentence.
-     */
+    /** A wrapped sentence exceeding the cap is split, and subsequent content is still emitted. */
     @Test
-    void testPrefersSentenceBoundary() {
-        String text = "The first sentence has enough words to pass the minimum boundary. The second sentence should not be split in half.";
-
-        List<String> chunks = chunker.chunk(text, 75, 10);
-
-        assertTrue(chunks.size() > 1);
-        assertTrue(chunks.get(0).endsWith("."));
+    void continuesAfterAnOversizedSentence() {
+        String text = "This sentence is much longer than\nthe requested chunk size and must be split. Next sentence.";
+        assertBoundedCoverage(text, chunker.chunk(text, 40, 35), 60);
     }
 
-    /**
-     * Verifies that chunking prefers whitespace before falling back to a hard split.
-     */
+    /** Headings and paragraphs without sentence punctuation provide safe structural boundaries. */
     @Test
-    void testPrefersWhitespaceBoundary() {
-        String text = "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda";
-
-        List<String> chunks = chunker.chunk(text, 35, 5);
-
-        assertTrue(chunks.size() > 1);
-        assertFalse(chunks.get(0).endsWith("eps"), "Chunk should not split a word when whitespace is available");
+    void splitsAtParagraphBoundaries() {
+        assertEquals(List.of("# Heading", "A long line without punctuation", "Final paragraph without punctuation"),
+            chunker.chunk("# Heading\n \nA long line without punctuation\n\nFinal paragraph without punctuation", 24, 0));
     }
 
-    /**
-     * Verifies that chunking still progresses when a long token has no natural boundary.
-     */
+    /** A soft line wrap never causes a split inside a sentence. */
     @Test
-    void testHardSplitFallbackForLongToken() {
-        String text = "abcdefghijklmnopqrstuvwxyz";
-
-        List<String> chunks = chunker.chunk(text, 10, 2);
-
-        assertEquals("abcdefghij", chunks.get(0));
-        assertEquals("ijklmnopqr", chunks.get(1));
+    void keepsWrappedSentencesTogether() {
+        String sentence = "This sentence wraps\nonto another line before ending.";
+        assertEquals(List.of(sentence, "Next sentence."), chunker.chunk(sentence + " Next sentence.", 42, 5));
     }
 
-    /**
-     * Checks whether neighboring chunks share at least the requested suffix/prefix context.
-     *
-     * @param previous previous chunk text
-     * @param next next chunk text
-     * @param minLength minimum required shared context length
-     * @return true when the end of previous appears at the start of next
-     */
-    private boolean hasSharedContext(String previous, String next, int minLength) {
-        int max = Math.min(previous.length(), next.length());
-        for (int len = max; len >= minLength; len--) {
-            if (next.startsWith(previous.substring(previous.length() - len))) {
-                return true;
-            }
+    /** Decimal points, colons, and semicolons stay inside sentences; closing quotes and brackets stay with them. */
+    @Test
+    void handlesSentencePunctuation() {
+        List<String> sentences = List.of("It costs 1.25 euros; use this value: exactly.",
+            "She asked \"Ready?\"", "The answer was (yes!).", "A final sentence.");
+        assertEquals(List.of(sentences.get(0), sentences.get(1) + " " + sentences.get(2), sentences.get(3)),
+            chunker.chunk(String.join(" ", sentences), 40, 0));
+    }
+
+    /** Checks word boundaries, bounded size, forward progress, and complete coverage of unique source passages. */
+    private void assertBoundedCoverage(String text, List<String> chunks, int maximumSize) {
+        int previousStart = -1;
+        int previousEnd = 0;
+        for (String chunk : chunks) {
+            assertTrue(chunk.isBlank() == false, "Chunks must contain text");
+            assertTrue(chunk.length() <= maximumSize, "Chunks must respect the cap including overlap");
+            int start = text.indexOf(chunk, previousStart + 1);
+            assertTrue(start > previousStart, "Every chunk must advance in the source");
+            int end = start + chunk.length();
+            assertTrue(end > previousEnd, "Every chunk must add new content");
+            assertTrue(start <= previousEnd || text.substring(previousEnd, start).isBlank(), "No text may be skipped");
+            assertTrue(start == 0 || Character.isWhitespace(text.charAt(start - 1)), "Chunk must start at a word boundary");
+            assertTrue(end == text.length() || Character.isWhitespace(text.charAt(end)), "Chunk must end at a word boundary");
+            previousStart = start;
+            previousEnd = end;
         }
-        return false;
+        assertEquals(text.length(), previousEnd, "All source content must be emitted");
     }
 }

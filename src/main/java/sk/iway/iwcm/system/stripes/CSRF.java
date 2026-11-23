@@ -174,7 +174,11 @@ public class CSRF
 				{
 					tokenFound = true;
 					if(deleteToken)
+					{
 						tokenList.remove(position);
+						//redis trigger session update
+						Tools.sessionSetAttribute(session, SESSION_KEY, tokenList);
+					}
 					break;
 				}
 			}

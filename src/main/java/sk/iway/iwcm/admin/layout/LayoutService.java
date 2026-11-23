@@ -39,10 +39,24 @@ public class LayoutService
 
             setGlobalData();
             setHeaderData();
+            layout.setSystemInfo(new SystemInfo(request, layout.getHeader().getCurrentDomain()));
             setMenuData();
 
         }
         return layout;
+    }
+
+    /** Derives avatar initials from the identity already available in the HTTP session. */
+    public String getUserInitials() {
+        if (user == null) return "";
+        String initials = initial(user.getFirstName()) + initial(user.getLastName());
+        return initials.isEmpty() ? initial(user.getLogin()) : initials;
+    }
+
+    private static String initial(String value) {
+        if (value == null || value.isBlank()) return "";
+        String name = value.strip();
+        return name.substring(0, name.offsetByCodePoints(0, 1)).toUpperCase(Locale.ROOT);
     }
 
     public LayoutService setGlobalData() {
@@ -57,6 +71,7 @@ public class LayoutService
         if ("cs".equals(lngWebjet)) lngWebjet = "cz";
         layout.setLngWebjet(lngWebjet);
         layout.setCsrfToken(CSRF.getCsrfToken(request.getSession(), true));
+        if (user.isAdmin()) layout.setLoginLocationUrl(sk.iway.iwcm.users.devices.AdminLoginLocation.takeRetryUrl(request.getSession()));
         layout.setPropertiesLastModified(AdminPropRestController.getLastModified(layout.getLngWebjet()));
         setNopermsCss();
 
@@ -119,6 +134,9 @@ public class LayoutService
                     css.append(".noperms-ver-multiweb { display: none !important; }\n");
                     javascript.append("nopermsJavascript[\"ver-multiweb\"]=true;\n");
                 }
+
+                css.append(".noperms-install-"+Constants.getInstallName()+" { display: none !important; }\n");
+                javascript.append("nopermsJavascript[\"install-"+Constants.getInstallName()+"\"]=true;\n");
 
                 //ve need to verify this modules because they are used in FE components
                 //and if user has no perms for them, they should not be visible in admin

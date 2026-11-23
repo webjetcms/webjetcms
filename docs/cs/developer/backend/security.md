@@ -26,4 +26,7 @@ Pokud máte na frontendu pole, které umožňuje HTML formátování, může do 
 Pokud potřebujete pracovat s HTML kódem je třeba daný atribut anotovat:
 
 - ```@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)``` - ​​povolí veškerý HTML kód, doporučujeme používat v minimální míře, respektive pouze v případě, že HTML kód skutečně má obsahovat i např. JavaScript nebo jiný potenciálně nebezpečný kód.
-- ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` - ​​povolí pouze základní HTML formátování podle doporučení [OWASP](https://owasp.org/www-project-java-html-sanitizer/). Tento konvertor doporučujeme používat na všechny vstupy, kde je používán jednoduchý WYSIWYG editor typu ```DataTableColumnType.QUILL```.
+- ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` - ​​povolí pouze základní HTML formátování podle doporučení [OWASP](https://owasp.org/www-project-java-html-sanitizer/). Čistí hodnotu **při načtení přes JPA**, zápis do databáze nemění. Používá se například pro jednoduchý WYSIWYG editor typu ```DataTableColumnType.QUILL```.
+- ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverterWithSave.class)``` - ​​používá stejnou HTML politiku při **ukládání i načítání**. Zachovává `null` a ochranu nevypíná ani hodnota `jpaentity` v konfiguraci `xssHtmlAllowedFields`. Čištění při čtení chrání i starší záznamy a hodnoty zapsané mimo JPA.
+
+Pole `title` a `navbar` v `DocBasic` používají `PageTitleAttributeConverter`. Ten před čištěním dekóduje starší zápis WebJET HTML `*|...|*` přes `Tools.convertToHtmlTags`. Ochrana je iv setterech a ve starším JDBC ukládání přes `EditorDB`. `DocDetails` a `DocHistory` dědí anotace z `DocBasic`.

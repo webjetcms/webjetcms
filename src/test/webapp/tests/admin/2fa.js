@@ -1,7 +1,8 @@
 Feature('admin.2fa');
 
-const http = require('http');
 const crypto = require('crypto');
+const { PNG } = require('pngjs');
+const jsQR = require('jsqr');
 
 var randomLogin;
 const passwordRequirementsErr_nonAdmin = 'Vaše heslo nespĺňa bezpečnostné nastavenia aplikácie';
@@ -32,63 +33,6 @@ function getOTP(secretValue) {
 	return ((parseInt((hmac.substr(parseInt(hmac.slice(-1), 16) * 2, 8)), 16) & 2147483647) + '').slice(-6);
 }
 
-/**
- * Parse data:image/png URL to file data
- * @param {*} dataurl
- * @returns
- */
-function dataURLtoFile(dataurl) {
-  var arr = dataurl.split(','),
-      mime = arr[0].match(/:(.*?);/)[1],
-      bstr = atob(arr[arr.length - 1]),
-      n = bstr.length,
-      u8arr = new Uint8Array(n);
-  while(n--){
-      u8arr[n] = bstr.charCodeAt(n);
-  }
-  return u8arr;
-}
-
-/**
- * Make HTTP request to verify QR code
- * @param {*} qrCodeImageData
- * @returns
- */
-function doRequest(qrCodeImageData) {
-  return new Promise(function (resolve, reject) {
-    const file = dataURLtoFile(qrCodeImageData);
-    const options = {
-      hostname: 'api.qrserver.com',
-      port: 80,
-      path: '/v1/read-qr-code/',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'multipart/form-data; boundary=boundary',
-      },
-    };
-    const req = http.request(options, (res) => {
-      let responseData = '';
-      res.on('data', (chunk) => {
-        responseData += chunk;
-      });
-
-      res.on('end', () => {
-        resolve(responseData);
-      });
-    });
-    req.write(
-      `--boundary\r\nContent-Disposition: form-data; name="file"; filename="frame.png"\r\nContent-Type: image/png\r\n\r\n`
-    );
-    req.write(file);
-    req.end(`\r\n--boundary--`);
-    req.on('error', (error) => {
-      console.log("Request error:");
-      console.error(error);
-      resolve(error);
-    });
-  });
-}
-
 Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     I.say('Prihlasenie sa ako admin');
     I.relogin('admin');
@@ -104,7 +48,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     randomLogin = 'testerga' + I.getRandomText();
     I.fillField('#DTE_Field_editorFields-login', randomLogin);
     I.fillField('#DTE_Field_password', secret(I.getDefaultPassword()));
-    DTE.save();
+    DTE.save(undefined, true);
 
     I.say('Prihlasenie sa do nového účtu');
     I.relogin(randomLogin, true, false);
@@ -128,14 +72,14 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     I.say("Verify QR code is valid");
 
     const secretValue = await I.grabTextFrom('#secret');
-    I.say("secret: "+secretValue);
-
     const qrCodeImageData = await I.grabAttributeFrom('img[alt="Scan me!"]', 'src');
-    let responseData = await doRequest(qrCodeImageData);
-    I.say("RESPONSE: "+responseData);
-    const responseObj = JSON.parse(responseData);
-    let qrCodeData = responseObj[0].symbol[0].data;
-    I.assertContain(qrCodeData, secretValue, 'Pri testovaní zobrazenia QR kódu sa nenašiel kľúč v kóde');
+    // Decode locally so the test does not depend on a public service or disclose the OTP secret.
+    const png = PNG.sync.read(Buffer.from(qrCodeImageData.split(',')[1], 'base64'));
+    const qrCode = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
+    I.assertTrue(qrCode !== null, 'The displayed QR code must be readable');
+    const otpUrl = qrCode && new URL(qrCode.data);
+    I.assertTrue(otpUrl?.protocol === 'otpauth:' && otpUrl.hostname === 'totp', 'The QR code must configure TOTP');
+    I.assertTrue(otpUrl?.searchParams.get('secret') === secretValue, 'The QR code must contain the displayed secret');
 
     I.clickCss("#btnOK");
 
@@ -177,7 +121,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     }
 
     I.dontSee("Zadaný kód nie je správny.");
-    I.waitForElement(locate('h2').withText('Vitajte, Tester Google Authenticate'), 10);
+    I.waitForElement(locate('h1.md-dashboard__greeting').withText('Vitajte späť, Tester Google Authenticate'), 10);
 
     I.logout();
 });

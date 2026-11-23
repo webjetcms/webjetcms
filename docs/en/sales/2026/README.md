@@ -4,6 +4,164 @@ This section contains descriptions of the features and **functionalities of WebJ
 
 ---
 
+## Clearer and faster page creation in PageBuilder
+
+WebJET CMS modernizes **PageBuilder – a tool for composing pages from ready-made blocks**. The editor has control over the selected part in one place in the fixed top bar. A clickable path shows him whether he is editing a column, its container or the entire section, and allows him to easily move to the parent part. **A copy of the block is inserted right next to the original and the order of the blocks is changed with a quick shift**, which saves time when editing product pages, campaigns and recurring offers.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+The new **Structure** panel shows an overview of all parts of the page** with names derived from the content. The editor can search for a block and go directly to its location, which makes it easier to navigate even on long and complexly structured pages. When adding content, he first selects a marked place directly on the page and then selects the appropriate block. The redesigned library offers **visual previews, categories, and a combination of search by name with filtering by label**, so he can find ready-made corporate design elements faster.
+
+The editor also supports **focused work with content**: while writing, the marking is refined and the frames can be completely hidden or displayed for the entire hierarchy of the selected block. Appearance settings are organized into drop-down groups, and when adjusting the column width, a helper shows for which device the layout is changing. Existing blocks and customization options remain usable; **both the library and the offered settings can be customized for a specific project**. Thus, the organization gains more convenient daily management while preserving its design and prepared content.
+
+**Main benefits:**
+
+- **Faster page editing**: Duplicating next to the original block and moving it one position shortens repetitive editing tasks.
+- **Better content navigation**: The structure tree and clickable path help you find and select exactly the part you need to edit.
+- **Easier to expand your page**: Visible insertion points and previews in the library make it easier to select and place a new block.
+- **Less distractions while typing**: Subtle or hidden borders let you focus on the text without losing access to tools.
+- **Clearer layout for different devices**: Width adjustment assistant makes it easier to distinguish between mobile, tablet, and desktop edits.
+- **Use of existing design**: The new control builds on the ready-made blocks and retains the ability to customize the library and available properties according to the needs of the organization.
+
+![PageBuilder Structure Panel and Common Toolbar](../../redactor/webpages/pagebuilder-structure.png)
+
+Detailed documentation: [Working with PageBuilder](../../redactor/webpages/pagebuilder.md) | [Customizing Blocks](../../frontend/page-builder/blocks.md)
+
+## Local artificial intelligence with data under its own control
+
+WebJET CMS allows **to generate text, translate and search by meaning directly on the customer's server**. When using local models, the processed content or search queries **are not sent to an external AI service**. This allows the organization to use these functions even where internal rules restrict sending data outside its own environment. After preparing and deploying model packages, the processing itself **does not require an internet connection or an API key from an external provider**.
+
+![](local-ai.png)
+
+Three separate models are available: **EuroLLM** for text creation, **M2M100** for plain text translation, and **multilingual-e5-base** for semantic indexing and search. The provider is selected in the settings of a specific AI assistant, so the customer can combine local and external services according to the needs of individual tasks. For search, both the content and the visitor's question can be processed locally and, optionally, a local text model can be involved to create an AI response.
+
+Models can be run **on standard processors** without **a dedicated graphics card**. Deployment requires an additional library and ready-made model packages; their creation requires an internet connection. Server performance and memory need to be adjusted to the expected load. Smaller models have more limited output quality and in particular generating AI responses can take longer, so it is advisable to verify the results on your own content before deployment. Local translation supports plain text with a specified source and target language, not entire HTML pages.
+
+The changes also include **more accurate management of the semantic index across domains**. Manual indexing and index removal check the permissions on the selected folder and its affiliation with the current domain. If a page is deleted or moved to another domain between being queued and processed, the system will clean up its stale records in the original domain.
+
+**Main benefits:**
+
+- **Control over data processing**: Both content and questions remain processed locally in the customer's environment.
+- **Less dependency on external services**: Deployed models process requests without an internet connection and external AI API.
+- **Using your own infrastructure**: CPU operation allows deployment without purchasing a specialized graphics card, taking into account the required performance and memory.
+- **Task-specific selection**: The organization can independently select a provider for text creation, translation, and search.
+- **More reliable search maintenance**: Permission checking and outdated index cleaning help keep results in the correct domain.
+
+Detailed documentation: [Local AI Models](../../redactor/ai/settings/README.md#local-models) | [Semantic Search](../../redactor/apps/semantic-search/README.md) | [Semantic Index Management](../../redactor/apps/semantic-search/embedding-chunks.md)
+
+## E-commerce sales and revenue overview
+
+WebJET CMS brings **an overview of e-commerce results directly in the administration**. The operator can see the number of orders, their average value, the number of units sold and the average number of products in an order in one place. The graph of sales development with and without VAT helps to track stronger and weaker periods without manually compiling reports. **Financial indicators are based on the values ​​of non-cancelled orders** ; canceled orders remain visible in the total number and order distribution graphs, but do not increase sales or the number of products sold.
+
+![Overview of orders, sales and product sales in the e-commerce](../../redactor/apps/eshop/stats/stats.png)
+
+The sales team gets information for **planning assortment, inventory and promotions**. The top ten best-selling products by number of units shows which items are in the greatest demand, and the category drop-down tree allows you to explore sales down to subcategories. Categories without sales also remain visible, making it easier to find areas that need attention. Charts also show the representation of order statuses, delivery methods and payment. A separate financial overview **separates delivery and payment fees from product sales**, making it easier to assess the composition of order value.
+
+The overview can be **customized by periods, currency and selection of one or more order statuses**, including custom statuses set for the project. Orders in different currencies are converted to the selected currency according to the configured exchange rates. The selected period is remembered by the browser even after logging out and shared with traffic statistics, making it easier to track traffic and sales over the same time period. The data is evaluated **separately for the current domain** and access is tied to e-commerce authorization, which supports controlled management of multiple stores in one CMS.
+
+**Main benefits:**
+
+- **Faster overview of results**: Summary indicators and graphs save time when regularly evaluating orders and sales.
+- **Better data for assortment and promotion**: Best-selling products and sales by category help decide which items to support and where to screen for weaker interest.
+- **Clear separation of fees**: The operator sees the value of shipping and payments as well as sales after deducting these fees, so he can better evaluate the actual sale of products.
+- **Overview of shopping preferences**: Representation of delivery and payment methods provides a basis for adjusting the service offering according to their use by customers.
+- **Evaluation according to company needs**: Period, currency, and status filters, including custom statuses, allow you to focus on a specific portion of orders without manual sorting.
+- **Easier multi-store management**: Separate domain results and permission-based access help keep store data under control.
+
+Detailed documentation: [E-commerce Statistics](../../redactor/apps/eshop/stats/README.md)
+
+## Easily detect and remove unused files
+
+WebJET CMS helps organizations **reveal files that are probably no longer needed** directly in the folder properties in Explorer. The administrator runs a scan of the selected folder and the system compares its contents with those used in published websites, media, banners, galleries and other standard parts of the CMS. This provides a basis for freeing up storage and removing obsolete digital content without the need for lengthy manual searches.
+
+The scan runs **in the background without blocking work** and its scope can be customized by selecting a specific folder or including all subfolders. The result is displayed in a clear table with the name, location, modification date and file size; the file can be opened in preview before making a decision. The administrator can then remove only the marked items or the entire scanned list at once, allowing for a combination of fast bulk cleaning with individual scanning of sensitive files.
+
+![Unused files check result](../../redactor/files/fbrowser/folder-settings/folder_settings_unused_files_result.png)
+
+The feature respects **access rights, domain separation, and folder write permissions**. The results of individual administrators are not shared, and the system coordinates concurrent checking and deletion to reduce collisions in team management. Since a file used from custom code, an external system, or other non-standard source may not be recognized, the result is intentionally intended for a controlled administrator decision; marked files must be verified before permanent deletion.
+
+**Main benefits:**
+
+- **Lower storage costs**: Uncovering forgotten images, documents, and other files helps free up disk space without manual inventory.
+- **Faster content maintenance**: Automatic checking of standard CMS parts replaces the tedious search for links and links to each file.
+- **Flexible scope of inspection**: The administrator selects a specific folder and includes its subfolders as needed, so the cleaning can be tailored to the size and structure of the project.
+- **The decision remains in control**: Preview and details about each file allow you to review the result and delete only selected items or the entire list.
+- **Smooth work of administrators**: The analysis runs in the background and the system continuously displays its status, so there is no need to wait in a blocked window.
+- **Securer team management**: Respecting permissions, domains, and coordinating concurrent operations reduces the risk of unwanted interference with third-party content.
+
+Detailed documentation: [Unused files](../../redactor/files/fbrowser/folder-settings/README.md#unused-files)
+
+## Safe cleaning and redirect optimization
+
+WebJET CMS provides **transparent control and cleaning of URL redirects**, which naturally accumulate during the operation of the website when moving or renaming content. The system will detect outdated and duplicate rules, cyclic redirects leading the visitor into a loop, and unnecessarily long chains of multiple redirects. This way, the organization can keep the navigation on the website reliable without time-consuming manual checking of each record.
+
+The cleaning is designed as a **controlled two-step process**. The administrator first runs the analysis and sees each proposed change in a clear table; only then does he confirm its implementation. In the case of duplicates, the system preserves the original record, in the case of a cycle, the step that closes the loop is removed, and the string of the type `/a → /b → /c` is shortened to the more direct `/a → /c`. This reduces the risk of unintentional interventions and at the same time, visitors and search engines get to the target content in a shorter and more reliable way.
+
+The analysis respects **domain separation** and can optionally include rules without an assigned domain. It leaves special pattern-based redirects and time-based rules unchanged. If the same domain is managed by multiple administrators, the system will not allow concurrent cleaning, which helps prevent collisions. The solution is therefore also suitable for large websites with a large number of redirects and multiple administrators.
+
+**Main benefits:**
+
+- **Lower risk of broken links**: Revealing outdated rules and cycles helps reliably lead visitors to the right content.
+- **Faster and easier maintenance**: Automatic analysis replaces the tedious manual review of a large number of redirects.
+- **Check before making changes**: The administrator sees the exact proposed changes and starts the cleaning only after it is verified and confirmed.
+- **Shorter path to content**: Shortening strings reduces unnecessary intermediate steps for both visitors and search engines.
+- **Secure multi-site management**: Redirects are evaluated separately for the selected domain and the system protects against concurrent administrator interventions.
+- **Preserve special rules**: Time-controlled and advanced redirects remain untouched, so automation respects individual project settings.
+
+![Preview of proposed redirect cleaning](../../redactor/webpages/redirects/redirect-cleaning-analyzed.png)
+
+Detailed documentation: [Cleaning redirects](../../redactor/webpages/redirects/README.md#cleaning-redirects)
+
+## Faster document management and uploading
+
+WebJET CMS connects the **Document Manager directly to the website editor**. When creating a link, the editor can browse the archive folders, select a document and paste its address without copying between multiple windows. If the document does not yet exist, it can be uploaded directly in the same dialog. Publishing attachments, forms, price lists or annual reports is thus faster and less prone to errors.
+
+![Document Manager in Link Insertion Dialog](../../redactor/webpages/working-in-editor/link_dialog-file-archive.png)
+
+The Document Manager itself has a **clear folder tree structure** with the ability to create new folders and filter documents by selected location. Multiple files can be uploaded at once by simply dragging them from your computer (`drag&drop`), while the system displays the progress of each item and the entire upload. This allows teams to process large document updates much more efficiently without tediously repeating the same steps.
+
+![List of documents with tree structure](../../redactor/files/file-archive/datatable.png)
+
+When a file with the same name is found, the system pauses the upload and offers a **safe decision for each file or for the entire batch**: skip it, replace the current document, or save it as a new version while preserving the previous version in history. The update is performed over the existing record, so its metadata and links are preserved. Allowed file types, target folders, and write permissions respect the project settings, making the solution **controlled, safe, and customizable** to the needs of the organization.
+
+![Check for duplicates when uploading in bulk](../../redactor/files/file-archive/drag-drop-upload-duplicity-dialog.png)
+
+**Main benefits:**
+
+- **Fewer steps when publishing**: The editor finds, uploads, and inserts the document directly from the link dialog without switching between applications and manually copying the URL.
+- **Fast bulk updates**: Multiple documents can be uploaded at once and a common decision applied to the entire batch, saving time when regularly changing price lists, forms, or product materials.
+- **Duplicate Control**: The system prompts for a decision before overwriting a file, reducing the risk of unwanted loss or creating messy copies.
+- **Document History and Continuity**: Selecting a new version will preserve the original document in history while preserving existing metadata and links.
+- **Clearer content organization**: The folder tree and filtering shorten the time it takes to search for documents and manage large archives.
+- **Secure operation according to organization rules**: Uploading respects allowed file types, destination folder, and user access rights.
+
+Detailed documentation: [Document Manager](../../redactor/files/file-archive/README.md) | [Inserting file links](../../redactor/webpages/working-in-editor/README.md#file-links-and-uploading-files)
+
+## Headless CMS for modern and flexible websites
+
+WebJET CMS can be used in **headless mode**, where it remains a central place for content management, but the appearance and user interface of the website can be created in any modern technology. Content, navigation, news and search are provided via **API (Application Programming Interface)**, thanks to which the customer is not tied to a single presentation layer or a single way of creating a website.
+
+A single WebJET CMS installation can **centrally manage content for multiple websites and domains**, even if each of them uses a different design or technology, such as `Astro, Next.js, Vue` or `React`. An organization can launch new portals, microsites or digital services faster without building a separate editorial administration for each project. At the same time, it can continue to use existing WebJET CMS applications, such as the gallery, forms or cookie consent management.
+
+![](../../frontend/headless/home.png)
+
+The solution also provides a **ready-made demo application**, which reduces the time and risk of first deployment. It transfers SEO data, supports preview of unpublished content and preservation of user sessions. Access can be limited to allowed domains and IP addresses, and requests to change data are protected against forgery. The customer thus obtains an **scalable architecture with controlled security**, suitable for the gradual modernization of large websites.
+
+![](../../frontend/headless/gallery.png)
+
+**Main benefits:**
+
+- **Freedom in choosing technology**: The frontend can be created in the technology most suitable for a specific project without losing comfortable content management in WebJET CMS.
+- **One administration for multiple websites**: Central content management for multiple domains reduces duplication, operating costs, and editor training requirements.
+- **Faster time to market for digital services**: Ready-made interfaces and a sample application accelerate the development and validation of a new solution.
+- **Reuse of existing features**: The new website can use content, search, news, forms, gallery, and cookie management from the existing CMS.
+- **Secure and controlled linking**: Allowed domains, IP restrictions, and request protection help protect the content and traffic of linked sites.
+- **Room for gradual modernization**: An organization can modernize individual websites at its own pace without having to replace the entire content management system at once.
+
+Detailed documentation: [Headless mode](../../frontend/headless/README.md) | [Sample application](../../frontend/headless/example.md) | [Available services](../../frontend/headless/services.md)
+
 ## AI answer directly in web search
 
 WebJET CMS extends search with the ability to display **brief AI answers above the results**. Visitors no longer have to click through multiple pages to find basic information. The system first finds relevant parts of the content and then creates a clear answer from them, which helps to understand the topic faster and continue to the right content.

@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script.
+        window.helpLink = "/sysadmin/update/README";
         let versionsJson = null;
         let versionSelectorOptionTemplate = '<a id=\"REPLACE_ID\" class=\"list-group-item list-group-item-action d-flex justify-content-between align-items-center REPLACE_CLASS\" data-toggle=\"list\" onclick=\"showVersionContent(\'REPLACE_FN_PARAM\')\" role=\"tab\" aria-controls=\"home\">REPLACE_A</a>';
         let bodyDivTemplate = '<div class="tab-pane fade REPLACE_CLASS" id="REPLACE_ID" role="tabpanel">REPLACE_CONTENT</div>';
@@ -135,7 +136,7 @@ block content
                         let options = {badge : true};
                         let versionYear= getYearFromVersion(element.version);
                         if(versionYear != null) {
-                            options.imgSrcPrefix = "https://docs.webjetcms.sk/v" + versionYear + "/";
+                            options.imgSrcPrefix = window.adminHelpContext.documentationBaseUrl + "/v" + versionYear + "/";
                         } else {
                             options.imgSrcPrefix = null;
                         }
@@ -162,6 +163,7 @@ block content
                     links.each(function() {
                         var href = $(this).attr("href");
                         if(href != undefined && href != null && href.indexOf("docs.webjetcms") != -1) {
+                            href = href.replace(/^https?:\/\/docs\.webjetcms\.(sk|com)(?=\/|$)/, window.adminHelpContext.documentationBaseUrl);
                             //remove .md extension
                             href = href.replace(".md", "");
                             //change # to ?id=

@@ -202,7 +202,7 @@ Prop prop = Prop.getInstance( language );
 					data: data,
 					success: function(msg)
 					{
-						if (msg.indexOf("Zadaný text z obrázku nie je zhodný") != -1)
+						if (msg.indexOf("captcha") != -1)
 						{
 							$("td.captcha img").attr("src", "/captcha.jpg?rnd="+(new Date().getTime()));
 							if ($("div.error").length == 0) {

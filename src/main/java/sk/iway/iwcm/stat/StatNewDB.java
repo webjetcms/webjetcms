@@ -875,6 +875,7 @@ public class StatNewDB
 						col.setIntColumn5(rs.getInt("unique_users"));
 						col.setColumn6(groupsDB.getPath(bdd.getGroupId())+"/"+col.getColumn2());
 						col.setColumn7("/apps/stat/admin/top-details/?docId="+docId+"&title="+Tools.URLEncode(col.getColumn6()));//link
+						col.setColumn8(bdd.getPerexImage());
 						ret.add(col);
 						colTable.put(docId, col);
 					}

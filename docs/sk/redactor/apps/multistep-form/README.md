@@ -28,7 +28,7 @@ Karta **Položky formuláru** je rozdelená na tri stĺpce:
 
 - **Kroky formuláru** - tabuľka obsahujúca zoznam krokov formuláru.
 - **Položky formuláru** - tabuľka obsahujúca zoznam položiek (jednotlivé formulárové polia) formuláru patriacich do práve vybraného kroku.
-- **Náhľad formuláru** - zobrazenie náhľadu práve zvoleného kroku formuláru.
+- **Náhľad formuláru** - zobrazenie náhľadu práve zvoleného kroku formuláru s možnosťou [výberu CSS šablóny](#výber-css-šablóny-v-náhľade).
 
 ![](real-form.png)
 
@@ -38,7 +38,23 @@ Prvý stĺpec zobrazuje zoznam krokov formuláru. V tomto zozname môžeme prid�
 
 ![](form-step-editor.png)
 
-Môžete vyplniť Úvodný text, ktorý sa zobrazí na začiatku kroku. V karte Pokročilé môžete zmeniť text tlačidla na prechod na ďalší krok (alebo odoslanie formuláru, ak ide o posledný krok). V karte Kód skriptu môžete vložiť vlastný HTML/JavaScript kód, ktorý sa vloží a vykoná pri zobrazení kroku.
+Môžete vyplniť **Úvodný text**, ktorý sa zobrazí na začiatku kroku. V texte môžete použiť [značky prihláseného používateľa](#značky-prihláseného-používateľa) a [značky hodnôt položiek](#značky-hodnôt-položiek) z už vyplnených krokov. V karte **Pokročilé** môžete zmeniť text tlačidla na prechod na ďalší krok (alebo odoslanie formulára, ak ide o posledný krok) aj text tlačidla na návrat na predchádzajúci krok. V karte **Kód skriptu** môžete vložiť vlastný HTML/JavaScript kód, ktorý sa vloží a vykoná pri zobrazení kroku.
+
+### Návrat na predchádzajúci krok
+
+Od druhého kroku sa zobrazuje tlačidlo **Prejsť na predchádzajúci krok**. Návštevník sa ním môže vrátiť k už vyplneným údajom a opraviť ich. Text tlačidla nastavíte v editore daného kroku v karte **Pokročilé**, v poli **Predchádzajúci krok**, napríklad na **Späť**. Ak pole necháte prázdne, použije sa predvolený text.
+
+Web dizajnér môže upraviť aj [HTML kód tlačidla](../formsimple/README.md#html-kód-tlačidiel), napríklad jeho CSS triedy alebo pridať ikonu.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Tlačidlo **Späť** zachová rozpracované údaje aj bez vyplnenia všetkých povinných polí. Keď sa do kroku vrátite, obnovia sa texty, výbery aj dokončené nahrávania. Zachová sa tiež vymazanie hodnoty alebo zrušenie výberu. Overenie CAPTCHA je potrebné zopakovať. Ak sa údaje nepodarí uchovať, zostanete v aktuálnom kroku a môžete návrat skúsiť znova.
+
+Pri pokračovaní dopredu sa údaje skontrolujú. Hodnoty skrytých polí sa uchovajú pre prípad ich opätovného zobrazenia, ale pri odoslaní daného kroku sa nepoužijú.
+
+!>**Upozornenie:** Používajte tlačidlo **Späť** vo formulári. Zachovanie údajov je dočasné a neslúži na pokračovanie po obnovení alebo zatvorení stránky.
 
 ### Duplikovanie
 
@@ -54,21 +70,43 @@ Druhý stĺpec obsahuje položky formuláru (alebo položky kroku formuláru), k
 
 ![](form-item-editor.png)
 
+Pole **Názov poľa** používa jednoriadkový editor. Text môžete zvýrazniť, zmeniť jeho farbu alebo pridať odkaz. Nadpisy, zoznamy a zalomenia riadkov nie sú povolené. Pri vložení viacriadkového textu alebo úprave HTML sa riadky spoja medzerami a blokové formátovanie sa odstráni.
+
+### Kopírovanie polí medzi formulármi
+
+Nastavené pole môžete použiť v inom formulári alebo kroku bez opätovného vypĺňania jeho nastavení:
+
+1. V tabuľke **Položky formuláru** označte jedno uložené pole a kliknite na <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> pre skopírovanie.
+2. Otvorte cieľový formulár v rovnakej alebo inej karte prehliadača a vyberte krok.
+3. Kliknite na <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> pre vloženie skopírovaného poľa. Otvorí sa editor nového poľa s pôvodnými nastaveniami a vybraným cieľovým krokom. Poradie je predvyplnené na koniec kroku.
+4. Podľa potreby upravte nastavenia a uložte. Zatvorením editora bez uloženia nevznikne nové pole.
+
+Kopíruje sa uložený stav poľa vrátane textov, možností alebo prepojenia na číselník, validácií, nastavenia **Povinné pole** a nastavení štatistiky. **Podmienky zobrazenia a povinnosti sa nekopírujú**, pretože odkazujú na polia pôvodného formulára. Nekopírujú sa ani počítadlá chýb. Pôvodné pole aj jeho podmienky zostanú zachované.
+
+Interná schránka uchováva jedno pole **30 minút** a umožňuje opakované vloženie. Kopírovanie ďalšieho poľa nahradí jej obsah; vloženie platnosť nepredlžuje. Schránka funguje aj po obnovení stránky a medzi kartami rovnakej adresy administrácie v rovnakom profile prehliadača, pre rovnakého používateľa a doménu. Systémová schránka sa nemení. Tlačidlo **Vložiť pole** je dostupné po výbere kroku, ak schránka obsahuje platné pole podporovaného typu. Vkladať môžete aj do prázdneho kroku.
+
+Kópia je samostatná: následné úpravy pôvodného poľa ju nezmenia. CSS šablóny a skripty kroku sa neprenášajú, preto výsledný vzhľad závisí od cieľového formulára.
+
 ### Pridávanie a úprava položiek
 
 Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj obsah podľa zvoleného typu poľa (položky). To znamená, že pre každý typ položky (napr. Meno, Priezvisko atď.) sa zobrazia rôzne nastavenia a možnosti konfigurácie. Podľa zvoleného typu položky môžete nastaviť parametre ako:
 
 - **Typ poľa** - určuje aký druh vstupu bude položka predstavovať (napr. textové pole, výber z rozbaľovacieho zoznamu, zaškrtávacie políčko atď.). Jednotlivé polia [pripravuje dizajnér web sídla](../formsimple/README.md#informácia-pre-web-dizajnéra) a sú rovnaké ako pre aplikáciu formulár ľahko.
 - **Povinné pole** - či je položka povinná na vyplnenie.
-- **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Viac sa o nich dozviete v sekcii [Regulárne výrazy](../form/regexps.md).
+- **Povolená hodnota** - pre pokročilú validáciu vstupu používateľa viete zvoliť ľubovoľný počet regulárnych výrazov, ktoré musia byť splnené, aby bol vstup platný. Každá možnosť používa formát **kód - názov**, napríklad **alphabetLowercase - povolené len malé znaky**. Názov sa zobrazuje v jazyku administrácie. Podľa názvu aj kódu môžete vyhľadávať. Kód zodpovedá stĺpcu **Kód** v sekcii [Regulárne výrazy](../form/regexps.md).
+- **Orezať medzery** - ak je zvolené, úvodné a koncové medzery sa z hodnoty odstránia ešte pred validáciou a uložením. Nastavenie je dostupné pre podporované textové polia; nepoužíva sa pre výberové polia a formátované textové pole.
 - **Názov poľa** - názov, ktorý sa zobrazí používateľovi. Ak nie je zadaný použije sa názov zhodný s typom poľa.
+- **Nápoveda** - voliteľný viacriadkový formátovaný text, ktorý sa vo formulári zobrazuje za názvom poľa. Editor podporuje odseky, zoznamy, odkazy a rozsiahlejší HTML obsah. Pole je dostupné pre všetky typy položiek hneď za názvom poľa a prenáša sa aj pri kopírovaní položky. Vlastné HTML šablóny polí môžu nápovedu vložiť značkou `${hint}`.
+- **Identifikátor položky vo formulári** - technický identifikátor sa automaticky vytvorí z názvu položky bez HTML značiek a doplní sa rozlišujúcou príponou tak, aby bol vo formulári jedinečný. Zobrazuje sa až pri úprave uloženej položky a nie je možné ho meniť. Používa sa v podmienkach, uložených dátach a v [značkách hodnôt položiek](#značky-hodnôt-položiek).
+
+Pravidlá **Povolená hodnota** sa pri povinnom poli kontrolujú aj pre prázdnu hodnotu. Pri nepovinnom poli sa kontrolujú iba vtedy, keď je pole vyplnené. Pri odoslaní kroku sa povinnosť určí podľa karty **Povinnosť**, ak obsahuje podmienky, inak podľa prepínača **Povinné pole**.
 
 V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 
 - **Krok formuláru** - krok, ku ktorému položka patrí, môžete tak ľahko položku presunúť do iného kroku.
 - **Poradie** - určuje poradie položky v rámci kroku.
 - **Predvyplnená hodnota** - hodnota, ktorá sa zobrazí vyplnená v poli, používateľ tak nemusí nastaviť hodnotu, ak je všeobecne známa. Toto pole sa zobrazuje iba ak nejde o položku typu výberové pole.
-- **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z dvoch hodnôt - textu, ktorý sa zobrazí používateľovi, a hodnoty, ktorá sa odošle pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Toto pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
+- **Povolené možnosti** - pri položke typu výberové pole (select, checkbox skupina, radio skupina, automatické dopĺňanie a pod.) môžete manuálne definovať zoznam možností. Každá možnosť sa skladá z textu zobrazeného používateľovi a hodnoty odoslanej pri odoslaní formulára. Možnosti je možné pridávať, odoberať a meniť ich poradie pomocou `drag & drop`. Prepínačom **Pridať prázdnu možnosť** - môžete do výberového zoznamu alebo skupiny výberových polí vložiť na začiatok aj voľbu bez hodnoty. Pri novom poli je prepínač vypnutý. Pole sa zobrazuje iba ak nie je povolená možnosť **Použiť prepojenie na číselník**.
 
 ![](form-item-editor-advanced.png)
 
@@ -79,10 +117,41 @@ V karte **Pokročilé** môžete nastaviť ďalšie voliteľné parametre ako:
 
 - **Zástupný text** - text, ktorý sa zobrazí v poli ako nápoveda pre používateľa ak nie je pole vyplnené (je prázdne).
 - **Tooltip** - ak zadáte hodnotu tooltipu, zobrazí sa pri názve poľa informačná bublina.
+- **Vlastná chybová správa** - text alebo prekladový kľúč, ktorý nahradí štandardnú správu pri chybe validácie danej položky.
 
 Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existujúce, či zmeniť aké nastavenia sú dostupné pre jednotlivé typy položiek, pozrite si dokumentáciu v sekcii [Položky formulárov](../formsimple/README.md#informácia-pre-web-dizajnéra).
 
+!>**Upozornenie:** vo viackrokovom formulári nefungujú vlastné typy položiek, ktoré priamo vykreslia natívny element `<input type="file">`. Súbor je možné nahrať iba pomocou komponentu `Dropzone`.
+
 !>**Upozornenie:** pri úprave položky formuláru neodporúčame meniť typ položky, ale radšej nahradiť pôvodnú položku novou.
+
+### Prázdna možnosť
+
+Prepínač **Pridať prázdnu možnosť** pridá do zoznamu (select) prázdny riadok a do skupiny rádií voľbu **Bez zvolenej možnosti** na zrušenie výberu. Hodnota je prázdna, takže povinné pole vyžaduje inú možnosť. Text rádia určuje kľúč `components.formsimple.emptyOptionLabel.radiogroup`. Pri zaškrtávacom poli a automatickom dopĺňaní je prepínač predvolene skrytý, pretože ich možno vyprázdniť bez neho.
+
+Prítomnosť `emptyOption` v kľúči `components.formsimple.hide.TYP_POLA` prepínač skryje; odstránením ho znova sprístupníte. Pre rádio:
+
+```properties
+components.formsimple.hide.radiogroup=placeholder,trimValue,regexValidationArr,emptyOption
+```
+
+Ostatné položky zachovajte a zmenu nastavte vo všetkých používaných jazykoch. Pri skrytí sa prázdna možnosť nezobrazí ani v starších formulároch a pri uložení sa odstráni z konfigurácie. Nastavenie platí iba pre manuálne možnosti, nie pre prepojenie na číselník.
+
+### Validácia pri opustení poľa
+
+Kontrola upozorní na chybu v textovom poli hneď po jeho opustení, napríklad klávesom `Tab`. Chybová správa sa zobrazí pri poli. Funkcia je predvolene zapnutá.
+
+Vypnete ju v administrácii v [Konfigurácia](../../../admin/setup/configuration/README.md) nastavením premennej `multistepform_validateOnBlur` na hodnotu `false`.
+
+Kontrola sa riadi nastaveniami **Povinné pole**, **Orezať medzery** a **Povolená hodnota**. Podmienky povinnosti sa zohľadnia až pri odoslaní kroku, keď sa skontrolujú všetky údaje. Samotné opustenie poľa údaje neukladá.
+
+V poli **Povolená hodnota** vyberáte [regulárne výrazy](../form/regexps.md), ktorým musí zadaná hodnota vyhovieť. Kontrolujú sa všetky vybrané pravidlá. Pri prázdnom výbere sa formát hodnoty neoveruje.
+
+### Automatické dopĺňanie
+
+Typ poľa **Automatické dopĺňanie - autocomplete** ponúka návštevníkovi možnosti podľa zadávaného textu. Zoznam vytvoríte v poli **Povolené možnosti** alebo ho prepojíte s aplikáciou [Číselníky](../../apps/enumeration/README.md). Každá možnosť môže mať odlišný zobrazovaný text a odosielanú hodnotu.
+
+Vyhľadávanie sa spustí po zadaní najmenej dvoch znakov, nerozlišuje veľkosť písmen ani diakritiku a prehľadáva text aj hodnotu možnosti. Zobrazí sa najviac 30 výsledkov. Po výbere sa do formulára uloží hodnota zvolenej možnosti.
 
 ### Riadkové zobrazenie
 
@@ -92,9 +161,9 @@ Môžete sa stretnúť so situáciou, kedy Vám editor nedovolí pridať zvolen�
 
 Formulár prepnete do režimu riadkového zobrazenia v [nastaveniach formuláru](../form/README.md#vytvorenie-formuláru).
 
-### Značky
+### Značky prihláseného používateľa
 
-Ak chcete v položke formuláru použiť informácie o aktuálnom prihlásenom používateľovi (napr. jeho meno, email, atď.), môžete použiť špeciálne značky. Tieto značky sa automatický nahradia príslušnými hodnotami pri zobrazení formuláru používateľovi. Pre neprihlásených používateľov budú tieto značky nahradené prázdnou hodnotou. Hodnotu zadajte do poľa **Predvyplnená hodnota** (ak je pre daný typ položky dostupné).
+Ak chcete v položke alebo v úvodnom texte kroku použiť informácie o aktuálnom prihlásenom používateľovi (napr. jeho meno alebo email), môžete použiť špeciálne značky. Tieto značky sa automaticky nahradia príslušnými hodnotami pri zobrazení formulára. Pre neprihlásených používateľov budú nahradené prázdnou hodnotou. V položke ich zadajte do poľa **Predvyplnená hodnota**, ak je pre daný typ položky dostupné.
 
 Dostupné značky sú:
 
@@ -118,6 +187,12 @@ Dostupné značky sú:
 - ```!LOGGED_USER_FIELDD!``` - voľné pole D
 - ```!LOGGED_USER_FIELDE!``` - voľné pole E
 - `!LOGGED_USER_GROUPS!` - zoznam skupín používateľov
+
+### Značky hodnôt položiek
+
+Hodnotu už vyplnenej položky môžete vložiť do **Úvodného textu** nasledujúceho kroku alebo do [stránky s verziou pre email](../form/README.md#karta---nastavenia) značkou `!identifikator-polozky!`. Identifikátor sa zobrazuje pri úprave uloženej položky.
+
+Ak má napríklad položka identifikátor `emailova-adresa-1`, použite značku `!emailova-adresa-1!`. Pri zobrazení ďalšieho kroku alebo pri vytvorení emailu sa značka nahradí odoslanou hodnotou. Ak položka ešte nebola vyplnená, nahradí sa prázdnou hodnotou.
 
 ### Podmienené zobrazenie/validovanie položky
 
@@ -151,7 +226,7 @@ Ide o plochú štruktúru (bez zátvoriek), takže nie je podporené vnáranie p
 
 Každá podmienka obsahuje tieto parametre:
 
-- **Pole formulára** - položka, ktorej hodnota sa použije pri vyhodnotení podmienky. Možnosti sú zoradené rovnako ako vo formulári.
+- **Pole formulára** - položka, ktorej hodnota sa použije pri vyhodnotení podmienky. Možnosti sú zoradené rovnako ako vo formulári. Rádiové tlačidlá s rovnakým názvom poľa a nastavením **Povinné pole** sa ponúkajú ako jedna skupina na pozícii prvého tlačidla, aj keď sú medzi nimi iné polia. Upravovaná položka sa v zozname neponúka. Pri úprave rádiového tlačidla sa neponúka celá jeho skupina, pretože tlačidlá zdieľajú rovnaký identifikátor položky.
 - **Podmienka porovnania** - spôsob porovnania hodnoty poľa:
   - **rovná sa**
   - **nerovná sa**
@@ -161,8 +236,8 @@ Každá podmienka obsahuje tieto parametre:
   - **končí na**
   - **je prázdne**
   - **nie je prázdne**
-- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa.
-- **Ignorovať veľkosť písmen** - porovnanie nebude citlivé na veľké/malé písmená.
+- **Porovnávaná hodnota** - hodnota, voči ktorej sa porovná obsah vybraného poľa. Pri výberových zoznamoch, skupinách výberových a zaškrtávacích polí a samostatných rádiových tlačidlách vyberáte pre podmienky **rovná sa** a **nerovná sa** z možností daného poľa. Zobrazuje sa text možnosti, uloží sa jej hodnota. Podporované sú aj možnosti z číselníka. Pri podmienkach **obsahuje**, **neobsahuje**, **začína na** a **končí na** aj pri ostatných poliach zadávate text. Prázdnu hodnotu overíte podmienkou **je prázdne** alebo **nie je prázdne**.
+- **Ignorovať veľkosť písmen** - porovnanie nebude citlivé na veľké/malé písmená. Voľba sa zobrazuje iba pri ručnom zadávaní porovnávanej hodnoty, pri výbere z preddefinovaných možností je skrytá.
 - **Logický operátor** - spojenie s nasledujúcou podmienkou:
   - `AND` - musia platiť obe podmienky,
   - `OR` - stačí, ak platí aspoň jedna podmienka.
@@ -183,11 +258,27 @@ Každá podmienka obsahuje tieto parametre:
 
 - Podmienka nemôže odkazovať sama na seba. Ide o nepovolený stav a podmienka sa nebude dať uložiť.
 - Položku, ktorá je použitá v podmienkach iných položiek, nie je možné odstrániť.
+- Pri odstránení položky sa odstránia aj jej podmienky zobrazenia a povinnosti. Polia, na ktoré tieto podmienky odkazovali, potom môžete odstrániť, ak ich nepoužíva podmienka ďalšej existujúcej položky. Podmienky sa odstránia aj pri zmazaní celého kroku alebo formulára.
 - Pri úprave takejto položky editor zobrazí upozornenie na závislé položky. Uloženie môžete povoliť v karte **Pokročilé** voľbou **Uložiť aj pri existujúcich závislých položkách**.
 
 Pri pokuse o úpravu alebo odstránenie položky, ktorá je použitá v podmienke inej položky, sa zobrazí chyba aj notifikácia so zoznamom závislých položiek.
 
 ![](save-condition-error.png)
+
+### Väzby
+
+Karta **Väzby** pri úprave existujúceho poľa ukazuje, ktoré ďalšie polia používajú jeho hodnotu.
+
+- **Zobrazenie polí** – polia, ktorých zobrazenie závisí od tohto poľa.
+- **Povinné vyplnenie polí** – polia, ktorých povinné vyplnenie závisí od tohto poľa.
+
+![Karta Väzby so zoznamami polí používaných v podmienkach zobrazenia a povinnosti.](tab-relations.png)
+
+Každé pole sa v príslušnom zozname zobrazí raz, aj keď sa naň odkazuje vo viacerých častiach podmienky.
+
+Kliknutím na názov otvoríte editor daného poľa. Ak je v inom kroku, prepne sa aj vybraný krok formulára. Pri neuložených zmenách si pred prechodom môžete vybrať, či ich chcete zahodiť, alebo zostať v pôvodnom editore.
+
+Napríklad pri pravidle „Telefónne číslo je povinné, ak Meno a priezvisko obsahuje text“ nájdete v karte **Väzby** poľa **Meno a priezvisko** položku **Telefónne číslo** v zozname podmienok povinnosti. Samotné pravidlo naďalej upravujete v karte **Povinnosť** poľa **Telefónne číslo**.
 
 ### Štatistika
 
@@ -213,6 +304,14 @@ Tretí stĺpec sekcie **Obsah formuláru** je náhľad formuláru. Tento náhľa
 
 Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa mení podľa toho, či je krok posledný alebo nie. Ak nie je posledný, tlačidlo bude mať text **Prejsť na ďalší krok**, inak **Odoslať formulár**. Text tlačidla môžete zmeniť v nastavení kroku, napríklad na **Pokračovať** alebo **Registrovať sa**.
 
+Od druhého kroku sa zobrazuje aj tlačidlo na [návrat na predchádzajúci krok](#návrat-na-predchádzajúci-krok).
+
+### Výber CSS šablóny v náhľade
+
+V záhlaví náhľadu je výberové pole **CSS šablóna**, pomocou ktorého môžete ihneď vyskúšať pripravené vzhľady formulára. Zoznam obsahuje všetky dostupné CSS šablóny a možnosť **Bez šablóny**, ktorá zobrazí základný vzhľad.
+
+Vybraná šablóna sa použije iba v administračnom náhľade a neuloží sa do nastavení formulára. Vzhľad formulára na webovej stránke nastavíte osobitne v poli **CSS šablóna** pri [vložení aplikácie Formulár](#css-šablóny). Každá vložená inštancia formulára môže mať zvolenú inú šablónu.
+
 ![](real-form.png)
 
 !>**Upozornenie:** Náhľad formuláru je orientačný a môže sa kompozične aj graficky líšiť od skutočného zobrazenia na stránke. V editore sa zobrazujú všetky položky bez ohľadu na nastavené podmienky, aby ste vedeli formulár lepšie navrhnúť a skontrolovať. Na reálnej stránke sa však formulár mení dynamicky podľa podmienok zobrazenia (niektoré polia sa môžu skryť alebo zobraziť podľa hodnôt iných polí) a zároveň podľa použitej šablóny a štýlov stránky, do ktorej je formulár vložený.
@@ -223,11 +322,56 @@ Vytvorený formulár môžete vložiť do web stránky pomocou aplikácie Formul
 
 ![](app-editor.png)
 
+Na jednu stránku môžete vložiť aj viac inštancií rovnakého viackrokového formulára. Každá inštancia pracuje nezávisle a vygenerované HTML identifikátory polí dostanú vlastný prefix, napríklad `f1-` a `f2-`, aby sa navzájom neovplyvňovali.
+
+### CSS šablóny
+
+Pri vkladaní alebo úprave aplikácie **Formulár** na stránke môžete v poli **CSS šablóna** vybrať pripravený vzhľad formulára. Voľba **Bez šablóny** ponechá základné zobrazenie podľa štýlov stránky. Každá vložená inštancia môže používať inú pripravenú šablónu bez toho, aby ovplyvnila ostatné formuláre na stránke, vrátane formulárov s voľbou **Bez šablóny**.
+
+Rovnaký výber je dostupný v [náhľade formulára v administrácii](#výber-css-šablóny-v-náhľade). Tam slúži iba na vyskúšanie vzhľadu a nemení nastavenie aplikácie vloženej na stránke. Po výbere vhodného vzhľadu preto nastavte šablónu aj v príslušnej aplikácii na stránke.
+
+### JavaScript udalosť po zobrazení kroku
+
+Po vložení HTML kódu kroku do stránky a inicializácii jeho podmienok formulár odošle na objekte `window` natívnu udalosť `CustomEvent` s názvom `WJ.multistepForm.stepShown`. Udalosť sa odošle pre prvý krok, po prechode na ďalší krok aj pri návrate na predchádzajúci krok. Nie je potrebné načítať administračný súbor `webjet.js` ani knižnicu `jQuery`.
+
+```javascript
+window.addEventListener("WJ.multistepForm.stepShown", (event) => {
+    const {
+        wrapper,
+        stepElement,
+        form,
+        formName,
+        stepId,
+        language,
+        domIdPrefix,
+        isInitialStep
+    } = event.detail;
+
+    console.log("Multistep form step shown", formName, stepId, stepElement);
+});
+```
+
+Objekt `event.detail` obsahuje:
+
+- `wrapper` - koreňový `div.multistep-form-app` konkrétnej inštancie formulára,
+- `stepElement` - `div.multistepStepContent` s práve vloženým krokom,
+- `form` - element `form` práve zobrazeného kroku,
+- `formName` - názov formulára používaný na serveri,
+- `stepId` - identifikátor práve zobrazeného kroku,
+- `language` - jazyk použitý pri načítaní kroku,
+- `domIdPrefix` - prefix HTML identifikátorov polí konkrétnej inštancie, napríklad `f1-`,
+- `isInitialStep` - hodnota `true` pri prvom zobrazenom kroku danej inštancie, inak `false`.
+
+Ak je na stránke viac viackrokových formulárov, event listener prijme udalosti zo všetkých inštancií. Konkrétny formulár rozlíšite pomocou hodnôt `wrapper` alebo `formName`.
+
+Ak potrebujete zachytiť aj udalosť prvého kroku, listener zaregistrujte pred inicializáciou aplikácie viackrokového formulára.
+
 ## Konfiguračné premenné
 
 Dostupné konfiguračné premenné pre viackrokové formuláre:
 
-- `multistepform_nameFields` - zoznam názvov polí, ktoré budú považované za polia pre meno. Medzi týmito poľami sa bude hľadať meno, ktoré by sa použilo ako oslovenie v emailoch. Použije sa iba **prvé** nájdene neprázdne meno.
-- `multistepform_emailFields` - zoznam názvov polí, ktoré budú považované za polia pre emailovú adresu. Medzi týmito poľami sa bude hľadať emailová adresa, na ktorú sa odošle potvrdenie o prijatí formuláru. Použije sa  **všetky** nájdene a validné emailové adresy.
+- `multistepform_nameFields` - zoznam začiatkov identifikátorov polí, ktoré budú považované za polia pre meno. Napríklad hodnota `meno` zodpovedá aj položke `meno-priezvisko-1`. Do emailu sa použije prvé nájdené neprázdne meno.
+- `multistepform_emailFields` - zoznam začiatkov identifikátorov polí, ktoré budú považované za polia pre emailovú adresu. Napríklad hodnota `email` zodpovedá aj položke `emailova-adresa-1`. Na potvrdenie prijatia formulára sa použijú všetky nájdené platné emailové adresy.
 - `multistepform_attachmentDefaultName` - prednastavený názov prílohy v emailoch, ktorý sa použije ak sa nepodarí získať skutočný názov súboru prílohy.
 - `multistepform_subjectDefaultValue` - prednastavený prekladový kľúč pre predmet emailu, ktorý sa použije ak nie je zadaný predmet v nastaveniach/atribútoch formuláru.
+- `multistepform_validateOnBlur` - riadi [validáciu textových polí pri ich opustení](#validácia-pri-opustení-poľa). Predvolená hodnota je `true`. Kontrolu vypnete nastavením hodnoty `false` v **Nastavenia → Konfigurácia**. Nastavenie platí pre všetky viackrokové formuláre a uplatní sa pri načítaní kroku.

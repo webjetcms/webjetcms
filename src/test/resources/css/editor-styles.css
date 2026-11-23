@@ -1,0 +1,670 @@
+@charset "UTF-8";
+ul.list-square {
+  /* editor category: Zoznamy */
+  /* editor group: Odrážky */
+  /*list styles*/
+}
+
+ul.list-circle {
+  /* editor category: Zoznamy */
+  /* editor group: Odrážky */
+  /*list styles*/
+}
+
+ul.list-no-offset {
+  /* editor category: Zoznamy */
+  /*list styles*/
+}
+
+ul.list--marker-orange {
+  /* editor category: Zoznamy */
+  /*list styles*/
+}
+
+ul.list-condensed {
+  /* editor category: Zoznamy */
+  /*list styles*/
+}
+
+ul.text-fullwidth {
+  /* editor category: Zoznamy */
+  /*text fullwidth styles*/
+}
+
+ul.list-inline {
+  /* editor category: Zoznamy */
+  /*list inline styles*/
+}
+
+ul.list-unstyled {
+  /* editor category: Zoznamy */
+  /* editor group: Odrážky */
+  /*list unstyled styles*/
+}
+
+li.text-narrow {
+  /* editor category: Zoznamy */
+  /* editor group: Šírka textu */
+  /*text narrow styles*/
+}
+
+li.text-readable {
+  /* editor category: Zoznamy */
+  /* editor group: Šírka textu */
+  /*text readable styles*/
+}
+
+table.table {
+  /* editor category: Tabuľky */
+  /*table default styles*/
+  /* editor title: Tabuľka Default */
+}
+
+table.table.table--striped {
+  /* editor category: Tabuľky */
+  /* editor base: table */
+  /*table striped styles*/
+  /* editor title: Tabuľka Striped */
+}
+
+table.table.table--responsive {
+  /* editor category: Tabuľky */
+  /* editor base: table */
+  /*table responsive styles*/
+  /* editor title: Tabuľka Responsive */
+}
+
+th.table__cell--shrink {
+  /* editor category: Tabuľky */
+  /* editor group: Šírka bunky */
+  /*table cell shrink styles*/
+  /* editor title: Tabuľka TH Cell Shrink */
+}
+
+th.table__cell--fill {
+  /* editor category: Tabuľky */
+  /* editor group: Šírka bunky */
+  /*table cell fill styles*/
+  /* editor title: Tabuľka TH Cell Fill */
+}
+
+td.table__cell--shrink {
+  /* editor category: Tabuľky */
+  /* editor group: Šírka bunky */
+  /*table cell shrink styles*/
+  /* editor title: Tabuľka TD Cell Shrink */
+}
+
+td.table__cell--fill {
+  /* editor category: Tabuľky */
+  /* editor group: Šírka bunky */
+  /*table cell fill styles*/
+  /* editor title: Tabuľka TD Cell Fill */
+}
+
+p.small {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /*small text styles*/
+}
+
+p.large {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /*large text styles*/
+}
+
+p.text-inverse {
+  /* editor category: Farba textu */
+  /* editor group: Farba textu */
+  /*text inverse styles*/
+}
+
+p.normal {
+  /* editor category: Typografia */
+  /* editor group: Hrúbka písma */
+  /*normal text styles*/
+}
+
+p.text-secondary {
+  /* editor category: Farba textu */
+  /* editor group: Farba textu */
+  /*text secondary styles*/
+}
+
+p.mb-none {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /*margin bottom none styles*/
+}
+
+p.mb-small {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /*margin bottom small styles*/
+}
+
+p.h4.bold.mb-large.mb-md-xlarge {
+  /* editor category: Typografia */
+  /*paragraph perex*/
+  /* editor title: Perex */
+}
+
+p.h2 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /*paragraph h2*/
+  /* editor title: Nadpis 2 */
+}
+
+h1.display-3.text-narrow {
+  /* editor category: Typografia */
+  /*display 3 text narrow styles*/
+  /* editor title: Nadpis 1 Display 3 Text Narrow */
+}
+
+h2.h1 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /*heading 2 h1 styles*/
+  /* editor title: Nadpis 2 H1 */
+}
+
+h2.h3 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /*heading 2 h3 styles*/
+  /* editor title: Nadpis 2 H3 */
+}
+
+h3.bold {
+  /* editor category: Typografia */
+  /* editor group: Hrúbka písma */
+  /*heading 3 bold small styles*/
+  /* editor title: Nadpis 3 Bold */
+}
+
+h3.mb-small {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /*heading 3 margin bottom small styles*/
+  /* editor title: Nadpis 3 MB Small */
+}
+
+h3.h4 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /*heading 3 h4 styles*/
+  /* editor title: Nadpis 3 H4 */
+}
+
+h4.normal {
+  /* editor category: Typografia */
+  /* editor group: Hrúbka písma */
+  /*heading 4 normal styles*/
+  /* editor title: Nadpis 4 Normal */
+}
+
+.h1 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*heading 1 styles*/
+  /* editor title: <span class="h1">Štýl nadpisu H1</span> */
+}
+
+.h2 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*heading 2 styles*/
+  /* editor title: <span class="h2">Štýl nadpisu H2</span> */
+}
+
+.h3 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*heading 3 styles*/
+  /* editor title: <span class="h3">Štýl nadpisu H3</span> */
+}
+
+.h4 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*heading 4 styles*/
+  /* editor title: <span class="h4">Štýl nadpisu H4</span> */
+}
+
+.h5 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*heading 5 styles*/
+  /* editor title: <span class="h5">Štýl nadpisu H5</span> */
+}
+
+.h6 {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*heading 6 styles*/
+  /* editor title: <span class="h6">Štýl nadpisu H6</span> */
+}
+
+.normal-text {
+  /* editor category: Typografia */
+  /* editor group: Veľkosť písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*normal text styles*/
+  /* editor title: <span class="normal-text">Štýl normálneho textu</span> */
+}
+
+.thin {
+  /* editor category: Typografia */
+  /* editor group: Hrúbka písma */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*thin styles*/
+  /* editor title: Štýl tenkého písma */
+}
+
+.mb-none {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*margin bottom none styles*/
+  /* editor title: Spodné odsadenie žiadne */
+}
+
+.mb-xsmall {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*margin bottom extra small styles*/
+  /* editor title: Spodné odsadenie xs */
+}
+
+.mb-small {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*margin bottom small styles*/
+  /* editor title: Spodné odsadenie s */
+}
+
+.mb-medium {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*margin bottom medium styles*/
+  /* editor title: Spodné odsadenie m */
+}
+
+.mb-large {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*margin bottom large styles*/
+  /* editor title: Spodné odsadenie l */
+}
+
+.mb-xlarge {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /* editor targets: p h1 h2 h3 h4 h5 h6 li td th div section article aside blockquote */
+  /*margin bottom extra large styles*/
+  /* editor title: Spodné odsadenie xl */
+}
+
+span.text-default {
+  /* editor category: Farba textu */
+  /* editor group: Farba textu */
+  /*text default styles*/
+  /* editor title: Text Default <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+span.text-secondary {
+  /* editor category: Farba textu */
+  /* editor group: Farba textu */
+  /*text secondary styles*/
+  /* editor title: Text Secondary <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+span.text-disabled {
+  /* editor category: Farba textu */
+  /* editor group: Farba textu */
+  /*text disabled styles*/
+  /* editor title: Text Disabled <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+span.text-accent {
+  /* editor category: Farba textu */
+  /* editor group: Farba textu */
+  /*text accent styles*/
+  /* editor title: Text Accent <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+img.img {
+  /* editor category: Obrázky */
+  /*image default styles*/
+}
+
+a.btn.btn-primary {
+  /* editor category: Tlačidlá a odkazy */
+  /* editor group: Vzhľad tlačidla */
+  /* editor base: btn */
+  /*bootstrap default*/
+}
+
+a.btn.btn-secondary {
+  /* editor category: Tlačidlá a odkazy */
+  /* editor group: Vzhľad tlačidla */
+  /* editor base: btn */
+  /*bootstrap default*/
+}
+
+a.megamenu__text--large {
+  /* editor category: Tlačidlá a odkazy */
+  /*ods megamenu large text*/
+}
+
+a.mb-none {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /*margin bottom none styles*/
+}
+
+button.mb-none {
+  /* editor category: Odsadenie */
+  /* editor group: Spodné odsadenie */
+  /*margin bottom none styles*/
+}
+
+section.is-dark {
+  /* editor category: Sekcie */
+  /* editor group: Téma sekcie */
+  /*Section is dark*/
+  /* editor title: Section is dark */
+}
+
+section.is-light {
+  /* editor category: Sekcie */
+  /* editor group: Téma sekcie */
+  /*Section is light*/
+  /* editor title: Section is light */
+}
+
+section.section--default {
+  /* editor category: Sekcie */
+  /* editor group: Veľkosť sekcie */
+  /*Default Section*/
+  /* editor title: Section Default */
+}
+
+section.section--small {
+  /* editor category: Sekcie */
+  /* editor group: Veľkosť sekcie */
+  /*Default Section*/
+  /* editor title: Section Small */
+}
+
+section.section--xsmall {
+  /* editor category: Sekcie */
+  /* editor group: Veľkosť sekcie */
+  /*Default Section*/
+  /* editor title: Section Extra Small */
+}
+
+section.background-accent1-blog {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Background accent1 blog*/
+  /* editor title: BG accent1 blog <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.background-accent2-blog {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Background accent2 blog*/
+  /* editor title: BG accent2 blog  <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.fill-primary {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Fill primary*/
+  /* editor title: BG fill primary <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.background-primary {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Background primary*/
+  /* editor title: BG primary <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.background-secondary {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Background secondary*/
+  /* editor title: BG secondary <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.background-contrast {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Background contrast*/
+  /* editor title: BG contrast <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.background-accent {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Background accent*/
+  /* editor title: BG accent <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.surface-moderate {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Surface moderate*/
+  /* editor title: Surface moderate <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.surface-subtle {
+  /* editor category: Pozadie */
+  /* editor group: Pozadie sekcie */
+  /*Default Surface subtle*/
+  /* editor title: Surface subtle <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+section.pb-not-automenu {
+  /* editor category: Sekcie */
+  /* editor title: Negenerujeme do float navigation */
+}
+
+div.grid.body-banner.body-banner--large.mb-large.fill-primary {
+  /* editor category: Bannery */
+  /* editor group: Pozadie bannera */
+  /* editor requires: grid body-banner body-banner--large */
+  /* editor base: grid body-banner body-banner--large mb-large */
+  /*Body banner large fill primary*/
+  /* editor title: BBL fill primary <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+div.grid.body-banner.body-banner--large.mb-large.background-secondary {
+  /* editor category: Bannery */
+  /* editor group: Pozadie bannera */
+  /* editor requires: grid body-banner body-banner--large */
+  /* editor base: grid body-banner body-banner--large mb-large */
+  /*Body banner large background secondary*/
+  /* editor title: BBL BG secondary <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+div.grid.body-banner.body-banner--large.mb-large.background-primary {
+  /* editor category: Bannery */
+  /* editor group: Pozadie bannera */
+  /* editor requires: grid body-banner body-banner--large */
+  /* editor base: grid body-banner body-banner--large mb-large */
+  /*Body banner large background primary*/
+  /* editor title: BBL BG primary <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+div.grid.body-banner.body-banner--large.mb-large.background-accent {
+  /* editor category: Bannery */
+  /* editor group: Pozadie bannera */
+  /* editor requires: grid body-banner body-banner--large */
+  /* editor base: grid body-banner body-banner--large mb-large */
+  /*Body banner large background accent*/
+  /* editor title: BBL BG accent <span class="style-color-pick"><span class="color-a"></span><span class="color-b"></span></span> */
+}
+
+div.alert.mb-none {
+  /* editor category: Upozornenia */
+  /* editor group: Spodné odsadenie */
+  /* editor base: alert */
+  /*Alert margin bottom none*/
+  /* editor title: Alert mb none */
+}
+
+div.alert.mb-xsmall {
+  /* editor category: Upozornenia */
+  /* editor group: Spodné odsadenie */
+  /* editor base: alert */
+  /*Alert margin bottom extra small*/
+  /* editor title: Alert mb extra small */
+}
+
+div.alert.mb-small {
+  /* editor category: Upozornenia */
+  /* editor group: Spodné odsadenie */
+  /* editor base: alert */
+  /*Alert margin bottom small*/
+  /* editor title: Alert mb small */
+}
+
+div.alert.mb-medium {
+  /* editor category: Upozornenia */
+  /* editor group: Spodné odsadenie */
+  /* editor base: alert */
+  /*Alert margin bottom medium*/
+  /* editor title: Alert mb medium */
+}
+
+div.alert.mb-large {
+  /* editor category: Upozornenia */
+  /* editor group: Spodné odsadenie */
+  /* editor base: alert */
+  /*Alert margin bottom large*/
+  /* editor title: Alert mb large */
+}
+
+div.alert.mb-xlarge {
+  /* editor category: Upozornenia */
+  /* editor group: Spodné odsadenie */
+  /* editor base: alert */
+  /*Alert margin bottom extra large*/
+  /* editor title: Alert mb extra large */
+}
+
+div.alert.alert--info {
+  /* editor category: Upozornenia */
+  /* editor group: Typ upozornenia */
+  /* editor base: alert */
+  /*Alert info styles*/
+  /* editor title: Alert info */
+}
+
+div.alert.alert--success {
+  /* editor category: Upozornenia */
+  /* editor group: Typ upozornenia */
+  /* editor base: alert */
+  /*Alert success styles*/
+  /* editor title: Alert success */
+}
+
+div.alert.alert--warning {
+  /* editor category: Upozornenia */
+  /* editor group: Typ upozornenia */
+  /* editor base: alert */
+  /*Alert warning styles*/
+  /* editor title: Alert warning */
+}
+
+div.alert.alert--danger {
+  /* editor category: Upozornenia */
+  /* editor group: Typ upozornenia */
+  /* editor base: alert */
+  /*Alert danger styles*/
+  /* editor title: Alert danger */
+}
+
+div.alert.alert--full-width {
+  /* editor category: Upozornenia */
+  /* editor base: alert */
+  /*Alert full width styles*/
+  /* editor title: Alert full width */
+}
+
+div.table-container.mb-none {
+  /* editor category: Tabuľky */
+  /* editor group: Spodné odsadenie */
+  /* editor base: table-container */
+  /*table scrollable margin bottom none styles*/
+  /* editor title: Table container MB none */
+}
+
+div.table-container.mb-xsmall {
+  /* editor category: Tabuľky */
+  /* editor group: Spodné odsadenie */
+  /* editor base: table-container */
+  /*table scrollable margin bottom extra small styles*/
+  /* editor title: Table container MB xs */
+}
+
+div.table-container.mb-small {
+  /* editor category: Tabuľky */
+  /* editor group: Spodné odsadenie */
+  /* editor base: table-container */
+  /*table scrollable margin bottom small styles*/
+  /* editor title: Table container MB s */
+}
+
+div.table-container.mb-medium {
+  /* editor category: Tabuľky */
+  /* editor group: Spodné odsadenie */
+  /* editor base: table-container */
+  /*table scrollable margin bottom medium styles*/
+  /* editor title: Table container MB m */
+}
+
+div.table-container.mb-large {
+  /* editor category: Tabuľky */
+  /* editor group: Spodné odsadenie */
+  /* editor base: table-container */
+  /*table scrollable margin bottom large styles*/
+  /* editor title: Table container MB l */
+}
+
+div.table-container.mb-xlarge {
+  /* editor category: Tabuľky */
+  /* editor group: Spodné odsadenie */
+  /* editor base: table-container */
+  /*table scrollable margin bottom extra large styles*/
+  /* editor title: Table container MB xl */
+}
+
+div.table-container.table-scrollable {
+  /* editor category: Tabuľky */
+  /* editor base: table-container */
+  /*table scrollable styles*/
+  /* editor title: Table container scrollable */
+}
+
+div.table-container.table {
+  /* editor category: Tabuľky */
+  /* editor base: table-container */
+  /*table styles*/
+  /* editor title: Table container */
+}

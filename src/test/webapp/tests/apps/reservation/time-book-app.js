@@ -63,39 +63,39 @@ Scenario('Check reservation TABLE + logic', async ({I}) => {
         I.seeElement( locate("td[id='2561_15'].free").withText("0/3") );
 
     I.say("Check interval selection logic");
-        prevent429(I);
+        I.prevent429();
         I.click(locate("td[id='2560_13'].free"));
         I.seeElement( locate("td[id='2560_13'].free.selectedTableCell") );
 
-        prevent429(I);
+        I.prevent429();
         I.click(locate("td[id='2560_15'].free"));
         I.seeElement( locate("td[id='2560_15'].free.selectedTableCell") );
         I.dontSeeElement( locate("td[id='2560_13'].free.selectedTableCell") );
 
-        prevent429(I);
+        I.prevent429();
         I.click(locate("td[id='2560_14'].free"));
         I.seeElement( locate("td[id='2560_15'].free.selectedTableCell") );
         I.seeElement( locate("td[id='2560_14'].free.selectedTableCell") );
 
-        prevent429(I);
+        I.prevent429();
         I.click(locate("td[id='2560_13'].free"));
         I.seeElement( locate("td[id='2560_15'].free.selectedTableCell") );
         I.seeElement( locate("td[id='2560_14'].free.selectedTableCell") );
         I.seeElement( locate("td[id='2560_13'].free.selectedTableCell") );
 
-        prevent429(I);
+        I.prevent429();
         I.click(locate("td[id='2560_14'].free"));
         I.dontSeeElement( locate("td[id='2560_15'].free.selectedTableCell") );
         I.dontSeeElement( locate("td[id='2560_14'].free.selectedTableCell") );
         I.dontSeeElement( locate("td[id='2560_13'].free.selectedTableCell") );
 
-        prevent429(I);
+        I.prevent429();
         I.click(locate("td[id='2560_14'].free"));
         I.dontSeeElement( locate("td[id='2560_15'].free.selectedTableCell") );
         I.seeElement( locate("td[id='2560_14'].free.selectedTableCell") );
         I.dontSeeElement( locate("td[id='2560_13'].free.selectedTableCell") );
 
-        prevent429(I);
+        I.prevent429();
         I.click(locate("td[id='2561_15'].free"));
         I.seeElement( locate("td[id='2561_15'].free.selectedTableCell") );
         I.dontSeeElement( locate("td[id='2560_15'].free.selectedTableCell") );
@@ -123,14 +123,6 @@ Scenario('Check reservation TABLE + logic', async ({I}) => {
         I.seeInField("#email", "");
 });
 
-/**
- * Prevent error 429 too many requests
- * @param {*} I
- */
-function prevent429(I) {
-    I.wait(1);
-}
-
 Scenario('Check reservation create logic', async ({I}) => {
     I.relogin('admin');
     I.amOnPage("/apps/rezervacie/rezervacia-tenisovych-kurtov.html");
@@ -146,9 +138,9 @@ Scenario('Check reservation create logic', async ({I}) => {
     I.seeInField("#timeRange", "13:00 - 14:00");
     I.seeInField("#price", "70");
 
-    prevent429(I)
+    I.prevent429()
     I.click( locate("td[id='2560_14'].free") );
-    prevent429(I)
+    I.prevent429()
     I.click( locate("td[id='2560_15'].free") );
     I.seeInField("#timeRange", "13:00 - 16:00");
     I.seeInField("#price", "210");
@@ -163,9 +155,9 @@ Scenario('Check reservation create logic', async ({I}) => {
         I.seeElement( locate("td[id='2560_13'].free").withText("1/2") );
 
     I.say("Reserve same object different interval and see changes");
-        prevent429(I);
+        I.prevent429();
         I.click( locate("td[id='2560_13'].free") );
-        prevent429(I);
+        I.prevent429();
         I.click( locate("td[id='2560_14'].free") );
         I.seeInField("#timeRange", "13:00 - 15:00");
         I.seeInField("#price", "140");
@@ -177,9 +169,9 @@ Scenario('Check reservation create logic', async ({I}) => {
         I.seeElement( locate("td[id='2560_13'].full").withText("2/2") );
 
     I.say("Create reservation for Another object that NEEDS approval - so changes will be visible AFTER approval by approver");
-        prevent429(I);
+        I.prevent429();
         I.click( locate("td[id='2561_14'].free") );
-        prevent429(I);
+        I.prevent429();
         I.click( locate("td[id='2561_15'].free") );
         I.seeInField("#timeRange", "14:00 - 16:00");
 
@@ -198,9 +190,9 @@ Scenario('Check reservation create logic', async ({I}) => {
 
         await setReservationDate(I, "01-01-2045");
 
-        prevent429(I);
+        I.prevent429();
         I.click( locate("td[id='2561_14'].free") );
-        prevent429(I);
+        I.prevent429();
         I.click( locate("td[id='2561_15'].free") );
         I.seeInField("#timeRange", "14:00 - 16:00");
         I.seeInField("#price", "60");

@@ -154,7 +154,7 @@ function editFolderWithAllChanges(I, DT, DTE, Document, currentFolderName, newNa
 
     fillFolderFields(I, fieldA, fieldB, fieldC, fieldD);
 
-    DTE.save();
+    DTE.save("groups-datatable", true);
     Document.notifyCheckAndClose("Žiadosť o schválenie priečinka dostal: Publish Notification, Tester Playwright");
 }
 
@@ -302,7 +302,7 @@ Scenario('Check approve email and approve logic @screenshot', async ({I, Documen
     I.clickCss("#modalIframe .modal-footer-custom-buttons button.btn-success");
 
     I.switchTo("#modalIframeIframeElement");
-    I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 5);
+    I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 10, ".alert-success");
     I.switchTo();
 
     I.say("Re-open the same approval link - should show already approved");
@@ -364,6 +364,7 @@ Scenario('Edit folder that needs approval - as NON-approver ', async ({I, DT, DT
     editFolderWithAllChanges(I, DT, DTE, Document, newFolderName, newFolderName + "_edited", "AAA", "BBB", "CCC", "DDD");
 
     I.say("Verify that no changes were applied yet - folder should have original values");
+    I.jstreeWaitForLoader();
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
     I.seeInField("#DTE_Field_groupName", newFolderName);
@@ -416,7 +417,7 @@ Scenario('Go check email and reject request for edit ', async ({I, DT, DTE, Docu
     I.clickCss("#modalIframe .modal-footer button.btn-danger");
 
     I.switchTo("#modalIframeIframeElement");
-    I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 5);
+    I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 10, ".alert-success");
     I.switchTo();
 
     I.say("Re-open the same approval link - should show already rejected");
@@ -469,11 +470,11 @@ Scenario('Edit folder again as NON-approver and APPROVE the change ', async ({I,
     I.clickCss("#modalIframe .modal-footer button.btn-success");
 
     I.switchTo("#modalIframeIframeElement");
-    I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 5);
+    I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 10, ".alert-success");
     I.switchTo();
 
     I.say("Verify all changes were applied after approval");
-    openCreatedFolder(I, DT, DTE, newFolderName);
+    openCreatedFolder(I, DT, DTE, newFolderName + "_edited_2");
 
     I.seeInField("#DTE_Field_groupName", newFolderName + "_edited_2");
 
@@ -491,7 +492,7 @@ Scenario('Edit folder AS APPROVER - no approval needed ', async ({I, DT, DTE, Do
     I.say("Edit folder directly as approver - changes should be applied immediately");
     I.relogin("admin");
 
-    openCreatedFolder(I, DT, DTE, newFolderName);
+    openCreatedFolder(I, DT, DTE, newFolderName + "_edited_2");
 
     I.fillField("#DTE_Field_groupName", newFolderName + "_edited_3");
 
@@ -560,7 +561,7 @@ Scenario('Log as approver and reject deletion request - then check that folder w
     I.clickCss("#modalIframe .modal-footer button.btn-danger");
 
     I.switchTo("#modalIframeIframeElement");
-    I.waitForText("Schválenie/zamietnutie vymazania priečinka bolo úspešné", 5);
+    I.waitForText("Schválenie/zamietnutie vymazania priečinka bolo úspešné", 10, ".alert-success");
     I.switchTo();
 
     I.say("Check that link does not work anymore after rejection");
@@ -605,7 +606,7 @@ Scenario('Again request for delete and this time approve it ', async ({I, DT, DT
     I.clickCss("#modalIframe .modal-footer button.btn-success");
 
     I.switchTo("#modalIframeIframeElement");
-    I.waitForText("Schválenie/zamietnutie vymazania priečinka bolo úspešné", 5);
+    I.waitForText("Schválenie/zamietnutie vymazania priečinka bolo úspešné", 10, ".alert-success");
     I.switchTo();
 
     I.say("Verify that folder was deleted");

@@ -5,7 +5,7 @@ Page Builder also includes the ability to insert ready-made blocks. Their list i
 In the root directory for blocks, you can have the following subdirectories:
 
 - ```section``` - ​​for section blocks (blue marking in Page Builder)
-- ```container``` - ​​for containers (red marking in Page Builder)
+- ```container``` - ​​for containers (pink marking in Page Builder)
 - ```column``` - ​​for columns (green marking in Page Builder)
 - ```content``` - ​​for inserting various texts, buttons, etc. They are inserted using the Blocks icon and the yellow line that appears between the blocks.
 
@@ -41,6 +41,8 @@ In each of these subdirectories, you need to create **block groups as additional
     - big.jpg
     - contactus.html
 ```
+
+Do not insert the `contenteditable` attribute into HTML blocks. Editable areas are managed by Page Builder. The editor removes this attribute regardless of the value (`true`, `false`, `plaintext-only` and empty value) when loading content and before saving, even if the user adds it in HTML mode. Attributes needed during editing remain in the live editor, they are not saved to the database.
 
 ## Block name and tags
 
@@ -190,7 +192,7 @@ The cards themselves are not editable, they are generated automatically. Only th
 
 The ID attributes of individual cards are generated automatically based on the card name. If you need to use a specific name, you can set the value `data-title` on the `.tab-pane` element in the HTML code.
 
-Note the use of the CSS class ```pb-not-container``` on the main container element. This ensures that this element is not marked as a container and that individual tabs are considered containers. Each tab uses the CSS class ```pb-custom-container```, which ensures that the red frame/toolbar of the container is displayed.
+Note the use of the CSS class ```pb-not-container``` on the main container element. This ensures that this element is not marked as a container and that individual tabs are considered containers. Each tab uses the CSS class ```pb-custom-container```, which ensures that the container is marked with a pink border and its tools are available in the common toolbar.
 
 When you select the tab move option (in the container toolbar), all tabs are automatically displayed so that you can easily mark the tab where to move it. This is provided by the Page Builder CSS style.
 
@@ -510,11 +512,28 @@ Complete HTML code sample of the website with sample sections:
 </section>
 ```
 
+## Structure selectors
+
+Page Builder and the **Styles** menu in both the classic and Page Builder editors use four common configuration variables to recognize section, container, row, and column. For a custom grid, set the appropriate CSS selectors directly in these variables:
+
+| Configuration variable | Default value |
+| --- | --- |
+| `pageBuilderGridSectionSelector` | `section:not(.pb-not-section), div.pb-section` |
+| `pageBuilderGridContainerSelector` | `div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]` |
+| `pageBuilderGridRowSelector` | `div.row` |
+| `pageBuilderGridColumnSelector` | `div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]:not(.pb-not-column):not(.pb-column__content)` |
+
+The **Styles** menu in both modes reads selectors from these four variables only. The existing `pageBuilderGrid`, `pbCustomOptions`, and `pbCustomSettings` settings remain available for Page Builder editing, but the **Styles** menu does not automatically pick them up. If you change selectors with them, keep them consistent with the configuration variables listed.
+
+The custom column selector must also exclude the wrapper of its content (by default `.pb-column__content`), use the appropriate class for the custom prefix.
+
+These four variables only change the recognition of elements. The classes added when inserting new blocks (`section_default_class`, `container_default_class`, `row_default_class`, `column_default_class`) and column width prefixes (`me.column.valid_prefixes`) continue to be set in `pbCustomSettings`, as in the following example.
+
 ## Supporting JavaScript code
 
 If you need your own JavaScript support file (see `pagesupport.js` mentioned above), you can create a file `/components/INSTALL_NAME/admin/pagesupport-custom.js`, which if it exists will be loaded after the file `pagesupport.js`. You can add your own functions, or modify the standard existing functions from [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
 
-You can also edit some settings, such as the color list, edit CSS selectors, set width for different devices, etc. The following code is just a sample, paste it into the `pagesupport-custom.js` file:
+You can, for example, edit the color list, new block classes, or width for different devices. Set the row and column selectors for your custom grid via `pageBuilderGridRowSelector` and `pageBuilderGridColumnSelector`. The following code is a sample, paste it into the `pagesupport-custom.js` file:
 
 ```JavaScript
 window.pbCustomOptions = function(options) {
@@ -534,11 +553,10 @@ window.pbCustomOptions = function(options) {
 };
 
 window.pbCustomSettings = function(me) {
-    //redefine grid column content selector
+    // Configure row and column selectors through pageBuilderGridRowSelector and pageBuilderGridColumnSelector.
+    // Set classes for newly inserted blocks and column width prefixes.
     me.grid.section_default_class = 'section';
-    me.grid.row = 'div.grid, div[class*="pb-grid"]';
     me.grid.row_default_class = 'grid';
-    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
     me.grid.column_default_class = 'grid__col grid__col--12';
 
     me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']
@@ -600,6 +618,8 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 
 };
 ```
+
+The **Style** window displays properties in separate expandable groups. The `pbBuildTabMenu` function receives the original configuration of `tabs` and `items`: `visible: false` hides the group or all groups of the given tab, `name` changes the group title, and the custom order of the items is preserved. If you do not change the order, the new default order starting with the identification is used. Empty groups, such as animations without controls, are not displayed. When opened, the `10` (Identification) group, or the first available group, is expanded.
 
 ## Custom functions for cleaning HTML code
 

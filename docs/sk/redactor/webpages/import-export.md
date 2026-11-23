@@ -8,7 +8,7 @@ Ak pripravujete nové web sídlo môžete vopred pripraviť stromovú štruktúr
 
 ## Exportovanie web stránok
 
-Najprv sa uistite, či sa nachádzate v adresári, ktorý chcete exportovať. Stlačte tlačidlo ![](import-export-button.png ":no-zoom") a počkajte na zobrazenie okna. Pre štandardný export obsahu zvoľte v tomto okne možnosť **Exportovať web stránky do ZIP archívu (xml)** a spustite export vo zvolenej vetve stromu stránok tlačidlo s textom **OK**.
+Najprv sa uistite, či sa nachádzate v adresári, ktorý chcete exportovať. Otvorte ponuku **Ďalšie akcie** a vyberte **Import/Export**. Pre štandardný export obsahu zvoľte v tomto okne možnosť **Exportovať web stránky do ZIP archívu (xml)** a spustite export vo zvolenej vetve stromu stránok tlačidlo s textom **OK**.
 
 Výstup by mal vyzerať podobne ako na nasledujúcom obrázku. Úplne na konci výstupu sa zobrazí odkaz na ZIP súbor k stiahnutiu. Ponúknutý súbor si stiahnete na váš počítač. Tento súbor budete môcť následne použiť na import na inom prostredí CMS WebJET.
 
@@ -16,7 +16,7 @@ Výstup by mal vyzerať podobne ako na nasledujúcom obrázku. Úplne na konci v
 
 ## Importovanie web stránok zo ZIP archívu
 
-Najprv sa uistite, či sa nachádzate v adresári, do ktorého chcete import aplikovať. Stlačte tlačidlo ![](import-export-button.png ":no-zoom") a počkajte na zobrazenie okna. V okne zvoľte možnosť **Importovať web stránky zo ZIP archívu (xml)** a stlačte tlačidlo s textom **OK**. Budete vyzvaný k nahratiu ZIP súboru, ktorý by mal byť v rovnakom stave ako keď bol vyexportovaný cez možnosť **Exportovať web stránky do ZIP archívu (xml)**. Akékoľvek experimentovanie s jeho obsahom môže mať za následok nesprávne fungovanie importu s dôsledkom poškodenia výsledného obsahu web sídla.
+Najprv sa uistite, či sa nachádzate v adresári, do ktorého chcete import aplikovať. Otvorte ponuku **Ďalšie akcie** a vyberte **Import/Export**. V okne zvoľte možnosť **Importovať web stránky zo ZIP archívu (xml)** a stlačte tlačidlo s textom **OK**. Budete vyzvaný k nahratiu ZIP súboru, ktorý by mal byť v rovnakom stave ako keď bol vyexportovaný cez možnosť **Exportovať web stránky do ZIP archívu (xml)**. Akékoľvek experimentovanie s jeho obsahom môže mať za následok nesprávne fungovanie importu s dôsledkom poškodenia výsledného obsahu web sídla.
 
 Máte taktiež možnosť zvoliť hodnotu **Synchronizovať stránky podľa**, ktorou rozhodnete, podľa akého parametra sa bude kontrolovať, či stránka už existuje alebo nie.
 Na výber máte možnosti:
@@ -65,7 +65,7 @@ K web stránke sa exportujú aj použité obrázky a súbory. Ak je v stránke p
 
 ## Import štruktúry z Excel súboru
 
-Pred importom sa uistite, či sa nachádzate v adresári, do ktorého chcete import aplikovať. Stlačte tlačidlo ![](import-export-button.png ":no-zoom") a počkajte na zobrazenie okna. V okne zvoľte možnosť **Importovať štruktúru z Excel súboru** a stlačte tlačidlo s textom **OK**. Zobrazí sa Vám nastavenie importu, ktoré Vás vyzve k zadaniu `XLS` súboru so štruktúrou. Nezabudnite, že **súboru musí byť typu XLS**. Nemôže byť typu `XLSX` ani `XLSM` iba práve XLS. Môžete si stiahnuť [vzorový súbor](import_struct.xls). Dostupné sú aj ďalšie možnosti importu:
+Pred importom sa uistite, či sa nachádzate v adresári, do ktorého chcete import aplikovať. Otvorte ponuku **Ďalšie akcie** a vyberte **Import/Export**. V okne zvoľte možnosť **Importovať štruktúru z Excel súboru** a stlačte tlačidlo s textom **OK**. Zobrazí sa Vám nastavenie importu, ktoré Vás vyzve k zadaniu `XLS` súboru so štruktúrou. Nezabudnite, že **súboru musí byť typu XLS**. Nemôže byť typu `XLSX` ani `XLSM` iba práve XLS. Môžete si stiahnuť [vzorový súbor](import_struct.xls). Dostupné sú aj ďalšie možnosti importu:
 
 - ID priečinka, kde sa na-importujú súbory, táto možnosť bude prednastavená podľa skôr zvoleného priečinka, ale stále sa dá zmeniť (zmeniť cieľový priečinok)
 - Nastaviť prioritu podľa úrovne - priorita usporiadania sa nastaví podľa vnorenia v stromovej štruktúre, čím je stránka hlbšie, tým bude mať väčšie číslo priority. Význam to má pri vyhľadávaní a usporiadaní výsledkov podľa priority, aby stránky na nižšej úrovni boli skôr vo výsledkoch vyhľadávania - predpokladá sa, že stránka sekcie je významnejšia ako jej pod-stránka.

@@ -173,6 +173,12 @@ Aplikace se do veřejné web stránky vkládá stejně jako jiná standardní ap
 !INCLUDE(sk.iway.basecms.contact.ContactApp, country="sk")!
 ```
 
+### Chyba při provádění aplikace
+
+Pokud vytvoření nebo provedení Spring aplikace vyhodí výjimku, chybová hláška nahradí pouze její značku `!INCLUDE(...)!`. Texty, JSP aplikace a ostatní Spring aplikace na stránce zůstanou zachovány. Chybová hláška se neukládá do cache aplikace, takže při dalším načtení se její provedení zkusí znovu.
+
+Hláška používá přeložený název z `@WebjetAppStore.nameKey`. Pokud aplikace tuto anotaci nemá, použije se upravený název třídy bez balíku. Podrobnosti výjimky se zobrazují pouze přihlášenému administrátorovi, pokud není nastaven request atribut `writeTagDontShowError`.
+
 ### Používání parametrů aplikace
 
 Každá aplikace může v ```!INCLUDE()!``` značce obsahovat parametry, v našem příkladu se jedná o parametr ```country```. Ten se automaticky přenese do atributu ```country``` ve třídě ```ContactApp```.

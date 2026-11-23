@@ -14,7 +14,6 @@ var numberOfDateToResults = "559";
 var formName = "Elektornicky-formular";
 var randomNumber;
 var randomNumber2;
-const assert = require('assert');
 
 Before(({ I, login }) => {
     login('admin');
@@ -38,7 +37,7 @@ Scenario('zoznam formularov', async ({ I, DT }) => {
     const url = await I.grabCurrentUrl();
     const formNameFromUrl = url.split('/?formName=').pop();
     I.amOnPage(`/apps/form/admin/detail/?formName=${formName}`);
-    assert.equal(formName, formNameFromUrl);
+    I.assertEqual(formName, formNameFromUrl);
     within("#pills-form-details", () => {
         I.waitForElement(locate('a').withText('Brexit'), 10);
         I.click('//li[1]')
@@ -129,7 +128,7 @@ Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
     });
 });
 
-function fillFormSimple(I, DTE, random) {
+function fillFormSimple(I, DTE, random, expectedResult="Formulár bol úspešne odoslaný") {
     if (DTE == null) I.fillField("Meno a priezvisko", "Form-autotest-"+random);
     else I.fillField("Meno a priezvisko", "Form-autotest-"+random+"<b>strong</b>");
 
@@ -152,7 +151,8 @@ function fillFormSimple(I, DTE, random) {
     I.click("Súhlas s podmienkami");
     I.click("Odoslať");
 
-    I.waitForElement("#ajaxFormResultContainer");
+    // The result container exists before the AJAX response arrives.
+    I.waitForText(expectedResult, 30, "#ajaxFormResultContainer");
 }
 
 Scenario("vyplnenie formsimple", ({ I }) => {
@@ -163,7 +163,7 @@ Scenario("vyplnenie formsimple", ({ I }) => {
 
     //over spam ochranu
     I.wait(5);
-    fillFormSimple(I, null, randomNumber2);
+    fillFormSimple(I, null, randomNumber2, "Formulár bol detekovaný ako SPAM");
     I.dontSee("Formulár bol úspešne odoslaný");
     I.see("Formulár bol detekovaný ako SPAM");
 
@@ -171,6 +171,46 @@ Scenario("vyplnenie formsimple", ({ I }) => {
 
     fillFormSimple(I, null, randomNumber2);
     I.see("Formulár bol úspešne odoslaný");
+});
+
+Scenario("formsimple tooltip fallback without multistep assets", async ({ I }) => {
+    I.amOnPage("/apps/formular-lahko/");
+    I.waitForElement("form.formsimple", 10);
+
+    I.assertFalse(await I.executeScript(() => Boolean(window.WebJETFormTooltip?.init)), "FormSimple must not load the multistep tooltip helper");
+    I.assertTrue(await I.executeScript(() => {
+        const fallbackScript = Array.from(document.scripts)
+            .find(script => script.textContent.includes("wjFormTooltipFallback"));
+        if (!fallbackScript) return false;
+
+        const fixture = document.createElement("div");
+        fixture.innerHTML = `
+            <button id="formsimple-tooltip-fallback" type="button" class="popover-link"
+                data-html="true" data-toggle="tooltip" data-trigger="hover focus"
+                title="Fallback tooltip description" aria-label="Help for fallback field"
+                aria-describedby="formsimple-tooltip-description"
+                data-wj-form-tooltip-description-id="formsimple-tooltip-description"></button>
+            <span id="formsimple-tooltip-description" class="sr-only" role="tooltip">Fallback tooltip description</span>
+            <button id="formsimple-tooltip-after" type="button">After tooltip</button>`;
+        document.body.appendChild(fixture);
+        const executableFallback = document.createElement("script");
+        executableFallback.textContent = fallbackScript.textContent;
+        document.body.appendChild(executableFallback);
+        return true;
+    }), "The rendered FormSimple page must contain its inline tooltip fallback");
+
+    const tooltipTrigger = "#formsimple-tooltip-fallback";
+    const stableDescriptionId = "formsimple-tooltip-description";
+    I.waitForElement(tooltipTrigger + "[data-trigger='hover focus']", 5);
+    I.focus(tooltipTrigger);
+    I.waitForVisible(".tooltip[role='tooltip']", 5);
+    I.see("Fallback tooltip description", ".tooltip[role='tooltip']");
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), stableDescriptionId, "Fallback must preserve the stable description while open");
+
+    I.focus("#formsimple-tooltip-after");
+    I.waitForInvisible(".tooltip[role='tooltip']", 5);
+    I.wait(0.2);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), stableDescriptionId, "Fallback must restore the stable description after hide");
 });
 
 function checkFormSimpleRowHtml(I, random, rowNumber, isWysiwyg=false) {
@@ -251,15 +291,19 @@ Scenario("Overenie zoznamu podla prihlaseneho pouzivatela", ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
 
     //tester
+    DT.filterEquals("formName", "formular-lahko");
     I.see("formular-lahko");
+    DT.filterEquals("formName", "FAQ");
     I.see("FAQ");
 
     //prihlas sa ako tester2
     I.relogin("tester2");
 
     I.amOnPage("/apps/form/admin/");
-    I.see("formular-lahko");
+    DT.filterEquals("formName", "FAQ");
     I.dontSee("FAQ");
+    DT.filterEquals("formName", "formular-lahko");
+    I.see("formular-lahko");
 
     I.click("formular-lahko");
     DT.waitForLoader();
@@ -289,32 +333,17 @@ Scenario("odhlasenie", ({ I }) => {
 Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko");
 
-    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-2-"+randomNumber);
-    I.see(randomNumber);
-    I.see("Záznamy 1 až 1 z 1");
-
-    //oznac zaznam a zmaz ho
-    I.clickCss("#formDetailDataTable tbody tr:nth-child(1) td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("#formDetailDataTable_modal");
-    DTE.save();
-
-    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
-    I.see(randomNumber);
-
-    I.see("Záznamy 1 až 1 z 1");
-
-    //zmaz cely formular
-    I.amOnPage("/apps/form/admin/");
-    DT.filterEquals("formName", "formular-lahko");
-
-    I.clickCss("#formsDataTable tbody tr:nth-child(1) td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("#formsDataTable_modal");
-    DTE.save();
-
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    I.see("Záznamy 0 až 0 z 0");
+    // The EML scenario uses the same published form. Delete only this run's two submissions.
+    for (const suffix of [randomNumber2, randomNumber]) {
+        DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-" + suffix);
+        I.see("Form-autotest-" + suffix, "#formDetailDataTable tbody");
+        I.see("Záznamy 1 až 1 z 1", "#formDetailDataTable_wrapper .dt-info");
+        I.clickCss("#formDetailDataTable tbody td.dt-select-td");
+        I.click("button.buttons-remove", "#formDetailDataTable_wrapper");
+        DTE.waitForEditor("formDetailDataTable");
+        DTE.save("formDetailDataTable", true);
+        I.see("Záznamy 0 až 0 z 0", "#formDetailDataTable_wrapper .dt-info");
+    }
 });
 
 Scenario("domainId overenie zobrazenia zoznamu", ({ I, DT, Document }) => {
@@ -345,42 +374,70 @@ Scenario("domainId odhlasenie", ({ I }) => {
     I.logout();
 });
 
-Scenario("formsimple-encrypted", ({ I }) => {
+Scenario("formsimple-encrypted @screenshot", ({ I, DT, DTE, Document, i18n }) => {
+    if (Document.isScreenshotsEnabled()) {
+        // Generate a disposable pair to illustrate key management without changing the fixture's keys.
+        I.amOnPage("/components/crypto/admin/keymanagement");
+        I.clickCss("#tabLink2");
+        I.clickCss("#tabMenu2 input[type=submit]");
+        I.waitForVisible("#tabMenu2 textarea.generatedKey", 10);
+        Document.screenshot("/redactor/apps/form/encryption-keys.png", 1000, 800);
+
+        I.amOnPage("/apps/form/admin/");
+        DT.filterEquals("formName", "formular-lahko-encrypted");
+        I.clickCss("#formsDataTable td.dt-select-td");
+        I.clickCss("#formsDataTable_wrapper button.buttons-edit");
+        DTE.waitForEditor("formsDataTable");
+        I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
+        Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/encryption-settings.png");
+        DTE.cancel();
+    }
+
+    // The public fixture and its stored HTML remain Slovak regardless of the admin language.
     I.amOnPage("/apps/formular-lahko/formular-lahko-encrypted.html");
 
     fillFormSimple(I, null, randomNumber);
     I.see("Formulár bol úspešne odoslaný");
 
-    //over zobrazenie v admine
+    // Verify that stored values and the HTML preview need the private key.
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko-encrypted");
+    DT.waitForLoader("#formDetailDataTable_processing");
     I.see("encrypted-tink-tester_42");
+    I.dontSee("Form-autotest-"+randomNumber);
+    Document.screenshot("/redactor/apps/form/encryption-list.png", 1280, 550);
 
     I.click( locate("#formDetailDataTable tbody tr:nth-child(1) a").withChild("i.ti-eye") );
+    I.waitForElement("#modalIframeIframeElement", 10);
     I.switchTo("#modalIframeIframeElement");
-    I.see("encrypted-tink");
+    I.waitForText("encrypted-tink", 10);
     I.dontSee("Technické info");
     I.switchTo()
 
-    //
     I.say("Setting decrypt key");
     I.amOnPage("/components/crypto/admin/keymanagement");
     I.fillField(".privateKey", "decrypt_key-tink-tester_42:eyJwcmltYXJ5S2V5SWQiOjEzNzAyODYzNDUsImtleSI6W3sia2V5RGF0YSI6eyJ0eXBlVXJsIjoidHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUuY3J5cHRvLnRpbmsuRWNpZXNBZWFkSGtkZlByaXZhdGVLZXkiLCJ2YWx1ZSI6IkVxTUJFbHdLQkFnQ0VBTVNVaEpRQ2poMGVYQmxMbWR2YjJkc1pXRndhWE11WTI5dEwyZHZiMmRzWlM1amNubHdkRzh1ZEdsdWF5NUJaWE5EZEhKSWJXRmpRV1ZoWkV0bGVSSVNDZ1lLQWdnUUVCQVNDQW9FQ0FNUUVCQWdHQUVZQVJvZ1RKMWJQYm83MW5ZTk56V1lVZmFITnJsZEJyUkp2ZXF3NHI1My9DMVhtTFFpSVFESU12TWtyUlhQdlNNN2hVaklHblcybWdob1BCd21HaDJKaEFhMEg0MlhWaG9nQ29oTno4bWR5NktBbWFmaCt2T2JUb2pTRkl6Q2VIWE50WS91SnFmNWx6RT0iLCJrZXlNYXRlcmlhbFR5cGUiOiJBU1lNTUVUUklDX1BSSVZBVEUifSwic3RhdHVzIjoiRU5BQkxFRCIsImtleUlkIjoxMzcwMjg2MzQ1LCJvdXRwdXRQcmVmaXhUeXBlIjoiVElOSyJ9XX0K");
-    I.click("Nastaviť");
+    Document.screenshot("/redactor/apps/form/encryption-decrypt-key.png", 1000, 560);
+    i18n.click("Setup");
+    i18n.waitForText("Decryption key set successfully", 10);
 
     I.amOnPage("/apps/form/admin/detail/?formName=formular-lahko-encrypted");
+    DT.waitForLoader("#formDetailDataTable_processing");
     I.dontSee("encrypted-tink-tester_42");
     I.see("Form-autotest-"+randomNumber);
     I.see("autotest."+randomNumber+"@balat.sk")
     I.see("Test odoslania formularu random: "+randomNumber);
     I.see("true");
+    Document.screenshot("/redactor/apps/form/encryption-list-decrypted.png", 1280, 550);
 
     I.click( locate("#formDetailDataTable tbody tr:nth-child(1) a").withChild("i.ti-eye") );
+    I.waitForElement("#modalIframeIframeElement", 10);
     I.switchTo("#modalIframeIframeElement");
+    I.waitForText("Technické info", 10);
     I.dontSee("encrypted-tink");
     I.see("Technické info");
     I.see(randomNumber, "span.form-control.emailInput-text");
     I.switchTo();
-    I.see("Vytlačiť", "#modalIframe div.modal-footer button");
+    i18n.see("Print", "#modalIframe div.modal-footer button");
 });
 
 Scenario("form with note field", ({ I, DT }) => {
@@ -449,7 +506,7 @@ Scenario("form attachments", async ({ I }) => {
         window.location.href=url;
     }, url11size);
     //should be redirected to homepage
-    I.see("Vitajte, Tester2 Playwright2");
+    I.see("Vitajte späť, Tester2 Playwright2", "h1.md-dashboard__greeting");
 });
 
 Scenario("odhlasenie2", async ({ I }) => {

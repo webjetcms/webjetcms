@@ -7,7 +7,7 @@ Technologies used:
 - ```rspack+node``` for compiling html/PUG/JS files
 - datatables.net + [editor](https://editor.datatables.net) - basic work and editing of tabular data, connected to Spring via DatatablesRestControllerV2 - example in [GalleryRestController.java](../../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) and [gallery.pug](../../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
 - [pugjs.org](pugjs.md) - ```preprocessor``` for generating HTML code for pages
-- [Vue.js](vue.md) - available as ```window.Vue```, short demo in [photo gallery](../../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- [Web components](web-components.md) - standard JavaScript components used in administration
 
 The entire process of generating a web page in ```/admin/v9/``` is as follows:
 

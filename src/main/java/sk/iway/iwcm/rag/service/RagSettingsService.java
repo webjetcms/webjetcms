@@ -31,24 +31,30 @@ public class RagSettingsService {
         return minimumResults;
     }
 
+    /**
+     * Resolves the text-match weight, clamping finite values and replacing invalid values with the default.
+     *
+     * @return weight in the range zero to one, or 0.15 for invalid or non-finite input
+     */
+    public static double getRerankLexicalWeight() {
+        double weight = Tools.getDoubleValue(Constants.getString("ragRerankLexicalWeight"), 0.15d);
+        return Double.isFinite(weight) ? Math.max(0d, Math.min(1d, weight)) : 0.15d;
+    }
+
     /* RAG - HYBRID SEARCH */
 
+    /**
+     * Resolves the hybrid retrieval mode, using global configuration for empty or automatic component values.
+     *
+     * @param pageParams optional component settings
+     * @return trimmed mode, or an empty string when no value is available
+     */
     public static String getHybridSearchMode(PageParams pageParams) {
-        String hybridSearchMode = null;
-        if(pageParams != null) {
-            hybridSearchMode = pageParams.getValue("hybridSearchMode", "");
-        }
-        String mode;
-
+        String hybridSearchMode = pageParams == null ? null : pageParams.getValue("hybridSearchMode", "");
         if(Tools.isEmpty(hybridSearchMode) || "auto".equalsIgnoreCase(hybridSearchMode)) {
-            // use value from settings - auto mode
-            mode = Constants.getString("ragHybridSearchMode");
-        } else {
-            // user specified mode
-            mode = hybridSearchMode;
+            hybridSearchMode = Constants.getString("ragHybridSearchMode");
         }
-
-        return Tools.getStringValue(mode, "").trim();
+        return Tools.getStringValue(hybridSearchMode, "").trim();
     }
 
     public static int getHybridShortQueryMaxChars(PageParams pageParams) {
@@ -99,21 +105,19 @@ public class RagSettingsService {
         return hybridChunkFetchMultiplier;
     }
 
+    /**
+     * Resolves whether full-text retrieval may fall back to a database-specific text-pattern search.
+     * Recognizes component values {@code true}, {@code trueValue}, {@code false}, and {@code falseValue};
+     * other values retain the global setting.
+     *
+     * @param pageParams optional component settings
+     * @return whether the full-text fallback is enabled
+     */
     public static boolean getHybridFtsUseIlikeFallback(PageParams pageParams) {
-        boolean hybridFtsUseIlikeFallback = Constants.getBoolean("ragHybridFtsUseIlikeFallback");
-
-        if(pageParams != null) {
-            String val = pageParams.getValue("hybridFtsUseIlikeFallback", "");
-            if(Tools.isNotEmpty(val)) {
-                if("true".equalsIgnoreCase(val) || "trueValue".equalsIgnoreCase(val)) {
-                    hybridFtsUseIlikeFallback = true;
-                } else if("false".equalsIgnoreCase(val) || "falseValue".equalsIgnoreCase(val)) {
-                    hybridFtsUseIlikeFallback = false;
-                }
-            }
-        }
-
-        return hybridFtsUseIlikeFallback;
+        String value = pageParams == null ? null : pageParams.getValue("hybridFtsUseIlikeFallback", "");
+        if("true".equalsIgnoreCase(value) || "trueValue".equalsIgnoreCase(value)) return true;
+        if("false".equalsIgnoreCase(value) || "falseValue".equalsIgnoreCase(value)) return false;
+        return Constants.getBoolean("ragHybridFtsUseIlikeFallback");
     }
 
     public static int getHybridRrfK(PageParams pageParams) {
@@ -174,50 +178,32 @@ public class RagSettingsService {
         return ragAnswerMaxMergedBlockCharacters;
     }
 
+    /**
+     * Combines the global hybrid-search switch with the component's retrieval mode and search type.
+     * An {@code off} mode disables hybrid retrieval; empty or automatic search types retain the global switch.
+     *
+     * @param pageParams optional component settings
+     * @return {@code true} when hybrid search is globally enabled and the component selection permits it
+     */
     public static boolean isHybridSearchEnabled(PageParams pageParams) {
-        if(Constants.getBoolean("ragHybridSearchEnabled") == false) {
-            // Does not matter what user selected, if hybrid search is disabled in settings, it should not be allowed
+        if(Constants.getBoolean("ragHybridSearchEnabled") == false || "off".equalsIgnoreCase(getHybridSearchMode(pageParams))) {
             return false;
         }
-
-        if("off".equalsIgnoreCase(getHybridSearchMode(pageParams))) {
-            return false;
-        }
-
-        if(pageParams == null) {
-            return true;
-        }
-
-        String searchType = Tools.getStringValue(pageParams.getValue("searchType", ""), "").trim();
-        if(Tools.isEmpty(searchType) || "auto".equalsIgnoreCase(searchType)) {
-            // auto mode
-            return true;
-        }
-
-        // User specified search type
-        return "hybrid".equalsIgnoreCase(searchType);
+        String searchType = pageParams == null ? "" : Tools.getStringValue(pageParams.getValue("searchType", ""), "").trim();
+        return Tools.isEmpty(searchType) || "auto".equalsIgnoreCase(searchType) || "hybrid".equalsIgnoreCase(searchType);
     }
 
+    /**
+     * Applies the global answer-generation gate and the component's optional answer preference.
+     * Empty or automatic preferences retain the global setting; unrecognized preferences disable answers.
+     *
+     * @param pageParams optional component settings
+     * @return {@code true} when answer generation is enabled globally and allowed by the component
+     */
     public static boolean isAnswerAllowed(PageParams pageParams) {
-        if(Constants.getBoolean("ragAnswerAllowed") == false) {
-            // Does not matter what user selected, if RAG answer is disabled in settings, it should not be allowed
-            return false;
-        }
-
-        if(pageParams == null) {
-            return true;
-        }
-
-        String answerAllowed = pageParams.getValue("answerAllowed", "");
-        if(Tools.isEmpty(answerAllowed) || "auto".equalsIgnoreCase(answerAllowed)) {
-            // auto mode
-            return true;
-        } else if("true".equalsIgnoreCase(answerAllowed) || "trueValue".equalsIgnoreCase(answerAllowed)) {
-            return true;
-        } else if("false".equalsIgnoreCase(answerAllowed) || "falseValue".equalsIgnoreCase(answerAllowed)) {
-            return false;
-        }
-
-        return false;
+        if(Constants.getBoolean("ragAnswerAllowed") == false) return false;
+        String answerAllowed = pageParams == null ? "" : pageParams.getValue("answerAllowed", "");
+        return Tools.isEmpty(answerAllowed) || "auto".equalsIgnoreCase(answerAllowed)
+            || "true".equalsIgnoreCase(answerAllowed) || "trueValue".equalsIgnoreCase(answerAllowed);
     }
 }

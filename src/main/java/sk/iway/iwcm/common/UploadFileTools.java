@@ -341,6 +341,18 @@ public class UploadFileTools {
      */
     public static List<String> handleGallery(IwcmFile newFileIwcm, Date dateCreated) {
 		List<String> added = new ArrayList<>();
+		handleGallery(newFileIwcm, dateCreated, added);
+		return added;
+	}
+
+	/**
+	 * Processes a gallery upload and exposes the image result code to callers displaying errors.
+	 * @param newFileIwcm uploaded file
+	 * @param dateCreated optional photo date
+	 * @param added receives relative paths of successfully generated gallery variants
+	 * @return 0 on success or when no gallery processing is needed, otherwise an ImageTools result code
+	 */
+	public static int handleGallery(IwcmFile newFileIwcm, Date dateCreated, List<String> added) {
 		String dir = newFileIwcm.getVirtualParent();
 		if (FileTools.isImage(newFileIwcm.getName())) {
 			if (GalleryDB.isGalleryFolder(dir)) {
@@ -350,7 +362,8 @@ public class UploadFileTools {
 					FileTools.copyFile(newFileIwcm, orig);
 				}
 
-				GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir);
+				int result = GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir);
+				if (result != 0) return result;
 				added.add("s_"+newFileIwcm.getName());
 				added.add("o_"+newFileIwcm.getName());
 			} else if (Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
@@ -363,6 +376,6 @@ public class UploadFileTools {
 			}
             GalleryDB.clearInterestPoint(dir, newFileIwcm.getName());
 		}
-		return added;
+		return 0;
 	}
 }

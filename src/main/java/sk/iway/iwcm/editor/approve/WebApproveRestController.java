@@ -35,6 +35,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
+import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 
@@ -67,8 +68,8 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
         WebpagesService ws = new WebpagesService(-1, getUser(), getProp(), getRequest());
 
         pageImpl.addOptions("tempId", ws.getTemplates(false), "tempName", "tempId", true);
-        pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), "title", "docId", false);
-        pageImpl.addOptions("headerDocId,footerDocId", ws.getHeaderList(true), "title", "docId", false);
+        WebpagesService.addDocOptions(pageImpl, "menuDocId,rightMenuDocId", ws.getMenuList(true));
+        WebpagesService.addDocOptions(pageImpl, "headerDocId,footerDocId", ws.getHeaderList(true));
         pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", "userGroupId", false);
         pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", "userGroupId", false);
         pageImpl.addOptions("perexGroups", ws.getPerexGroups(false), "label", "value", false);
@@ -140,7 +141,7 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
                     if (groupIdsInDomain.isEmpty()) groupIdsInDomain.add(-1);
 
                     if (groupIdsInDomain.size()>0) {
-                        predicates.add(root.get("groupId").in(groupIdsInDomain));
+                        predicates.add(JpaTools.in(root.get("groupId"), groupIdsInDomain, builder));
                     }
                 }
             }
@@ -158,11 +159,11 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
             }
         }
         if (groupIdsInTrash.isEmpty()==false) {
-            predicates.add(builder.not(root.get("groupId").in(groupIdsInTrash)));
+            predicates.add(JpaTools.notIn(root.get("groupId"), groupIdsInTrash, builder));
         }
 
         //remove pages which current version is in Trash
-        if (skipHistoryId.isEmpty()==false) predicates.add(builder.not(root.get("id").in(skipHistoryId)));
+        if (skipHistoryId.isEmpty()==false) predicates.add(JpaTools.notIn(root.get("id"), skipHistoryId, builder));
 
         return predicates;
     }

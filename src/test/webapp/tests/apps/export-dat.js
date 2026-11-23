@@ -12,7 +12,7 @@ Scenario('Export dat zakladne testy @baseTest', async ({I, DataTables}) => {
         perms: 'cmp_export',
         createSteps: function(I, options) {
             I.clickCss("#pills-dt-exportDatDataTable-filter-tab");
-            I.click(".btn-vue-jstree-add");
+            I.click(".btn-webjet-jstree-add");
             I.click("test");
             I.clickCss("#pills-dt-exportDatDataTable-basic-tab");
         },
@@ -48,6 +48,7 @@ Scenario('Export dat json a XML', ({I, Browser}) => {
 
 Scenario('Overenie filtrovania primitivneho boolean', ({I, DT}) => {
     I.amOnPage("/apps/export-dat/admin/");
+    I.waitForVisible('#exportDatDataTable_wrapper .dt-filter-expandGroupIds button.btn-outline-secondary', 20);
     DT.filterSelect("expandGroupIds", "Áno");
     I.see("/export-dat/xml/")
     I.dontSee("/export-dat/json/")

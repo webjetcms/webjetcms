@@ -145,6 +145,41 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 }
 ```
 
+## Filtering by domain
+
+If the Spring DATA repository implements the `DomainIdRepository` interface, the `DatatableRestControllerV2` class works with the value `domainId`. When reading, automatic filtering is activated for MultiWeb/Cloud installations or when the `enableStaticFilesExternalDir` configuration variable is enabled. When writing, the missing `domainId` is always added for such a repository and it is verified that the value sent corresponds to the expected domain.
+
+The expected domain is returned by the protected method `getDomainId()`. Its default implementation uses the current domain from `CloudToolsForCore.getDomainId()`. The value is used in standard retrieval of one or all records, deletion, searching for a record via `findItemBy`, calculating sums, and when appending or checking `domainId` during storage.
+
+If the controller is to work with a domain other than the current one, override the `getDomainId()` method. Use the same method in the controller's own repository queries:
+
+```java
+@Override
+protected int getDomainId() {
+    return DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+}
+```
+
+In the example, the controller manages auxiliary records `CustomFieldsEntity`, but their domain scope is determined by `EnumerationDataBean`. Therefore, the annotated context class is passed to the resolver, not necessarily the entity type used in the repository.
+
+The annotation [`@DomainIdCommon`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdCommon.java) indicates an entity whose data is common to all domains. It is available during application runtime and also applies to subclasses. It is evaluated by the class [`DomainIdScopeResolver`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdScopeResolver.java):
+
+- for an annotated class, returns the value of the configuration variable `domainIdCommon` ; if it is not set to a positive number, uses the domain `1`,
+- for an unannotated or unknown class, returns the current domain,
+- the class can be specified as `Class<?>` or its full name (`FQDN`).
+
+You mark an entity as follows:
+
+```java
+@Entity
+@DomainIdCommon
+public class EnumerationDataBean {
+    // ...
+}
+```
+
+The annotation itself does not automatically change database queries. The controller must use `DomainIdScopeResolver` in the overridden method `getDomainId()`, and services with their own queries must use the resolver result explicitly. Therefore, use the annotation only for data that is actually to be shared and modified across domains.
+
 ## Methods for data manipulation
 
 You can also construct a class with a ```NULL``` repository, in which case you need to implement methods for working with the data:
@@ -296,6 +331,17 @@ If you need to edit the data before saving, or perform an action after saving to
 	}
 
     /**
+	 * Called before duplicating an entity, with the ID of the source entity.
+	 * The default implementation preserves compatibility with controllers that
+	 * override {@link #beforeDuplicate(Object)}.
+	 * @param entity entity prepared for insertion
+	 * @param originalId ID of the source entity
+	 */
+	public void beforeDuplicate(T entity, Long originalId) {
+
+	}
+
+    /**
 	 * Metoda volana po duplikovanim danej entity,
 	 * da sa pouzit na dokopirovanie udajov, napr. media web stranky
 	 * @param entity - novo ulozena (zduplikovana) entita
@@ -427,13 +473,21 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Non-existent attributes in the editor
 
-By default, not all entity attributes may come from the editor, so the values ​​of the existing entity and the data sent from the editor are combined before saving. By default, all non-```null``` attributes are overwritten. However, this does not allow you to enter an empty date (if it has already been set). Therefore, attributes annotated with DataTableColumn type ```Date``` are transferred even if they have a ```null``` value. This combination is performed in the ```public T editItem(T entity, long id)``` method using ```NullAwareBeanUtils.copyProperties(entity, one);```.
+By default, not all entity attributes may come from the editor, so the values ​​of the existing entity and the data sent from the editor are combined before saving. All attributes with a value different from ```null``` are overwritten.
+
+The automatic transfer of the ```null``` value only applies to attributes marked with the ```@DataTableColumn``` annotation. Within these attributes, the ```java.util.Date```, ```java.sql.Date```, ```LocalDate```, ```LocalDateTime``` and object arrays with ```inputType = DataTableColumnType.NUMBER``` that support ```null``` are transferred for Java types, so that they can be emptied in the editor. For attributes without the ```@DataTableColumn``` annotation, the input value ```null``` is ignored and the original entity value is preserved, even if it is a date type. Primitive numeric types do not support the value ```null```.
+
+During import, the value ```null``` for these date attributes and ```NUMBER``` is automatically transferred only if their column is in the header of the imported Excel file. The common list ```importedColumns``` is created from the header independently of the values ​​in the individual rows. An omitted column will retain the value of the existing entity; an empty cell or explicit value ```NULL``` in the imported column will reset it. Required fields are still subject to validation, for example ```@NotNull```.
+
+For a date stored in another type, such as ```Instant```, ```Timestamp``` or ```Long```, or for ```TEXT_NUMBER```, the ```null``` transfer can be turned on using ```alwaysCopyProperties = { true }```. This setting forces the transfer even if the import column is omitted. The value ```false``` disables automatic transfer for supported date types and ```NUMBER```. This connection is made in the ```public T editItem(T entity, long id)``` method using ```NullAwareBeanUtils.copyProperties(entity, one);```.
 
 ## Restoring data after saving
 
 By calling the ```setForceReload(true);``` method, it is possible to force the data table to be refreshed after saving.
 
 This is necessary if the saved object is moved to another directory, etc. The example is in [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
+
+In a data table with `serverSide: false`, after editing a single record, the page it is on is displayed according to the current sorting and filtering. The record is searched for by field `reloadRowKey`, by default by `editorId`. If after editing it no longer matches the filter or is no longer in the loaded data, the original page or the last valid page is preserved. The page is also preserved during bulk editing and deletion. If the last page disappears by deleting the last row, the previous valid page is displayed. In an empty list, the first page with an empty status is displayed. After creating a record, the pagination is reset to the first page by forcing a refresh.
 
 ## Dials for select boxes
 
@@ -922,6 +976,51 @@ If you need to specifically check permissions (e.g. folder permissions for websi
         return true;
     }
 ```
+
+## Range check when changing order
+
+The `/row-reorder` endpoint retrieves the entire requested batch from the repository and calls `checkItemPerms` for each record. However, if the table list is also limited by a request parameter or a parent record, such as `formName`, `stepId`, `parentId`, or a category, simply checking each record may not guarantee that all of them fall within the currently displayed range.
+
+In such a controller, implement the method:
+
+```java
+protected boolean checkRowReorderScope(HttpServletRequest request, List<T> entities)
+```
+
+The method is called after the complete batch has been loaded from the repository and before validating the changed field or changing the entities. The `entities` parameter therefore contains the stored entities, not the values ​​from the request body. The default implementation returns `true` to preserve the behavior of existing controllers.
+
+The implementation must proceed safely and return `false` on invalid input:
+
+- verify the presence and validity of all parameters determining the scope,
+- compare this range with each entity in the list,
+- verify the current domain, if the entity uses it,
+- verify the existence and relationship of the parent record,
+- verify that the current user can edit the given scope.
+
+For example, multi-step form items validate the form name, step, domain, and user permissions:
+
+```java
+@Override
+protected boolean checkRowReorderScope(HttpServletRequest request, List<FormItemEntity> entities) {
+    String formName = MultistepFormsService.getFormName(request);
+    int stepId = Tools.getIntValue(request.getParameter("stepId"), -1);
+    if (Tools.isEmpty(formName) || stepId < 1 || entities == null || entities.isEmpty() || getUser() == null) return false;
+
+    int domainId = CloudToolsForCore.getDomainId();
+    for (FormItemEntity entity : entities) {
+        if (entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+            entity.getStepId() == null || entity.getStepId().intValue() != stepId ||
+            entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
+    }
+
+    if (formStepsRepository.getValidStep(formName, Long.valueOf(stepId), domainId).isEmpty()) return false;
+    return formsService.isFormAccessible(formName, getUser());
+}
+```
+
+The client will preserve the parameters from `DATA.url` when constructing the URL for `/row-reorder`. However, these parameters are client-controlled and cannot be considered as proof of authorization. Similarly, it is not sufficient to define the scope only via `addSpecSearch`, as this does not automatically apply to the endpoint `/row-reorder`.
+
+If the method returns `false`, the entire operation is rejected and nothing is saved. `checkRowReorderScope` is a batch-wide check and does not replace `checkItemPerms`, which is still used for permissions on each individual record.
 
 ## Error triggering
 

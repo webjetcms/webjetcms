@@ -16,6 +16,7 @@ import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.queries.ReadAllQuery;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -124,6 +125,9 @@ public class JpaDB<T extends ActiveRecordBase>
 	@SuppressWarnings("rawtypes")
 	public List getValues(String property)
 	{
+		if (DB.isValidColumnName(property, true) == false)
+			throw new IllegalArgumentException("Invalid JPA property identifier");
+
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(dbName);
 		try
 		{

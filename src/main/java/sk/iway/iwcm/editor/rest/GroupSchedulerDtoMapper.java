@@ -9,6 +9,7 @@ import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupSchedulerDetails;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface GroupSchedulerDtoMapper {
@@ -30,6 +31,14 @@ public interface GroupSchedulerDtoMapper {
     @Mapping(source = "hiddenInAdmin", target = "hiddenInAdmin", qualifiedByName = "integerToBoolean")
     GroupDetails groupSchedulerDtoToGroup(GroupSchedulerDto dto);
     List<GroupDetails> groupSchedulerDtosToGroupDetailsList(List<GroupSchedulerDto> dtos);
+
+    @Mapping(source = "id", target = "schedulerId")
+    @Mapping(source = "groupId", target = "groupId")
+    @Mapping(source = "forceGroupTemplate", target = "forceTheUseOfGroupTemplate")
+    @Mapping(source = "newPageDocidTemplate", target = "newPageDocIdTemplate")
+    @Mapping(source = "hiddenInAdmin", target = "hiddenInAdmin", qualifiedByName = "integerToBoolean")
+    GroupSchedulerDetails groupSchedulerDtoToGroupSchedulerDetails(GroupSchedulerDto dto);
+    List<GroupSchedulerDetails> groupSchedulerDtosToGroupSchedulerDetailsList(List<GroupSchedulerDto> dtos);
 
     @Named("booleanToInteger")
     default Integer booleanToInteger(boolean value) {

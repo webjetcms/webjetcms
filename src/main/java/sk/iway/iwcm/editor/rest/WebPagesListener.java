@@ -271,9 +271,17 @@ public class WebPagesListener {
         expanded.addAll(rootGroups);
 
         //ziskaj zoznam parent priecinkov
-        List<GroupDetails> parentGroups = GroupsDB.getInstance().getParentGroups(lastGroupId);
+        List<GroupDetails> parentGroups = GroupsDB.getInstance().getParentGroups(lastGroupId, true);
         Collections.reverse(parentGroups);
-        expandGroups(expanded, parentGroups, lastGroupId, 0, user, showPages, click, request);
+        // System and Trash trees omit ancestors above their visible roots.
+        // Start at a visible root so direct links can expand its descendants.
+        int position = 0;
+        while (position < parentGroups.size()) {
+            String parentId = String.valueOf(parentGroups.get(position).getGroupId());
+            if (rootGroups.stream().anyMatch(item -> item.getId().equals(parentId))) break;
+            position++;
+        }
+        expandGroups(expanded, parentGroups, lastGroupId, position, user, showPages, click, request);
 
         //vyresetuj selected atribut
         for (JsTreeItem item : expanded) {

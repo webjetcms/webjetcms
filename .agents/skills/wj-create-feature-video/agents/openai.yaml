@@ -1,0 +1,4 @@
+interface:
+  display_name: "WJ Create Feature Video"
+  short_description: "Create unified video plans, narration and demos"
+  default_prompt: "Use $wj-create-feature-video to prepare one JavaScript shot plan with Slovak narration and inline shot/prepare callbacks for a CodeceptJS feature video from this PR."

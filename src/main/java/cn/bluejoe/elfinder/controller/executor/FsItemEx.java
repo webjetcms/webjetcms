@@ -9,7 +9,6 @@ import java.util.List;
 import cn.bluejoe.elfinder.service.FsItem;
 import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.service.FsVolume;
-import sk.iway.iwcm.FileTools;
 
 public class FsItemEx
 {
@@ -233,36 +232,8 @@ public class FsItemEx
 
 	public List<FsItemEx> listChildren(int selectedType) {
 		List<FsItemEx> list = new ArrayList<>();
-		FsItem[] childrens = _v.listChildren(_f);
-
-		if(selectedType == sk.iway.iwcm.system.elfinder.FsService.TYPE_IMAGES) {
-			//Accept ONLY image AND the directory
-			for (FsItem child : childrens) {
-				String mimeType = _v.getMimeType(child);
-				if("directory".equals(mimeType) || mimeType.startsWith("image/") || FileTools.isImage(_v.getName(child))) {
-					list.add(new FsItemEx(child, _s));
-				}
-			}
-		} else if(selectedType == sk.iway.iwcm.system.elfinder.FsService.TYPE_VIDEOS) {
-			//Accept ONLY video AND the directory
-			for (FsItem child : childrens) {
-				String mimeType = _v.getMimeType(child);
-				if("directory".equals(mimeType) || mimeType.startsWith("video/") || mimeType.startsWith("audio/") || FileTools.isVideoFile(_v.getName(child)) || FileTools.isAudioFile(_v.getName(child))) {
-					list.add(new FsItemEx(child, _s));
-				}
-			}
-		} else if(selectedType == sk.iway.iwcm.system.elfinder.FsService.TYPE_MULTIMEDIA) {
-			//Accept ONLY multimedia AND the directory
-			for (FsItem child : childrens) {
-				String mimeType = _v.getMimeType(child);
-				//in ckeditor user is able to insert image OR video directly into page, so for images type we will show also video files
-				if("directory".equals(mimeType) || mimeType.startsWith("image/") || mimeType.startsWith("video/") || mimeType.startsWith("audio/") || FileTools.isImage(_v.getName(child)) || FileTools.isVideoFile(_v.getName(child)) || FileTools.isAudioFile(_v.getName(child))) {
-					list.add(new FsItemEx(child, _s));
-				}
-			}
-		} else {
-			// Return them all
-			for (FsItem child : childrens) {
+		for (FsItem child : _v.listChildren(_f)) {
+			if (_v.isFolder(child) || sk.iway.iwcm.system.elfinder.FsService.isFileTypeAllowed(selectedType, _v.getName(child))) {
 				list.add(new FsItemEx(child, _s));
 			}
 		}

@@ -11,7 +11,9 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.multistep_form.rest.FormHtmlHandler;
 import sk.iway.iwcm.components.multistep_form.rest.FormMailService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
@@ -48,6 +50,8 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *  univerzalne poslanie mailu
@@ -60,6 +64,7 @@ import java.util.*;
  *@created      ďż˝tvrtok, 2002, marec 28
  *@modified     $Date: 2004/03/23 19:23:02 $
  */
+@SuppressWarnings({"java:S3776", "java:S2077"})
 public class FormMailAction extends HttpServlet
 {
 	private static final long serialVersionUID = 1L;
@@ -74,6 +79,7 @@ public class FormMailAction extends HttpServlet
 	public static final String FORM_HTML_DIR = "/WEB-INF/formhtml/";
 
 	private static final String NOBODY_EMAIL = "nobody@nowhere.com";
+	private static final Pattern MIN_LEN_PATTERN = Pattern.compile("(?:^|\\s)minLen([0-9]+)(?=\\s|$)");
 
 	/**
 	 *  Zaslanie formularu z www stranky, nastavuje sa to cez:<br>
@@ -220,6 +226,8 @@ public class FormMailAction extends HttpServlet
 			String paramName = entry.getKey();
 			String value = entry.getValue();
 			if (Tools.isEmpty(value)) continue;
+			// An unselected source page must not replace the page ID submitted by the form.
+			if ("useFormDocId".equals(paramName) && Tools.getIntValue(value, -1) < 1) continue;
 			//nastaveny parameter useFormDocId ma prioritu z databazy (lebo WriteTag ho vzdy nastavi podla aktualnej stranky)
 			if (wrapped.hasParameter(paramName)==false || "useFormDocId".equals(paramName))
 			{
@@ -311,7 +319,7 @@ public class FormMailAction extends HttpServlet
 							}
 							String fileName = XhrFileUploadServlet.getService().getTempFileName(fileKey);
 							if (Tools.isNotEmpty(fileName)) {
-								if (fileNames.length()>0) fileNames.append(", ");
+								if (fileNames.isEmpty()==false) fileNames.append(", ");
 								fileNames.append(fileName);
 							}
 						}
@@ -590,15 +598,14 @@ public class FormMailAction extends HttpServlet
 						fields = null;
 						String field;
 
-						List<String> emailFieldsNames = Arrays.stream( Constants.getArray(FormMailService.EMAIL_FIELD_KEY) ).map(s -> s.toLowerCase()).toList();
-						List<String> nameFieldsNames = Arrays.stream( Constants.getArray(FormMailService.NAME_FIELD_KEY) ).map(s -> s.toLowerCase()).toList();
+						List<String> emailFieldsNames = Arrays.stream( Constants.getArray(FormMailService.EMAIL_FIELD_KEY) ).map(String::toLowerCase).toList();
+						List<String> nameFieldsNames = Arrays.stream( Constants.getArray(FormMailService.NAME_FIELD_KEY) ).map(String::toLowerCase).toList();
 
 						//vytvor strom
 						HTMLTokenizer htmlTokenizer = new HTMLTokenizer(Tools.replace(doc.getData(), "/>", ">").toCharArray());
 						//HTMLTree htmlTree = new HTMLTree(htmlTokenizer);
 						@SuppressWarnings("unchecked")
 						Enumeration<Object> e = htmlTokenizer.getTokens();
-						TagToken tagToken;
 						Object o;
 						String skipToTag = null;
 						StringBuilder labelContent = null;
@@ -606,9 +613,8 @@ public class FormMailAction extends HttpServlet
 						while (e.hasMoreElements())
 						{
 							o = e.nextElement();
-							if (o instanceof TagToken)
+							if (o instanceof TagToken tagToken)
 							{
-								tagToken = (TagToken) o;
 								if (hasHtmlData == false)
 								{
 									htmlData.append(tagToken.getLineForm(request));
@@ -673,7 +679,7 @@ public class FormMailAction extends HttpServlet
 										//field = tagToken.getAttribute("value");
 										field = request.getParameter(field);
 										if (field != null && field.length() > 3) {
-											if (meno == null || meno.length() == 0) meno = DB.internationalToEnglish(field);
+											if (Tools.isEmpty(meno)) meno = DB.internationalToEnglish(field);
 											else meno += " " + DB.internationalToEnglish(field); //NOSONAR
 										}
 									}
@@ -735,7 +741,9 @@ public class FormMailAction extends HttpServlet
 		}
 
 		CryptoFactory cryptoFactory = new CryptoFactory();
-		String publicKey = request.getParameter("encryptKey");
+		// Only server-side settings may select the encryption key, including when encryption is disabled.
+		FormSettingsEntity formSettings = Tools.isNotEmpty(formName) ? FormSettingsService.loadEntity(DB.internationalToEnglish(formName)) : null;
+		String publicKey = formSettings == null ? null : formSettings.getEncryptKey();
 
 		StringBuilder db_data = null;
 		StringBuilder db_data_names = null;
@@ -808,7 +816,7 @@ public class FormMailAction extends HttpServlet
 							value = value.replace('_', ' ');
 						}
 						//nahradu spravim len v pripade, ked nie je pouzity specialny tvar HTML kodu
-						if (value.length() < 1 && Tools.isEmpty(source))
+						if (value.isEmpty() && Tools.isEmpty(source))
 						{
 							value = "&nbsp;";
 						}
@@ -833,7 +841,8 @@ public class FormMailAction extends HttpServlet
 
 		if ("true".equals(request.getParameter("addTechInfo")))
 		{
-			String techInfoHtml = prop.getText("components.formsimple.techinfo");
+			String techInfoHtml = FormsService.replaceFields(prop.getText("components.formsimple.techinfo"),
+				FormsService.getSettingsReplacementMap(FormSettingsService.loadEntity(formName)));
 			techInfoHtml = ShowDoc.updateCodes(null, techInfoHtml, docId, request, Constants.getServletContext());
 			if (forceTextPlain)
 			{
@@ -1004,7 +1013,7 @@ public class FormMailAction extends HttpServlet
 			ResultSet rs = null;
 			try
 			{
-				if (formName != null && formName.length() > 0 && db_data_names!=null && db_data_names.length()>3)
+				if (Tools.isNotEmpty(formName) && db_data_names!=null && db_data_names.length()>3)
 				{
 					db_conn = DBPool.getConnection(request);
 					ps = db_conn.prepareStatement("SELECT min(id) AS id FROM forms WHERE form_name=? "+CloudToolsForCore.getDomainIdSqlWhere(true));
@@ -1166,12 +1175,12 @@ public class FormMailAction extends HttpServlet
 							IwcmFile pdfFile =  new IwcmFile(pdfUrl);
 							//fileNames = new StringBuilder(pdfFile.getVirtualPath() + ";" + pdfFile.getName());
 							if (fileNames == null) fileNames = new StringBuilder();
-							if (fileNames.length()>0) fileNames.append(";");
+							if (fileNames.isEmpty()==false) fileNames.append(";");
 							fileNames.append(pdfFile.getName());
 
 							//fileNamesSendLater = new StringBuilder();
 							if (fileNamesSendLater == null) fileNamesSendLater = new StringBuilder();
-							if (fileNamesSendLater.length()>0) fileNamesSendLater.append(";");
+							if (fileNamesSendLater.isEmpty()==false) fileNamesSendLater.append(";");
 							fileNamesSendLater.append(FORM_FILE_DIR).append(pdfFile.getName()).append(";").append(pdfFile.getName());
 							attachs.add(new IwcmFile(pdfUrl));
 						}
@@ -1390,7 +1399,7 @@ public class FormMailAction extends HttpServlet
 						}
 					}
 				}
-				if (meno == null || meno.trim().length() < 1)
+				if (Tools.isEmpty(meno))
 				{
 					meno = email;
 				}
@@ -1473,7 +1482,7 @@ public class FormMailAction extends HttpServlet
 				else
 				{
 					//vygeneruj mail a posli ho
-					Properties props = System.getProperties();
+					Properties props = new Properties();
 
 					try
 					{
@@ -1547,7 +1556,7 @@ public class FormMailAction extends HttpServlet
 						}
 
 						String from = email;
-						msg.setFrom(new InternetAddress(getFirstEmail(email), meno));
+						msg.setFrom(new InternetAddress(getFirstEmail(email), meno, SetCharacterEncodingFilter.getEncoding()));
 
 						//iteruj cez polozky formularu
 						String fieldsEmailHeader = request.getParameter("fieldsEmailHeader");
@@ -1665,7 +1674,7 @@ public class FormMailAction extends HttpServlet
 
 						if(beforePostReturnParams==null || beforePostReturnParams.indexOf("doNotSend") == -1)
 						{
-							Transport.send(msg);
+							boolean savedToFile = SendMail.sendMessage(msg);
 
 							RequestBean.addParameter("formName", formName);
 							RequestBean.addParameter("beforePostMethod", beforePostMethod);
@@ -1673,7 +1682,7 @@ public class FormMailAction extends HttpServlet
 							RequestBean.addParameter("to", recipients);
 							RequestBean.addParameter("subject", subject);
 
-							Adminlog.add(Adminlog.TYPE_FORMMAIL, "Formular "+formName+" uspesne odoslany na email "+recipients, docId, formId);
+							Adminlog.add(Adminlog.TYPE_FORMMAIL, savedToFile ? "Form "+formName+" saved as EML for email "+recipients : "Formular "+formName+" uspesne odoslany na email "+recipients, docId, formId);
 						}
 						else
 						{
@@ -1884,7 +1893,7 @@ public class FormMailAction extends HttpServlet
 					{
 						if (ret == null) ret = new StringBuilder();
 
-						if (ret.length()>0) ret.append(";;\n");
+						if (ret.isEmpty()==false) ret.append(";;\n");
 						ret.append(fixFileNameDirPath(f.getFileName()));
 					}
 				}
@@ -2058,6 +2067,19 @@ public class FormMailAction extends HttpServlet
 	}
 
 	/**
+	 * Extracts the digits from the first complete {@code minLenXX} CSS class.
+	 *
+	 * @param classNames whitespace-separated CSS classes, or {@code null}
+	 * @return the minimum length as text, or an empty string if no valid class is present
+	 */
+	public static String getMinLen(String classNames)
+	{
+		if (classNames == null) return "";
+		Matcher matcher = MIN_LEN_PATTERN.matcher(classNames);
+		return matcher.find() ? matcher.group(1) : "";
+	}
+
+	/**
 	 * Vrati true, ak su zadane vsetky pozadovane povinne polia
 	 * @param request
 	 * @param classNames
@@ -2114,7 +2136,15 @@ public class FormMailAction extends HttpServlet
 				{
 					List<String> classes = Arrays.asList(Tools.getTokens(className, " "));
 					if (phoneValidator.hasBlacklistedPhoneClass(classes) && phoneValidator.isBlacklisted(paramValue)) {
-						String text = "components.tatrabanka.blacklistedNumber".equalsIgnoreCase(prop.getText("components.tatrabanka.blacklistedNumber")) ? prop.getText("components.form.blacklistedNumber") : prop.getText("components.tatrabanka.blacklistedNumber");
+						String text;
+						if ("components.tatrabanka.blacklistedNumber".equalsIgnoreCase(prop.getText("components.tatrabanka.blacklistedNumber")))
+						{
+							text = prop.getText("components.form.blacklistedNumber");
+						}
+						else
+						{
+							text = prop.getText("components.tatrabanka.blacklistedNumber");
+						}
 						if (context != null)
 						{
 							context.getValidationErrors().add(fieldName, new SimpleError(text));
@@ -2165,7 +2195,7 @@ public class FormMailAction extends HttpServlet
 							if(className.indexOf("email") != -1)
 								context.getValidationErrors().add(fieldName, new SimpleError(Tools.replace(prop.getText("converter.email.invalidEmail"), "{1}", paramValue)));
 							else if(className.indexOf("minLen") != -1)
-								context.getValidationErrors().add(fieldName, new SimpleError(Tools.replace(Tools.replace(prop.getText("validation.minlength.valueTooShort"), "{2}", paramValue.replaceFirst("minLen", "")), "{0}", fieldName)));
+								context.getValidationErrors().add(fieldName, new SimpleError(Tools.replace(Tools.replace(prop.getText("validation.minlength.valueTooShort"), "{2}", getMinLen(className)), "{0}", fieldName)));
 							else if(className.indexOf("number") != -1)
 								context.getValidationErrors().add(fieldName, new SimpleError(Tools.replace(Tools.replace(prop.getText("converter.number.invalidNumber"), "{1}", paramValue), "{0}", fieldName)));
 							else
@@ -2174,7 +2204,7 @@ public class FormMailAction extends HttpServlet
 						if(className.indexOf("email") != -1)
 							formMailValidationErrors.append("<li>").append(Tools.replace(prop.getText("converter.email.invalidEmail"), "{1}", paramValue)).append("</li>").append('\n');
 						else if(className.indexOf("minLen") != -1)
-							formMailValidationErrors.append("<li>").append(Tools.replace(Tools.replace(prop.getText("validation.minlength.valueTooShort"), "{2}", className.replaceFirst("minLen", "")), "{0}", fieldName)).append("</li>").append('\n');
+							formMailValidationErrors.append("<li>").append(Tools.replace(Tools.replace(prop.getText("validation.minlength.valueTooShort"), "{2}", getMinLen(className)), "{0}", fieldName)).append("</li>").append('\n');
 						else if(className.indexOf("number") != -1)
 							formMailValidationErrors.append("<li>").append(Tools.replace(Tools.replace(prop.getText("converter.number.invalidNumber"), "{1}", paramValue), "{0}", fieldName)).append("</li>").append('\n');
 						else
@@ -2441,14 +2471,32 @@ public class FormMailAction extends HttpServlet
 	}
 
 	/**
-	 * Odoslanie notifikacie na email navstevnika, ktory ho vyplnil, zadane v poli formMailSendUserInfoDocId
-	 * @param sendUserInfoDocId
-	 * @param formId
-	 * @param email
-	 * @param attachs
-	 * @param request
+	 * Sends the visitor notification using the configured SMTP, EML storage, or deferred-delivery mode.
+	 *
+	 * @param sendUserInfoDocId notification page ID
+	 * @param formId saved form ID
+	 * @param email visitor email address
+	 * @param attachs files attached to the notification
+	 * @param formFilesTable uploaded files indexed by form field
+	 * @param request current HTTP request
 	 */
 	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request)
+	{
+		sendUserInfo(sendUserInfoDocId, formId, email, attachs, formFilesTable, request, null);
+	}
+
+	/**
+	 * Sends the visitor notification, replacing placeholders with prepared form data or request parameters.
+	 *
+	 * @param sendUserInfoDocId notification page ID
+	 * @param formId saved form ID
+	 * @param email visitor email address
+	 * @param attachs files attached to the notification
+	 * @param formFilesTable uploaded files indexed by form field
+	 * @param request current HTTP request
+	 * @param formData prepared, HTML-safe values keyed by form field ID; null uses request parameters
+	 */
+	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request, Map<String, String> formData)
 	{
 		DocDB docDB = DocDB.getInstance();
 
@@ -2475,10 +2523,10 @@ public class FormMailAction extends HttpServlet
 				data = Tools.replace(data, "!OPTIN_HASH!", hash);
 			}
 
-			for (Object parameterNameObj: Collections.list(request.getParameterNames()))
+			Collection<String> parameterNames = formData != null ? formData.keySet() : Collections.list(request.getParameterNames());
+			for (String parameterName : parameterNames)
 			{
-				String parameterName = String.valueOf(parameterNameObj);
-				String value = getValue(parameterName, request, formFilesTable);
+				String value = formData != null ? formData.get(parameterName) : getValue(parameterName, request, formFilesTable);
 
 				data = Tools.replace(data, "!" + parameterName.toUpperCase() + "!", value);
 				data = Tools.replace(data, "!" + parameterName + "!", value);

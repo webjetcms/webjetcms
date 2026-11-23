@@ -28,7 +28,7 @@ The **Form Items** tab is divided into three columns:
 
 - **Form Steps** - table containing a list of form steps.
 - **Form Items** - a table containing a list of form items (individual form fields) belonging to the currently selected step.
-- **Form preview** - display a preview of the currently selected form step.
+- **Form preview** - display a preview of the currently selected form step with the option to [select a CSS template](#select-css-template-in-preview).
 
 ![](real-form.png)
 
@@ -38,7 +38,23 @@ The first column shows a list of form steps. In this list, we can add, duplicate
 
 ![](form-step-editor.png)
 
-You can fill in the Introduction text that will appear at the beginning of the step. In the Advanced tab, you can change the text of the button to go to the next step (or submit the form if it is the last step). In the Script Code tab, you can insert custom HTML/JavaScript code that will be inserted and executed when the step is displayed.
+You can fill in the **Introductory text** that will appear at the beginning of the step. You can use [logged-in user tags](#logged-in-user-tags) and [item-value tags](#item-value-tags) from already filled-in steps in the text. In the **Advanced** tab, you can change the text of the button to go to the next step (or submit the form if it is the last step) and the text of the button to go back to the previous step. In the **Script code** tab, you can insert custom HTML/JavaScript code that will be inserted and executed when the step is displayed.
+
+### Return to previous step
+
+From the second step onwards, the **Go to previous step** button is displayed. The visitor can use it to return to the data already filled in and correct it. You can set the text of the button in the editor of the given step in the **Advanced** tab, in the **Previous step** field, for example to **Back**. If you leave the field empty, the default text will be used.
+
+A web designer can also edit the [HTML button code](../formsimple/README.md#html-button-code), for example its CSS classes or adding an icon.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+The **Back** button will save the data in progress even without filling in all the required fields. When you return to a step, the texts, selections and completed uploads will be restored. Deleting a value or canceling a selection will also be preserved. CAPTCHA verification must be repeated. If the data cannot be saved, you will remain in the current step and can try returning again.
+
+The data is validated when you continue forward. The values ​​of hidden fields are preserved in case they are displayed again, but they are not used when you submit the step.
+
+!>**Warning:** Please use the **Back** button on the form. Data retention is temporary and does not allow you to continue after refreshing or closing the page.
 
 ### Duplication
 
@@ -54,21 +70,43 @@ The second column contains form items (or form step items) that are only visible
 
 ![](form-item-editor.png)
 
+The **Field Name** field uses a single-line editor. You can highlight the text, change its color, or add a link. Headings, lists, and line breaks are not allowed. When you insert multi-line text or edit HTML, the lines are joined with spaces and block formatting is removed.
+
+### Copy fields between forms
+
+You can use a configured field in another form or step without re-filling its settings:
+
+1. In the **Form Items** table, select one saved field and click <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> for copying.
+2. Open the target form in the same or a different browser tab and select a step.
+3. Click on <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> to paste the copied field. The new field editor opens with the original settings and the target step selected. The order is pre-populated to the end of the step.
+4. Adjust the settings as needed and save. Closing the editor without saving will not create a new field.
+
+The saved state of the field is copied, including texts, options or a link to a code list, validations, **Required field** settings, and statistics settings. **Display conditions and obligations are not copied** because they refer to fields in the original form. Error counters are not copied either. The original field and its conditions are preserved.
+
+The internal clipboard stores one field for **30 minutes** and allows repeated insertion. Copying another field will replace its contents; insertion does not extend the validity. The clipboard works even after page refresh and between tabs of the same administration address in the same browser profile, for the same user and domain. The system clipboard does not change. The **Insert Field** button is available after selecting a step if the clipboard contains a valid field of a supported type. You can also insert into an empty step.
+
+The copy is self-contained: subsequent edits to the original field will not change it. CSS templates and step scripts are not carried over, so the resulting appearance depends on the target form.
+
 ### Adding and editing items
 
 The editor for adding and editing items is special in that it changes its content according to the selected field type (item). This means that for each item type (e.g. First Name, Last Name, etc.) different settings and configuration options will be displayed. Depending on the selected item type, you can set parameters such as:
 
 - **Field type** - determines what kind of input the item will represent (e.g. text field, drop-down list selection, checkbox, etc.). Individual fields [are prepared by the website designer](../formsimple/README.md#information-for-web-designer) and are the same as for the Easy Form application.
 - **Required field** - whether the item is required to be filled out.
-- **Allowed value** - for advanced validation of user input, you can choose any number of regular expressions that must be met for the input to be valid. You can learn more about them in the [Regular expressions](../form/regexps.md) section.
+- **Allowed value** - for advanced user input validation, you can select any number of regular expressions that must be met for the input to be valid. Each option uses the format **code - name**, for example **alphabetLowercase - only lowercase characters allowed**. The name is displayed in the administration language. You can search by both name and code. The code corresponds to the **Code** column in the [Regular expressions] section (../form/regexps.md).
+- **Trim spaces** - if selected, leading and trailing spaces will be removed from the value before validation and saving. The setting is available for supported text fields; it is not used for select fields and formatted text fields.
 - **Field name** - the name that will be displayed to the user. If not specified, the name matching the field type will be used.
+- **Help** - optional multi-line formatted text that appears after the field name in the form. The editor supports paragraphs, lists, links, and more extensive HTML content. The field is available for all item types immediately after the field name and is also carried over when copying the item. Custom HTML field templates can insert the help with the `${hint}` tag.
+- **Item identifier in the form** - the technical identifier is automatically created from the item name without HTML tags and is supplemented with a distinctive suffix so that it is unique in the form. It is only displayed when editing a saved item and cannot be changed. It is used in conditions, saved data and [item value tags](#item-value-tags).
+
+**Allowed Value** rules are checked for a mandatory field even if it is empty. For an optional field, they are checked only if the field is filled in. When submitting a step, the obligation is determined by the **Requirement** card, if it contains conditions, otherwise by the **Required Field** radio button.
 
 In the **Advanced** tab, you can set additional optional parameters such as:
 
 - **Form Step** - the step the item belongs to, so you can easily move the item to another step.
 - **Order** - determines the order of the item within the step.
 - **Prefilled value** - a value that will be displayed filled in the field, so the user does not have to set a value if it is generally known. This field is only displayed if it is not a select field type item.
-- **Allowed options** - for a selection field type item (select, checkbox group, radio group, etc.), you can manually define a list of options. Each option consists of two values ​​- the text that is displayed to the user and the value that is sent when the form is submitted. Options can be added, removed, and reordered using `drag & drop`. This field is only displayed if the **Use link to code list** option is not enabled.
+- **Allowed options** - for a selection field type item (select, checkbox group, radio group, autocomplete, etc.), you can manually define a list of options. Each option consists of the text displayed to the user and the value sent when the form is submitted. Options can be added, removed, and reordered using `drag & drop`. With the **Add empty option** switch - you can also insert an option without a value at the beginning of a selection list or group of selection fields. The switch is disabled for a new field. The field is displayed only if the **Use link to code list** option is not enabled.
 
 ![](form-item-editor-advanced.png)
 
@@ -79,10 +117,41 @@ In the **Advanced** tab, you can set additional optional parameters such as:
 
 - **Placeholder text** - text that will be displayed in the field as a hint for the user if the field is not filled in (empty).
 - **Tooltip** - if you enter a tooltip value, an information bubble will appear next to the field name.
+- **Custom error message** - text or translation key that will replace the standard message when a validation error occurs for a given item.
 
 If you want to define your own form items, or want to change existing ones, or change what settings are available for individual item types, see the documentation in the [Form Items] section(../formsimple/README.md#information-for-web-designers).
 
+!>**Warning:** Custom item types that directly render the native `<input type="file">` element do not work in a multi-step form. The file can only be uploaded using the `Dropzone` component.
+
 !>**Warning:** When editing a form item, we do not recommend changing the item type, but rather replacing the original item with a new one.
+
+### Empty option
+
+The **Add Empty Option** radio button adds an empty row to the select list and a **No Option Selected** radio button to the radio group to deselect. The value is empty, so the required field requires another option. The radio text is specified by the key `components.formsimple.emptyOptionLabel.radiogroup`. For checkboxes and autocomplete, the radio button is hidden by default because they can be cleared without it.
+
+The presence of `emptyOption` in the `components.formsimple.hide.TYP_POLA` key hides the switch; removing it will make it available again. For radio:
+
+```properties
+components.formsimple.hide.radiogroup=placeholder,trimValue,regexValidationArr,emptyOption
+```
+
+Keep the other items and apply the change to all languages ​​used. When hidden, the empty option will not appear in older forms and will be removed from the configuration when saved. The setting only applies to manual options, not to the dialpad link.
+
+### Validation when leaving the field
+
+The checker will alert you to an error in a text field as soon as you leave it, for example by pressing the `Tab` key. An error message will be displayed next to the field. The feature is enabled by default.
+
+You can disable it in the administration in [Configuration](../../../admin/setup/configuration/README.md) by setting the variable `multistepform_validateOnBlur` to the value `false`.
+
+The validation is governed by the **Required Field**, **Trim Spaces**, and **Allowed Value** settings. The requirement conditions are only considered when the step is submitted, when all data has been validated. Leaving the field alone does not save the data.
+
+In the **Allowed value** field, you select [regular expressions](../form/regexps.md) that the entered value must match. All selected rules are checked. If the selection is empty, the value format is not validated.
+
+### Automatic replenishment
+
+The **Autocomplete** field type offers the visitor options based on the text they enter. You can create a list in the **Allowed options** field or link it to the [Enumerations] application (../../apps/enumeration/README.md). Each option can have a different display text and sent value.
+
+The search starts after entering at least two characters, is case-insensitive, and searches both the text and the option value. A maximum of 30 results are displayed. After selection, the value of the selected option is saved to the form.
 
 ### Line display
 
@@ -92,9 +161,9 @@ You may encounter a situation where the editor will not allow you to add a selec
 
 You can switch the form to row view mode in [form settings](../form/README.md#creating-form).
 
-### Brands
+### Logged-in user tags
 
-If you want to use information about the currently logged in user (e.g., their name, email, etc.) in a form item, you can use special tags. These tags will be automatically replaced with the appropriate values ​​when the form is displayed to the user. For non-logged in users, these tags will be replaced with an empty value. Enter the value in the **Prefilled value** field (if available for the item type).
+If you want to use information about the currently logged in user (e.g., their name or email) in an item or in the introductory text of a step, you can use special tags. These tags will be automatically replaced with the appropriate values ​​when the form is displayed. For non-logged in users, they will be replaced with an empty value. Enter them in the **Prefilled value** field in the item, if available for the given item type.
 
 Available brands are:
 
@@ -118,6 +187,12 @@ Available brands are:
 - ```!LOGGED_USER_FIELDD!``` - ​​free field D
 - ```!LOGGED_USER_FIELDE!``` - ​​free field E
 - `!LOGGED_USER_GROUPS!` - ​​list of user groups
+
+### Item value tags
+
+You can insert the value of an already filled item into the **Introductory text** of the next step or into the [email version page](../form/README.md#tab---settings) tag with `!identifikator-polozky!`. The identifier is displayed when editing a saved item.
+
+For example, if the item has an identifier of `emailova-adresa-1`, use the tag `!emailova-adresa-1!`. When the next step is displayed or the email is created, the tag is replaced with the submitted value. If the item has not yet been filled in, it is replaced with an empty value.
 
 ### Conditional display/validation of an item
 
@@ -151,7 +226,7 @@ This is a flat structure (without parentheses), so nesting of conditions is not 
 
 Each condition contains the following parameters:
 
-- **Form field** - an item whose value will be used when evaluating a condition. The options are ordered the same as in a form.
+- **Form Field** - an item whose value is used when evaluating a condition. The options are ordered the same as in the form. Radio buttons with the same field name and the **Required Field** setting are offered as one group in the first button position, even if there are other fields between them. The item being edited is not offered in the list. When editing a radio button, its entire group is not offered because the buttons share the same item identifier.
 - **Comparison condition** - method of comparing field values:
   - **equals**
   - **does not equal**
@@ -161,8 +236,8 @@ Each condition contains the following parameters:
   - **ends on**
   - **is empty**
   - **not empty**
-- **Compared value** - the value against which the contents of the selected field will be compared.
-- **Ignore case** - the comparison will not be case sensitive.
+- **Compared value** - the value against which the contents of the selected field are compared. For picklists, groups of selection and checkboxes, and individual radio buttons, you select from the options of the given field for the conditions **equals** and **not equals**. The text of the option is displayed, and its value is saved. Options from the code list are also supported. For the conditions **contains**, **does not contain**, **starts with**, and **ends with**, you enter text for the other fields as well. You can check for an empty value with the condition **is empty** or **is not empty**.
+- **Ignore case** - the comparison will not be case sensitive. The option is only displayed when manually entering the value to be compared, it is hidden when selecting from predefined options.
 - **Logical operator** - connection with the following condition:
   - `AND` - ​​both conditions must apply,
   - `OR` - ​​it is enough if at least one condition applies.
@@ -183,11 +258,27 @@ Each condition contains the following parameters:
 
 - A condition cannot refer to itself. This is an illegal state and the condition will not be saved.
 - An item that is used in the conditions of other items cannot be deleted.
+- When you delete an item, its display conditions and obligations are also deleted. You can then delete the fields that these conditions referenced, unless they are used by a condition on another existing item. Conditions are also deleted when you delete an entire step or form.
 - When editing such an item, the editor will display a warning about dependent items. You can enable saving in the **Advanced** tab by selecting **Save even with existing dependent items**.
 
 When you try to edit or delete an item that is used in a condition of another item, an error and a notification with a list of dependent items will appear.
 
 ![](save-condition-error.png)
+
+### Bindings
+
+The **Links** tab shows which other fields use its value when editing an existing field.
+
+- **Field Display** – fields whose display depends on this field.
+- **Mandatory fields** – fields whose mandatory completion depends on this field.
+
+![Relations tab with lists of fields used in display conditions and obligations.](tab-relations.png)
+
+Each field appears once in the corresponding list, even if it is referenced in multiple parts of the condition.
+
+Clicking on the name will open the editor for that field. If it is in a different step, the selected form step will also be switched. If you have unsaved changes, you can choose to discard them or stay in the original editor before switching.
+
+For example, for the rule "Phone number is required if First and Last name contains text", you will find **Phone number** in the list of requirement conditions on the **First and Last name** field's **Relationships** tab. You continue to edit the rule itself on the **Requirement** tab of the **Phone number** field.
 
 ### Statistics
 
@@ -213,6 +304,14 @@ The third column in the **Form Content** section is the form preview. This previ
 
 At the end of each step, a button is automatically generated, the text of which changes depending on whether the step is the last or not. If it is not the last, the button will have the text **Go to next step**, otherwise **Submit form**. You can change the button text in the step settings, for example to **Continue** or **Register**.
 
+From the second step onwards, a [return to previous step] button is also displayed.
+
+### Selecting a CSS template in the preview
+
+In the preview header, there is a **CSS template** selection box that you can use to immediately try out the ready-made form layouts. The list contains all available CSS templates and the **No template** option, which displays the basic layout.
+
+The selected template will only be used in the administration view and will not be saved in the form settings. You can set the appearance of the form on the website separately in the **CSS template** field when [inserting the Form application](#css-templates). Each inserted form instance can have a different template selected.
+
 ![](real-form.png)
 
 !>**Warning:** The form preview is for guidance only and may differ compositionally and graphically from the actual display on the page. The editor displays all items regardless of the set conditions so that you can better design and check the form. However, on a real page, the form changes dynamically according to the display conditions (some fields may be hidden or displayed according to the values ​​of other fields) and also according to the template used and the styles of the page into which the form is inserted.
@@ -223,11 +322,56 @@ You can insert the created form into a web page using the Form application, wher
 
 ![](app-editor.png)
 
+You can also insert multiple instances of the same multi-step form on a single page. Each instance works independently, and the generated HTML field identifiers are given their own prefix, such as `f1-` and `f2-`, so that they don't interfere with each other.
+
+### CSS templates
+
+When inserting or editing a **Form** application on a page, you can select a pre-made form appearance in the **CSS Template** field. The **No Template** option leaves the basic appearance according to the page styles. Each inserted instance can use a different pre-made template without affecting other forms on the page, including forms with the **No Template** option.
+
+The same selection is available in [form preview in administration](#css-template-selection-in-preview). There it is only used to test the appearance and does not change the settings of the application embedded on the page. After selecting a suitable appearance, therefore, set the template in the corresponding application on the page as well.
+
+### JavaScript event after step is displayed
+
+After inserting the HTML code of the step into the page and initializing its conditions, the form sends a native event `CustomEvent` on the object `window` with the name `WJ.multistepForm.stepShown`. The event is sent for the first step, after moving to the next step, and when returning to the previous step. There is no need to load the administration file `webjet.js` or the library `jQuery`.
+
+```javascript
+window.addEventListener("WJ.multistepForm.stepShown", (event) => {
+    const {
+        wrapper,
+        stepElement,
+        form,
+        formName,
+        stepId,
+        language,
+        domIdPrefix,
+        isInitialStep
+    } = event.detail;
+
+    console.log("Multistep form step shown", formName, stepId, stepElement);
+});
+```
+
+Object `event.detail` contains:
+
+- `wrapper` - ​​root `div.multistep-form-app` of a specific form instance,
+- `stepElement` - ​​`div.multistepStepContent` with the step just inserted,
+- `form` - ​​element `form` of the currently displayed step,
+- `formName` - ​​form name used on the server,
+- `stepId` - ​​identifier of the currently displayed step,
+- `language` - ​​language used when loading the step,
+- `domIdPrefix` - ​​HTML prefix of field identifiers of a specific instance, for example `f1-`,
+- `isInitialStep` - ​​value `true` at the first displayed step of the given instance, otherwise `false`.
+
+If there are multiple multi-step forms on a page, the event listener will receive events from all instances. You can distinguish a specific form using the values ​​`wrapper` or `formName`.
+
+If you also need to capture the first step event, register the listener before initializing the multi-step form application.
+
 ## Configuration variables
 
 Available configuration variables for multi-step forms:
 
-- `multistepform_nameFields` - ​​list of field names that will be considered as name fields. These fields will be searched for a name that would be used as a greeting in emails. Only the **first** non-empty name found will be used.
-- `multistepform_emailFields` - ​​list of field names that will be considered as email address fields. These fields will be searched for an email address to which a confirmation of receipt of the form will be sent. **all** found and valid email addresses will be used.
+- `multistepform_nameFields` - ​​list of starting field identifiers that will be considered as name fields. For example, the value `meno` also matches the entry `meno-priezvisko-1`. The first non-empty name found will be used in the email.
+- `multistepform_emailFields` - ​​list of starting field identifiers that will be considered as email address fields. For example, the value `email` also matches the entry `emailova-adresa-1`. All found valid email addresses will be used to confirm receipt of the form.
 - `multistepform_attachmentDefaultName` - ​​default attachment name in emails, which will be used if the actual attachment file name cannot be obtained.
 - `multistepform_subjectDefaultValue` - ​​default translation key for the email subject, which will be used if no subject is specified in the form settings/attributes.
+- `multistepform_validateOnBlur` - ​​controls [validation of text fields when they are left](#validation-when-field-is-left). The default value is `true`. To disable the check, set the value `false` in **Settings → Configuration**. The setting applies to all multi-step forms and is applied when a step is loaded.

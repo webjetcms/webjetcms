@@ -5,6 +5,7 @@
   "main": "index.html",
   "scripts": {
     "docs": "docsify serve .",
+    "docs:rag": "node serve-rag.cjs",
     "sitemap": "node sitemapGenerator.js",
     "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'cs/' && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'en/' && npm run fix",
     "fix": "node posttranslate.js",

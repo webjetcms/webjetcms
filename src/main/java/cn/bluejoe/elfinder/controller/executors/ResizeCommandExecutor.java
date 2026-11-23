@@ -11,6 +11,7 @@ import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 
 /**
@@ -35,6 +36,11 @@ public class ResizeCommandExecutor extends AbstractJsonCommandExecutor
 		String target = request.getParameter("target");
 
 		FsItemEx fsi = super.findItem(fsService, target);
+		if (!fsi.isWritable(fsi))
+		{
+			json.put("error", Prop.getInstance(request).getText("admin.operationPermissionDenied"));
+			return;
+		}
 		String virtualPath = sk.iway.iwcm.system.elfinder.FsService.getVirtualPath(fsi);
 		if (virtualPath.startsWith("/")==false) virtualPath = "/"+virtualPath;
 		
@@ -49,21 +55,23 @@ public class ResizeCommandExecutor extends AbstractJsonCommandExecutor
 		Logger.debug(ResizeCommandExecutor.class, "mode"+mode+" path="+virtualPath+" w="+width+" h="+height);
 		
 		if (tempFile.exists()==false || tempFile.canRead()==false) return;
+		int result = -1;
 		
 		if ("resize".equals(mode))
 		{
-			int ret = ImageTools.resizeImage(tempFile, width, height);
-			Logger.debug(ResizeCommandExecutor.class, " ret="+ret);
+			result = ImageTools.resizeImage(tempFile, width, height);
 		}
 		else if ("crop".equals(mode))
 		{
-			int ret = ImageTools.cropImage(tempFile, width, height, x, y);
-			Logger.debug(ResizeCommandExecutor.class, " ret="+ret);
+			result = ImageTools.cropImage(tempFile, width, height, x, y);
 		}
 		else if ("rotate".equals(mode))
 		{
-			int ret = ImageTools.rotateImage(tempFile, degree);
-			Logger.debug(ResizeCommandExecutor.class, " ret="+ret);
+			result = ImageTools.rotateImage(tempFile, degree);
+		}
+		if (result != 0) {
+			json.put("error", Prop.getInstance(request).getText(ImageTools.getErrorKey(result)));
+			return;
 		}
 				
 		// posli info o zmene

@@ -45,7 +45,7 @@ public class Identity extends UserDetails
 		{
 			PropertyUtils.copyProperties(this, user);
 			//permissions treba precistit, aby sa korektne znova nasetovali
-			if (disabledItemsTable != null) disabledItemsTable.clear();
+			if (disabledItemsTable != null) disabledItemsTable = new Hashtable<>(); //do not use disabledItemsTable.clear as it also clear table in user object (its copied by reference)
 			UsersDB.setDisabledItems(this);
 		}
 		catch (Exception ex)
@@ -142,8 +142,16 @@ public class Identity extends UserDetails
 	 */
 	public boolean isDisabledItem(String name)
 	{
+		return isDisabledItem(name, true);
+	}
+
+	/**
+	 * Set checkDomain to false only when building cached Spring authorities.
+	 */
+	public boolean isDisabledItem(String name, boolean checkDomain)
+	{
 		if (name.contains("&") || name.contains("|")) {
-			return isEnabledItem(name)==false;
+			return isEnabledItem(name, checkDomain)==false;
 		}
 
 		//allow welcome for all
@@ -160,6 +168,8 @@ public class Identity extends UserDetails
 			}
 			return true;
 		}
+
+		if (checkDomain && !Modules.getInstance().isAllowedForDomain(fixedName)) return true;
 
 		//Logger.println(this,"isDisabledItem("+name+")");
 		if (disabledItemsTable == null)
@@ -187,17 +197,22 @@ public class Identity extends UserDetails
 	 */
 	public boolean isEnabledItem(String name)
 	{
+		return isEnabledItem(name, true);
+	}
+
+	private boolean isEnabledItem(String name, boolean checkDomain)
+	{
 		String separator = "";
 		if (name.contains("|")) separator = "|";
 		else if (name.contains("&")) separator = "&";
 
-		if (Tools.isEmpty(separator)) return !isDisabledItem(name);
+		if (Tools.isEmpty(separator)) return !isDisabledItem(name, checkDomain);
 
 		int counter = 0;
 		String[] names = Tools.getTokens(name, separator);
 		for (String n : names)
 		{
-			if (!isDisabledItem(n)) counter++;
+			if (!isDisabledItem(n, checkDomain)) counter++;
 		}
 
 		if ("|".equals(separator))

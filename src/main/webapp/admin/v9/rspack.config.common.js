@@ -3,7 +3,6 @@ const fs = require("node:fs");
 const glob = require("glob");
 const rspack = require("@rspack/core");
 const browserslist = require("browserslist");
-const { VueLoaderPlugin } = require('vue-loader');
 
 const shouldAnalyzeBundle = process.env.ADMIN_V9_BUNDLE_ANALYZE === "1";
 const bundleAnalyzer = shouldAnalyzeBundle ? require("webpack-bundle-analyzer") : null;
@@ -107,18 +106,6 @@ const config = {
     },
     module: {
         rules: [
-            {
-                test: /\.vue$/,
-                loader: 'vue-loader',
-                options: {
-                    loaders: {
-                        css: [rspack.CssExtractRspackPlugin.loader, {
-                            loader: 'css-loader'
-                        }],
-                    },
-                    cacheBusting: true
-                }
-            },
             //PUG templates are rendered outside module rules by shared dev/prod renderers
             {
                 test: /\.m?js$/,
@@ -174,7 +161,19 @@ const config = {
                         options: {
                             postcssOptions: {
                                 plugins: [
-                                    "autoprefixer"
+                                    "autoprefixer",
+                                    {
+                                        postcssPlugin: "webjet-woff2-fonts",
+                                        AtRule: {
+                                            "font-face": fontFace => {
+                                                // Filter font alternatives before css-loader emits their assets.
+                                                fontFace.walkDecls("src", declaration => {
+                                                    const sources = declaration.value.match(/url\([^)]*\)\s*format\(["']woff2["']\)/g);
+                                                    if (sources) declaration.value = sources.join(", ");
+                                                });
+                                            }
+                                        }
+                                    }
                                 ]
                             }
                         }
@@ -210,6 +209,11 @@ const config = {
 
         new rspack.CopyRspackPlugin({
             patterns:[
+                {
+                    from: 'src/scss/5-modules/_md-environment.scss',
+                    to: 'css/environment.css',
+                    transform: content => sassImplementation.compileString(content.toString()).css
+                },
                 { from: 'src/images/logo-cms.png', to: 'images/' },
                 { from: 'src/images/logo-cms.svg', to: 'images/' },
                 { from: 'src/images/logo-dms.png', to: 'images/' },
@@ -225,7 +229,6 @@ const config = {
                 { from: 'src/images/40px.png', to: 'images/' }
             ]
         }),
-        new VueLoaderPlugin(),
         new BuildTimestampPlugin(),
 
         ...(shouldAnalyzeBundle ? [
@@ -242,10 +245,7 @@ const config = {
         new rspack.ContextReplacementPlugin(/moment[/\\]locale$/, /sk|cs|de/),
     ],
     resolve: {
-        extensions: [ '.js', '.vue' ],
-        alias: {
-            'vue$': 'vue/dist/vue.esm-bundler.js',
-        }
+        extensions: [ '.js' ]
     },
     optimization: {
         //share single runtime across all entries so they use the same module instances (e.g. jQuery, bootstrap)

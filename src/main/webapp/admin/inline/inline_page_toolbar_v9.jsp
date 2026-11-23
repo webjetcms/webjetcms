@@ -27,11 +27,16 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     </script>
     <iwcm:combine type="css" set="adminInlineCss"/>
     <iwcm:combine type="js" set="adminInlineJs"/>
+    <script>
+        // Disable automatic editors before DOM ready, including for persisted contenteditable attributes.
+        CKEDITOR.disableAutoInline = true;
+    </script>
 
     <!-- /NINJA PAGE BUILDER -->
     <style>
         :root {
             --<%=Constants.getString("pageBuilderPrefix", "pb")%>-image-width: <%=Constants.getInt("pagebuilderLibraryImageWidth")%>px;
+            --<%=Constants.getString("pageBuilderPrefix", "pb")%>-structure-width: <%=Constants.getInt("pagebuilderStructureWidth", 280)%>px;
         }
         p.text-right { text-align: right; }
         p.text-center { text-align: center; }
@@ -74,13 +79,23 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 <script>
     var templateGroupId = ${ninja.temp.group.templatesGroupBean.templatesGroupId};
     var ckEditorInstance = null;
+    var pageBuilderReady = false;
     function getCkEditorInstance()
     {
         return ckEditorInstance;
     }
 
     function initializePageBuilder() {
+        // Shared helpers and frame events must work even when the page has no inline editors.
+        window.userLng = window.parent.userLng;
+        window.WJ = window.parent.WJ;
+        window.WJ.fireEvent = function(name, detail) {
+            window.dispatchEvent(new CustomEvent(name, {detail: detail}));
+        };
+
         let pageDiv = $("#wjInline-docdata");
+        // Keep initial user input out of the snapshot while inline editors normalize their HTML.
+        document.body.inert = true;
 
         $("body").addClass("is-edit-mode");
 
@@ -88,7 +103,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         pageDiv.ninjaPageBuilder({
             max_col_size: <%=Constants.getInt("bootstrapColumns", 12)%>,
             prefix: "<%=pbPrefix%>",
-            filter_auto_open_items: <%=Constants.getInt("pagebuilderFilterAutoOpenItems")%>,
             //toto sa berie z inline_script.jsp kde sa hodnota inicializuje
             template_group_id: templateGroupId,
             <%
@@ -112,22 +126,42 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             },
         });
 
-        initPageBuilderEditors(pageDiv);
+        initPageBuilderEditors(pageDiv).then(() => {
+            pageBuilderReady = true;
+            window.parent.WJ.dispatchEvent("WJ.PageBuilder.ready", {document: document});
+            document.body.inert = false;
+        });
     }
 
     function initPageBuilderEditors(pageDiv)
     {
+        pageDiv.data('plugin_ninjaPageBuilder').prepare_application_blocks(pageDiv);
         <%--var editableElements = pageDiv.find("* [class*='npb-column__content']");--%>
         //console.log("initPageBuilderEditors, pageDiv=", pageDiv);
-        var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content']");
+        // Grid content remains discoverable after nested markers are removed and its column is moved.
+        var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content'], .<%=pbPrefix%>-column__content");
+        const readyPromises = [];
         editableElements.each(function()
         {
             //console.log("Has class editableElement: "+$(this).hasClass("editableElement"), this);
             var $this = $(this);
             var $that = $this;
 
+            // Content inside an existing editor must not create another inline editor.
+            if ($this.parentsUntil(pageDiv, ".editableElement").length) {
+                $this.removeClass("<%=pbPrefix%>-editable <%=pbPrefix%>-content");
+                return;
+            }
+
             //na tomto elemente je to uz inicializovane, preskocme
             if ($this.hasClass("editableElement")) return;
+
+            // Ignore copied PB markers on elements that cannot host an inline editor.
+            const tagName = this.tagName.toLowerCase();
+            if (!CKEDITOR.dtd.$editable[tagName] && tagName !== "textarea") return;
+
+            // Clean descendants before CKEditor captures data and starts copying paragraph classes.
+            $this.find(".<%=pbPrefix%>-editable, .<%=pbPrefix%>-content").removeClass("<%=pbPrefix%>-editable <%=pbPrefix%>-content");
 
             this.form = document.editorForm;
 
@@ -139,23 +173,13 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
             var mainWindow = window.parent;
             //window.CKEDITOR = mainWindow.CKEDITOR;
-            window.userLng = mainWindow.userLng;
-            window.WJ = mainWindow.WJ;
-            //BEWARE: this must be here, because WJ is binded to window in parent frame
-            window.WJ.fireEvent = function(name, detail) {
-                //console.log("Firing event: ", name, detail, "window=", window.location.href);
-                //firni event
-                const event = new CustomEvent(name, {
-                    detail: detail
-                });
-                //console.log('Dispatching event, name=', name, 'detail=', detail);
-                window.dispatchEvent(event);
-            }
             var DatatablesCkEditor = mainWindow.datatablesCkEditorModule.DatatablesCkEditor;
 
             //console.log("DatatablesCkEditor=", DatatablesCkEditor, "window=", window);
 
             var wjeditor = null;
+            let resolveReady;
+            readyPromises.push(new Promise(resolve => { resolveReady = resolve; }));
             const options = {
                 datatable: null,
                 fieldid: $that.attr("id"),
@@ -174,11 +198,14 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 onReady: function(instance) {
                     //console.log("onReady, instance=", instance, "wjeditor=", wjeditor);
                     //setStylesDef(window.editorStyles, ckEditorInstanceInitialized);
+                    // Structural styles require explicitly selecting their target in the picker.
+                    instance.config.wjstylescombo_scope = function() { return pageDiv[0]; };
                     WJ.dispatchEvent("WJ.PageBuilder.instanceReady", {ckinstance: instance});
                     //setTimeout(()=> {
                         wjeditor.setStyleComboList(window.editorStyles);
                         //setStylesDef(window.editorStyles, instance);
                     //}, 100);
+                    resolveReady();
                 }
             };
             wjeditor = new DatatablesCkEditor(options);
@@ -197,6 +224,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 WJ.fireEvent("WJ.PageBuilder.instanceReady", {ckinstance: ckEditorInstanceInitialized});
             });*/
         });
+        return Promise.all(readyPromises);
     }
 
     function getSaveData()
@@ -224,28 +252,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             }
 
             var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
-            var node = $(pageBuilderInstance.getClone());
-            //console.log(node);
-
-            //console.log("Node html:", node.html());
-
-            var editableElements = node.find("*[class*='editableElement']");
-            editableElements.each(function()
-            {
-                var editorName =  $(this).attr("data-ckeditor-instance");
-                //console.log("editorName=", editorName);
-                    //console.log($(this));
-                //console.log($(this).html());
-
-                var editorData = CKEDITOR.instances[editorName].getData();
-                $(this).html(editorData);
-            });
-
-            //clear node after CkEditor, because sometimes with invalid PB HTML structure some classes are inside CkEditor editable area
-            node = pageBuilderInstance.getClearNode(node[0]);
-
-            //console.log("Before unwrap HTML:", node.html());
-            pageBuilderInstance.clearEditorAttributes(node);
+            var node = pageBuilderInstance.getSaveNode();
 
             var htmlCode = node.html();
 
@@ -320,6 +327,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     }
 
     function markPbElements(wjAppField) {
+        const ready = [];
         $("[data-wjapp='pageBuilder']").each(function(index)
         {
             if (wjAppField != $(this).data("wjappfield")) return;
@@ -333,8 +341,9 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
             pageBuilderInstance.mark_grid_elements();
 
-            initPageBuilderEditors($(this));
+            ready.push(initPageBuilderEditors($(this)));
         });
+        return Promise.all(ready);
     }
 
     /**
@@ -370,7 +379,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     $(document).ready(()=> {
 
-        CKEDITOR.disableAutoInline = true;
         CKEDITOR.dtd.$editable.span = 1
         CKEDITOR.dtd.$editable.a = 1
         var ckEditorAutofocusInstanceName = null;
@@ -378,7 +386,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         CKEDITOR.on('instanceReady', function(ev) {
             //console.log("Ckeditor "+ev.editor.name+" instance ready");
             //console.log(ev);
-            ckEditorInstance = ev.editor;
+            // A sibling finishing initialization must not replace the focused editor after block insertion.
+            if (ckEditorInstance == null || ev.editor.focusManager.hasFocus) {
+                ckEditorInstance = ev.editor;
+            }
 
                 //ev.editor.on("blur", function(event) { console.log("blured"); $("#wjInlineCkEditorToolbarElement").hide(); });
             ev.editor.on("focus", function(event)

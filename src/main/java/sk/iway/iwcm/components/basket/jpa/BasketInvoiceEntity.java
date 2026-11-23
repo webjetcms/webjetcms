@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.basket.rest.PriceRoundingService;
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -33,6 +34,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name="basket_invoice")
@@ -40,11 +43,23 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @EntityListenersType(Adminlog.TYPE_BASKET_UPDATE)
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "personal_info", title = "reservation.reservations.personal_info"),
+    @DataTableTab(id = "notify", title = "components.basket.tab.notify"),
+    @DataTableTab(id = "payments", title = "components.basket.invoice.payments.tab"),
+    @DataTableTab(id = "items", title = "components.basket.invoice_items"),
+    @DataTableTab(id = "order_status", title = "components.basket.tab.order", hideOnCreate = true, content = "<div class=\"previewContainer\"><iframe id=\"dataDiv\" src=\"about:blank\" width=\"100%\" height=\"600\"></iframe><div>"),
+    @DataTableTab(id = "fields", title = "editor.tab.fields")
+})
 public class BasketInvoiceEntity extends ActiveRecordRepository implements Serializable {
 
 	@PrePersist
 	public void onPrePersist() {
-		//After insert update invoice stats
+		//Rounded checkout prepares totals before saving the invoice and binding its items.
+		//Keep those totals instead of recalculating from browser items with old prices or excluded products.
+		if (priceToPayVat != null) return;
+		//Run the legacy calculation before insert when totals have not been prepared.
 		ProductListService.updateInvoiceStats(this.getId(), this.browserId, true);
 	}
 
@@ -400,7 +415,9 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	@JsonIgnore
 	public List<BasketInvoiceItemEntity> getBasketItems() {
 		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
-		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+		List<BasketInvoiceItemEntity> items = biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+		if (PriceRoundingService.isEnabled()) PriceRoundingService.allocateVat(items);
+		return items;
 	}
 
 	@JsonIgnore

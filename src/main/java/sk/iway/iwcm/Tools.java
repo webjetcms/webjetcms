@@ -4,9 +4,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import org.json.JSONArray;
@@ -24,7 +27,6 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormDB;
-import sk.iway.iwcm.helpers.RequestHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
@@ -608,7 +610,6 @@ public class Tools
 		Request request;
 
 		basePath = Tools.natUrl(basePath);
-		//WebJETProxySelector.setProxyForHttpClient(client, basePath);
 		Logger.debug(Tools.class, "downloadUrl: basePath="+basePath);
 		String name;
 		String value;
@@ -668,8 +669,9 @@ public class Tools
 		request.setHeader("Content-Type", contentType);
 		Logger.println(Tools.class,"header: Content-Type: " + contentType);
 
-		try {
-			Response response = request.execute();
+		//.createSystem() will use proxy settings from the system properties
+		try (CloseableHttpClient client = HttpClients.createSystem()) {
+			Response response = Executor.newInstance(client).execute(request);
 			HttpResponse httpResponse = response.returnResponse();
 
 			// write out the response headers
@@ -1928,42 +1930,6 @@ public class Tools
 		return returnCode.toString();
 	}
 
-	public static String insertAngular2(HttpServletRequest request) {
-		return insertAngular2(request, true, true);
-	}
-
-	public static String insertAngular2(HttpServletRequest request, boolean minified, boolean insertBaseHref)
-	{
-		boolean alreadyInserted = Tools.getBooleanValue((String) request.getAttribute("angular2Inserted"), false);
-		request.setAttribute("angular2Inserted", "true");
-
-		if (!alreadyInserted)
-		{
-			StringBuilder htmlCode = new StringBuilder();
-
-			if (insertBaseHref) {
-				DocDetails docDetails = new RequestHelper(request).getDocument();
-				if (docDetails != null) {
-					htmlCode.append("<base href=\"").append(Tools.getBaseHref(request)).append(docDetails.getDocLink()).append("/\">");
-				}
-			}
-
-			String version = Constants.getString("AngularCDNVersion");
-
-			htmlCode.append("<script src=\"https://cdnjs.cloudflare.com/ajax/libs/angular.js/").append(version).append("/angular2-polyfills");
-
-			if (minified) {
-				htmlCode.append(".min");
-			}
-
-			htmlCode.append(".js\"></script>");
-
-			return htmlCode.toString();
-		}
-
-		return "";
-	}
-
 	public static String getDomainBaseHref(HttpServletRequest request) {
 
 		StringBuilder sb = new StringBuilder();
@@ -1989,6 +1955,13 @@ public class Tools
 	public static String getBaseHref(HttpServletRequest request)
 	{
 		String httpServerName = Constants.getString("httpServerName");
+		boolean secure = request != null && Tools.isSecure(request);
+		if (Tools.isNotEmpty(httpServerName) && (httpServerName.startsWith("http://") || httpServerName.startsWith("https://")))
+		{
+			secure = httpServerName.startsWith("https://");
+		}
+		int serverPort = Constants.getInt(secure ? "httpsServerPort" : "httpServerPort");
+		int defaultPort = secure ? 443 : 80;
 
 		if (request == null)
 		{
@@ -2003,16 +1976,16 @@ public class Tools
 
 			StringBuilder baseHref = new StringBuilder(httpServerName);
 
-			if (Constants.getInt("httpServerPort") != 80)
+			if (serverPort != defaultPort)
 			{
-				baseHref.append(':').append(Constants.getInt("httpServerPort"));
+				baseHref.append(':').append(serverPort);
 			}
 
 			return baseHref.toString();
 		}
 
 		StringBuilder baseHref = new StringBuilder();
-		if (Tools.isSecure(request)) baseHref.append("https");
+		if (secure) baseHref.append("https");
 		else baseHref.append("http");
 		baseHref.append("://");
 
@@ -2025,17 +1998,13 @@ public class Tools
 			baseHref.append(getServerName(request, false));
 		}
 
-        if (Constants.getInt("httpServerPort") == -1)
-        {
-            //ak je httpServerPort nastavene na -1 pridame do URL priamo jeho hodnotu (pouziva sa, ked server bezi na viacerych portoch a nie je maskovany navonok)
-            if (request.getServerPort()!=80 && request.getServerPort()!=443)
-            {
-                baseHref.append(':').append(request.getServerPort());
-            }
-        }
-		else if (Constants.getInt("httpServerPort") != 80)
+		if (serverPort == -1)
 		{
-			baseHref.append(':').append(Constants.getInt("httpServerPort"));
+			serverPort = request.getServerPort();
+		}
+		if (serverPort != defaultPort)
+		{
+			baseHref.append(':').append(serverPort);
 		}
 
 		if (Tools.isEmpty(httpServerName))
@@ -2393,7 +2362,7 @@ public class Tools
 				path = f.getAbsolutePath();
 			}
 		} catch (Exception ex) {
-			sk.iway.iwcm.Logger.error(ex);
+			sk.iway.iwcm.Logger.error(Tools.class, ex.getLocalizedMessage());
 		}
 
 		if (path == null) {
@@ -3216,6 +3185,44 @@ public class Tools
 	}
 
 	/**
+	 * Normalizes whitespace and common copy/paste artifacts in a single-line label or path segment.
+	 * Unicode spaces (including NBSP), tabs, line breaks, NEL and zero-width spaces become
+	 * ordinary spaces. Consecutive spaces are collapsed and leading/trailing spaces are removed.
+	 * Named and numeric HTML entities for non-breaking spaces are also normalized.
+	 * Other ISO control characters, soft hyphens, word joiners and BOMs are removed.
+	 * Other formatting characters, including ZWJ/ZWNJ used in emoji and scripts, are preserved.
+	 * Other HTML entities and tags are preserved; whitespace inside inline markup is normalized too.
+	 *
+	 * @param value single-line value to normalize, or {@code null}
+	 * @return normalized text, or {@code null} if the input is {@code null}
+	 */
+	public static String removeNbsp(String value) {
+		if (value == null) return null;
+		value = value.replaceAll("(?i)&(?:nbsp|NonBreakingSpace|#0*(?:160|8239)|#x0*(?:a0|202f));", " ");
+
+		StringBuilder result = new StringBuilder(value.length());
+		boolean pendingSpace = false;
+		for (int offset = 0; offset < value.length();) {
+			int codePoint = value.codePointAt(offset);
+			offset += Character.charCount(codePoint);
+
+			if (Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint)
+					|| codePoint == 0x0085 || codePoint == 0x200B) {
+				pendingSpace = result.length() > 0;
+			} else if (Character.isISOControl(codePoint) || codePoint == 0x00AD
+					|| codePoint == 0x2060 || codePoint == 0xFEFF) {
+				// Discard non-spacing artifacts without joining words separated by whitespace.
+				continue;
+			} else {
+				if (pendingSpace) result.append(' ');
+				result.appendCodePoint(codePoint);
+				pendingSpace = false;
+			}
+		}
+		return result.toString();
+	}
+
+	/**
 	 * Returns toString value of StringBuilder OR null if StringBuilder is NULL
 	 * @param builder
 	 * @return
@@ -3236,14 +3243,18 @@ public class Tools
 	}
 
 	/**
-	 * Returns Spring ApplicationContext to access spring beans from not spring classes
-	 * @return
+	 * Returns the request's Spring context, falling back to the servlet application's context
+	 * for background jobs whose request bean has no Spring context.
+	 * @return the available Spring context, or {@code null} when no context is registered
 	 */
 	public static ApplicationContext getSpringContext() {
 		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
 		ApplicationContext context;
-      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-		else context = requestBean.getSpringContext();
+		if (requestBean == null || requestBean.getSpringContext() == null) {
+			context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
+		} else {
+			context = requestBean.getSpringContext();
+		}
 
 		return context;
 	}
@@ -3344,7 +3355,7 @@ public class Tools
 		return new StringBuilder( replaceRegex(source.toString(), regexPattern, newStr, isCaseInsensitive) );
 	}
 
-	/*
+	/**
 	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException
 	 * @param session
 	 * @param name

@@ -21,6 +21,7 @@ Scenario('Forum app - test INCLUDE building', async ({ I, DTE, Apps }) => {
 
     I.switchTo();
     I.clickCss('.cke_dialog .cke_dialog_footer_buttons a.cke_dialog_ui_button.cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog_container', 20);
 
     const defaultParams = {
         type: "normal",
@@ -67,9 +68,13 @@ Scenario('Forum app - test INCLUDE building', async ({ I, DTE, Apps }) => {
         I.clickCss("#pills-dt-component-datatable-componentIframeWindowTabList-tab");
         I.waitForVisible("#DTE_Field_iframe", 5);
 
-    I.seeElement("#pills-dt-component-datatable-basic-tab");
+    // Structure creation is covered separately; this scenario only checks INCLUDE parameters.
+    I.clickCss("#pills-dt-component-datatable-groups-tab");
+    I.fillField("#DTE_Field_structure", "");
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog_container', 20);
 
     const changedParams = {
         type: "topics",

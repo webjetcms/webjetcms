@@ -53,7 +53,7 @@ public interface EnumerationDataRepository extends JpaRepository<EnumerationData
     @Query(value = "UPDATE enumeration_data SET parent_enumeration_data_id = null WHERE enumeration_type_id = ?1", nativeQuery=true)
     void denyParentEnumerationDataByTypeId(Long enumerationTypeId);
 
-    @Query(value = "SELECT edb.id FROM EnumerationDataBean edb WHERE edb.string1 = :string1 AND edb.typeId = :typeId")
+    @Query(value = "SELECT edb.id FROM EnumerationDataBean edb WHERE edb.fieldA = :string1 AND edb.typeId = :typeId")
     Integer getIdByString1AndTypeId(@Param("string1")String string1, @Param("typeId")Integer typeId);
 
     @Query(value = "SELECT MAX(edb.sortPriority) FROM EnumerationDataBean edb WHERE edb.typeId = :typeId")

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.URL;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -27,9 +28,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.SystemDefaultCredentialsProvider;
 import org.apache.http.message.BasicNameValuePair;
 
 import sk.iway.iwcm.Identity;
@@ -67,7 +68,7 @@ public class ProxyByHttpClient4
 		Logger.debug(ProxyByHttpClient4.class, "ProxyByHttpClient - service");
 		String path = null;
 		String data = null;
-		try
+		try (CloseableHttpClient client = HttpClients.createSystem())
 		{
 			String originalURI = req.getRequestURI();
 			if (ContextFilter.isRunning(req)) originalURI = ContextFilter.removeContextPath(req.getContextPath(), originalURI);
@@ -109,34 +110,31 @@ public class ProxyByHttpClient4
 
 			Logger.debug(ProxyByHttpClient4.class, "fullPath:"+fullPath);
 
-			CloseableHttpClient client = null;
 			HttpClientContext context = HttpClientContext.create();
-
-			if (client == null)
-			{
-				client = HttpClients.createDefault();
-			}
 
 			if (proxy.getRemoteServer().startsWith("https"))
 			{
 				//Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
 			}
 
-			if ("ntlm".equalsIgnoreCase(proxy.getAuthMethod()))
+			if ("ntlm".equalsIgnoreCase(proxy.getAuthMethod()) || "basic".equalsIgnoreCase(proxy.getAuthMethod()))
 			{
-					//client.getParams().setAuthenticationPreemptive(true);
-				//CredentialsProvider defaultcreds = new NTCredentials(proxy.getAuthUsername(), proxy.getAuthPassword(), proxy.getAuthHost(), proxy.getAuthDomain());
-					//client.getParams().setCredentials(new AuthScope(proxy.getAuthHost(), proxy.getRemotePort(), AuthScope.ANY_REALM), defaultcreds);
-				CredentialsProvider credsProvider = new BasicCredentialsProvider();
-				credsProvider.setCredentials(AuthScope.ANY, new NTCredentials(proxy.getAuthUsername(), proxy.getAuthPassword(), proxy.getAuthHost(), proxy.getAuthDomain()));
-				context.setCredentialsProvider(credsProvider);
+				URL remoteUrl = new URL(fullPath);
+				int remotePort = remoteUrl.getPort();
+				if (remotePort == -1) remotePort = remoteUrl.getDefaultPort();
+				AuthScope authScope = new AuthScope(remoteUrl.getHost(), remotePort);
+				// Keep target credentials separate from the system proxy credentials.
+				CredentialsProvider credsProvider = new SystemDefaultCredentialsProvider();
+				if ("ntlm".equalsIgnoreCase(proxy.getAuthMethod()))
+				{
+					credsProvider.setCredentials(authScope, new NTCredentials(proxy.getAuthUsername(), proxy.getAuthPassword(), proxy.getAuthHost(), proxy.getAuthDomain()));
 				}
-			else if ("basic".equalsIgnoreCase(proxy.getAuthMethod()))
-			{
-				CredentialsProvider credsProvider = new BasicCredentialsProvider();
-				credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(proxy.getAuthUsername(), proxy.getAuthPassword()));
-				context.setCredentialsProvider(credsProvider);
+				else
+				{
+					credsProvider.setCredentials(authScope, new UsernamePasswordCredentials(proxy.getAuthUsername(), proxy.getAuthPassword()));
 				}
+				context.setCredentialsProvider(credsProvider);
+			}
 
 			if (Tools.isNotEmpty(proxy.getAllowedMethods()))
 			{
@@ -146,8 +144,6 @@ public class ProxyByHttpClient4
 					return;
 				}
 			}
-
-			//WebJETProxySelector.setProxyForHttpClient(client, fullPath);
 
 			HttpRequestBase method = null;
 			if ("GET".equalsIgnoreCase(req.getMethod()))
@@ -493,7 +489,6 @@ public class ProxyByHttpClient4
 				hcResponse.close();
 			}
 			if (method != null) method.releaseConnection();
-			client.close();
 
 			req.setAttribute("proxyOutputData", data);
 		}

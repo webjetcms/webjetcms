@@ -1,14 +1,22 @@
 Feature('apps.forms.multistep-forms');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber;
 var newMultistepFormName;
+var duplicatedMultistepFormName;
 var specialFormName;
+var emptyOptionFormName;
+var stepOrderFormName;
 Before(({ I, DT, login }) => {
     login('admin');
     if (typeof randomNumber=="undefined") {
         randomNumber = I.getRandomText();
-        newMultistepFormName = "multistepform_" + randomNumber;
-        specialFormName = "multistep_new_logic_" + randomNumber;
+        newMultistepFormName = "multistepform_autotest_" + randomNumber;
+        duplicatedMultistepFormName = "multistepform_duplicate_autotest_" + randomNumber;
+        specialFormName = "multistep_new_logic_autotest_" + randomNumber;
+        emptyOptionFormName = "multistep_empty_option_autotest_" + randomNumber;
+        stepOrderFormName = "step_order_autotest_" + randomNumber;
     }
 
     DT.addContext("formSteps", "#formStepsDataTable_wrapper");
@@ -17,6 +25,7 @@ Before(({ I, DT, login }) => {
 
 const baseAdminMail = "wjmultistep.admin";
 const baseUserMail = "wjmultistep.user";
+const customEmailError = "Email address is required - autotest custom error";
 const appInsertTestPageId = 156277;
 const appMultiInsertTestPageId = 156272;
 
@@ -30,7 +39,7 @@ Scenario('Check editor tabs', async ({ I, DT, DTE, TempMail }) => {
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");
-    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced"]);
+    checkEditorTabVsibility(I, ["basic", "settings-basic", "settings-email", "settings-advanced", "fields"]);
 });
 
 Scenario('Base multistep form', ({ I, DT, DTE, TempMail }) => {
@@ -77,6 +86,16 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     createAndFillFormItem(I, DT, DTE, 'Meno', true, "Vase meno", "!LOGGED_USER_FIRSTNAME!", "Vase prve meno", null);
     createAndFillFormItem(I, DT, DTE, 'Priezvisko', false, "Vase priezvisko", "!LOGGED_USER_LASTNAME!", "Vase rodinne meno", null);
     createAndFillFormItem(I, DT, DTE, 'E-mailová adresa', true, "Emailova adresa", null, null, "nieco@interway.sk");
+
+    I.say("Configure and verify a custom validation error");
+    I.click(locate("table#formItemsDataTable > tbody > tr > td").withText("Emailova adresa"));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor("formItemsDataTable");
+    I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
+    DTE.fillField("customError", customEmailError);
+    I.seeInField("#DTE_Field_customError", customEmailError);
+    DTE.save();
+
     createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "A:A|B:B|C:C", null, null);
     createAndFillFormItem(I, DT, DTE, 'Skupina výberových polí', false, null, "D:D|E:E|F:F", null, null);
 
@@ -86,7 +105,9 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
     I.click(DT.btn.formSteps_add_button);
     DTE.waitForEditor("formStepsDataTable");
 
-    DTE.fillQuill("header", "2 - Druhy krok | 2 - Sekundarny nadpis druheho kroku");
+    DTE.fillQuill("header", "2 - Druhy krok | Email: !emailova-adresa-1! | User: !LOGGED_USER_FIRSTNAME!");
+    I.clickCss("#pills-dt-formStepsDataTable-advanced-tab");
+    DTE.fillField("backStepBtnLabel", "Späť na údaje");
     DTE.save();
 
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
@@ -99,45 +120,185 @@ Scenario('Fill and test form content', async ({ I, DT, DTE, Document }) => {
 
     //compare screenshots
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 1") );
+    I.waitForElement("input#f1-vase-priezvisko-1", 10);
+    I.seeElement("input#f1-emailova-adresa-1");
+    I.seeElement("input#f1-checkboxgroup-1-0");
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-1.png", null, null, 5);
+
+    I.say("Preview CSS templates without changing the form settings");
+    I.waitForElement("#previewCssTemplate option[value='/apps/form/mvc/styles/template-1.css']", 10);
+    for (const template of ["template-1.css", "template-2.css", "template-3.css"]) {
+        I.selectOption("#previewCssTemplate", template);
+        I.waitForElement(`div.stepPreview[data-multistep-css-template='/apps/form/mvc/styles/${template}'] #formStepPreviewCssTemplate`);
+    }
+    I.selectOption("#previewCssTemplate", "Bez šablóny");
+    I.dontSeeElement("#formStepPreviewCssTemplate");
+
     I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
     //wait for cleditor to load
     I.waitForElement("div.cleditorToolbar", 20);
+    I.seeElement("select#f1-select-pole-1");
+    I.waitForElement("textarea#f1-wysiwyg-1"); // special case
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-step-2.png", null, null, 5);
 });
 
 Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Apps }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
-
-    // Set new multistep form as form for the page
-    DTE.waitForEditor();
-    Apps.openAppEditor();
-    DTE.selectOption("formName", newMultistepFormName);
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
-    DTE.save();
+    insertMultistepForm(I, DTE, Apps, newMultistepFormName);
 
     I.say("Test visual of step one");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-1.png", null, null, 5);
 
+    I.say("Check form counter prefix in generated field and label IDs");
+    I.seeElement("input#f1-vase-priezvisko-1");
+    I.seeElement("label[for='f1-vase-priezvisko-1']");
+    I.dontSeeElement("input#priezvisko-1");
+
+    I.executeScript(() => {
+        window.__wjMultistepStepShownEvents = [];
+        window.addEventListener('WJ.multistepForm.stepShown', (event) => {
+            const detail = event.detail;
+            window.__wjMultistepStepShownEvents.push({
+                formName: detail.formName,
+                stepId: String(detail.stepId),
+                language: detail.language,
+                domIdPrefix: detail.domIdPrefix,
+                isInitialStep: detail.isInitialStep,
+                hasWrapper: detail.wrapper?.classList.contains('multistep-form-app') === true,
+                hasStepElement: detail.stepElement?.classList.contains('multistepStepContent') === true,
+                hasForm: detail.form?.matches('form.multistep-form') === true
+            });
+        }, { once: true });
+    });
+
     I.say("Test and submit step 1");
     I.clickCss("button[type='submit']");
-    I.waitForText("Emailova adresa - povinné pole");
-    I.fillField("#email-1", "sivan@noopmail.com");
+    I.waitForText(customEmailError, 5);
+    I.dontSee("Emailova adresa - povinné pole");
+    I.fillField("#f1-emailova-adresa-1", "sivan@noopmail.com");
     // chebbox group
-    I.clickCss("#checkboxgroup-1-0");
-    I.clickCss("#checkboxgroup-1-1");
+    I.clickCss("#f1-checkboxgroup-1-0");
+    I.clickCss("#f1-checkboxgroup-1-1");
     // radio button group
-    I.clickCss("#radiogroup-1-1");
-    I.clickCss("#radiogroup-1-2");
+    I.clickCss("#f1-radiogroup-1-1");
+    I.clickCss("#f1-radiogroup-1-2");
     //submit
     I.clickCss("button[type='submit']");
 
     I.say("Test visual of step one");
-    I.waitForVisible("#multiupload_images-1-dropzone");
+    I.waitForVisible("#f1-pridajte-obrazky-1-dropzone");
+    I.waitForText("2 - Druhy krok | Email: sivan@noopmail.com | User: Tester", 5, ".step-header");
     I.waitForElement("div.cleditorToolbar", 20);
+
+    const stepShownEvents = await I.executeScript(() => window.__wjMultistepStepShownEvents);
+    I.assertEqual(stepShownEvents.length, 1, "One stepShown event should be dispatched for the second step");
+    I.assertEqual(stepShownEvents[0].formName, newMultistepFormName);
+    I.assertTrue(stepShownEvents[0].stepId.length > 0, "The event should contain the rendered step ID");
+    I.assertEqual(stepShownEvents[0].language, "sk");
+    I.assertEqual(stepShownEvents[0].domIdPrefix, "f1-");
+    I.assertEqual(stepShownEvents[0].isInitialStep, false);
+    I.assertTrue(stepShownEvents[0].hasWrapper, "The event should contain the form wrapper");
+    I.assertTrue(stepShownEvents[0].hasStepElement, "The event should contain the step wrapper");
+    I.assertTrue(stepShownEvents[0].hasForm, "The event should contain the rendered form");
+
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-step-2.png", null, null, 5);
+
+    I.say("Verify tooltip accessibility after AJAX step rendering");
+    const tooltipTrigger = "label[for='f1-select-pole-1'] + button.popover-link[data-toggle='tooltip']";
+    const tooltipField = "#f1-select-pole-1";
+    const visualTooltip = ".tooltip.wj-form-tooltip-hoverable[role='tooltip']";
+    I.waitForElement(tooltipTrigger, 5);
+    I.seeElement(tooltipTrigger + "[type='button'][data-trigger='hover focus'][data-bs-trigger='hover focus'][aria-describedby][data-wj-form-tooltip-description-id]");
+    I.assertTrue(await I.executeScript((selector) => document.querySelector(selector)?.closest("label") === null, tooltipTrigger), "Tooltip trigger must be outside the field label");
+    const tooltipLabel = await I.grabAttributeFrom(tooltipTrigger, "aria-label");
+    I.assertEqual(tooltipLabel, "Pomoc k poľu Select pole", "Tooltip trigger must have a contextual accessible name");
+    const tooltipId = await I.grabAttributeFrom(tooltipTrigger, "aria-describedby");
+    const configuredTooltipId = await I.grabAttributeFrom(tooltipTrigger, "data-wj-form-tooltip-description-id");
+    I.assertEqual(tooltipId, configuredTooltipId, "Tooltip trigger must reference its stable description before focus");
+    I.assertTrue(tooltipId.startsWith("info-tooltip-f1-select-pole-1-"), "Tooltip description must use the field-specific stable ID");
+    I.assertEqual(await I.executeScript((id) => {
+        const description = document.getElementById(id);
+        return description?.matches(".wj-form-tooltip-description[role='tooltip']") ? description.textContent.replace(/\s+/g, " ").trim() : "";
+    }, tooltipId), "zoznam tooltip", "Stable tooltip content must contain the field-specific help");
+
+    const getAccessibleDescription = async () => I.executeScript((selector) => {
+        const trigger = document.querySelector(selector);
+        const describedBy = trigger?.getAttribute("aria-describedby");
+        if (!describedBy) return "";
+        return describedBy.split(/\s+/)
+            .map(id => document.getElementById(id)?.textContent || "")
+            .join(" ").replace(/\s+/g, " ").trim();
+    }, tooltipTrigger);
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must expose its description before focus");
+    const tooltipDescriptionIds = await I.executeScript(() => Array.from(document.querySelectorAll(".wj-form-tooltip-description"), element => element.id));
+    I.assertTrue(tooltipDescriptionIds.length >= 2, "Rendered tooltip descriptions must be present in the AJAX step");
+    I.assertEqual(new Set(tooltipDescriptionIds).size, tooltipDescriptionIds.length, "Every rendered tooltip description ID must be unique");
+
+    I.focus(tooltipField);
+    I.pressKey(["Shift", "Tab"]);
+    I.waitForElement(tooltipTrigger + ":focus", 5);
+    I.assertTrue(await I.executeScript((selector) => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return style.outlineStyle === "solid" && parseFloat(style.outlineWidth) >= 2;
+    }, tooltipTrigger), "Tooltip trigger must have a visible keyboard focus indicator");
+
+    I.waitForVisible(visualTooltip, 5);
+    I.see("zoznam tooltip", visualTooltip);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Visual tooltip must not replace the stable accessible description");
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must retain its accessible description while open");
+
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForFunction(([selector]) => document.querySelector(selector) === null, [visualTooltip], 5);
+    I.waitForElement(tooltipTrigger + ":focus", 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Escape must preserve the stable accessible description");
+    I.assertEqual(await getAccessibleDescription(), "zoznam tooltip", "Tooltip trigger must retain its description after dismissal");
+
+    I.pressKey("Enter");
+    I.waitForVisible(visualTooltip, 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Keyboard activation must preserve the stable accessible description");
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForFunction(([selector]) => document.querySelector(selector) === null, [visualTooltip], 5);
+
+    I.focus(tooltipField);
+    I.waitForElement(tooltipField + ":focus", 5);
+    I.moveCursorTo(tooltipTrigger);
+    I.waitForVisible(visualTooltip, 5);
+    I.moveCursorTo(visualTooltip);
+    I.waitForFunction(([selector]) => document.querySelector(selector)?.matches(":hover") === true, [visualTooltip], 5);
+    const hoverStartedAt = await I.executeScript(() => performance.now());
+    I.waitForFunction(([selector, startedAt]) => {
+        const tooltip = document.querySelector(selector);
+        if (performance.now() - startedAt < 500 || !tooltip) return false;
+        const style = getComputedStyle(tooltip);
+        return style.display !== "none" && style.visibility !== "hidden" && parseFloat(style.opacity || "1") > 0;
+    }, [visualTooltip, hoverStartedAt], 2);
+    I.pressKey("Escape");
+    I.waitForInvisible(visualTooltip, 5);
+    I.waitForElement(tooltipField + ":focus", 5);
+    I.assertEqual(await I.grabAttributeFrom(tooltipTrigger, "aria-describedby"), tooltipId, "Hover dismissal must preserve the stable accessible description");
+    I.blur(tooltipField);
+
+    I.say("Go back, restore saved choices and persist a cleared checkbox");
+    I.see("Späť na údaje", "[data-multistep-back-step]");
+    I.clickCss("[data-multistep-back-step]");
+    I.waitForVisible("#f1-emailova-adresa-1");
+    I.seeInField("#f1-emailova-adresa-1", "sivan@noopmail.com");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-0");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-1");
+    I.seeCheckboxIsChecked("#f1-radiogroup-1-2");
+    I.dontSeeElement("[data-multistep-back-step]");
+    I.uncheckOption("#f1-checkboxgroup-1-1");
+    I.clickCss("button[type='submit']");
+    I.waitForVisible("[data-multistep-back-step]");
+    I.clickCss("[data-multistep-back-step]");
+    I.waitForVisible("#f1-checkboxgroup-1-1");
+    I.dontSeeCheckboxIsChecked("#f1-checkboxgroup-1-1");
+    I.checkOption("#f1-checkboxgroup-1-1");
+    I.clickCss("button[type='submit']");
+    I.waitForVisible("#f1-pridajte-obrazky-1-dropzone");
+    I.waitForElement("div.cleditorToolbar", 20);
 
     I.say("Test and submit step 2 - final");
 
@@ -145,15 +306,36 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', 'tests/apps/penguin.jpg');
     I.waitForText("Odstrániť súbor", 5, "a.dz-remove");
 
+    I.say("Preserve an unfinished upload, select value and rich text through Back");
+    const draftUploadKey = await I.grabValueFrom("input[name='f1-pridajte-obrazky-1']");
+    I.selectOption("#f1-select-pole-1", "C");
+    await I.usePlaywrightTo('edit the unfinished rich text field', async ({ page }) => {
+        await page.frameLocator('.multistep-form .cleditorMain iframe').locator('body').fill('autotest unfinished rich text');
+    });
+    I.clickCss("[data-multistep-back-step]");
+    I.waitForVisible("#f1-emailova-adresa-1");
+    I.clickCss("button[type='submit']");
+    I.waitForVisible("#f1-pridajte-obrazky-1-dropzone");
+    I.waitForElement("div.cleditorToolbar", 20);
+    I.waitForText("penguin.jpg", 10, ".dz-preview");
+    I.seeInField("input[name='f1-pridajte-obrazky-1']", draftUploadKey);
+    I.seeInField("#f1-select-pole-1", "C");
+    await I.usePlaywrightTo('verify restored rich text and preserve the expected final submission', async ({ page }) => {
+        const body = page.frameLocator('.multistep-form .cleditorMain iframe').locator('body');
+        await body.filter({ hasText: 'autotest unfinished rich text' }).waitFor();
+        await body.fill('happy wysiwyg placeholder');
+    });
+
     // Try second same image - save should be blocked with error
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', 'tests/apps/penguin.jpg');
-    I.wait(5);
+    I.waitForElement(locate("a.dz-remove").at(2), 10);
 
-    I.selectOption("#select-1", "C");
+    I.selectOption("#f1-select-pole-1", "C");
 
     //submit
     I.clickCss("button[type='submit']");
 
+    I.dontSee("Formulár bol úspešne odoslaný");
     I.see("Súbor penguin.jpg bol nahratý viac krát.");
 
     // remove one image
@@ -171,13 +353,13 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
     I.see("Záznamy 1 až 1 z 1");
 
     const columnNames = [
-        {id: "meno-1", name: "Vase meno (Krok 1)", value: "Tester" },
-        {id: "priezvisko-1", name: "Vase priezvisko (Krok 1)", value: "Playwright" },
-        {id: "email-1", name: "Emailova adresa (Krok 1)", value: "sivan@noopmail.com" },
+        {id: "vase-meno-1", name: "Vase meno (Krok 1)", value: "Tester" },
+        {id: "vase-priezvisko-1", name: "Vase priezvisko (Krok 1)", value: "Playwright" },
+        {id: "emailova-adresa-1", name: "Emailova adresa (Krok 1)", value: "sivan@noopmail.com" },
         {id: "checkboxgroup-1", name: "Skupina zaškrtávacích polí (Krok 1)", value: "A,B" },
         {id: "radiogroup-1", name: "Skupina výberových polí (Krok 1)", value: "F" },
-        {id: "multiupload_images-1-fileNames", name: "Pridajte obrazky (Krok 2)", value: "penguin.jpg" },
-        {id: "select-1", name: "Select pole (Krok 2)", value: "C" },
+        {id: "pridajte-obrazky-1-fileNames", name: "Pridajte obrazky (Krok 2)", value: "penguin.jpg" },
+        {id: "select-pole-1", name: "Select pole (Krok 2)", value: "C" },
         {id: "wysiwyg-1", name: "WYSIWYG (Krok 2)", value: "happy wysiwyg placeholder" }
     ];
 
@@ -203,16 +385,41 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
     DTE.cancel();
 
     const expectedHtml = `
-        <div class="form-step mt-3"><div class="step-header"><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div class="form-group mb-3"><label for="meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Tester</span></div>
-        <div class="form-group mb-3"><label for="priezvisko-1">Vase priezvisko:</label> <span class="form-control emailInput-text">Playwright</span></div><div class="form-group mb-3"><label for="email-1">Emailova adresa<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">sivan@noopmail.com</span></div>
-        <div class="form-group mb-3"><label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label><div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label></div>
-        <div class="form-check"><span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">B</label></div>
-        <div class="form-check"><span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label></div>
-        </div><div class="form-group mb-3"><label for="radiogroup-1">Skupina výberových polí:</label><div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-0" class="form-check-label">D</label></div>
-        <div class="form-check"><span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">E</label></div>
-        <div class="form-check"><span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label></div>
-        </div></div><hr><div class="form-step mt-3"><div class="step-header"><p>2 - Druhy krok | 2 - Sekundarny nadpis druheho kroku</p></div><div class="form-group mb-3"><label for="multiupload_images-1">Pridajte obrazky:</label> <span class="form-control emailInput-text">penguin.jpg</span> </div>
-        <div class="form-group mb-3"><label for="select-1">Select pole:</label><span class="form-control emailInput-select">C</span></div><div class="form-group mb-3"><label for="wysiwyg-1">WYSIWYG<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span></div></div>
+        <div class="form-step mt-3"><div class="step-header"><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div class="form-group mb-3">
+            <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-text">Tester</span>
+            </div><div class="form-group mb-3">
+            <label for="vase-priezvisko-1">Vase priezvisko</label><div class="form-hint"></div> <span class="form-control emailInput-text">Playwright</span>
+            </div><div class="form-group mb-3">
+            <label for="emailova-adresa-1">Emailova adresa<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-text">sivan@noopmail.com</span>
+            </div><div class="form-group mb-3">
+            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label><div class="form-hint"></div>
+            <div class="form-check">
+            <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-0" class="form-check-label">A</label>
+            </div>
+            <div class="form-check">
+            <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">B</label>
+            </div>
+            <div class="form-check">
+            <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-2" class="form-check-label">C</label>
+            </div>
+            </div><div class="form-group mb-3">
+            <label for="radiogroup-1">Skupina výberových polí</label><div class="form-hint"></div>
+            <div class="form-check">
+            <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-0" class="form-check-label">D</label>
+            </div>
+            <div class="form-check">
+            <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">E</label>
+            </div>
+            <div class="form-check">
+            <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-2" class="form-check-label">F</label>
+            </div>
+            </div></div><hr><div class="form-step mt-3"><div class="step-header"><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div class="form-group mb-3">
+            <label for="pridajte-obrazky-1">Pridajte obrazky</label><div class="form-hint"></div> <span class="form-control emailInput-text">penguin.jpg</span>
+            </div><div class="form-group mb-3">
+            <label for="select-pole-1">Select pole</label><div class="form-hint"></div><span class="form-control emailInput-select">C</span>
+            </div><div class="form-group mb-3">
+            <label for="wysiwyg-1">WYSIWYG<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-textarea" style="height: auto;">happy wysiwyg placeholder</span>
+        </div></div>
     `;
 
     const actualHtml = await getSubmitedFormPreview(I);
@@ -221,21 +428,70 @@ Scenario('Test form detail and filled data', async ({ I, DT, DTE }) => {
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
+Scenario('Archive one form submission', async ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', 'sivan@noopmail.com');
+    I.waitForText('Záznamy 1 až 1 z 1', 10, '#formDetailDataTable_wrapper');
+
+    I.clickCss('#formDetailDataTable tbody tr:first-child td.dt-select-td');
+    const archiveButton = '#formDetailDataTable_wrapper button.buttons-archive';
+    I.waitForEnabled(archiveButton, 10);
+    const archiveLabel = await I.grabAttributeFrom(archiveButton, 'aria-label');
+    I.assertEqual(archiveLabel, 'Archivuj formulár', 'Archive action must use a translated label');
+
+    I.click(archiveButton);
+    DT.waitForLoader('formDetailDataTable');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailDataTable');
+
+    I.amOnPage('/apps/form/admin/archived-detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', 'sivan@noopmail.com');
+    I.waitForText('sivan@noopmail.com', 10, '#formDetailDataTable');
+    I.see('Záznamy 1 až 1 z 1', '#formDetailDataTable_wrapper');
+    I.see('Trvanie vyplnenia', '#formDetailDataTable_wrapper');
+});
+
 Scenario('Test send email', async ({ I, TempMail }) => {
     await TempMail.login(baseAdminMail);
     await TempMail.openLatestEmail();
 
     const expectedHtml = `
-        <form action="/rest/multistep-form/save-form?form-name=${newMultistepFormName}&amp;step-id=-1" method="post" name="formMailForm-${newMultistepFormName}"><div><div><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div>
-        <div><label for="meno-1">Vase meno<span style="color: red;">&nbsp;*</span>:</label> <span>Tester</span></div><div><label for="priezvisko-1">Vase priezvisko:</label> <span>Playwright</span></div><div><label for="email-1">Emailova adresa<span style="color: red;">&nbsp;*</span>:</label> <span>sivan@noopmail.com</span></div>
-        <div><label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label><div><span>[X]</span> <label for="checkboxgroup-1-0">A</label></div>
-        <div><span>[X]</span> <label for="checkboxgroup-1-1">B</label></div>
-        <div><span>[&nbsp;]</span> <label for="checkboxgroup-1-2">C</label></div>
-        </div><div><label for="radiogroup-1">Skupina výberových polí:</label><div><span>[&nbsp;]</span> <label for="radiogroup-1-0">D</label></div>
-        <div><span>[&nbsp;]</span> <label for="radiogroup-1-1">E</label></div>
-        <div><span>[X]</span> <label for="radiogroup-1-2">F</label></div>
-        </div></div><hr><div><div><p>2 - Druhy krok | 2 - Sekundarny nadpis druheho kroku</p></div><div><label for="multiupload_images-1">Pridajte obrazky:</label> <span>penguin.jpg</span> </div><div><label for="select-1">Select pole:</label><span>C</span></div>
-        <div><label for="wysiwyg-1">WYSIWYG<span style="color: red;">&nbsp;*</span>:</label> <span style="height: auto;">happy wysiwyg placeholder</span></div></div>  </form>
+        <form action="/rest/multistep-form/save-form?form-name=${newMultistepFormName}&amp;step-id=-1" method="post" name="formMailForm-${newMultistepFormName}"><div><div><p>1 - Primarny nadpis | 1 - Sekundarny nadpis</p></div><div>
+            <label for="vase-meno-1">Vase meno<span>&nbsp;*</span></label><div class="form-hint"></div> <span>Tester</span>
+            </div><div>
+            <label for="vase-priezvisko-1">Vase priezvisko</label><div class="form-hint"></div> <span>Playwright</span>
+            </div><div>
+            <label for="emailova-adresa-1">Emailova adresa<span>&nbsp;*</span></label><div class="form-hint"></div> <span>sivan@noopmail.com</span>
+            </div><div>
+            <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label><div class="form-hint"></div>
+            <div>
+            <span>[X]</span> <label for="checkboxgroup-1-0">A</label>
+            </div>
+            <div>
+            <span>[X]</span> <label for="checkboxgroup-1-1">B</label>
+            </div>
+            <div>
+            <span>[&nbsp;]</span> <label for="checkboxgroup-1-2">C</label>
+            </div>
+            </div><div>
+            <label for="radiogroup-1">Skupina výberových polí</label><div class="form-hint"></div>
+            <div>
+            <span>[&nbsp;]</span> <label for="radiogroup-1-0">D</label>
+            </div>
+            <div>
+            <span>[&nbsp;]</span> <label for="radiogroup-1-1">E</label>
+            </div>
+            <div>
+            <span>[X]</span> <label for="radiogroup-1-2">F</label>
+            </div>
+            </div></div><hr><div><div><p>2 - Druhy krok | Email: sivan@noopmail.com | User: Tester</p></div><div>
+            <label for="pridajte-obrazky-1">Pridajte obrazky</label><div class="form-hint"></div> <span>penguin.jpg</span>
+            </div><div>
+            <label for="select-pole-1">Select pole</label><div class="form-hint"></div><span>C</span>
+            </div><div>
+            <label for="wysiwyg-1">WYSIWYG<span>&nbsp;*</span></label><div class="form-hint"></div> <span style="height: auto;">happy wysiwyg placeholder</span>
+            </div></div>  </form>
     `;
 
     checkEmailWithForm(I, expectedHtml);
@@ -261,20 +517,26 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
     I.checkOption("#DTE_Field_formSettings-forceTextPlain_0");
     I.fillField("#DTE_Field_formSettings-emailTextBefore", "START form text");
     I.fillField("#DTE_Field_formSettings-emailTextAfter", "END form text");
+
+    I.clickCss("#pills-dt-formsDataTable-fields-tab");
+    for (const letter of ["A", "B", "C", "D", "E", "F"]) {
+        I.fillField(`#DTE_Field_formSettings-field${letter}`, `${newMultistepFormName}-${letter}`);
+    }
     DTE.save();
 
     I.say("Fill the form again to test changed email settings");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
 
     I.say("Fill and submit step 1");
-    I.fillField("#email-1", baseUserMail + TempMail.getTempMailDomain());
-    I.clickCss("#checkboxgroup-1-0");
-    I.clickCss("#checkboxgroup-1-2");
-    I.clickCss("#radiogroup-1-2");
+    I.fillField("#f1-emailova-adresa-1", baseUserMail + TempMail.getTempMailDomain());
+    I.clickCss("#f1-checkboxgroup-1-0");
+    I.clickCss("#f1-checkboxgroup-1-2");
+    I.clickCss("#f1-radiogroup-1-2");
     //submit
     I.clickCss("button[type='submit']");
 
     I.say("Fill and submit step 2 - final");
+    I.waitForText(`2 - Druhy krok | Email: ${baseUserMail + TempMail.getTempMailDomain()} | User: Tester`, 5, ".step-header");
     I.dontSee("Odstrániť súbor");
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', 'tests/apps/penguin.jpg');
     I.waitForText("Odstrániť súbor", 5, "a.dz-remove");
@@ -284,23 +546,61 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
 
     I.say("Test generated filled form in admin");
     I.amOnPage("/apps/form/admin/detail/?formName=" + newMultistepFormName);
-    DT.filterStartsWith("col_email-1", baseUserMail + TempMail.getTempMailDomain());
+    DT.filterStartsWith("col_emailova-adresa-1", baseUserMail + TempMail.getTempMailDomain());
     I.see("Záznamy 1 až 1 z 1");
 
     const expectedHtml = `
         START form text
-        <br>1 - Primarny nadpis | 1 - Sekundarny nadpis<br><br>
-        <br>Vase meno * : Tester<br>
-        <br>Vase priezvisko: Playwright<br>
-        <br>Emailova adresa * : ${baseUserMail + TempMail.getTempMailDomain()}<br>
-        <br>Skupina zaškrtávacích polí: [X] A<br><br>[ ] B<br><br>[X] C<br><br>
-        <br>Skupina výberových polí: [ ] D<br><br>[ ] E<br><br>[X] F<br><br>
+        <br>1 - Primarny nadpis | 1 - Sekundarny nadpis
         <br>
         <br>
-        <br>2 - Druhy krok | 2 - Sekundarny nadpis druheho kroku<br><br>
-        <br>Pridajte obrazky: penguin.jpg<br>
-        <br>Select pole: A<br>
-        <br>WYSIWYG * : happy wysiwyg placeholder<br>
+        <br>Vase meno *
+        <br>
+        <br>Tester
+        <br>
+        <br>Vase priezvisko
+        <br>
+        <br>Playwright
+        <br>
+        <br>Emailova adresa *
+        <br>
+        <br>${baseUserMail + TempMail.getTempMailDomain()}
+        <br>
+        <br>Skupina zaškrtávacích polí
+        <br>
+        <br>[X] A
+        <br>
+        <br>[ ] B
+        <br>
+        <br>[X] C
+        <br>
+        <br>
+        <br>Skupina výberových polí
+        <br>
+        <br>[ ] D
+        <br>
+        <br>[ ] E
+        <br>
+        <br>[X] F
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>2 - Druhy krok | Email: ${baseUserMail + TempMail.getTempMailDomain()} | User: Tester
+        <br>
+        <br>
+        <br>Pridajte obrazky
+        <br>
+        <br>penguin.jpg
+        <br>
+        <br>Select pole
+        <br>
+        <br>A
+        <br>
+        <br>WYSIWYG *
+        <br>
+        <br>happy wysiwyg placeholder
+        <br>
         <br>
         <br>
         <br>END form text
@@ -326,9 +626,31 @@ Scenario('Change form_settings and test it No.1', async ({ I, DT, DTE, TempMail 
     // TODO, check file with form ?
 });
 
+Scenario('Archive another submission into an existing archive', async ({ I, DT, TempMail }) => {
+    const email = baseUserMail + TempMail.getTempMailDomain();
+
+    I.amOnPage('/apps/form/admin/detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', email);
+    I.waitForText('Záznamy 1 až 1 z 1', 10, '#formDetailDataTable_wrapper');
+
+    I.clickCss('#formDetailDataTable tbody tr:first-child td.dt-select-td');
+    const archiveButton = '#formDetailDataTable_wrapper button.buttons-archive';
+    I.waitForEnabled(archiveButton, 10);
+    I.click(archiveButton);
+    DT.waitForLoader('formDetailDataTable');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailDataTable');
+
+    I.amOnPage('/apps/form/admin/archived-detail/?formName=' + newMultistepFormName);
+    DT.waitForLoader('formDetailDataTable');
+    DT.filterStartsWith('col_emailova-adresa-1', email);
+    I.waitForText(email, 10, '#formDetailDataTable');
+    I.see('Záznamy 1 až 1 z 1', '#formDetailDataTable_wrapper');
+});
+
 Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail }) => {
-    I.say("too fast - sometimes spam proble -> wait 35 sec");
-    I.wait(35);
+    I.say("too fast - sometimes spam problem -> wait 35 sec");
+    await I.waitForTime(Date.now() + 35000);
 
     I.amOnPage("/apps/form/admin/");
     DT.filterEquals("formName", newMultistepFormName);
@@ -336,14 +658,19 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.click("button.buttons-edit");
     DTE.waitForEditor("formsDataTable");
 
+    I.clickCss("#pills-dt-formsDataTable-fields-tab");
+    for (const letter of ["A", "B", "C", "D", "E", "F"]) {
+        I.seeInField(`#DTE_Field_formSettings-field${letter}`, `${newMultistepFormName}-${letter}`);
+    }
+
     I.clickCss("#pills-dt-formsDataTable-settings-basic-tab");
     I.uncheckOption("#DTE_Field_formSettings-messageAsAttach_0");
-    I.click("#editorAppDTE_Field_formSettings-formmailSendUserInfoDoc button.btn-vue-jstree-item-edit");
-    I.waitForVisible("#jsTree");
+    I.click("#editorAppDTE_Field_formSettings-formmailSendUserInfoDoc button.btn-webjet-jstree-item-edit");
+    I.waitForVisible(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Multistep formulár').find('.jstree-icon.jstree-ocl'));
     I.click(locate('a.jstree-anchor').withText('UserNotifyAftertSave'));
-    I.waitForInvisible("#jsTree");
+    I.waitForInvisible(WebjetDteJsTree.tree);
 
     I.clickCss("#pills-dt-formsDataTable-settings-email-tab");
     I.uncheckOption("#DTE_Field_formSettings-forceTextPlain_0");
@@ -355,10 +682,10 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
 
     I.say("Fill and submit step 1");
-    I.fillField("#email-1", baseUserMail + TempMail.getTempMailDomain());
-    I.clickCss("#checkboxgroup-1-0");
-    I.clickCss("#checkboxgroup-1-2");
-    I.clickCss("#radiogroup-1-2");
+    I.fillField("#f1-emailova-adresa-1", baseUserMail + TempMail.getTempMailDomain());
+    I.clickCss("#f1-checkboxgroup-1-0");
+    I.clickCss("#f1-checkboxgroup-1-2");
+    I.clickCss("#f1-radiogroup-1-2");
     //submit
     I.clickCss("button[type='submit']");
 
@@ -377,7 +704,7 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     I.say("Because email contains dynamic tech info, we will just check presence of some static texts");
     I.see("Primarny nadpis");
     I.see("Skupina zaskrtavacich poli");
-    I.see("Sekundarny nadpis druheho kroku");
+    I.see("Email: wjmultistep.user@fexpost.com | User: Tester");
     I.see("penguin.jpg");
     I.see("Technicke info:");
     I.see("IP adresa:");
@@ -396,34 +723,111 @@ Scenario('Change form_settings and test it No.2', async ({ I, DT, DTE, TempMail 
     await TempMail.destroyInbox(baseUserMail);
 });
 
-Scenario('Remove form and test it', ({ I, DT }) => {
+Scenario('Duplicate multistep form', async ({ I, DT, DTE, TempMail }) => {
     I.amOnPage("/apps/form/admin/");
 
     DT.filterEquals("formName", newMultistepFormName);
-    I.clickCss("td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.waitForText("Naozaj chcete zmazať položku?", 5);
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.clickCss("#formsDataTable td.dt-select-td");
+    I.clickCss("#formsDataTable_wrapper button.btn-duplicate");
+    DTE.waitForEditor("formsDataTable");
 
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    DTE.fillField("formName", duplicatedMultistepFormName);
+    DTE.save();
+
+    I.amOnPage("/apps/form/admin/");
+    I.say("Check duplicated form settings");
+    DT.filterEquals("formName", duplicatedMultistepFormName);
+    I.waitForText(duplicatedMultistepFormName, 10, "#formsDataTable");
+    I.clickCss("#formsDataTable td.dt-select-td");
+    I.clickCss("#formsDataTable_wrapper button.buttons-edit");
+    DTE.waitForEditor("formsDataTable");
+
+    I.seeInField("#DTE_Field_formSettings-recipients", baseAdminMail + TempMail.getTempMailDomain());
+    I.clickCss("#pills-dt-formsDataTable-settings-email-tab");
+    I.seeInField("#DTE_Field_formSettings-emailTextBefore", "START form text");
+    I.seeInField("#DTE_Field_formSettings-emailTextAfter", "END form text");
+    DTE.cancel();
+
+    I.say("Check duplicated steps and items");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=" + duplicatedMultistepFormName);
+    I.waitForVisible("#formStepsDataTable_wrapper");
+    I.waitForElement(locate("#formStepsDataTable tbody tr.selected").withText("Krok 1"));
+
+    const stepsCount = await I.grabNumberOfVisibleElements("#formStepsDataTable tbody tr");
+    I.assertEqual(stepsCount, 2, "Duplicated form should contain both form steps");
+
+    I.waitForText("Vase meno", 10, "#formItemsDataTable");
+    const firstStepItemsCount = await I.grabNumberOfVisibleElements("#formItemsDataTable tbody tr");
+    I.assertEqual(firstStepItemsCount, 5, "Duplicated first step should contain all form items");
+
+    I.click(locate("#formStepsDataTable tbody tr").withText("Krok 2"));
+    DT.waitForLoader("formItemsDataTable");
+    I.waitForText("Pridajte obrazky", 10, "#formItemsDataTable");
+    const secondStepItemsCount = await I.grabNumberOfVisibleElements("#formItemsDataTable tbody tr");
+    I.assertEqual(secondStepItemsCount, 3, "Duplicated second step should contain all form items");
+});
+
+Scenario('Delete all form records and keep form definition', async ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/detail/?formName=" + newMultistepFormName);
+    DT.waitForLoader("formDetailDataTable");
+    I.dontSee("Nenašli sa žiadne vyhovujúce záznamy", "#formDetailDataTable");
+
+    DT.deleteAll("formDetailDataTable");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formDetailDataTable");
+    I.see("Záznamy 0 až 0 z 0", "#formDetailDataTable_wrapper");
+
+    I.say("The empty form must remain in the forms list");
+    I.amOnPage("/apps/form/admin/");
+    DT.filterEquals("formName", newMultistepFormName);
+    I.waitForText(newMultistepFormName, 10, "#formsDataTable");
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1, "Deleting submissions must preserve form settings");
+});
+
+Scenario('Delete used form data and preserve its definition', async ({ I, DT }) => {
+    I.amOnPage("/apps/form/admin/");
+    removeFormDefinition(I, DT, newMultistepFormName, true);
+    I.see("Dáta formulára boli zmazané.");
+    I.see("docId: " + appInsertTestPageId);
+    I.see("dáta formulára sú v archíve");
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1);
+
+    I.amOnPage("/apps/multistep-formular/app-insert-test.html");
+    I.waitForElement(".multistep-form-app input#f1-emailova-adresa-1", 10);
+});
+
+Scenario('Remove archived form data', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/archived/');
+    DT.waitForLoader('formDetailArchivedTable');
+    DT.filterEquals('formName', newMultistepFormName);
+
+    const archivedForms = await I.grabNumberOfVisibleElements('#formDetailArchivedTable tbody td.dt-select-td');
+    if (archivedForms > 0) {
+        I.clickCss('#formDetailArchivedTable tbody tr:first-child td.dt-select-td');
+        I.clickCss('#formDetailArchivedTable_wrapper button.buttons-remove');
+        I.waitForElement('#formDetailArchivedTable_modal', 10);
+        DTE.save('formDetailArchivedTable');
+    }
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#formDetailArchivedTable');
+});
+
+Scenario('Remove original and duplicated form definitions', async ({ I, DT, DTE, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    DTE.save();
+    I.amOnPage("/apps/form/admin/");
+
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 1);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1);
+    removeFormDefinition(I, DT, newMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, newMultistepFormName), 0, "Deleting a form must remove its settings");
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 1, "Another form's settings must remain");
+    removeFormDefinition(I, DT, duplicatedMultistepFormName);
+    I.assertEqual(await getFormSettingsCount(I, duplicatedMultistepFormName), 0, "Deleting a duplicate must remove its settings");
 });
 
 Scenario('Insert and test multiple forms in one page - before clear page', ({ I, DTE, Apps }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appMultiInsertTestPageId);
-    DTE.waitForEditor();
-    DTE.waitForCkeditor();
-
-    Apps.switchEditor('html');
-
-    I.clickCss("div.CodeMirror-lines");
-
-    I.pressKey(['CommandOrControl', 'A']);
-    I.wait(0.3);
-
-    I.pressKey(['Backspace']);
-    I.wait(0.3);
-
+    Apps.clearPageContent();
     DTE.save();
 });
 
@@ -440,6 +844,7 @@ Scenario('Insert and test multiple forms in one page - insert two same apps', ({
         I.switchTo('#editorComponent');
 
         DTE.selectOption("formName", "Multistepform_light");
+        DTE.selectOption("cssTemplate", "template-1.css");
         I.switchTo();
         I.switchTo();
         I.clickCss('.cke_dialog_ui_button_ok');
@@ -454,6 +859,7 @@ Scenario('Insert and test multiple forms in one page - insert two same apps', ({
         I.switchTo('#editorComponent');
 
         DTE.selectOption("formName", "Multistepform_light");
+        DTE.selectOption("cssTemplate", "Bez šablóny");
         I.switchTo();
         I.switchTo();
         I.clickCss('.cke_dialog_ui_button_ok');
@@ -484,6 +890,29 @@ Scenario('Insert and test multiple forms in one page - test apps independent beh
     const formIds = await I.grabAttributeFromAll('div.multistep-form-app', 'id');
     const escapedFormIds = formIds.map(id => escapeCssId(id));
 
+    I.say("Check that the selected CSS template only styles its own form");
+    const formStyles = await I.executeScript(() => Array.from(document.querySelectorAll("div.multistep-form-app"), wrapper => {
+        const style = getComputedStyle(wrapper.querySelector(".multistep-form"));
+        return {
+            template: wrapper.getAttribute("data-multistep-css-template") || "",
+            accent: style.getPropertyValue("--mf-accent").trim(),
+            borderRadius: style.borderRadius
+        };
+    }));
+    const styledForms = formStyles.filter(form => form.template === "/apps/form/mvc/styles/template-1.css");
+    const plainForms = formStyles.filter(form => form.template === "");
+    I.assertEqual(styledForms.length, 1, "Exactly one form must use the selected template");
+    I.assertEqual(plainForms.length, 1, "Exactly one form must remain without a template");
+    I.assertEqual(styledForms[0].accent, "#079fc5", "The selected template must style its form");
+    I.assertEqual(styledForms[0].borderRadius, "18px", "The styled form must use the template's border radius");
+    I.assertEqual(plainForms[0].accent, "", "The form without a template must remain unstyled");
+
+    I.say("Check that generated field IDs are unique for every form instance");
+    I.seeElement("#" + escapedFormIds[0] + " input#f1-meno-1");
+    I.seeElement("#" + escapedFormIds[1] + " input#f2-meno-1");
+    I.dontSeeElement("#" + escapedFormIds[0] + " input#f2-meno-1");
+    I.dontSeeElement("#" + escapedFormIds[1] + " input#f1-meno-1");
+
     I.say("Test that one app do not interfere with the second one - fill and submit first form");
 
     I.say('Do submit first form');
@@ -496,19 +925,17 @@ Scenario('Insert and test multiple forms in one page - test apps independent beh
     I.dontSee(nameMinLengthError, locate("#" + escapedFormIds[1]));
 
     I.say("DO another change and check");
-    I.fillField("#" + escapedFormIds[0] + " input[name='meno-1']", "X");
+    I.fillField("#" + escapedFormIds[0] + " input#f1-meno-1", "X");
     I.click("#" + escapedFormIds[0] + " button[type='submit']");
-    I.wait(1);
 
     I.dontSee(nameRequiredError, locate("#" + escapedFormIds[0]));
-    I.waitForText(nameMinLengthError, locate("#" + escapedFormIds[0]));
+    I.waitForText(nameMinLengthError, 5, locate("#" + escapedFormIds[0]));
     I.dontSee(nameRequiredError, locate("#" + escapedFormIds[1]));
     I.dontSee(nameMinLengthError, locate("#" + escapedFormIds[1]));
 
     I.say("Now submit second form and test both forms");
-    I.fillField("#" + escapedFormIds[1] + " input[name='meno-1']", "KOKOS");
+    I.fillField("#" + escapedFormIds[1] + " input#f2-meno-1", "KOKOS");
     I.click("#" + escapedFormIds[1] + " button[type='submit']");
-    I.wait(1);
 
     I.waitForText(formSendSuccessMessage, 5, locate("#" + escapedFormIds[1] + " div.alert.alert-success"));
     I.dontSee(nameRequiredError, locate("#" + escapedFormIds[1]));
@@ -519,9 +946,8 @@ Scenario('Insert and test multiple forms in one page - test apps independent beh
 
 
     I.say('Now fix first form and submit it');
-    I.fillField("#" + escapedFormIds[0] + " input[name='meno-1']", "XYZ");
+    I.fillField("#" + escapedFormIds[0] + " input#f1-meno-1", "XYZ");
     I.click("#" + escapedFormIds[0] + " button[type='submit']");
-    I.wait(1);
 
     I.say("BUT it must be detected as spam because both forms where submitted too fast - check spam message AND second form is untouched");
     I.waitForText("Nastala chyba pri spracovani sekcie", 5, locate("#" + escapedFormIds[0] + " div.alert.alert-danger"));
@@ -529,16 +955,15 @@ Scenario('Insert and test multiple forms in one page - test apps independent beh
 });
 
 Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
-    I.say("too fast - sometimes spam proble -> wait 35 sec");
-    I.wait(35);
+    I.say("too fast - sometimes spam problem -> wait 35 sec");
+    await I.waitForTime(Date.now() + 35000);
 
     I.say("Test generated preview");
     I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_rowView");
     I.waitForVisible("#formStepsDataTable_wrapper");
 
     I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
-    I.waitForElement(".form-step input#meno-1");
-    I.wait(3);
+    I.waitForElement(".form-step input#f1-meno-1");
 
     await Document.compareScreenshotElement("div.stepPreviewWrapper > div.stepPreview", "multistep-form/multistep-form-rowView.png", null, null, 5);
 
@@ -549,11 +974,10 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     await Document.compareScreenshotElement("div.multistep-form-app", "multistep-form/multistep-form-page-rowView.png", null, null, 5);
 
     I.say("Submit rowView form, so we can test generated filled version");
-    I.fillField("#meno-1", "Vlad");
-    I.fillField("#priezvisko-1", "Priezvisko-" + randomNumber);
-    I.fillField("#email-1", "test@balat.sk");
-    I.fillField("#email-1", "test@balat.sk");
-    I.fillField("#adresa-1", "Askaban");
+    I.fillField("#f1-meno-1", "Vlad");
+    I.fillField("#f1-priezvisko-1", "Priezvisko-" + randomNumber);
+    I.fillField("#f1-email-1", "test@balat.sk");
+    I.fillField("#f1-adresa-1", "Askaban");
     I.clickCss("button[type='submit']");
     I.waitForText("Formulár bol úspešne odoslaný");
 
@@ -564,9 +988,23 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
     I.see("Záznamy 1 až 1 z 1");
 
     const expectedHtml = `
-        <div class="form-step mt-3"><div class="step-header"><p>Ukážka: viacero polí v jednom riadku</p></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="meno-1">Meno:</label> <span class="form-control emailInput-text">Vlad</span></div></div>
-        <div class="col"><div class="form-group mb-3"><label for="priezvisko-1">Priezvisko:</label> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span></div></div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="email-1">Email:</label> <span class="form-control emailInput-text">test@balat.sk</span></div>
-        </div><div class="col">&nbsp;</div></div><div class="row"><div class="col"><div class="form-group mb-3"><label for="adresa-1">Adresa:</label> <span class="form-control emailInput-text">Askaban</span></div></div></div></div>
+        <div class="form-step mt-3"><div class="step-header"><p>Ukážka: viacero polí v jednom riadku</p></div><div class="row"><div class="col">
+        <div class="form-group mb-3">
+        <label for="meno-1">Meno</label><div class="form-hint"></div> <span class="form-control emailInput-text">Vlad</span>
+        </div>
+        </div><div class="col">
+        <div class="form-group mb-3">
+        <label for="priezvisko-1">Priezvisko</label><div class="form-hint"></div> <span class="form-control emailInput-text">Priezvisko-${randomNumber}</span>
+        </div>
+        </div></div><div class="row"><div class="form-hint"></div><div class="col">
+        <div class="form-group mb-3">
+        <label for="email-1">Email</label><div class="form-hint"></div> <span class="form-control emailInput-text">test@balat.sk</span>
+        </div>
+        </div><div class="col">&nbsp;<div class="form-hint"></div></div></div><div class="row"><div class="form-hint"></div><div class="col">
+        <div class="form-group mb-3">
+        <label for="adresa-1">Adresa</label><div class="form-hint"></div> <span class="form-control emailInput-text">Askaban</span>
+        </div>
+        </div></div></div>
     `;
 
     const actualHtml = await getSubmitedFormPreview(I);
@@ -576,7 +1014,8 @@ Scenario('RowView version - test appearance', async ({ I, DT, Document }) => {
 });
 
 Scenario('Check form stat tab behaviour', ({ I, DT, DTE }) => {
-    I.amOnPage("/apps/form/admin/form-steps/");
+    I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_screens");
+    DT.waitForLoader("formItemsDataTable");
     I.click(DT.btn.formItems_add_button);
     DTE.waitForEditor("formItemsDataTable");
 
@@ -648,8 +1087,10 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
             .replace(/>\s+</g, '><')
             .trim();
 
-         // I.say(normalize(actualHtml));
-         // I.say(normalize(expectedHtml));
+        //I.say("ACTUAL HTML:\n" + actualHtml);
+        //I.say("EXPECTED HTML:\n" + expectedHtml);
+        //I.say("ACTUAL:\n" + normalize(actualHtml));
+        //I.say("EXPECTED:\n" + normalize(expectedHtml));
 
         I.assertEqual(
             normalize(actualHtml),
@@ -658,13 +1099,55 @@ function compareTwoHtml(I, actualHtml, expectedHtml) {
         );
 }
 
-function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder) {
-    I.click(DT.btn.formItems_add_button);
-    DTE.waitForEditor("formItemsDataTable");
-    fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder);
+/** Replaces the test page content so insertion does not depend on an earlier run's component. */
+function insertMultistepForm(I, DTE, Apps, formName) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    Apps.openAppForInsert('Formulár', '#multistep_form-title');
+    DTE.selectOption("formName", formName);
+    DTE.selectOption("cssTemplate", "Bez šablóny");
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    DTE.save();
 }
 
-function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder) {
+async function getFormSettingsCount(I, formName) {
+    return I.executeScript(async (name) => {
+        const response = await fetch("/admin/rest/form-settings/search/findByColumns?searchFormName=" + encodeURIComponent("^" + name + "$"), {
+            headers: { "X-CSRF-Token": window.csrfToken }
+        });
+        if (response.ok === false) throw new Error("Could not load form settings: " + response.status);
+        const settings = await response.json();
+        return settings.content.length;
+    }, formName);
+}
+
+function removeFormDefinition(I, DT, formName, preserve = false) {
+    DT.filterEquals("formName", formName);
+    I.waitForText(formName, 10, "#formsDataTable");
+    I.clickCss("#formsDataTable td.dt-select-td");
+    I.clickCss("#formsDataTable_wrapper button.buttons-remove");
+    I.waitForElement("div.DTE_Action_Remove");
+    I.waitForText("Naozaj chcete zmazať položku?", 5);
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.waitForInvisible("div.DTE_Action_Remove", 10);
+    DT.waitForLoader("formsDataTable");
+    if (preserve) I.waitForText(formName, 10, "#formsDataTable");
+    else I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#formsDataTable");
+}
+
+function createAndFillFormItem(I, DT,  DTE, fieldType, required, label, value, tooltip, placeholder, options = {}) {
+    I.waitForFunction(() => {
+        const selectedStep = document.querySelector("#formStepsDataTable tbody tr.selected");
+        return selectedStep && new URL(formItemsDataTable.getAjaxUrl(), window.location.origin).searchParams.get("stepId") === selectedStep.id;
+    }, [], 10);
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor("formItemsDataTable");
+    if(options.checkGeneratedId === true) { I.dontSeeElement("div.DTE_Field_Name_itemFormId"); }
+    fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder, options);
+}
+
+function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeholder, options = {}) {
     selectFieldType(I, fieldType);
 
     if(required !== null) {
@@ -673,6 +1156,7 @@ function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeh
     }
 
     if(label !== null) { DTE.fillQuill("label", label); }
+    if(options.trimValue === true) { I.checkOption("#DTE_Field_trimValue_0"); }
 
     I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
     if(value !== null) {
@@ -683,6 +1167,12 @@ function fillFormItem(I, DTE, fieldType, required, label, value, tooltip, placeh
             // its basic text value input
             I.fillField("#DTE_Field_value", value);
         }
+    }
+
+    if(options.emptyOption === true) {
+        I.waitForElement("#DTE_Field_valueAsOptions input.options-empty-option-btn", 5);
+        I.checkOption("#DTE_Field_valueAsOptions input.options-empty-option-btn");
+        I.seeCheckboxIsChecked("#DTE_Field_valueAsOptions input.options-empty-option-btn");
     }
 
     if(tooltip !== null) { DTE.fillQuill("tooltip", tooltip); }
@@ -761,6 +1251,172 @@ Scenario("check special form options behavior", ({ I, DT, DTE }) => {
     I.seeElement("div.DTE_Field_Name_valueAsEnumeration");
 });
 
+Scenario('Field step labels follow drag-and-drop order immediately and after reload', async ({ I, DT, DTE }) => {
+    const fieldLabel = 'Step order field autotest';
+    const steps = '#formStepsDataTable_wrapper #formStepsDataTable';
+    const items = '#formItemsDataTable';
+
+    function editField(stepNumber, stepId) {
+        I.clickIfVisible(locate(items + ' tbody tr:not(.selected)').withText(fieldLabel).find('td:last-child'));
+        I.click(DT.btn.formItems_edit_button);
+        DTE.waitForEditor('formItemsDataTable');
+        I.clickCss('#pills-dt-formItemsDataTable-advanced-tab');
+        I.seeTextEquals('Krok ' + stepNumber, '#DTE_Field_stepId option:checked');
+        I.seeInField('#DTE_Field_stepId', String(stepId));
+    }
+
+    I.amOnPage('/apps/form/admin/');
+    DT.waitForLoader('formsDataTable');
+    I.clickCss('#formsDataTable_wrapper .buttons-create');
+    DTE.waitForEditor('formsDataTable');
+    DTE.fillField('formName', stepOrderFormName);
+    DTE.save();
+    I.waitForElement(steps + ' tbody tr.selected');
+    DT.waitForLoader('formItemsDataTable');
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    DTE.selectOption('fieldType', 'Meno');
+    DTE.fillQuill('label', fieldLabel);
+    DTE.save();
+    I.waitForText(fieldLabel, 10, items);
+    const firstStepId = await I.grabAttributeFrom(steps + ' tbody tr.selected', 'id');
+
+    I.click(DT.btn.formSteps_add_button);
+    DTE.waitForEditor('formStepsDataTable');
+    DTE.save();
+    I.waitForText('Krok 2', 10, steps);
+    const secondStepId = await I.grabAttributeFrom(steps + ' tbody tr:last-child', 'id');
+    editField(1, firstStepId);
+    DTE.cancel();
+
+    I.dragAndDrop(steps + ' tbody tr:last-child .row-reorder-handler', steps + ' tbody tr:first-child .row-reorder-handler', { force: true });
+    I.waitForElement(steps + ' tbody tr:last-child[id="' + firstStepId + '"]');
+    DT.waitForLoader('formStepsDataTable');
+    DT.waitForLoader('formItemsDataTable');
+    I.seeTextEquals('Krok 2', steps + ' tbody tr.selected .text-muted');
+    editField(2, firstStepId);
+    I.seeTextEquals('Krok 1', '#DTE_Field_stepId option[value="' + secondStepId + '"]');
+    DTE.save();
+    I.waitForText(fieldLabel, 10, items);
+
+    I.refreshPage();
+    I.waitForElement(steps + ' tbody tr.selected');
+    I.click(locate(steps + ' tbody tr td').withText('Krok 2'));
+    I.waitForText(fieldLabel, 10, items);
+    editField(2, firstStepId);
+    DTE.cancel();
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss('#pills-dt-formItemsDataTable-advanced-tab');
+    I.seeTextEquals('Krok 2', '#DTE_Field_stepId option:checked');
+    I.seeInField('#DTE_Field_stepId', String(firstStepId));
+    DTE.cancel();
+
+    I.dragAndDrop(steps + ' tbody tr:last-child .row-reorder-handler', steps + ' tbody tr:first-child .row-reorder-handler', { force: true });
+    I.waitForElement(steps + ' tbody tr:first-child[id="' + firstStepId + '"]');
+    DT.waitForLoader('formStepsDataTable');
+    DT.waitForLoader('formItemsDataTable');
+    editField(1, firstStepId);
+    DTE.cancel();
+});
+
+Scenario('Cleanup step order autotest form', ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/');
+    DT.filterEquals('formName', stepOrderFormName);
+    DT.deleteAll('formsDataTable');
+});
+
+Scenario('Empty option settings by field type', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/form/admin/');
+    I.clickCss('#formsDataTable_wrapper button.buttons-create');
+    DTE.waitForEditor('formsDataTable');
+    DTE.fillField('formName', emptyOptionFormName);
+    DTE.save();
+    I.waitForVisible('#formStepsDataTable_wrapper');
+    I.waitForFunction(() => {
+        const step = document.querySelector('#formStepsDataTable tbody tr.selected');
+        return step && new URL(formItemsDataTable.getAjaxUrl(), location.origin).searchParams.get('stepId') === step.id;
+    }, [], 10);
+
+    const emptyOption = '#DTE_Field_valueAsOptions input.options-empty-option-btn';
+    const basicTab = '#pills-dt-formItemsDataTable-basic-tab';
+    const advancedTab = '#pills-dt-formItemsDataTable-advanced-tab';
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    selectFieldType(I, 'Výberový zoznam - select');
+    DTE.fillQuill('label', 'Radio empty option autotest');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    DTE.addFieldOptions('valueAsOptions', 'First autotest:one|Second autotest:two');
+    I.checkOption(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina zaškrtávacích polí');
+    I.clickCss(advancedTab);
+    I.waitForInvisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina výberových polí');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    I.checkOption(emptyOption);
+    DTE.save();
+    I.waitForVisible('div.stepPreview input[type="radio"][value=""]');
+    I.see('Bez zvolenej možnosti', 'div.stepPreview');
+
+    I.click(locate('#formItemsDataTable tbody td').withText('Radio empty option autotest'));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.seeCheckboxIsChecked(emptyOption);
+    DTE.cancel('formItemsDataTable');
+    I.clickCss('#formItemsDataTable_wrapper .buttons-copy-field');
+    I.waitForEnabled('#formItemsDataTable_wrapper .buttons-paste-field');
+    I.clickCss('#formItemsDataTable_wrapper .buttons-paste-field');
+    DTE.waitForEditor('formItemsDataTable');
+    I.clickCss(advancedTab);
+    I.waitForVisible(emptyOption);
+    I.seeCheckboxIsChecked(emptyOption);
+    I.clickCss(basicTab);
+    selectFieldType(I, 'Skupina zaškrtávacích polí');
+    I.clickCss(advancedTab);
+    I.waitForInvisible(emptyOption);
+    I.dontSeeCheckboxIsChecked(emptyOption);
+    DTE.save();
+    I.waitForVisible('div.stepPreview input[type="checkbox"]');
+    I.seeNumberOfElements('div.stepPreview input[type="checkbox"]', 2);
+    I.dontSeeElement('div.stepPreview input[type="checkbox"][value=""]');
+
+    createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, 'Select empty option autotest', 'First:one|Second:two', null, null, { emptyOption: true });
+    I.waitForElement('div.stepPreview select option[value=""]');
+    createAndFillFormItem(I, DT, DTE, 'Skupina výberových polí', false, 'Radio without empty option autotest', 'First:one|Second:two', null, null);
+    I.seeNumberOfElements('div.stepPreview input[type="radio"][value=""]', 1);
+
+    I.click(DT.btn.formItems_add_button);
+    DTE.waitForEditor('formItemsDataTable');
+    selectFieldType(I, 'Automatické dopĺňanie - autocomplete');
+    I.clickCss(advancedTab);
+    I.waitForVisible('#DTE_Field_valueAsOptions');
+    I.dontSeeElement(emptyOption);
+    DTE.cancel('formItemsDataTable');
+});
+
+Scenario('Cleanup empty option autotest form', ({ I, DT }) => {
+    I.amOnPage('/apps/form/admin/');
+    DT.filterEquals('formName', emptyOptionFormName);
+    DT.deleteAll('formsDataTable');
+    I.executeScript(() => {
+        const key = 'webjet.multistepform.clipboard.';
+        Object.keys(localStorage).filter(name => name.startsWith(key)).forEach(name => {
+            if (localStorage.getItem(name).includes('Radio empty option autotest')) localStorage.removeItem(name);
+        });
+    });
+});
+
 Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Apps, Document }) => {
     I.say('Prepare test form');
     I.amOnPage("/apps/form/admin/");
@@ -769,14 +1425,15 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     DTE.waitForEditor("formsDataTable");
 
     DTE.fillField("formName", specialFormName);
-    DTE.save();
+    DTE.save("formsDataTable", true);
 
     I.amOnPage("/apps/form/admin/form-steps/?formName=" + specialFormName);
     I.waitForVisible("#formStepsDataTable_wrapper");
     I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
+    I.wait(1);
 
-    createAndFillFormItem(I, DT, DTE, 'Meno', true, "Vase meno", "!LOGGED_USER_FIRSTNAME!", "Vase prve meno", null);
-    createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "labelA:valueA|labelB:valueB|labelC:valueC|labelD:valueD", null, null);
+    createAndFillFormItem(I, DT, DTE, 'Meno', true, "Vase meno", "!LOGGED_USER_FIRSTNAME!", "Vase prve meno", null, { trimValue: true, checkGeneratedId: true });
+    createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "labelA:valueA|labelB:valueB,with-comma|labelC:valueC|labelD:valueD", null, null);
 
     // Special enum must be add separate
     I.click(DT.btn.formItems_add_button);
@@ -791,68 +1448,163 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
 
     DTE.save();
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    createAndFillFormItem(I, DT, DTE, 'Výberový zoznam - select', false, "Empty option autotest", "labelA:valueA|labelB:valueB", null, null, { emptyOption: true });
+    createAndFillFormItem(I, DT, DTE, 'Automatické dopĺňanie - autocomplete', false, "Country autocomplete autotest", "Slovensko:SK|Česko:CZ|Rakúsko:AT", null, null);
+    createAndFillFormItem(I, DT, DTE, 'Nahrať jeden súbor', false, "Upload CV autotest", null, null, "Please use a PDF file - autotest");
 
-    // Set new multistep form as form for the page
-    DTE.waitForEditor();
-    Apps.openAppEditor();
-    DTE.selectOption("formName", specialFormName);
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
+    I.say("Check generated item ID and trim setting in edit mode");
+    I.click(locate("#formItemsDataTable tbody td").withText("Vase meno"));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor("formItemsDataTable");
+    I.seeElement("div.DTE_Field_Name_itemFormId");
+    I.verifyDisabled("#DTE_Field_itemFormId");
+    I.seeInField("#DTE_Field_itemFormId", "vase-meno-1");
+    I.seeCheckboxIsChecked("#DTE_Field_trimValue_0");
+    DTE.cancel("formItemsDataTable");
+
+    I.say("Check that the empty option setting is persisted");
+    I.click(locate("#formItemsDataTable tbody td").withText("Empty option autotest"));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor("formItemsDataTable");
+    I.clickCss("#pills-dt-formItemsDataTable-advanced-tab");
+    I.waitForElement("#DTE_Field_valueAsOptions input.options-empty-option-btn:checked", 5);
+    I.seeCheckboxIsChecked("#DTE_Field_valueAsOptions input.options-empty-option-btn");
+    DTE.cancel("formItemsDataTable");
+
+    I.say("Add an empty confirmation step for returning to saved values");
+    I.click(DT.btn.formSteps_add_button);
+    DTE.waitForEditor("formStepsDataTable");
+    DTE.fillQuill("header", "autotest confirmation");
     DTE.save();
+
+    insertMultistepForm(I, DTE, Apps, specialFormName);
 
     I.say("Test of step structure - showed must be labels not values");
     I.amOnPage("/apps/multistep-formular/app-insert-test.html");
 
-    testRadioCheckgroup(I, "checkboxgroup-1", "value", "label");
+    I.fillField("#f1-vase-meno-1", "  Trim autotest  ");
 
-    testRadioCheckgroup(I, "radiogroup-1", "valueEnum", "labelEnum");
+    ["A", "B", "C", "D"].forEach((suffix, index) => {
+        const value = suffix === "B" ? "valueB,with-comma" : "value" + suffix;
+        I.seeElement("#f1-checkboxgroup-1-" + index + "[value='" + value + "']");
+        I.seeElement(locate("label[for='f1-checkboxgroup-1-" + index + "']").withText("label" + suffix));
+    });
 
-    I.clickCss("label[for='checkboxgroup-1-1']");
-    I.clickCss("label[for='checkboxgroup-1-2']");
+    testRadioCheckgroup(I, "f1-radiogroup-1", "valueEnum", "labelEnum");
 
-    I.clickCss("label[for='radiogroup-1-0']");
+    I.say("Test select with an empty option");
+    I.seeInField("#f1-empty-option-autotest-1", "");
+    const selectOptionValues = await I.grabAttributeFromAll("#f1-empty-option-autotest-1 option", "value");
+    I.assertEqual(selectOptionValues.join("|"), "|valueA|valueB", "Select should start with an empty option");
 
-    //submit
+    I.say("Test remote autocomplete with accent-insensitive search");
+    const autocompleteSelector = "#f1-country-autocomplete-autotest-1";
+    I.waitForElement(autocompleteSelector + "[data-ac-initialized='true']", 10);
+    I.fillField(autocompleteSelector, "ces");
+    I.waitForText("Česko", 10, "ul.ui-autocomplete");
+    I.dontSee("Slovensko", "ul.ui-autocomplete");
+    I.click(locate("ul.ui-autocomplete li").withText("Česko"));
+    I.waitForValue(autocompleteSelector, "CZ", 5);
+
+    I.clickCss("label[for='f1-checkboxgroup-1-1']");
+    I.clickCss("label[for='f1-checkboxgroup-1-2']");
+
+    I.clickCss("label[for='f1-radiogroup-1-0']");
+
+    I.say("Test single file input");
+    const fileDropzoneSelector = "#f1-upload-cv-autotest-1-dropzone";
+    const fileButtonSelector = fileDropzoneSelector + " button.dz-message";
+    const uploadedFileName = "archive_file_test.pdf";
+
+    I.see("Please use a PDF file - autotest", "label[for='f1-upload-cv-autotest-1-dropzone'] ~ div.form-text");
+    I.seeElement(fileDropzoneSelector + "[data-dzmaxfiles='1']");
+    I.seeElement(fileButtonSelector + ".border.border-secondary.dz-clickable:not([disabled])");
+
+    I.attachFile("input.dz-hidden-input", "tests/apps/file-archive/docs/" + uploadedFileName);
+    I.waitForText(uploadedFileName, 10, fileDropzoneSelector + " [data-dz-name]");
+    I.waitForElement(fileButtonSelector + "[disabled]", 5);
+    I.dontSeeElement(fileButtonSelector + ".dz-clickable");
+
+    const uploadedFilesCount = await I.grabNumberOfVisibleElements(fileDropzoneSelector + " .dz-preview");
+    I.assertEqual(uploadedFilesCount, 1, "Single file input must contain exactly one uploaded file");
+
+    I.clickCss(fileDropzoneSelector + " button[data-dz-remove]");
+    I.waitForInvisible(fileDropzoneSelector + " .dz-preview", 5);
+    I.waitForElement(fileButtonSelector + ".dz-clickable:not([disabled])", 5);
+
+    I.attachFile("input.dz-hidden-input", "tests/apps/file-archive/docs/" + uploadedFileName);
+    I.waitForText(uploadedFileName, 10, fileDropzoneSelector + " [data-dz-name]");
+    I.waitForElement(fileButtonSelector + "[disabled]", 5);
+
+    const fileInputSelector = "input[name='f1-upload-cv-autotest-1']";
+    const uploadedFileKey = await I.grabValueFrom(fileInputSelector);
+    I.assertTrue(uploadedFileKey.length > 0, "The uploaded PDF must have a temporary file key");
+
+    I.say("Return from confirmation and restore saved selections and the PDF");
+    I.clickCss("button[type='submit']");
+    I.waitForText("autotest confirmation", 10, ".step-header");
+    I.clickCss("button[data-multistep-back-step]");
+    I.waitForVisible("#f1-vase-meno-1", 10);
+    I.seeInField("#f1-vase-meno-1", "Trim autotest");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-1[value='valueB,with-comma']");
+    I.seeCheckboxIsChecked("#f1-checkboxgroup-1-2");
+    I.seeCheckboxIsChecked("#f1-radiogroup-1-0");
+    I.waitForText(uploadedFileName, 10, fileDropzoneSelector + " [data-dz-name]");
+    I.waitForElement(fileButtonSelector + "[disabled]", 5);
+    I.seeInField(fileInputSelector, uploadedFileKey);
+    const restoredFilesCount = await I.grabNumberOfVisibleElements(fileDropzoneSelector + " .dz-preview");
+    I.assertEqual(restoredFilesCount, 1, "Returning to the step must restore the PDF exactly once");
+
+    I.clickCss("button[type='submit']");
+    I.waitForText("autotest confirmation", 10, ".step-header");
     I.clickCss("button[type='submit']");
     I.waitForText("Formulár bol úspešne odoslaný");
 
     I.say('Check saved anwers');
     I.amOnPage("/apps/form/admin/detail/?formName=" + specialFormName);
     I.see("Záznamy 1 až 1 z 1");
+    I.see(uploadedFileName, "#formDetailDataTable");
 
     const expectedHtml = `
         <div class="form-step mt-3"><div class="form-group mb-3">
-        <label for="meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span>:</label> <span class="form-control emailInput-text">Tester</span>
+        <label for="vase-meno-1">Vase meno<span class="text-danger requirement-mark">&nbsp;*</span></label><div class="form-hint"></div> <span class="form-control emailInput-text">Trim autotest</span>
         </div><div class="form-group mb-3">
-        <label for="checkboxgroup-1">Skupina zaškrtávacích polí:</label>
+        <label for="checkboxgroup-1">Skupina zaškrtávacích polí</label><div class="form-hint"></div>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-0" class="form-check-label">valueA</label>
+        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-0" class="form-check-label">labelA</label>
         </div>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">valueB</label>
+        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-1" class="form-check-label">labelB</label>
         </div>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-2" class="form-check-label">valueC</label>
+        <span class="inputcheckbox emailinput-cb input-checked">[X]</span> <label for="checkboxgroup-1-2" class="form-check-label">labelC</label>
         </div>
         <div class="form-check">
-        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-3" class="form-check-label">valueD</label>
+        <span class="inputcheckbox emailinput-cb input-unchecked">[&nbsp;]</span> <label for="checkboxgroup-1-3" class="form-check-label">labelD</label>
         </div>
         </div><div class="form-group mb-3">
-        <label for="radiogroup-1">Skupina výberových polí:</label>
+        <label for="radiogroup-1">Skupina výberových polí</label><div class="form-hint"></div>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-0" class="form-check-label">valueEnumA</label>
+        <span class="inputradio emailinput-radio input-checked">[X]</span> <label for="radiogroup-1-0" class="form-check-label">labelEnumA</label>
         </div>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">valueEnumB</label>
+        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-1" class="form-check-label">labelEnumB</label>
         </div>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-2" class="form-check-label">valueEnumC</label>
+        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-2" class="form-check-label">labelEnumC</label>
         </div>
         <div class="form-check">
-        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-3" class="form-check-label">valueEnumD</label>
+        <span class="inputradio emailinput-radio input-unchecked">[&nbsp;]</span> <label for="radiogroup-1-3" class="form-check-label">labelEnumD</label>
         </div>
+        </div><div class="form-group mb-3">
+        <label for="empty-option-autotest-1">Empty option autotest</label><div class="form-hint"></div><span class="form-control emailInput-select">&nbsp;</span>
+        </div><div class="form-group mb-3">
+        <label for="country-autocomplete-autotest-1">Country autocomplete autotest</label><div class="form-hint"></div><span class="form-control emailInput-text">CZ</span>
+        </div><div class="form-group mb-3">
+        <label class="form-label" for="upload-cv-autotest-1-dropzone">Upload CV autotest</label><div class="form-hint"></div>
+        <div class="form-text mb-2">Please use a PDF file - autotest</div><span class="form-control emailInput-text">archive_file_test.pdf</span>
         </div></div>
+        <hr><div class="form-step mt-3"><div class="step-header"><p>autotest confirmation</p></div></div>
     `;
 
     const actualHtml = await getSubmitedFormPreview(I);
@@ -861,17 +1613,13 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     compareTwoHtml(I, actualHtml, expectedHtml);
 });
 
-Scenario('Remove form 2 and test it @screenshot', ({ I, DT }) => {
+Scenario('Remove form 2 and test it @screenshot', async ({ I, DT, DTE, Apps }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + appInsertTestPageId);
+    Apps.clearPageContent();
+    DTE.save();
     I.amOnPage("/apps/form/admin/");
-
-    DT.filterEquals("formName", specialFormName);
-    I.clickCss("td.dt-select-td");
-    I.click("button.buttons-remove");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.waitForText("Naozaj chcete zmazať položku?", 5);
-    I.click("Zmazať", "div.DTE_Action_Remove");
-
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    removeFormDefinition(I, DT, specialFormName);
+    I.assertEqual(await getFormSettingsCount(I, specialFormName), 0, "Deleting the unused form must remove its settings");
 });
 
 function testRadioCheckgroup(I, field, valuePrefix, labelPrefix) {

@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -32,17 +33,21 @@ public class RegExpEntity implements Serializable {
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
-    @Column(name = "title")
-    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title="components.form.admin_form.title")
-    @Size(max = 255)
-    @NotBlank
-    private String title;
+    @Transient
+    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title="components.form.admin_form.translated_title", hiddenEditor = true, filter = true, className = "not-export")
+    private String translatedTitle;
 
     @Column(name = "type")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.form.admin_form.type")
     @Size(max = 32)
     @NotBlank
     private String type;
+
+    @Column(name = "title")
+    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title="components.form.admin_form.translation_key")
+    @Size(max = 255)
+    @NotBlank
+    private String title;
 
     @Column(name = "reg_exp")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.form.admin_form.reg_exp")

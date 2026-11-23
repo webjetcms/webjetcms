@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -73,21 +74,49 @@ public class SessionClusterService {
         return new ObjectMapper().valueToTree( convertToList(content, userId) );
     }
 
+    /**
+     * Reads sessions for an already authorized set of users in one cluster query.
+     * Callers must enforce permission and domain scope before supplying user IDs.
+     *
+     * @param userIds authorized user IDs to include
+     * @return active session records without expanding the supplied user set
+     */
+    public static List<SessionDetails> getSessionsForUsers(Set<Integer> userIds) {
+        List<SessionDetails> sessions = new ArrayList<>();
+        if (userIds.isEmpty()) return sessions;
+        deleteOldData(false);
+        new ComplexQuery().setSql(GET_ALL_NODES).setParams(TYPE).list(new Mapper<Object>() {
+            @Override
+            public Object map(ResultSet rs) throws SQLException {
+                for (SessionDetails session : readSessions(rs.getString("content"))) {
+                    if (userIds.contains(session.getLoggedUserId()) && !SessionHolder.INVALIDATE_SESSION_ADDR.equals(session.getRemoteAddr()))
+                        sessions.add(session);
+                }
+                return null;
+            }
+        });
+        return sessions;
+    }
+
     private static List<SessionDetails> convertToList(String content, int userId) {
         List<SessionDetails> userSessions = new ArrayList<>();
         if(Tools.isEmpty(content) || userId < 1) return userSessions;
 
+        for (SessionDetails session : readSessions(content)) {
+            if (session.getLoggedUserId() == userId) userSessions.add(session);
+        }
+        return userSessions;
+    }
+
+    /** Deserializes cluster records, tolerating empty or stale malformed node data. */
+    private static List<SessionDetails> readSessions(String content) {
+        if (Tools.isEmpty(content)) return new ArrayList<>();
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            for(SessionDetails session : mapper.readValue(content, new TypeReference<List<SessionDetails>>() {})) {
-                if(session.getLoggedUserId() == userId)
-                    userSessions.add(session);
-            }
+            return new ObjectMapper().readValue(content, new TypeReference<List<SessionDetails>>() {});
         } catch (JsonProcessingException e) {
             // BAD data maybe, refresh
         }
-
-        return userSessions;
+        return new ArrayList<>();
     }
 
     /**

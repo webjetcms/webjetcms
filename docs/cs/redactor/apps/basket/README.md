@@ -2,9 +2,11 @@
 
 Přes aplikaci E-shop můžete vytvořit a spravovat jednoduchý elektronický obchod. V rámci aplikace definujete jednotlivé produkty a jejich atributy (např. velikost, barva), způsoby doručení či platby. Aplikace evidujete seznam přijatých objednávek, umožňuje nastavovat jejich stav s možností notifikace změn v objednávce na zákazníky email.
 
+Volitelné [zaokrouhlování](rounding.md) zajistí, aby se cena v košíku počítala ze zobrazené ceny za kus s DPH. Například cena **1,594 €** se zaokrouhlí na **1,59 €** a zákazník za tři kusy zaplatí **4,77 €**.
+
 ## Nastavení aplikace
 
-### Karta Nastavení:
+### Karta Nastavení
 
 - **Adresář**: Zadejte cestu k adresáři.
 - **Uspořádat podle**: Vyberte kritérium uspořádání, například „Priority“.
@@ -20,22 +22,23 @@ Přes aplikaci E-shop můžete vytvořit a spravovat jednoduchý elektronický o
 - **Katalog produktů (bez nákupního košíku)**: Zobrazení katalogu bez možnosti nákupu.
 - **Tajný klíč pro službu "ověřeno zákazníky" (heureka.sk)**: Zadejte tajný klíč pro službu.
 
-#### Způsob doručení:
+#### Způsob doručení
 
 - **Zadejte způsob doručení**: Vyplňte dostupné způsoby doručení.
   - Při stisku **Přidat** lze vyplnit: **Cena bez DPH**, **Měna**, **Daň**, **Cena s DPH**, **Stará cena s DPH**
 
 ![](editor.png)
 
-### Karta Vizuální styl:
+### Karta Vizuální styl
 
 - Možnost vybrat ze dvou stylů pro zobrazení.
 
 ![](editor-style.png)
 
-### Seznam objednávek:
+### Seznam objednávek
 
 Při zobrazení lze vyfiltrovat podle:
+
 - **Stav**
 - **Vydána / odeslána**
 - **Jméno**
@@ -44,18 +47,18 @@ Při zobrazení lze vyfiltrovat podle:
 
 ![](editor-list.png)
 
-### Karta položky:
+### Karta položky
 
 - **Název web stránky**: Zadejte název web stránky.
 - **Popis produktu**: Zadejte popis produktu.
 - **Zobrazit štítek**: Zapnout zobrazení štítku produktu.
 
-#### Přidat variantu:
+#### Přidat variantu
 
 - **Název varianty**: Zadejte název varianty produktu.
 - **Hodnoty varianty**: Zadejte dostupné hodnoty varianty.
 
-#### Informace o produktu:
+#### Informace o produktu
 
 - **Cena bez DPH**
 - **Měna**

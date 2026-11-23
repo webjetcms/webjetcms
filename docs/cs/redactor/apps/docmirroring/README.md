@@ -37,7 +37,17 @@ Při další práci se zrcadlí následující operace:
 - Změna pořadí adresáře/stránky ve struktuře (kromě kořenových složek)
 - Přesunutí adresáře/stránky do jiného adresáře
 
+Při přesunu do jiné zrcadlené složky se přesunou stávající jazykové verze se zachováním jejich ID. Nevytváří se další kopie namísto přesunutých položek. Po přesunu složky se v jejích zrcadlených verzích aktualizují také automaticky generované nebo zděděné URL adresy stránek v přesunuté složce i v jejích podsložkách podle nového umístění.
+
 Zbývající vlastnosti adresářů/stránek zůstávají zachovány a nemají vliv na svůj ekvivalent ve druhé jazykové mutaci.
+
+Před smazáním se v potvrzovacím okně zobrazí [seznam zrcadlených stránek nebo složek](../../webpages/README.md#smazání-zrcadlených-stránek-a-složek), které se smažou spolu s vybranou položkou.
+
+![](../../webpages/mirroring/delete-groups.png)
+
+Ve stromové struktuře můžete pomocí [jazykových odkazů](../../webpages/README.md#přechod-mezi-zrcadlenými-složkami) přejít do propojené složky a zapnout si [upozornění na chybná provázání](../../webpages/mirroring-strom-šnm-šr.
+
+![](../../webpages/mirroring/tree-problems.png)
 
 ## Vytvoření odkazu na jazykové mutace v hlavičce stránky
 
@@ -88,6 +98,8 @@ Překladač při vytvoření stránky hledá ve složkách rekurzivně směrem k
 
 Překládá se **Název web stránky**, název položky v menu, URL adresa a **Obsah** web stránky.
 
+Pokud překlad selže, například po vyčerpání kvóty DeepL, zrcadlení pokračuje s aktuálním názvem a obsahem v původním jazyce. Po uložení se zobrazí upozornění **Automatický překlad selhal** s informací, že byl použit původní jazyk. Upozornění obsahuje i konkrétní důvod z výjimky překladače; při HTTP chybě DeepL zobrazí HTTP kód a zprávu z odpovědi, je-li dostupná, například o vyčerpané kvótě, nepodporované kombinaci jazyků nebo interní chybě služby. Redaktor může jazykovou verzi přeložit ručně nebo po obnovení překladače zopakovat uložení původní stránky.
+
 ### Nová stránka
 
 Při vytváření stránky se vždy spustí automatický překlad. Pokud vytvoříte novou stránku s názvem "dobré ráno" ve složce `preklad_sk`, kde je nastaven Český jazyk, tak v adresáři `preklad_en` vznikne stránka `good morning`, obsah stránky bude také přeložen do Anglického jazyka.
@@ -108,6 +120,8 @@ WebJET potřebuje vědět, zda přeložená stránka byla již upravena skutečn
 
 V uživatelích tedy vytvořte nového (virtuálního) uživatele s právy na editaci potřebných web stránek a jeho přihlašovací jméno zadejte do konf. proměnné `structureMirroringAutoTranslatorLogin`. S tímto uživatelem byste se neměli nikdy přihlašovat a používat jej k redaktorské činnosti, je to jen technický/virtuální uživatel. Výchozí přihlašovací jméno je `autotranslator`, pokud použijete toto přihlašovací jméno nemusíte nastavovat uvedenou konf. proměnnou.
 
+Při uložení **pracovní verze** se obsah již zveřejněných jazykových verzí nepřepisuje, ani když je jejich autorem uživatel nastaven v `structureMirroringAutoTranslatorLogin`. Nezveřejněné jazykové verze mohou být aktualizovány podle podmínek uvedených níže. Při publikování zdrojové stránky se tyto podmínky vyhodnotí i pro zveřejněné jazykové verze.
+
 Automatický překlad již existující stránky se provede za následujících podmínek:
 
 - Pokud konfigurační proměnná `structureMirroringAutoTranslatorLogin` je nastavena a daný uživatel existuje v databázi.
@@ -116,7 +130,7 @@ Automatický překlad již existující stránky se provede za následujících 
 
 Při nastavené hodnotě `structureMirroringAutoTranslatorLogin` je tedy detekce spolehlivější, protože i ještě nezveřejněnou verzi web stránky mohl již jiný uživatel opravit/korigovat, ale ještě ji nezveřejnil. Při vaší změně by nastalo přepsání textu, což je nežádoucí stav. Doporučujeme vytvořit (virtuálního) uživatele a jeho přihlašovací jméno nastavit do `structureMirroringAutoTranslatorLogin` pro spolehlivější detekci změn.
 
-Při ukládání stránky se změny aplikují na všechny kopie. Pokud tedy z SK verze vytvořím EN a DE verzi (které ještě nejsou publikovány, nebo nebyly změněny reálným redaktorem), tak při změně EN verze se text přeloží do DE verze. CS verze se neovlivní, protože je již typicky publikovaná, respektive je vytvořena reálným (ne `structureMirroringAutoTranslatorLogin`) uživatelem.
+Změny obsahu se přenášejí do všech kopií, které splňují uvedené podmínky. Například při úpravě EN verze se může text přeložit do DE verze, pokud ji ještě nekorigoval redaktor. Při uložení pracovní verze EN se přitom již zveřejněná DE verze nezmění.
 
 Je-li nastavena konf. proměnná `syncGroupAndWebpageTitle` na hodnotu `true` (což je standardní hodnota) automaticky se synchronizuje název složky s názvem hlavní stránky ve složce. Při změně názvu hlavní stránky se přejmenuje i složka a to iv přeložených verzích.
 

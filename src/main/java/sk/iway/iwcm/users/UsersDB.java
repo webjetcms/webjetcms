@@ -11,6 +11,7 @@ import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.dmail.EmailDB;
+import sk.iway.iwcm.doc.PlannedAssetPaths;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.stat.StatNewDB;
@@ -1912,7 +1913,7 @@ public class UsersDB
 			{
 			}
 		}
-		while (!success && countDown>0)
+		if (!success && countDown>0)
 		{
 			try
 			{
@@ -2365,6 +2366,13 @@ public class UsersDB
 
 		if (FileBrowserTools.hasForbiddenSymbol(folder)) return false;
 
+        // Planned files inherit permissions from their public destination.
+        if (folder != null && folder.startsWith(PlannedAssetPaths.ROOT)) {
+            int slash = folder.indexOf('/', PlannedAssetPaths.ROOT.length());
+            if (slash <= PlannedAssetPaths.ROOT.length()) return false;
+            folder = folder.substring(slash);
+        }
+
 		String writableFolders = writableFoldersParam;
         if (Tools.isEmpty(writableFolders) && Constants.getBoolean("fbrowserShowOnlyWritableFolders"))
         {
@@ -2391,7 +2399,8 @@ public class UsersDB
 				if (dir.endsWith("/+") || dir.endsWith("/*")) dir = dir.substring(0, dir.length()-2);
 				else dir = dir.substring(0, dir.length()-1);
 
-				if (folder.startsWith(dir))
+				String recursiveDir = dir.endsWith("/") ? dir : dir + "/";
+				if (folder.startsWith(recursiveDir))
 				{
 					return(true);
 				}

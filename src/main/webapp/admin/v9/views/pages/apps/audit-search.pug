@@ -8,10 +8,7 @@ block content
         window.domReady.add(function () {
             var url = "/admin/rest/audit/log";
 
-            var tabs = [
-                { id: 'description', title: '[[\#{components.audit_log.description}]]', selected: true, content: '<div></div>' },
-                { id: 'main', title: '[[\#{datatable.tab.basic}]]' }
-            ];
+            var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.system.audit.jpa.AuditLogEntity')})];
 
             var columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.AuditLogEntity")})];
             //console.log(columns);

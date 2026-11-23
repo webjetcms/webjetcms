@@ -8,6 +8,8 @@ argument-hint: 'Optionally specify which part of the documentation the changes a
 
 Analyzes Git changes and updates the content of the currently open Markdown document in Slovak.
 
+Use the target project's actual PR base, documentation layout and release conventions. `origin/main` in the command examples is a placeholder: resolve the PR base or remote default branch before comparing. In a customer project, do not require or create core changelog/roadmap files. Use `wj-project-context` when available to distinguish shared WebJET conventions from core-only workflows. Resolve paths against the target project root, not the installed skill directory.
+
 ## When to use
 
 - You want to document changes introduced by the current PR before merging
@@ -97,7 +99,7 @@ Update types:
 
 ### 6. Update the CHANGELOG
 
-Open the file `/docs/sk/CHANGELOG-2026.md` and find the section `## 2026.0-SNAPSHOT`. Add or append a record in the format:
+If the target project requires a changelog, locate its current release file and section. In core this is the corresponding `docs/sk/CHANGELOG-<year>.md` file. Do not assume a fixed year or create this layout in a customer project. Where the convention applies, add or append a record in the format:
 
 ```
 - <brief description of the change in Slovak> (#XXXX)
@@ -112,11 +114,11 @@ After the update, check:
 - [ ] Documentation is in Slovak
 - [ ] File structure is preserved
 - [ ] New parts are consistent with existing style
-- [ ] CHANGELOG contains an entry with ticket number `(#XXXX)`
+- [ ] The applicable project changelog is updated, with a ticket number only when known.
 
 ## Notes
 
-- If the change is purely refactoring (no change in behavior), do not **edit** the documentation, just inform the user. However, update the CHANGELOG whenever there is a visible change in behavior or a fix.
+- If the change is purely refactoring (no change in behavior), do not **edit** the documentation, just inform the user. For visible changes or fixes, update a changelog only when the project's conventions require it.
 - If the current Markdown file does not contain a section for changed classes/functions, suggest where to add it.
 - If the branch does not have a standard format (e.g. `main`, `develop`), omit the ticket number and notify the user.
 
@@ -199,7 +201,7 @@ git rev-parse --abbrev-ref HEAD
 
 The branch has the format `feature/XXXX-description` or `hotfix/XXXX-description` — the ticket number is `XXXX` (the digits between `/` and the first `-`).
 
-Open the file `/docs/sk/CHANGELOG-2026.md` and find the section `## 2026.0-SNAPSHOT`. Add or append a record in the format:
+If the target project requires a changelog, locate its current release file and section. In core this is the corresponding `docs/sk/CHANGELOG-<year>.md` file. Do not assume a fixed year or create this layout in a customer project. Where the convention applies, add or append a record in the format:
 
 ```
 - <brief description of the change in Slovak> (#XXXX)
@@ -214,11 +216,11 @@ After the update, check:
 - [ ] Documentation is in Slovak
 - [ ] File structure is preserved
 - [ ] New parts are consistent with existing style
-- [ ] CHANGELOG contains an entry with ticket number `(#XXXX)`
+- [ ] The applicable project changelog is updated, with a ticket number only when known.
 
 ## Notes
 
-- If the change is purely refactoring (no change in behavior), do not **edit** the documentation, just inform the user. However, update the CHANGELOG whenever there is a visible change in behavior or a fix.
+- If the change is purely refactoring (no change in behavior), do not **edit** the documentation, just inform the user. For visible changes or fixes, update a changelog only when the project's conventions require it.
 - If the current Markdown file does not contain a section for changed classes/functions, suggest where to add it.
 - If the branch does not have a standard format (e.g. `main`, `develop`), omit the ticket number and notify the user.
 - Unlike `wj-docs-uncommited`, this skill covers **all committed changes in the PR branch**, not just local unstaged/staged edits.

@@ -6,11 +6,18 @@ Before(({ login }) => {
 
 async function checkColor(title, expectedColor, I, DTE) {
     I.click(title);
+    DTE.waitForEditor();
+    I.see(title, "#datatableInit_modal .modal-title");
     DTE.waitForLoader();
     DTE.waitForCkeditor();
 
     const elementSelector = "section.prices div.card-header.text-white:nth-child(1)";
 
+    I.waitForFunction(([selector, color]) => {
+        const frame = document.querySelector("iframe.cke_wysiwyg_frame.cke_reset");
+        const element = frame?.contentDocument?.querySelector(selector);
+        return element != null && frame.contentWindow.getComputedStyle(element).backgroundColor === color;
+    }, [elementSelector, expectedColor], 10);
     I.switchTo("iframe.cke_wysiwyg_frame.cke_reset");
     let background = await I.grabCssPropertyFrom(elementSelector, 'background-color');
     I.switchTo();

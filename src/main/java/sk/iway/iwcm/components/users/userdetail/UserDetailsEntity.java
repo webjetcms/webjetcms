@@ -23,6 +23,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 /**
  * Udaje pouzivatela
@@ -35,6 +37,14 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_EDIT)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "personalInfo", title = "useredit.personal_info", selected = true),
+    @DataTableTab(id = "contactTab", title = "components.users.contact"),
+    @DataTableTab(id = "freeItems", title = "components.users.free_items"),
+    @DataTableTab(id = "groupsTab", title = "user.admin.userGroups"),
+    @DataTableTab(id = "rightsTab", title = "useredit.permissions", perms = "users_edit_admins"),
+    @DataTableTab(id = "approvingTab", title = "components.users.approving", hideOnCreate = true, perms = "users_edit_admins")
+})
 public class UserDetailsEntity extends UserDetailsBasic {
 
     public UserDetailsEntity(){

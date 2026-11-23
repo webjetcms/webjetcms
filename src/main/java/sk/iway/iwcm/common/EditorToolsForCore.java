@@ -4,10 +4,19 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import net.sourceforge.stripes.mock.MockHttpServletRequest;
 import net.sourceforge.stripes.mock.MockHttpServletResponse;
 import sk.iway.Password;
 import sk.iway.iwcm.Cache;
@@ -70,6 +79,7 @@ public class EditorToolsForCore {
                 doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128));
                 doc.setVirtualPath(my_form.getVirtualPath());
                 doc.setGroupId(my_form.getGroupId());
+                doc.setTempId(my_form.getTempId());
                 String virtualPath = DocDB.getURL(doc, groupDiskPath);
                 String koncovka = virtualPath.endsWith("/") ? "/" : ".html";
                 String editorPageExtension = Constants.getString("editorPageExtension");
@@ -318,6 +328,8 @@ public class EditorToolsForCore {
         String renderedData = null;
         String includeFileName = "/components/_common/fulltext_preview.jsp";
         StringBuilder htmlCode = null;
+        RequestAttributes originalAttributes = RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes temporaryAttributes = null;
 
         try
         {
@@ -325,12 +337,53 @@ public class EditorToolsForCore {
             {
 
                 WJResponseWrapper respWrapper = null;
-                MockHttpServletResponse response = new MockHttpServletResponse();
+                MockHttpServletResponse response = new MockHttpServletResponse() {
+                    @Override
+                    public String getHeader(String name) {
+                        Collection<String> values = getHeaders(name);
+                        if (values.isEmpty()) return null;
+                        return values.iterator().next();
+                    }
+
+                    @Override
+                    public Collection<String> getHeaders(String name) {
+                        List<String> values = new ArrayList<>();
+                        for (Map.Entry<String, List<Object>> header : getHeaderMap().entrySet()) {
+                            if (header.getKey().equalsIgnoreCase(name)) {
+                                for (Object value : header.getValue()) {
+                                    if (value != null) values.add(String.valueOf(value));
+                                }
+                            }
+                        }
+                        return values;
+                    }
+
+                    @Override
+                    public Collection<String> getHeaderNames() {
+                        return new ArrayList<>(getHeaderMap().keySet());
+                    }
+                };
                 respWrapper = new WJResponseWrapper(response, request);
+                // Use the response with header accessors instead of the wrapper's default Stripes mock.
+                respWrapper.setResponse(response);
+
+                if (originalAttributes == null || request instanceof MockHttpServletRequest)
+                {
+                    // Synthetic requests need their own scope even when the caller has a Spring request context.
+                    temporaryAttributes = new ServletRequestAttributes(request, respWrapper);
+                    RequestContextHolder.setRequestAttributes(temporaryAttributes);
+                }
 
                 request.setAttribute("fulltext_preview", data);
 
-                request.getRequestDispatcher(includeFileName).include(request, respWrapper);
+                RequestDispatcher dispatcher;
+                if (request instanceof MockHttpServletRequest) {
+                    dispatcher = Constants.getServletContext().getRequestDispatcher(includeFileName);
+                } else {
+                    dispatcher = request.getRequestDispatcher(includeFileName);
+                }
+                dispatcher.include(request, respWrapper);
+
                 if (Tools.isEmpty(respWrapper.getRedirectURL()))
                 {
                     htmlCode = new StringBuilder(respWrapper.getStrWriterAsString());
@@ -373,6 +426,20 @@ public class EditorToolsForCore {
             sk.iway.iwcm.Logger.error(ex);
             Logger.debug(EditorToolsForCore.class, "renderIncludes ERROR, htmlData:"+htmlCode);
         }
+        finally
+        {
+            if (temporaryAttributes != null)
+            {
+                try
+                {
+                    temporaryAttributes.requestCompleted();
+                }
+                finally
+                {
+                    RequestContextHolder.setRequestAttributes(originalAttributes);
+                }
+            }
+        }
 
         //nastala exception, radsej to do FT indexu nedame
         if (renderedData!=null && renderedData.contains("iwcm.tags.WriteTag.writeText")) renderedData = null;
@@ -382,11 +449,19 @@ public class EditorToolsForCore {
     }
 
     /**
-     * Remove from string html tags and keep the length of string
+     * Removes HTML tags while preserving character positions within the configured input limit.
      */
     public static String removeHtmlTagsKeepLength(String html_text)
     {
         if (Tools.isEmpty(html_text)) return("");
+
+        int maxLength = Constants.getInt("fulltextMaxHtmlLength");
+        if (maxLength <= 0) maxLength = 2000000;
+        if (html_text.length() > maxLength)
+        {
+            Logger.warn(EditorToolsForCore.class, "Truncating HTML input from {} to {} characters (fulltextMaxHtmlLength).", html_text.length(), maxLength);
+            html_text = html_text.substring(0, maxLength);
+        }
 
         //Logger.debug(EditorDB.class, "Html size: "+html_text.length()+" Html text: "+html_text);
 
@@ -407,10 +482,35 @@ public class EditorToolsForCore {
 
         try
         {
+            // Guard against future changes that stop advancing tt.
             int failsafe = 0;
             c = html_text.charAt(tt);
-            while (tt < (html_text.length()) && failsafe++ < 100000)
+            while (tt < html_text.length() && failsafe++ < maxLength)
             {
+                // Ignore tag-like text in comments and quoted attributes, preserving its positions.
+                int skipUntil = -1;
+                if (script == false && c == '<' && html_text.startsWith("<!--", tt))
+                {
+                    int end = html_text.indexOf("-->", tt + 4);
+                    skipUntil = end == -1 ? html_text.length() : end + 3;
+                }
+                else if (intag && script == false && (c == '"' || c == '\''))
+                {
+                    int end = html_text.indexOf(c, tt + 1);
+                    skipUntil = end == -1 ? html_text.length() : end + 1;
+                }
+                if (skipUntil != -1)
+                {
+                    while (tt < skipUntil)
+                    {
+                        s.append(' ');
+                        tt++;
+                    }
+                    if (tt == html_text.length()) break;
+                    c = html_text.charAt(tt);
+                    continue;
+                }
+
                 if (c == '<')
                 {
                     //start of a tag
@@ -469,7 +569,8 @@ public class EditorToolsForCore {
                 if(tt == (html_text.length())) break;
                 c = html_text.charAt(tt);
 
-                if (intag == true)
+                // Only script/style names and their closing tags need to be recognized.
+                if (intag == true && temp.length() < 7)
                 {
                     temp += (char) c;
                 }

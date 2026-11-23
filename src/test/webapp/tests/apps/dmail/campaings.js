@@ -1,5 +1,7 @@
 Feature('apps.dmail.campaings');
 
+const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");
+
 var randomNumber, entityNameOriginal;
 var recipientsWrapper = "#datatableFieldDTE_Field_recipientsTab_wrapper";
 var recipientsModal = "#datatableFieldDTE_Field_recipientsTab_modal";
@@ -33,7 +35,7 @@ Scenario('campaings-zakladne testy @baseTest', ({I, DT, DTE}) => {
     I.dontSeeElement('Otvorenia');
     I.dontSeeElement('Kliknutia');
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -73,7 +75,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -121,7 +123,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     /* PREPARE ENTITY */
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -238,7 +240,7 @@ Scenario('testy skupiny pouzivatelov @baseTest', ({I, DT, DTE}) => {
     I.click(DT.btn.campaings_add_button);
     DTE.waitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
@@ -310,13 +312,14 @@ Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
 
     /* CREATE TEST */
     I.clickCss("div.dt-buttons button.buttons-create");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
     //Set subject
+    I.wait(1); //wait to subject change handler in index.html
     I.fillField("#DTE_Field_subject", prijemcoviaEntityName);
 
     editGroups(I, DT, ['Newsletter'], []);
@@ -327,36 +330,36 @@ Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
     DTE.save();
 
     //
-    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter);
+    overPocetPrijemcov(I, DTE, prijemcoviaEntityName, pocetPrijemcovNewsletter);
 
     // IN the end, number of recipients must be 3
     I.say("Pridam skupinu Vianocne pozdravy, overim pocet prijemcov");
     I.click(prijemcoviaEntityName);
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     editGroups(I, DT, ["Vianočné pozdravy"], []);
     DTE.save();
 
-    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter+pocetPrijemcovVianocnePozdravy);
+    overPocetPrijemcov(I, DTE, prijemcoviaEntityName, pocetPrijemcovNewsletter+pocetPrijemcovVianocnePozdravy);
 
     //
     I.say("Odoberem skupinu Vianocne pozdravy, overim pocet prijemcov");
     I.click(prijemcoviaEntityName);
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     editGroups(I, DT, [], ["Vianočné pozdravy"]);
     DTE.save();
 
-    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter);
+    overPocetPrijemcov(I, DTE, prijemcoviaEntityName, pocetPrijemcovNewsletter);
 });
 
 Scenario('campaings pocty prijemcov delete', ({I, DT, DTE}) => {
     deleteCampaingByName(I, DT, DTE, prijemcoviaEntityName);
 });
 
-Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
+Scenario('zobrazenie nahladu emailu', ({I, DT, DTE}) => {
     DT.waitForLoader();
     DT.filterContains("subject", "Testovaci email");
     I.click("Testovaci email");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
 
     I.clickCss("#pills-dt-campaingsDataTable-preview-tab");
     I.wait(1);
@@ -365,12 +368,12 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.see("Formular", "div.container");
     I.switchTo();
 
-    I.dtEditorCancel();
+    DTE.cancel();
 
     //
     DT.filterContains("subject", "Test_1");
     I.click("Test_1");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
 
     I.clickCss("#pills-dt-campaingsDataTable-preview-tab");
     I.wait(1);
@@ -383,7 +386,7 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     //
     I.say("Zmenim stranku a mal by sa zmenit aj text");
     I.clickCss("#pills-dt-campaingsDataTable-main-tab");
-    I.clickCss("button.btn-vue-jstree-item-edit")
+    I.clickCss("button.btn-webjet-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
@@ -394,12 +397,12 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.see("Testovací newsletter");
     I.switchTo();
 
-    I.dtEditorCancel();
+    DTE.cancel();
 
     //
     I.say("Vyskusam novy email");
     I.clickCss("button.buttons-create");
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-preview-tab");
     I.wait(1);
     I.switchTo("#emailPreviewIframe");
@@ -408,7 +411,7 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.dontSee("Testovací newsletter");
     I.switchTo();
 
-    I.dtEditorCancel();
+    DTE.cancel();
 });
 
 Scenario('Test sort in inner tables', ({I, DT, DTE}) => {
@@ -798,8 +801,8 @@ function prepareCampaignForInsert(I, DTE, entityName) {
     DTE.waitForEditor("campaingsDataTable");
 
     //Needed fields
-    I.clickCss("button.btn-vue-jstree-item-edit");
-    I.waitForElement("#jsTree");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
+    I.waitForElement(WebjetDteJsTree.tree);
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
@@ -828,15 +831,15 @@ function addEmail(I, DTE, recipientName, recipientEmail, checkModalClose=true, s
     }
 }
 
-function overPocetPrijemcov(I, entityName, pocetPrijemcov) {
+function overPocetPrijemcov(I, DTE, entityName, pocetPrijemcov) {
     I.say("Over pocet prijemcov");
     I.dtFilter("subject", entityName);
     I.see("0 / "+pocetPrijemcov, "#campaingsDataTable tbody tr td.cell-not-editable");
     I.click(entityName);
-    I.dtWaitForEditor("campaingsDataTable");
+    DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.see("Záznamy 1 až "+pocetPrijemcov+" z "+pocetPrijemcov, "#datatableFieldDTE_Field_recipientsTab_info");
-    I.dtEditorCancel();
+    DTE.cancel();
 }
 
 Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
@@ -848,8 +851,8 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     let campaign = "BUG-reciepients-autotest-" + randomNumber;
     I.fillField("#DTE_Field_subject", campaign);
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
-    I.waitForElement("div#jsTree");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
+    I.waitForElement(WebjetDteJsTree.tree);
 
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
     I.click(locate('.jstree-node.jstree-closed').withText('Hromadný e-mail').find('.jstree-icon.jstree-ocl'));
@@ -885,12 +888,14 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
 
     I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.btn.btn-sm.btn-outline-secondary.buttons-refresh');
     DT.waitForLoader('#datatableFieldDTE_Field_recipientsTab_processing');
+    I.wait(1);
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-select-all") );
+    I.wait(1);
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-remove") );
-    DTE.waitForEditor("campaingsDataTable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForEditor("datatableFieldDTE_Field_recipientsTab");
+    I.click("Zmazať", "#datatableFieldDTE_Field_recipientsTab_modal div.DTE_Action_Remove");
     DTE.waitForModalClose('datatableFieldDTE_Field_recipientsTab_modal');
-    DT.waitForLoader();
+    DT.waitForLoader('datatableFieldDTE_Field_recipientsTab');
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     DTE.cancel();
 
@@ -963,13 +968,13 @@ Scenario('Feature setting of subject', ({I, DTE}) => {
     I.seeInField("#DTE_Field_subject", "");
 
     I.say("Select webpage and check that subject is set");
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
     I.seeInField("#DTE_Field_subject", "Produktová stránka - B verzia");
 
     I.say("Change webpage and wait for dialog");
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Registracia do newsletra');
     I.waitForVisible("#toast-container-webjet");
@@ -979,7 +984,7 @@ Scenario('Feature setting of subject', ({I, DTE}) => {
     I.seeInField("#DTE_Field_subject", "Produktová stránka - B verzia");
 
     I.say("Change webpage and wait for dialog");
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Registracia do newsletra');
     I.waitForVisible("#toast-container-webjet");
@@ -1004,7 +1009,7 @@ Scenario('BUG - remove users from unselected groups while campain is not save ye
 
     I.say("Add default recipient");
     I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success");
-    I.waitForElement(recipientsModal);
+    I.waitForElement(recipientsModal + "[data-dte-focus-state='ready']", 20);
     I.fillField("#DTE_Field_recipientName", "test");
     I.fillField("#DTE_Field_recipientEmail", "testdefault@balat.sk");
     I.clickCss(recipientsModal + " > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");
@@ -1038,7 +1043,7 @@ Scenario('BUG multiple users same email', ({I, DT, DTE}) => {
 
     DTE.waitForEditor("campaingsDataTable");
 
-    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.clickCss("button.btn-webjet-jstree-item-edit");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Testovaci newsletter');
     I.wait(0.5);

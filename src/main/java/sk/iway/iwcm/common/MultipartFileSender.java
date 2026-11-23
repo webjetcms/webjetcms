@@ -58,6 +58,12 @@ public class MultipartFileSender {
          return;
       }
 
+      if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(new java.io.File(file.getPath()))) {
+         response.setHeader("Cache-Control", "no-store");
+         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+         return;
+      }
+
       if (!file.exists()) {
          Logger.error(MultipartFileSender.class, "File doesn't exist at URI : "+file.getAbsolutePath());
          response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -212,7 +218,7 @@ public class MultipartFileSender {
             //Logger.debug(MultipartFileSender.class,"Return full file");
             response.setContentType(contentType);
             response.setHeader("Content-Range", "bytes " + full.start + "-" + full.end + "/" + full.total);
-            response.setHeader("Content-Length", String.valueOf(full.length));
+            response.setContentLengthLong(full.length);
             Range.copy(input, output, length, full.start, full.length);
 
          } else if (ranges.size() == 1) {
@@ -222,7 +228,7 @@ public class MultipartFileSender {
             //Logger.debug(MultipartFileSender.class, "Return 1 part of file : from ("+r.start+") to ("+r.end+")");
             response.setContentType(contentType);
             response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
-            response.setHeader("Content-Length", String.valueOf(r.length));
+            response.setContentLengthLong(r.length);
             response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
             // Copy single part range.
             Range.copy(input, output, length, r.start, r.length);

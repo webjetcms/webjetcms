@@ -2,55 +2,31 @@ include ../pug/mixins
 
 div.ly-container.container
 
-    div.header-link-group
+    div.header-link-group.header-branding
 
         button.btn.btn-sm.btn-outline-secondary.js-sidebar-toggler(type="button" data-th-aria-label="\#{templates.temps-list.main-navigation}" aria-label="Toggle navigation")
             i.ti.ti-menu-2(aria-hidden="true")
 
-        .header-title
+        include ./environment
+
+        .header-title(role="heading" aria-level="1")
 
     div.header-link-wrapper
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-help-toggler(onclick="WJ.showHelpWindow();" tabindex="0" role="button")
-                i.ti.ti-help(aria-hidden="true")
-                |   <span data-th-text="\#{menu.top.help}">Pomocnik</span>
+            button.btn.btn-sm.md-quick-search-trigger.js-search-toggler(type="button" data-th-aria-label="\#{admin.quickSearch.title.js}" aria-haspopup="dialog" aria-controls="admin-quick-search")
+                i.ti.ti-search(aria-hidden="true")
+                span.md-quick-search-trigger__label(data-th-text="\#{admin.quickSearch.trigger.js}") Hľadať…
+                kbd.md-quick-search-trigger__shortcut(aria-hidden="true") Ctrl K
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-search-toggler(data-th-if="${layout.hasPermission('menuWebpages|edit_text')}" href="/admin/v9/search/index/" data-th-title="\#{components.search.title}" data-th-aria-label="\#{components.search.title}" data-bs-toggle="tooltip")
-                i.ti.ti-search.notext(aria-hidden="true")
+            include ./help-menu
 
         div.header-link-group
 
-            div.dropdown
-                button.btn.btn-sm.btn-outline-secondary.js-profile-toggler.form-select(id="dropdownMenuUser" data-bs-toggle="dropdown" aria-expanded="false")
-                    i.ti.ti-user(aria-hidden="true")
-                    <span data-th-text="${layout.user.fullName}" style="padding-left: 3px;">WebJET User</span>
-
-                ul.dropdown-menu(aria-labelledby="dropdownMenuUser")
-                    li
-                        a.dropdown-item(data-th-data-userid="${layout.user.userId}" data-th-data-onlyself="${!layout.hasPermission('users.edit_admins')}" onclick="window.openProfileDialog($(this).data('userid'), $(this).data('onlyself'))")
-                            i.ti.ti-user(aria-hidden="true")
-                            <span data-th-text="\#{components.forum.bb.profile}" data-th-remove="tag">Profil</span>
-                    li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
-                        a.dropdown-item(onclick="WJ.openPopupDialog('/admin/2factorauth.jsp')")
-                            i.ti.ti-device-mobile-message(aria-hidden="true")
-                            <span data-th-text="\#{user.gauth.title}" data-th-remove="tag">2 stupnove overovanie</span>
-                    li(data-th-if="${layout.getConstantBoolean('password_passKeyEnabled')}")
-                        a.dropdown-item.passkey(onclick="WJ.openModal({url: '/admin/v9/users/passkey/', title: this.textContent.trim()})")
-                            i.ti.ti-fingerprint(aria-hidden="true")
-                            <span data-th-text="\#{passkey.manage.title}" data-th-remove="tag">PassKey</span>
-                    li(data-th-if="${layout.hasPermission('cmp_form')}")
-                        a.dropdown-item(onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
-                            i.ti.ti-key(aria-hidden="true")
-                            <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
-                    li
-                        a.dropdown-item(href="javascript:document.adminLogoffForm.submit()")
-                            i.ti.ti-logout(aria-hidden="true")
-                            <span data-th-text="\#{menu.logout}" data-th-remove="tag">Odhlasenie</span>
-                |
+            include ./user-menu
 
         div.header-link-group(style="margin-left: 4px;")
 

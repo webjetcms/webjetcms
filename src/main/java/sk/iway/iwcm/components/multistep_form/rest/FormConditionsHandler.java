@@ -53,14 +53,55 @@ public class FormConditionsHandler {
         cache.removeObject(getConditionsCacheKey(formItemId, ConditionType.REQUIREMENT, domainId), true);
     }
 
+    /**
+     * Deletes visibility and requirement conditions owned by removed fields and evicts their caches.
+     *
+     * @param formItemIds database IDs of the removed fields, not logical IDs referenced by conditions
+     * @param domainId domain owning the fields
+     */
+    public static void deleteItemConditions(List<Long> formItemIds, Integer domainId) {
+        if (formItemIds.isEmpty()) return;
+
+        getConditionsRepository().deleteAllByFormItemIdInAndDomainId(formItemIds, domainId);
+        for (Long formItemId : formItemIds) clearConditionsCache(formItemId, domainId);
+    }
+
+    /**
+     * Deletes all conditions of a removed form, including conditions whose owning fields no longer exist.
+     *
+     * @param formName name of the removed form
+     * @param domainId domain owning the form
+     */
+    public static void deleteFormConditions(String formName, Integer domainId) {
+        deleteFormConditions(formName, domainId, getConditionsRepository());
+    }
+
+    /**
+     * Deletes form conditions and evicts their caches using the caller's repository.
+     *
+     * @param formName name of the removed form
+     * @param domainId domain owning the form
+     * @param repository repository used to find condition owners and delete their conditions
+     */
+    public static void deleteFormConditions(String formName, Integer domainId, FormItemsConditionsRepository repository) {
+        List<Long> formItemIds = repository.findConditionOwnerIds(formName, domainId);
+        repository.deleteAllByFormNameAndDomainId(formName, domainId);
+        for (Long formItemId : formItemIds) clearConditionsCache(formItemId, domainId);
+    }
+
+    private static FormItemsConditionsRepository getConditionsRepository() {
+        FormItemsConditionsRepository repository = Tools.getSpringBean("formItemsConditionsRepository", FormItemsConditionsRepository.class);
+        if (repository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsConditionsRepository");
+        return repository;
+    }
+
     public FormConditionsHandler(String formName, HttpServletRequest request) {
 
         if(Tools.isEmpty(formName)) throw new IllegalArgumentException("Form name must be provided to FormConditionsHandler.");
         this.formName = formName;
         this.request = request;
 
-        this.formItemsConditionsRepository = Tools.getSpringBean("formItemsConditionsRepository", FormItemsConditionsRepository.class);
-        if(this.formItemsConditionsRepository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsConditionsRepository");
+        this.formItemsConditionsRepository = getConditionsRepository();
 
         this.formItemsRepository = Tools.getSpringBean("formItemsRepository", FormItemsRepository.class);
         if(this.formItemsRepository == null) throw new IllegalStateException("FormConditionsHandler was not able to obtain FormItemsRepository");
@@ -120,11 +161,10 @@ public class FormConditionsHandler {
 
         if (conditions == null || conditions.isEmpty()) return null; // no conditions found
 
-        String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
-
         try {
             Boolean combinedResult = null;
             JoinOperatorType prevJoinOperator = JoinOperatorType.AND;
+            String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
 
             for (FormItemsConditionEntity condition : conditions) {
                 String fieldId = condition.getItemFormId();
@@ -137,8 +177,7 @@ public class FormConditionsHandler {
                 // First check current step data (received JSON), then previous steps from session.
                 String actualValue = received.optString(fieldId, null);
                 if (actualValue == null) {
-                    Object sessionValue = request.getSession().getAttribute(sessionPrefix + fieldId);
-                    actualValue = sessionValue != null ? sessionValue.toString() : "";
+                    actualValue = getSessionValue(fieldId, sessionPrefix);
                 }
 
                 boolean met = evaluateOperator(operatorType, actualValue, requiredValue, caseInsensitive);
@@ -165,7 +204,13 @@ public class FormConditionsHandler {
     }
 
 
-        /**
+    /** Reads a saved answer from the HTTP session, returning an empty string if it is missing. */
+    private String getSessionValue(String fieldId, String sessionPrefix) {
+        Object value = request.getSession().getAttribute(sessionPrefix + fieldId);
+        return value == null ? "" : value.toString();
+    }
+
+    /**
      * Evaluate a single condition operator.
      * @param operator the operator (equals, not_equals, contains, not_contains, empty, not_empty)
      * @param actualValue the actual field value
@@ -245,6 +290,7 @@ public class FormConditionsHandler {
 
         JSONObject result = new JSONObject();
         Integer domainId = CloudToolsForCore.getDomainId();
+        String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
 
         List<FormItemEntity> stepItems = formItemsRepository.getAllStepItems(stepId, domainId);
         Set<String> currentStepFieldIds = new HashSet<>();
@@ -262,8 +308,6 @@ public class FormConditionsHandler {
                 conditionsByItemId.computeIfAbsent(condition.getFormItemId(), key -> new ArrayList<>()).add(condition);
             }
         }
-
-        String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
 
         for (FormItemEntity stepItem : stepItems) {
             List<FormItemsConditionEntity> conditionsX = conditionsByItemId.get(stepItem.getId());
@@ -302,8 +346,7 @@ public class FormConditionsHandler {
                         continue;
                     }
 
-                    Object sessionValue = request.getSession().getAttribute(sessionPrefix + fieldId);
-                    String storedValue = sessionValue != null ? sessionValue.toString() : "";
+                    String storedValue = getSessionValue(fieldId, sessionPrefix);
 
                     boolean met = evaluateOperator(operatorType, storedValue, requiredValue, caseInsensitive);
 

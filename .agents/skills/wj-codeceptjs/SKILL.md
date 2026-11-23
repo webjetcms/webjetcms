@@ -9,6 +9,8 @@ description: Skill for writing E2E (end-to-end) tests using CodeceptJS with Play
 
 WebJET CMS uses **CodeceptJS** with **Playwright** for automated E2E browser testing. Tests are written in JavaScript and located in `src/test/webapp/tests/` directory, organized by modules/applications.
 
+This layout and the commands below describe the core test harness. Before writing a customer project's tests, inspect its test package, CodeceptJS configuration and available `DT`/`DTE` helpers. Use `wj-project-context` when available, resolve paths from the target project, and match its existing test conventions and CMS version. If the harness or a required helper is absent, report the prerequisite rather than copying the entire core infrastructure or generating a test that cannot run. Installing this skill does not install CodeceptJS or Playwright.
+
 ## Project Structure
 
 ```
@@ -51,7 +53,7 @@ src/test/webapp/
    auto_name = 'name-autotest-' + randomNumber;
    ```
 
-3. **No fixed waits**: Never use `I.wait(N)` for synchronization. Always use `waitFor*` methods:
+3. **No fixed waits**: Never use `I.wait(N)` for synchronization. Use dedicated `waitFor*` methods or bounded retries of assertions:
    ```javascript
    // BAD
    I.click("Pridať");
@@ -77,6 +79,26 @@ src/test/webapp/
 6. **Permissions testing is mandatory**: For datatable tests, always include `perms` parameter.
 
 7. **Always run tests with local URL**: Use `CODECEPT_URL='http://iwcm.interway.sk'` so tests run against local development version. Do not use `*:prod` scripts for branch verification. For the exact commands, see **Running Tests**.
+
+8. **Prefer standard CodeceptJS commands**: Avoid direct `I.usePlaywrightTo` calls when standard commands can perform the operation. Prefer `I.mockRoute()` / `I.stopMockingRoute()` for request interception, existing action and assertion commands, and the waiting patterns below. Use `I.executeScript()` for browser-side JavaScript. Use `I.usePlaywrightTo` only for a justified operation that cannot be implemented directly with the available CodeceptJS commands. Check the configured helpers and installed version first, keep the callback limited to the unsupported operation, and explain the reason in a short English comment.
+
+### Waiting for asynchronous UI updates
+
+Prefer dedicated waits such as `I.waitForText()` and `I.waitForVisible()`. When waiting for an assertion to pass, prefer a bounded `I.retry(...).seeTextEquals(...)` or another matching CodeceptJS assertion over `I.waitForFunction()`. Retry only the assertion, so the action that triggered the update runs once.
+
+For example, after changing the country, wait for the exact text of the selected delivery option:
+
+```javascript
+await I.retry({
+    retries: 20,
+    minTimeout: 1000,
+    maxTimeout: 1000
+}).seeTextEquals(wantedValue.trim(), '#deliveryMethodId option:checked');
+```
+
+This retries the check at most 20 times with one-second intervals and finishes as soon as it passes. Scope the assertion to the relevant state: text elsewhere in the select does not prove that the option is selected. The assertion also performs the final check, so a separate `I.executeScript()` and `I.assertEqual()` are unnecessary.
+
+Reserve `I.waitForFunction()` for browser-side state that cannot be expressed using the available wait or assertion commands, and explain that need in a short English comment.
 
 ## Authentication
 
@@ -229,7 +251,7 @@ Implemented in `src/test/webapp/pages/DTE.js`:
 ### Document.* (Document/Page functions)
 
 - `Document.switchDomain(domain)` - switch domain, e.g. `Document.switchDomain("test23.tau27.iway.sk")`
-- `Document.setConfigValue(name, value)` - set configuration variable
+- `Document.setConfigValue(name, value, temporary = false)` - set a configuration variable; pass `true` as the third argument for a runtime value without database persistence
 - `Document.resetPageBuilderMode()` - reset editor mode
 - `Document.notifyClose()` - close toastr notification
 - `Document.notifyCheckAndClose(text)` - verify and close toastr notification
@@ -238,6 +260,27 @@ Implemented in `src/test/webapp/pages/DTE.js`:
 - `Document.scrollTo(selector)` - scroll to element
 - `await Document.compareScreenshotElement(selector, filename, width?, height?, tolerance?)` - visual comparison test
 
+### Configuration changes and cleanup
+
+Use `Document.setConfigValue` for test setup and cleanup instead of writing a scenario-specific configuration setter. Check existing `Document`, `DT`, and `DTE` helpers before duplicating their UI steps; extend a shared helper with a backward-compatible optional parameter when needed.
+
+For configuration needed only during a test, pass `true` as the third argument. Restore the known baseline in a separate cleanup `Scenario` immediately after the dependent test(s). For example, `fileArchivUseCategoryAsLink` normally starts as `"false"`:
+
+```javascript
+Scenario('Test category-based archive destination', ({ Document }) => {
+    Document.setConfigValue("fileArchivUseCategoryAsLink", "true", true);
+    // Exercise the behavior that requires this configuration.
+});
+
+Scenario('Cleanup file archive configuration', ({ Document }) => {
+    Document.setConfigValue("fileArchivUseCategoryAsLink", "false", true);
+});
+```
+
+Use a known default when established by the test environment or the user; do not add original-value tracking just for that case. Capture an original value only when the test actually needs to preserve an environment-specific setting. Temporary values still need cleanup because they remain active until reset or application restart.
+
+For routine test cleanup, use separate scenarios rather than importing CodeceptJS `recorder`, calling `recorder.catchWithoutStop`, or adding `try/catch/finally` logic to recover its queue. Keep this compatible with `pauseOnFail`; do not introduce an `After()` hook. Keep tests that change shared configuration and their cleanup in one `Feature` tagged `@singlethread`, using the repository's serial test commands. Include cleanup when filtering with `--grep` or `@current`; a separate cleanup scenario runs only when selected and the runner continues after the test.
+
 ### Browser.* (Browser detection)
 
 - `Browser.isChromium()` - returns true if running in Chromium
@@ -245,8 +288,24 @@ Implemented in `src/test/webapp/pages/DTE.js`:
 
 ### Assert functions (codeceptjs-chai)
 
+Prefer the configured `I.assertXXX` methods, such as `I.assertEqual`, `I.assertTrue`, and `I.assertDeepEqual`, over importing `assert`, `node:assert/strict`, or `chai` into E2E scenarios. These assertions are already available through `codeceptjs-chai` and appear as normal test steps. Use a separate assertion library only when an existing assertion helper cannot express the required check.
+
+When a justified exception requires `I.usePlaywrightTo`, return the data from its callback and perform `I.assertXXX` checks after the awaited call. Do not call or await `I.*` steps inside that callback: they enter the CodeceptJS queue that is already waiting for the callback and can block execution.
+
+```javascript
+const { status, content } = await I.usePlaywrightTo("read uploaded file", async ({ page }) => {
+    const response = await page.request.get(fileUrl);
+    return { status: response.status(), content: await response.body() };
+});
+await I.assertEqual(status, 200, "The uploaded file must be accessible.");
+await I.assertTrue(content.equals(expectedContent), "Unexpected uploaded file content.");
+```
+
+Available assertion helpers include:
+
 ```javascript
 I.assertEqual(actual, expected, message?);
+I.assertDeepEqual(actual, expected, message?);
 I.assertNotEqual(actual, expected, message?);
 I.assertContain(target, value, message?);
 I.assertNotContain(target, value, message?);
@@ -723,7 +782,7 @@ Scenario('testovanie app - last modify', async ({ I, DTE, Apps }) => {
 
 1. **Feature naming**: Match file path - `Feature('apps.banner.banner')` for `tests/apps/banner/banner.js`
 2. **Test data isolation**: Use `autotest` prefix + `I.getRandomText()` for all test data
-3. **Create & cleanup in separate scenarios**: If creation scenario fails, cleanup scenarios still run
+3. **Create & cleanup in separate scenarios**: Place cleanup after the dependent tests and include it in filtered runs
 4. **Use proper selectors**: Narrow CSS selectors with parent context (e.g. `"#bannerDataTable td.dt-row-edit"`)
 5. **Verify selectors in browser console**: Use `$("your-selector")` in F12 console to verify uniqueness
 6. **No fixed waits**: Use `waitForText`, `waitForElement`, `waitForVisible`, `DT.waitForLoader()`, `DTE.waitForEditor()`, `DTE.waitForLoader()`

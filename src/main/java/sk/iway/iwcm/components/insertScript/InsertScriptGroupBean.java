@@ -118,8 +118,9 @@ public class InsertScriptGroupBean extends ActiveRecordRepository implements Ser
 	}
 
 	/**
-     * Vratenie cesty pre vue komponentu
-     * @return
+     * Returns the full path of the selected folder.
+     *
+     * @return the full path, or an empty string if the folder does not exist
      */
 	@JsonProperty(access = Access.READ_ONLY)
     public String getFullPath() {

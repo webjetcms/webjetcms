@@ -1,16 +1,34 @@
 # Sémantický index
 
-Sémantický index převádí obsah stránek na vektorové reprezentace (`embedding`) pomocí OpenAI API a ukládá je do vektorové databáze. Používá se pro sémantické vyhledávání, hybridní vyhledávání i pro generování RAG odpovědi ve vyhledávání.
+Sémantický index převádí obsah stránek na vektorové reprezentace (`embedding`) pomocí nastaveného AI poskytovatele a ukládá je do vektorové databáze. Používá se pro sémantické vyhledávání, hybridní vyhledávání i pro generování RAG odpovědi ve vyhledávání.
 
 Pro přesnější výsledky se obsah rozděluje na menší části - **chunky**. Každý chunk je indexován samostatně, což systému umožňuje porovnávat dotazy s konkrétními částmi textu a ne s celou stránkou najednou.
 
 Zprávu vektorů naleznete v sekci **Nastavení → Sémantický index**.
 
-Aktuálně je podporováno indexování **webových stránek**. Další typy mohou přibýt v budoucnosti.
+Index je rozdělen na karty **Webové stránky** a **Markdown dokumenty**.
 
 !>**Upozornění:** Indexování **neprobíhá okamžitě**. Každý požadavek (přidání, úprava, vymazání) se zařadí do **fronty** a zpracuje se v pravidelných intervalech pomocí cron úlohy.
 
 Pro zobrazení seznamu indexovaných objektů je třeba mít právo Sémantický index.
+
+## Indexování Markdown dokumentace
+
+Markdown dokumentace a její index jsou společné pro všechny domény. Kořeny nastavuje správce globálně v `ragMarkdownFolders`. Indexování používá asistenta `RAG-EMB-INDEX` domény, která požadavek zařadila do fronty; této doméně se zaznamená i spotřeba. Vyhledávání používá asistenta aktuální domény. Poskytovatel a model vyhledávání musí odpovídat indexu.
+
+Na kartě **Markdown dokumenty** vyberte nakonfigurovaný kořen nebo jeho podsložku ve stromu. Přepínač **Zobrazit iz podsložek** nastavuje rozsah tabulky i akčních dialogů; po vypnutí se použijí pouze soubory přímo ve vybrané složce. Tabulka obsahuje údaje **Cesta dokumentu** a **Název dokumentu**, které slouží pouze ke čtení. Výběr a nastavení přepínače se zachovají při přepnutí karet.
+
+Správce může použít také serverové složky, například `file:/srv/manuals`. Alias ​​`file:/docs` vyžaduje globální mapování v `symlinkTranslate`, například `/docs/|/srv/documentation/webjetcms/`. Lokální indexování samo nezpřístupní soubory přes web.
+
+**Dokumentace musí používat jazykové složky**, například `sk`, `en` nebo `cs`. Jazyk se určí z nejbližší rozpoznané složky v celé cestě včetně kořene: soubory pod `file:/docs/sk/admin/users` dostanou jazyk `sk`. Rozpoznané jazyky vycházejí z globální proměnné `languages` ; `sk`, `en` a `cs` jsou podporovány vždy. Soubory bez jazykové složky se při indexování přeskočí.
+
+Tlačítka **Přidat indexování** a **Odstranit indexování** otevřou dialog, ve kterém můžete změnit složku i zahrnutí podsložek. Dialog zobrazuje celkový počet dokumentů, počet indexovaných dokumentů a počet ve frontě pro zvolenou akci. Při indexování se počítají soubory s rozpoznaným jazykem a indexem aktuálního poskytovatele, modelu a odvozeného jazyka. Při odstranění se zahrnou všechny indexy ve vybraném rozsahu včetně záznamů již neexistujících souborů.
+
+Po potvrzení se požadavky zařadí do fronty. Zpracuje je `sk.iway.iwcm.rag.service.RagIndexCronTask` ; chyby zůstávají ve frontě na další pokus. Odstranění zruší i čekající indexaci stejného zdroje z jiné domény. Požadavky ostatních složek zůstanou zachovány. Pokud nejsou nastaveny žádné kořeny, zobrazí se informace o potřebné konfiguraci a akční tlačítka jsou vypnuta.
+
+Při přechodu ze starší verze postupujte podle [technické dokumentace](../../../custom-apps/apps/rag/markdown-search.md#zpráva-indexu-v-administraci), zejména u relativních cest a starších doménových indexů. Společné indexy s `domainId = 0` zůstávají platné; doména ve frontě určuje vlastníka spotřeby.
+
+!>Odstranění indexu nemaže Markdown soubory ani nevypíná jejich automatickou indexaci. Úloha `MarkdownIndexCronTask` při dalším prohledání vytvoří index znovu.
 
 ## Indexování webových stránek
 
@@ -21,7 +39,8 @@ Každý chunk obsahuje tyto sloupce:
 - **ID entity** - ID webové stránky.
 - **Index části** - pořadí chunku v rámci stránky (0, 1, 2, ...).
 - **Text části** - text, pro který byl vygenerován embedding. Samotný embedding se v tabulce nezobrazuje.
-- **Model** - použitý OpenAI model, například. `text-embedding-3-small`.
+- **Poskytovatel embeddingu** - poskytovatel použitý při vytvoření vektoru. `openai` nebo `gemini`.
+- **Model embeddingu** - použitý embedding model, například. `text-embedding-3-small` nebo `gemini-embedding-001`.
 - **Dimenze** - počet dimenzí vektoru. `1536`.
 - **Jazyk** - jazyková verze stránky.
 - **Stav** - stav zpracování:
@@ -35,20 +54,24 @@ V databázi se navíc ukládá `group_id` a sloupce `root_group_l1`, `root_group
 
 ![](datatable.png)
 
+Po načtení stránky se zobrazí informační oznámení s aktuálním poskytovatelem a modelem používaným k indexování. Nastavení se načte ze systémového AI asistenta `RAG-EMB-INDEX`, kterého můžete upravit v sekci **Nastavení → AI asistenti**.
+
+Pokud systémový asistent ještě neexistuje, vytvoří se automaticky podle konfiguračních proměnných `ragEmbeddingProvider` a `ragEmbeddingModel`. Po jeho vytvoření mají hodnoty nastavené v asistentovi přednost před konfiguračními proměnnými.
+
+!>**Upozornění:** Po změně poskytovatele nebo modelu spusťte indexování znovu. Indexy vytvořené různými kombinacemi poskytovatele a modelu se ukládají odděleně a mohou existovat současně i pro stejnou stránku. Vyhledávací asistent `RAG-EMB-SEARCH` musí používat stejný identifikátor poskytovatele a modelu jako index, ve kterém má vyhledávat.
+
+Položka ve frontě neobsahuje poskytovatele ani model; tyto hodnoty se načtou z asistenta `RAG-EMB-INDEX` až při zpracování. Pokud má rozpracovaná fronta dokončit původní index, nechte ji před změnou asistenta zcela zpracovat.
+
 ## Rozdělení textu na chunky
 
 Velikost chunků se nastavuje konfiguračními proměnnými:
 
-- `ragEmbeddingChunkSize` - ​​maximální velikost jedné části textu ve znacích, ve výchozím nastavení `1000`.
-- `ragEmbeddingChunkOverlap` - ​​počet znaků překrytí mezi sousedními částmi, ve výchozím nastavení `200`.
+- `ragEmbeddingChunkSize` - ​​přibližná cílová velikost chunku ve znacích, ve výchozím nastavení `1000`. Maximální velikost je o 50 % vyšší, tedy ve výchozím nastavení `1500` znaků. Hodnota menší nebo rovná nule vypne rozdělování textu.
+- `ragEmbeddingChunkOverlap` - ​​přibližné překrytí mezi sousedními chunky ve znacích, ve výchozím nastavení `200`.
 
-Při dělení textu se systém snaží zachovat přirozený kontext. Konec chunku se vybírá v tomto pořadí:
+Chunky podle možnosti začínají a končí na rozpoznané hranici věty nebo odstavce, která je nejblíže cílové velikosti. Věta zalomená do více řádků zůstane spolu, pokud se vejde do maximální velikosti. Delší věty nebo odstavce se rozdělí mezi slovy. Pokud i samotné slovo překročí maximum, rozdělí se uprostřed.
 
-1. konec odstavce,
-2. konec řádku,
-3. konec věty nebo podobná interpunkce,
-4. mezera mezi slovy,
-5. tvrdé rozdělení podle maximální velikosti.
+Překrytí se podle možnosti přizpůsobuje celým větám nebo odstavcům, proto se jeho skutečná velikost mění a může být i nulová, pokud je to nutné pro pokračování v textu nebo dodržení maximální velikosti. Každý další chunk přidá nový obsah. Nové hranice se na stávající dokumenty použijí po opětovném indexování.
 
 Překrytí se používá k zachování kontextu mezi sousedními částmi. Při RAG odpovědi se sousední chunky jedné stránky mohou znovu sloučit, přičemž se odstraní duplicitní text vzniklý překrytím.
 
@@ -60,6 +83,7 @@ V hlavičce tabulky jsou dostupné tyto filtry:
 
 - **Výběr složky** - zobrazí chunky pouze pro stránky z dané složky v rámci aktuální domény.
 - **Zobrazit iz podsložek** - zahrne do výsledků i stránky z podsložek.
+- **Poskytovatel embeddingu** a **Model embeddingu** - omezí tabulku na konkrétní kombinaci uloženého indexu.
 
 !>**Upozornění:** Pokud vyberete **Kořenovou složku** bez zapnutí možnosti **Zobrazit iz podsložek**, nezískáte žádné výsledky. Kořenová složka je virtuální a neobsahuje stránky přímo.
 
@@ -79,7 +103,11 @@ Systém automaticky zařadí stránku do fronty při:
 
 Klepněte na tlačítko <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-database-plus"></i></span></button> pro otevření dialogu indexování.
 
-Dialog zobrazí přehled stránek zvolené složky - celkový počet, počet již indexovaných a počet ve frontě. Složka se nastaví podle aktivního filtru. Po potvrzení se do fronty zařadí všechny vyhledatelné stránky ze zvolené složky. Pokud se text chunku nezměnil, systém se pokusí použít existující embedding podle jeho hash hodnoty.
+Dialog zobrazí přehled stránek zvolené složky - celkový počet, počet již indexovaných a počet ve frontě. Za indexované se považují pouze stránky, které mají index pro aktuálního poskytovatele a model asistenta `RAG-EMB-INDEX`. Index vytvořený jiným poskytovatelem nebo modelem se proto v tomto počtu nezohlední.
+
+Manuální akci lze provést pouze nad složkami aktuální domény, pro které má uživatel právo na úpravu. Při výběru kořenové složky musí mít právo na všechny kořenové složky domény.
+
+Složka i volba **Zobrazit iz podsložek** se převezmou z aktivního filtru. Po potvrzení se do fronty zařadí všechny vyhledatelné stránky ze zvoleného rozsahu. Pokud se text chunku nezměnil, systém se pokusí použít existující embedding se stejným poskytovatelem a modelem podle jeho hash hodnoty. Opětovné indexování nahradí pouze index aktuální kombinace poskytovatele a modelu; ostatní indexy stejné stránky zůstanou zachovány.
 
 Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check"></i><span>Spustit akci</span></button> .
 
@@ -89,7 +117,7 @@ Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check
 
 Klepněte na tlačítko <button class="btn btn-sm btn-danger" type="button"><span><i class="ti ti-database-minus"></i></span></button> pro otevření dialogu odstranění indexů.
 
-Dialog zobrazí stejný přehled jako při indexování. Po potvrzení se stránky zařadí do fronty pro odstranění všech chunků pro stránky zvolené složky.
+Dialog převezme složku i volbu **Zobrazit iz podsložek** a zobrazí stejný přehled jako při indexování, ale počet indexovaných stránek zahrnuje všechny poskytovatele a modely. Po potvrzení se stránky zařadí do fronty pro odstranění všech chunků pro stránky zvoleného rozsahu bez ohledu na poskytovatele a model.
 
 Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check"></i><span>Spustit akci</span></button> .
 
@@ -97,7 +125,9 @@ Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check
 
 ## Chyby při indexování
 
-Pokud při indexování stránky nastane chyba, systém uloží záznam se stavem **ERROR** a zkrácenou chybovou zprávou. Chyba se zapisuje i do administrátorského logu v kategorii **RAG**. Pokud selže zpracování položky ještě na úrovni fronty, položka zůstane ve frontě a systém se ji pokusí zpracovat při dalším běhu cron úlohy.
+Pokud při indexování stránky nastane chyba, systém uloží záznam se stavem **ERROR** a zkrácenou chybovou zprávou. Chyba se zapisuje i do administrátorského logu v kategorii **Vyhledávání** (`SEARCH`). Pokud selže zpracování položky ještě na úrovni fronty, položka zůstane ve frontě a systém se ji pokusí zpracovat při dalším běhu cron úlohy.
+
+!>**Upozornění:** Konfigurační proměnná `ragEmbeddingDimensions` je globální pro celou instalaci. Její změna vymaže celý sémantický index pro všechny poskytovatele a modely, protože databázový sloupec `vector(N)` má společnou dimenzi. Po změně je třeba znovu indexovat celý obsah. Místní model `intfloat/multilingual-e5-base` vyžaduje hodnotu `768`.
 
 ## Detaily implementace
 

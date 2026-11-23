@@ -34,10 +34,9 @@ import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
- * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
- * anotacie {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumn}
- * nad poliami objektu. Trieda je priamo mapovatelna pomocou
- * {@link com.fasterxml.jackson.databind.ObjectMapper}
+ * Represents DataTable column and editor metadata derived from an annotated object field.
+ * Supports supplied column annotations containing saved overrides and direct JSON serialization
+ * with {@link com.fasterxml.jackson.databind.ObjectMapper}.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
@@ -83,6 +82,38 @@ public class DataTableColumn {
 
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
+        this(controller, field, fieldPrefix, field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class));
+    }
+
+    /**
+     * Builds column metadata using the supplied annotation and the field's editor metadata.
+     * Without an active HTTP request, only the prefixed name and data path are initialized.
+     *
+     * @param controller class used to resolve fallback translation keys and AI assistants
+     * @param field source field for type and editor metadata
+     * @param fieldPrefix prefix for the field name and data path, or {@code null} for no prefix
+     * @param annotation declared or synthesized column annotation, or {@code null} to skip column annotation settings
+     */
+    @SuppressWarnings("rawtypes")
+    public DataTableColumn(Class controller, Field field, String fieldPrefix, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
+        this(controller, field, fieldPrefix, annotation, null);
+    }
+
+    /**
+     * Builds column metadata with a saved disabled override applied after the declared editor attributes.
+     * An explicit {@code true} adds the disabled attribute, while {@code false} removes it even when
+     * it originates from the {@code DISABLED} input type. A null override preserves the computed editor attributes.
+     * Cell-editing restrictions are derived afterward; independent hidden-field and CSS restrictions remain effective.
+     * Without an active HTTP request, only the prefixed name and data path are initialized.
+     *
+     * @param controller class used to resolve fallback translation keys and AI assistants
+     * @param field source field for type and editor metadata
+     * @param fieldPrefix prefix for the field name and data path, or {@code null} for no prefix
+     * @param annotation declared or synthesized column annotation, or {@code null} to skip column annotation settings
+     * @param disabledOverride saved disabled state, or {@code null} to preserve the computed editor attributes
+     */
+    @SuppressWarnings("rawtypes")
+    public DataTableColumn(Class controller, Field field, String fieldPrefix, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation, Boolean disabledOverride) {
         String fieldPrefixNotNull = fieldPrefix;
         if (fieldPrefixNotNull == null)
             fieldPrefixNotNull = "";
@@ -97,10 +128,18 @@ public class DataTableColumn {
         Prop prop = Prop.getInstance(request);
 
         setPropertiesFromFieldType(field);
-        setPropertiesFromAnnotation(controller, field, prop);
+        setPropertiesFromAnnotation(controller, field, prop, annotation);
         setEditorPropertiesFromField(field);
 
         setFinalProperties(field);
+        if (disabledOverride != null) {
+            if (disabledOverride) {
+                if (editor == null) editor = new DataTableColumnEditor();
+                editor.addAttr("disabled", "disabled");
+            } else if (editor != null && editor.getAttr() != null) {
+                editor.getAttr().remove("disabled");
+            }
+        }
         setCellNotEditable(field);
         addEditIcon(field);
 
@@ -119,16 +158,16 @@ public class DataTableColumn {
     }
 
     /**
-     * Metoda nastavi JSON podla anotacie
-     * {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumn} na danom
-     * poli. Anotacie maju rovnaky nazov a format ako generovany JSON.
+     * Applies column rendering, visibility and editor defaults from the supplied annotation.
+     * Titles are localized, and field metadata provides defaults for unspecified attributes.
      *
-     * @param field - reflection field, ktore ma nastavenu anotaciu
-     *              {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumn}
+     * @param controller class used to construct fallback title translation keys
+     * @param field source field for fallback names and persistence metadata
+     * @param prop translations for the current request
+     * @param annotation declared or synthesized column annotation, or {@code null} to leave properties unchanged
      */
     @SuppressWarnings("rawtypes")
-    private void setPropertiesFromAnnotation(Class controller, Field field, Prop prop) {
-        sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
+    private void setPropertiesFromAnnotation(Class controller, Field field, Prop prop, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
         if (annotation == null) {
             return;
         }
@@ -376,11 +415,11 @@ public class DataTableColumn {
     }
 
     /**
-     * Metoda nastavi do JSONu atributy, podla toho, ako je natavena anotacia
-     * inputType {@link DataTableColumnType}
+     * Applies renderer, CSS and editor defaults for a column input type.
      *
-     * @param dataTableColumnType - {@link DataTableColumnType} - nastaveny v
-     *                            anotacii inputType
+     * @param dataTableColumnType input type whose defaults are applied
+     * @param annotation column annotation supplying type-specific attributes
+     * @param prop translations for generated option labels
      */
     private void setPropertiesFromType(DataTableColumnType dataTableColumnType, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation, Prop prop) {
         if (dataTableColumnType == DataTableColumnType.ID) {
@@ -639,12 +678,12 @@ public class DataTableColumn {
             editor.setType("hidden");
         }
 
-        if (dataTableColumnType == DataTableColumnType.RADIO) {
+        if (dataTableColumnType == DataTableColumnType.RADIO || dataTableColumnType == DataTableColumnType.BUTTON_GROUP) {
             renderFormat = "dt-format-radio";
             if (editor == null) {
                 editor = new DataTableColumnEditor();
             }
-            editor.setType("radio");
+            editor.setType(dataTableColumnType == DataTableColumnType.BUTTON_GROUP ? "buttonGroup" : "radio");
         }
 
         if (dataTableColumnType == DataTableColumnType.PASSWORD) {

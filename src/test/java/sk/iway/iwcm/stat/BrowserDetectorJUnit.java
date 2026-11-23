@@ -2,13 +2,16 @@ package sk.iway.iwcm.stat;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.InputStream;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
 import sk.iway.iwcm.test.TestRequest;
 import sk.iway.iwcm.utils.MapUtils;
+import ua_parser.Parser;
 
 /**
  *  BrowserDetectorJUnit.java
@@ -75,7 +78,7 @@ class BrowserDetectorJUnit
 				ahrefs, "AhrefsBot",
 				claude, "ClaudeBot",
 				perplexity, "PerplexityBot",
-				openAi, "ChatGPTBot",
+				openAi, "GPTBot",
 				amazon, "Amzn-SearchBot",
 				uptime, "UptimeRobot",
 				amazon2, "Amazonbot",
@@ -152,6 +155,16 @@ class BrowserDetectorJUnit
 				monspark, "unknown",
 				bing, "unknown"
 	);
+
+	@Test
+	void shouldLoadBundledWebjetParserRules() throws Exception
+	{
+		try (InputStream is = BrowserDetector.class.getResourceAsStream("/ua-parser/regexes-webjet.yaml"))
+		{
+			assertNotNull(is);
+			new Parser(is, Parser.getDefaultLoaderOptions());
+		}
+	}
 
 	@Test
 	void shouldDetectAllBrowsers()

@@ -37,6 +37,16 @@ dôležitý je konštruktor, ktorý odovzdáva Spring DATA repozitár ```Redirec
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
+!>**Upozornenie:** anotácia `@PreAuthorize` na triede kontroléra chráni iba metódy deklarované v tejto triede. Pri metóde zdedenej z bázovej triedy Spring Security hľadá anotáciu od triedy, ktorá metódu deklaruje, smerom k jej predkom, nie v podtriede. Ak pridávate REST metódu (`@GetMapping`, `@PostMapping`…) do bázovej triedy, ktorú dedia kontroléry s rôznymi právami, dajte jej anotáciu priamo na metódu. Rovnako to robia metódy v `DatatableRestControllerV2`:
+
+```java
+@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+@PostMapping("/preview/")
+public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
+```
+
+Metóda `checkAccessAllowedOnController` overí právo z anotácie `@PreAuthorize` na triede konkrétneho kontroléra a jeho metódu `checkAccessAllowed`. Ak kontrolér nemá ani jedno, povolí prístup každému administrátorovi. Každý kontrolér odvodený od `DatatableRestControllerV2` preto potrebuje `@PreAuthorize` na triede, a to aj vtedy, keď ho používa iba vnorená tabuľka na stránke chránenej iným kontrolérom. Druhou možnosťou je vlastná metóda `checkAccessAllowed`. Test `InheritedHandlerPreAuthorizeTest` nájde kontroléry bez práva aj metódy kontrolérov s anotáciou na triede, ktoré zostali bez kontroly práv.
+
 !>**Upozornenie:** Spring DATA entita musí mať ako PK ```Long id``` (nie napr. ```adminlogId``` a podobne), ak sa stĺpec v databáze volá inak, je potrebné mu nastaviť meno stĺpca:
 
 ```java
@@ -144,6 +154,41 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     }
 }
 ```
+
+## Filtrovanie podľa domény
+
+Ak Spring DATA repozitár implementuje rozhranie `DomainIdRepository`, trieda `DatatableRestControllerV2` pracuje s hodnotou `domainId`. Pri čítaní sa automatické filtrovanie aktivuje pre MultiWeb/Cloud inštaláciu alebo pri zapnutej konfiguračnej premennej `enableStaticFilesExternalDir`. Pri zápise sa pre takýto repozitár vždy doplní chýbajúce `domainId` a overí sa, že zaslaná hodnota zodpovedá očakávanej doméne.
+
+Očakávanú doménu vracia chránená metóda `getDomainId()`. Jej predvolená implementácia používa aktuálnu doménu z `CloudToolsForCore.getDomainId()`. Hodnota sa používa pri štandardnom získaní jedného alebo všetkých záznamov, mazaní, vyhľadaní záznamu cez `findItemBy`, výpočte súm a pri doplnení alebo kontrole `domainId` počas uloženia.
+
+Ak má controller pracovať s inou než aktuálnou doménou, prepíšte metódu `getDomainId()`. Rovnakú metódu použite aj vo vlastných repozitárových dotazoch controllera:
+
+```java
+@Override
+protected int getDomainId() {
+    return DomainIdScopeResolver.resolve(EnumerationDataBean.class);
+}
+```
+
+V príklade controller spravuje pomocné záznamy `CustomFieldsEntity`, ale ich doménový rozsah určuje `EnumerationDataBean`. Resolveru sa preto odovzdáva anotovaná kontextová trieda, nie nevyhnutne typ entity použitej v repozitári.
+
+Anotácia [`@DomainIdCommon`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdCommon.java) označuje entitu, ktorej dáta sú spoločné pre všetky domény. Je dostupná počas behu aplikácie a vzťahuje sa aj na podtriedy. Vyhodnocuje ju trieda [`DomainIdScopeResolver`](../../../../src/main/java/sk/iway/iwcm/system/multidomain/DomainIdScopeResolver.java):
+
+- pre anotovanú triedu vráti hodnotu konfiguračnej premennej `domainIdCommon`; ak nie je nastavená na kladné číslo, použije doménu `1`,
+- pre neanotovanú alebo neznámu triedu vráti aktuálnu doménu,
+- triedu je možné zadať ako `Class<?>` alebo jej úplné meno (`FQDN`).
+
+Entitu označíte nasledovne:
+
+```java
+@Entity
+@DomainIdCommon
+public class EnumerationDataBean {
+    // ...
+}
+```
+
+Samotná anotácia nemení databázové dotazy automaticky. Controller musí použiť `DomainIdScopeResolver` v prepísanej metóde `getDomainId()` a služby s vlastnými dotazmi musia použiť výsledok resolvera explicitne. Označenie preto používajte iba pre dáta, ktoré majú byť skutočne zdieľané a upravované zo všetkých domén.
 
 ## Metódy pre manipuláciu s dátami
 
@@ -296,6 +341,17 @@ Ak potrebujete upraviť dáta pred uložením, alebo vykonať akciu po uložení
 	}
 
     /**
+	 * Called before duplicating an entity, with the ID of the source entity.
+	 * The default implementation preserves compatibility with controllers that
+	 * override {@link #beforeDuplicate(Object)}.
+	 * @param entity entity prepared for insertion
+	 * @param originalId ID of the source entity
+	 */
+	public void beforeDuplicate(T entity, Long originalId) {
+
+	}
+
+    /**
 	 * Metoda volana po duplikovanim danej entity,
 	 * da sa pouzit na dokopirovanie udajov, napr. media web stranky
 	 * @param entity - novo ulozena (zduplikovana) entita
@@ -427,13 +483,21 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Neexistujúce atribúty v editore
 
-Štandardne z editora nemusia prichádzať všetky atribúty entity, preto sa pred uložením spájajú hodnoty existujúcej entity a údajov zaslaných z editora. Štandardne sa prepíšu všetky nie ```null``` atribúty. To ale neumožňuje zadať prázdny dátum (ak už bol raz nastavený). Preto atribúty anotované DataTableColumn typu ```Date``` sú prenesené aj keď majú ```null``` hodnotu. Toto spojenie sa vykonáva v metóde ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
+Štandardne z editora nemusia prichádzať všetky atribúty entity, preto sa pred uložením spájajú hodnoty existujúcej entity a údajov zaslaných z editora. Prepíšu sa všetky atribúty s hodnotou odlišnou od ```null```.
+
+Automatický prenos hodnoty ```null``` sa týka iba atribútov označených anotáciou ```@DataTableColumn```. V rámci týchto atribútov sa prenesie pre Java typy ```java.util.Date```, ```java.sql.Date```, ```LocalDate```, ```LocalDateTime``` a objektové polia s ```inputType = DataTableColumnType.NUMBER```, ktoré podporujú ```null```, aby ich bolo možné v editore vyprázdniť. Pri atribútoch bez anotácie ```@DataTableColumn``` sa vstupná hodnota ```null``` ignoruje a zachová sa pôvodná hodnota entity, aj keď ide o dátumový typ. Primitívne číselné typy hodnotu ```null``` nepodporujú.
+
+Pri importe sa hodnota ```null``` pre tieto dátumové atribúty a ```NUMBER``` automaticky prenesie iba vtedy, keď sa ich stĺpec nachádza v hlavičke importovaného Excel súboru. Spoločný zoznam ```importedColumns``` sa vytvára z hlavičky nezávisle od hodnôt v jednotlivých riadkoch. Vynechaný stĺpec zachová hodnotu existujúcej entity; prázdna bunka alebo explicitná hodnota ```NULL``` v importovanom stĺpci ju vynuluje. Povinné polia naďalej podliehajú validácii, napríklad ```@NotNull```.
+
+Pre dátum uložený v inom type, napríklad ```Instant```, ```Timestamp``` alebo ```Long```, prípadne pre ```TEXT_NUMBER```, je možné prenos ```null``` zapnúť pomocou ```alwaysCopyProperties = { true }```. Toto nastavenie vynúti prenos aj pri vynechanom stĺpci importu. Hodnotou ```false``` sa automatický prenos pre podporované dátumové typy a ```NUMBER``` vypne. Toto spojenie sa vykonáva v metóde ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
 
 ## Obnovenie údajov po uložení
 
 Volaním metódy ```setForceReload(true);``` je možné vynútiť obnovenie údajov datatabuľky po uložení.
 
 Je to potrebné ak sa uložený objekt presunie do iného adresára a podobne. Ukážka je vo [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
+
+Pri datatabuľke s `serverSide: false` sa po úprave jedného záznamu zobrazí strana, na ktorej sa nachádza podľa aktuálneho triedenia a filtrovania. Záznam sa vyhľadá podľa poľa `reloadRowKey`, predvolene podľa `editorId`. Ak po úprave prestane vyhovovať filtru alebo už nie je v načítaných údajoch, zachová sa pôvodná strana, prípadne posledná platná strana. Rovnako sa zachová strana pri hromadnej editácii a mazaní. Ak zmazaním posledného riadka zanikne posledná strana, zobrazí sa predchádzajúca platná strana. Pri prázdnom zozname sa zobrazí prvá strana s prázdnym stavom. Po vytvorení záznamu sa vynúteným obnovením stránkovanie resetuje na prvú stranu.
 
 ## Číselníky pre select boxy
 
@@ -922,6 +986,51 @@ Ak potrebujete špeciálne kontrolovať práva (napr. pri web stránkach povolen
         return true;
     }
 ```
+
+## Kontrola rozsahu pri zmene poradia
+
+Koncový bod `/row-reorder` načíta z repozitára celú požadovanú dávku a pre každý záznam zavolá `checkItemPerms`. Ak je však zoznam tabuľky obmedzený aj parametrom požiadavky alebo nadradeným záznamom, napríklad `formName`, `stepId`, `parentId` alebo kategóriou, samotná kontrola jednotlivých záznamov nemusí zaručiť, že všetky patria do aktuálne zobrazeného rozsahu.
+
+V takom kontroléri implementujte metódu:
+
+```java
+protected boolean checkRowReorderScope(HttpServletRequest request, List<T> entities)
+```
+
+Metóda sa volá po načítaní kompletnej dávky z repozitára a pred validáciou meneného poľa alebo zmenou entít. Parameter `entities` preto obsahuje uložené entity, nie hodnoty z tela požiadavky. Predvolená implementácia vracia `true`, aby zostalo zachované správanie existujúcich kontrolérov.
+
+Implementácia musí postupovať bezpečne a pri neplatnom vstupe vrátiť `false`:
+
+- overiť prítomnosť a platnosť všetkých parametrov určujúcich rozsah,
+- porovnať tento rozsah s každou entitou v zozname,
+- overiť aktuálnu doménu, ak ju daná entita používa,
+- overiť existenciu a vzťah nadradeného záznamu,
+- overiť, že aktuálny používateľ môže daný rozsah upravovať.
+
+Napríklad položky viac-krokového formulára overujú názov formulára, krok, doménu aj oprávnenie používateľa:
+
+```java
+@Override
+protected boolean checkRowReorderScope(HttpServletRequest request, List<FormItemEntity> entities) {
+    String formName = MultistepFormsService.getFormName(request);
+    int stepId = Tools.getIntValue(request.getParameter("stepId"), -1);
+    if (Tools.isEmpty(formName) || stepId < 1 || entities == null || entities.isEmpty() || getUser() == null) return false;
+
+    int domainId = CloudToolsForCore.getDomainId();
+    for (FormItemEntity entity : entities) {
+        if (entity == null || Objects.equals(formName, entity.getFormName()) == false ||
+            entity.getStepId() == null || entity.getStepId().intValue() != stepId ||
+            entity.getDomainId() == null || entity.getDomainId().intValue() != domainId) return false;
+    }
+
+    if (formStepsRepository.getValidStep(formName, Long.valueOf(stepId), domainId).isEmpty()) return false;
+    return formsService.isFormAccessible(formName, getUser());
+}
+```
+
+Klient pri zostavení URL pre `/row-reorder` zachová parametre z `DATA.url`. Tieto parametre sú však ovládané klientom, preto ich nemožno považovať za dôkaz oprávnenia. Rovnako nestačí rozsah definovať iba cez `addSpecSearch`, pretože ten sa na koncový bod `/row-reorder` automaticky neaplikuje.
+
+Ak metóda vráti `false`, celá operácia sa odmietne a nič sa neuloží. `checkRowReorderScope` je kontrola celej dávky a nenahrádza `checkItemPerms`, ktorá sa naďalej používa pre oprávnenia ku každému jednotlivému záznamu.
 
 ## Vyvolanie chyby
 

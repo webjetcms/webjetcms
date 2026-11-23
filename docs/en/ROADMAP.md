@@ -15,20 +15,19 @@ Explanation of the pictograms used:
 ## 2026
 
 - [x] Semantic search - use AI to improve search with `RAG` (#211).
-- [ ] AI - possibility to use small local models running directly on the CPU, at least for Semantic Search (#58561).
+- [x] AI - possibility to use small local models running directly on the CPU, at least for Semantic Search (#58561).
 - [x] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode (#58597) (#258).
 - [ ] Migration to `Spring Boot` project (#58569).
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
 - [ ] Rights - add the option to set read-only rights and optionally set only allowed IDs for editing.
 - [x] Forms - add option to set total attachment size for form, now can only be set per file (#58517).
-- [ ] Statistics - adjust write to `seo_bots` through `StatWriteBuffer` for fewer conflicts under high load and cluster database.
+- [x] Statistics - adjust write to `seo_bots` via `StatWriteBuffer` for fewer conflicts under high load and cluster database (#303).
 - [x] Scripts - add option to set whether the script should also be inserted in the page editor or not (#58349).
 - [x] Forms - add a group of selection and checkbox fields `radio/checkbox` connected to the number list, similar to what we have for the `select` field (#58517).
 - [ ] Delete files associated with a web page when I delete it - but ask the user in advance if they want to delete the files. Check if they are not being used somewhere else.
 - [x] Data deletion - add the option to delete pages and folders from the trash. Also fix the option to run data deletion as an automated task (#58617) (#271).
 - [x] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
-- [ ] Unused files - make it possible to get a list of unused files - they are not used anywhere on the page, not even in media, etc. There was an API for this `FileTools.getDirFileUsage(currentDir, request)`. Add as a tab to folder properties in explorer (#58621).
-- [ ] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager.
+- [x] Explorer - prevent working with the Document Manager folder so that files cannot be manipulated outside of the Document Manager (#298).
 - [x] +Explorer - add permission to upload files with accented characters (removed for `/images` and `/files` folders) (#58589).
 - [x] +Websites - better integrate document manager for inserting links into the page - new tab similar to Photobank for images (#58593).
 - [x] +Forms - add more detailed statistics on errors in completed forms (#58509).
@@ -42,20 +41,35 @@ Explanation of the pictograms used:
 - [x] Add authorization option via `OAuth2`, option to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [x] Optional fields – add the ability to set a text length limit for a field of type `textarea`, similar to what is currently possible for a field of type `text`.
-- [ ] Datatable – edit fields of type `Date` and `Datetime` so that validation `not null` works correctly.
-- [ ] Datatable – modify the `mergovania` method of the modified entity so that values ​​of type `number` can be reset.
+- [x] Datatable – modify fields of type `Date` and `Datetime` so that validation `not null` works correctly (#58770).
+- [x] Datatable – modify the `mergovania` method of the modified entity so that it is possible to reset values ​​of type `number` (#58770).
 - [x] +Redirects - distinguish automatically created redirects in the database (look for the variable `editorDisableAutomaticRedirect`) from manually created ones, possibility to filter accordingly in the UI (show only manually created redirects) (#58625).
-- [ ] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it is deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc` (#58629).
-- +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).
-- [ ] Optional fields - add the ability to select multiple items for connection to the dialer (#58637).
-- [ ] +Numbers - add the ability to define the field type for a string like we have in optional fields (#58641).
+- [x] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it is deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc` (#58629).
+- [x] +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).
+- [x] Optional fields - add the ability to select multiple items for connection to the dialer (#58637).
+- [x] +Encoders - add the ability to define the field type for a string like we have in optional fields (#58641).
 - [x] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term (#58645).
-- [ ] +Background tasks - the option to manually run the task on `node`, which the task is set to, will now run on `node` where the user is logged in.
-- [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
-- [ ] +Translation keys - display a tree structure of translation keys for better orientation.
-- [ ] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a "Set temporarily" checkbox there with an info icon that the value is set only temporarily and upon restart the value as in the database will be restored.
+- [x] +Background tasks - option to manually run a task on `node`, which the task is set to, will now run on `node` where the user is logged in (#58718).
+- [x] + Dialpad - move selection and management of dialpad types to the tree in the left panel, with search and retention of the settings editor (#58786).
+- [x] +Blog - move folder selection to the tree on the left, with searching and preserving the All Sections selection and adding sections (#58786).
+- [x] +News - move folder selection to the tree on the left similar to gallery/websites, with subfolder selection and search (#58786).
+- [x] +Translation keys - display a tree structure of translation keys for better orientation (#58714).
+- [x] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a checkbox there "Set temporarily" with an info icon that the value is set only temporarily and on restart the value as in the database will be restored. (#291)
 - [ ] Explorer - fix displaying files with special characters (for example `@`).
 - [ ] Automatically delete `temp` files that may accumulate.
+- [x] +Administration - remove dependency on `Vue.js` and replace internal components with native web components (#58722).
+- [ ] +Modify the loading of the admin section so that only the inside of the page is replaced via a REST service call, not a complete reload of the HTML code.
+- [x] +Improve the administration homepage - dynamic blocks, ability to customize what is displayed, useful information and blocks (#332).
+- [ ] +Filter in the news application does not allow entering DOC ID of multiple pages if they wanted to select multiple pages according to the filter “DOC_ID equals”
+The filter only takes the first value. So add the `IN` option to allow multiple values ​​(#JT-2139).
+- [x] +AI - adjust `chunk` generation so that they start and end at sentence or word boundaries where possible (#58778).
+- [x] +Websites - configurable default view for user without custom setting (`webpagesTreeDefaultSettings`), default to ascending order; ID and order display can be enabled in configuration (#368).
+- [x] +Websites - bulk addition and removal of tags and user groups while preserving other groups via the More Actions menu, to which Import/Export (#368) has also been moved.
+- [x] +Websites - before deleting a page or folder, show a warning with a list of mirrored items that will be deleted along with the selection (#58846).
+- [x] +Add support for AVIF images and animations (#371).
+- [x] + Possibility to change the order of fields in the datatables editor, the tab in which the field is located, or even create a new tab in which the fields are inserted. That is, to configure the values ​​that are currently set for annotations (#366).
+- [ ] +In the window of pre-prepared blocks, add the option to edit a block that is loaded from a web page (open the editor with the block's docid in a new tab) (#NNCZ-4456).
+- [ ] +When I create a large ZIP file, the connection to the server is often interrupted (if there is a proxy, for example), an error is displayed, but after some time the ZIP is created. Either edit the error message so that the user knows that the connection was only interrupted, or somehow maintain the connection from the server by sending some status info so that the proxy does not interrupt the connection.
 
 ## 2025
 
@@ -105,7 +119,8 @@ Explanation of the pictograms used:
 - [x] +Structure mirroring - add option to delete `sync_id` values ​​for selected folder (recursively). To make it easy to cancel/reset synchronization. Also there is a problem that I clone `SK,DE,EN` then disable `DE` and want to have only `EN` but mirroring still applies changes to `DE` folder (#57561).
 - [ ] +Add `autoupdate` verification to GitHub tests for all supported database servers - i.e. initialize an empty database and verify all `autoupdate` and verify that they pass without error. Make it a separate pipeline.
 - [x] Gallery - allow changing the gallery path (folder) and set everything related to it (#58433).
-- [ ] +Configuration - add the group column with the value `modules` of the configuration variable (select field, can have multiple values). Add the option to display unset variables (i.e. complete list). Create a tool to generate all variables by groups/modules into the `md` file in the documentation for an overview of all variables.
+- [x] +Configuration - add hierarchical module tree and the ability to display unset variables (complete list).
+- [ ] +Configuration - create a tool to generate all variables by groups/modules into the `md` file in the documentation.
 - [x] +If I have an unsaved page with the title Cleaning and there is already another page called Cleaning, then the newly uploaded images will be uploaded to the `upratovanie` folder before saving it. But when the page is saved, it will get the URL cleaning-2.html and the other images will be uploaded to the `upratovanie-2` folder. You need to modify the code in `getPageUploadSubDir` so that instead of using the page title directly, it will try to get the URL for the new page and then use that (#58361).
 - [x] +HTTP headers - extend the maximum size of the HTTP header value to more than 255 characters, for `Content-Security-Policy` it is an insufficient size (#PR83, #58129).
 - [x] +Integration of AI tools, helpers, assistants (#57997).

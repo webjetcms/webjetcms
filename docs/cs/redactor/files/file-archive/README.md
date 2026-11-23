@@ -8,13 +8,21 @@ V zobrazeném seznamu vidíme všechny dokumenty, které byly vloženy do manaž
 
 Na levé straně se nachází **stromová struktura složek** (JSTREE), která umožňuje procházet složky archivu a filtrovat dokumenty podle zvolené složky. Strom zobrazuje složky z kořenového adresáře archivu nastaveného konfigurační proměnnou `fileArchivDefaultDirPath` (standardně `files/archiv/`). Složka pro naplánované nahrávání z konfigurační proměnné `fileArchivInsertLaterDirPath` se ve stromu nezobrazuje.
 
+Složky, do kterých nemáte právo zápisu, jsou označeny ikonou<i class="ti ti-folder-x"></i> . Označení se vztahuje i na kořenovou složku archivu. Takové složky můžete rozbalit a přejít do podsložek, ke kterým máte oprávnění.
+
+Pokud při výběru cílového adresáře pro nahrání dokumentu nemáte právo zápisu do složky aktuálně zadané v poli, po otevření výběru se zobrazí upozornění s jeho cestou. Pokud je v poli povolena podsložka, upozornění se nezobrazí ani při zakázané kořenové složce archivu. Ve stromu vyberte složku, do které můžete zapisovat.
+
+Výběr složky po otevření rozbalí cestu ke složce zadané v poli a označí ji, pokud máte oprávnění k jejímu výběru. Platí to i pro vnořené podsložky a ručně upravenou cestu. Klepnutím na složku výběr potvrdíte.
+
 Po kliknutí na složku ve stromu se v tabulce zobrazí pouze dokumenty patřící do dané složky. Zvolená složka se zároveň použije jako cílový adresář pro [hromadné nahrávání souborů](#hromadné-nahrávání-souborů) a automaticky se předvyplní při vytváření nového dokumentu přes editor.
 
 Nad stromem se nacházejí tlačítka:
 
--<i class="ti ti-plus"></i> - **Přidat** - vytvoří novou podsložku v aktuálně označené složce. Tlačítko se zobrazuje uživatelům s právem `menuFileArchivManagerCategory` a vytvoření složky vyžaduje právo zápisu do zvolené složky.
+-<i class="ti ti-plus"></i> - **Přidat** - vytvoří novou podsložku v aktuálně označené složce. Tlačítko se zobrazuje uživatelům s právem `menuFileArchivManagerCategory` a je aktivní, když máte právo zápisu do zvolené složky. Můžete také vytvořit novou podsložku v povolené podsložce archivu, pokud do kořenové složky nemáte právo zápisu.
 -<i class="ti ti-refresh"></i> - **Obnovit** - obnoví stromovou strukturu složek
 -<i class="ti ti-adjustments-horizontal"></i> - **Nastavení** - umožňuje nastavit šířku stromové struktury vůči tabulce
+
+Šířku stromu můžete zvolit poměrem vůči tabulce nebo v pixelech. Strom má minimální šířku `200 px`, aby se do něj vešlo vyhledávací pole is tlačítky. Menší poměr tuto hranici nesníží.
 
 ![](datatable.png)
 
@@ -55,6 +63,25 @@ Karta obsahuje základní informace pro vložení dokumentu.
   - **Nahrát po** - výběr data a času, po kterém se má dokumentu nahrát
   - **Emaily oddělené čárkou (notifikace po nahrání)** - zadejte emaily oddělené čárkou, na které chcete zaslat notifikaci o úspěšném/neúspěšném nahrání dokumentu
 
+#### Platnost a stahování historických verzí
+
+Konfigurační proměnná fileArchivCheckHistoryValid určuje, zda se u již nahraných historických verzí kontrolují data **Platnost od a Platnost do**. Ve výchozí hodnotě true se historická verze dokumentu mimo rozsah platnosti nezobrazí v seznamu starších verzí v aplikaci na webové stránce a nelze ji stáhnout. Při hodnotě `false` se data ignorují, takže verze může být zobrazena a dostupná ke stažení i mimo rozsah platnosti. Ostatní podmínky zobrazení a přístupová oprávnění zůstávají zachovány. Nevyplněné datum příslušnou mez platnosti neomezuje.
+
+Údaje o zobrazení v aplikaci uvedené v tabulce předpokládají, že dokument vyhovuje ostatním filtrům aplikace. Archivní verze se vypisují pouze při zapnuté možnosti **Zobrazit archivní verze** a vzory při zapnuté možnosti **Zobrazit vzory**.
+
+| Typ a stav záznamu | `true` (výchozí hodnota) | `false` |
+| --- | --- | --- |
+| Historická verze dokumentu, **Zobrazit** zapnuto, datum platné | Stáhne se a zobrazí se v aplikaci | Stáhne se a zobrazí se v aplikaci |
+| Historická verze dokumentu, **Zobrazit** zapnuto, před **Platností od** nebo po **Platnosti do** | Vrátí chybu 404 a v aplikaci se nezobrazí | Stáhne se a zobrazí se v aplikaci |
+| Historická verze vzoru, **Zobrazit** zapnuto, datum platné | Stáhne se, v aplikaci se nezobrazí | Stáhne se, v aplikaci se nezobrazí |
+| Historická verze vzoru, **Zobrazit** zapnuto, před **Platností od** nebo po **Platnosti do** | Vrátí chybu 404 a v aplikaci se nezobrazí | Stáhne se, v aplikaci se nezobrazí |
+| Dokument nebo vzor, ​​**Zobrazit** vypnuto | Vrátí chybu 404 a v aplikaci se nezobrazí | Vrátí chybu 404 a v aplikaci se nezobrazí |
+| Aktuální dokument nebo aktuální vzor, ​​**Zobrazit** zapnuto, datum platné | Stáhne se a zobrazí se v aplikaci | Stáhne se a zobrazí se v aplikaci |
+| Aktuální dokument nebo aktuální vzor, ​​**Zobrazit** zapnuto, datum neplatné | Vrátí chybu 404 a v aplikaci se nezobrazí | Vrátí chybu 404 a v aplikaci se nezobrazí |
+| Verze čekající na nahrání | Čekající verze se nezobrazí, aktuálně publikovaná verze zůstává zobrazena | Čekající verze se nezobrazí, aktuálně publikovaná verze zůstává zobrazena |
+
+Při hodnotě `false` zůstávají data historických verzí uložena a zobrazena v archivu jako informace o účinnosti dokumentu. Aplikace mezi vzory vypisuje pouze jejich aktuální verze. U obou hodnot se nadále kontrolují přístupová oprávnění. Nastavení indexování dokumentů zůstávají zachována.
+
 ### Karta - Pokročilé
 
 ![](editor_advanced.png)
@@ -71,7 +98,9 @@ Karta obsahuje základní informace pro vložení dokumentu.
   - dokument nesmí čekat na nahrání (musí být již nahrán)
   - nemůže to být vzor
 - **Poznámka** - poznámka se zobrazí na stránce při odkazu na dokument
-- **Uložit dokument i když již existuje** - manažer standardně nedovoluje přidání téhož dokumentu vícekrát (aby se zabránilo duplicitě). Chcete-li to povolit, musíte zaškrtnout tuto možnost.
+- **Uložit dokument i když již existuje** - povolí uložení souboru se stejným obsahem, jaký již má jiný dokument v manažeru. Podrobnosti naleznete v části [Kontrola duplicitních dokumentů](#kontrola-duplicitních-dokumentů).
+
+Při ukládání a přejmenování polí **Produkt** a **Kategorie** se tvrdé a ostatní Unicode mezery, tabulátory a zalomení řádků převedou na obyčejnou mezeru. Opakované mezery se sloučí a mezery na začátku a konci názvu se odstraní. Odstraní se i zbývající řídicí znaky a neviditelné znaky BOM, měkký spojovník a word joiner; zero-width space se převede na mezeru. Úprava platí i při hromadném nahrávání dokumentů, takže kopírování názvů z ​​jiných dokumentů nevytváří odlišné kategorie pouze kvůli těmto znakům.
 
 !>**Upozornění:** pole **Produkt** / **Kategorie** / **Kód produktu** Vám později poslouží při filtrování zobrazení souborů na stránce
 
@@ -89,13 +118,23 @@ Pokud jste nahráli soubor se špatným formátem, validace záznam neuloží, a
 
 ![](invalid-file-type.png)
 
-Na pozadí se kontroluje, zda nahrávaný soubor/dokument, již existuje v manažeru.
+## Kontrola duplicitních dokumentů
 
-!>**Upozornění:** nekontroluje se název dokumentu ale jeho **obsah**. To znamená, že pokud dokumenty jsou stejné, nepomůže jejich přejmenování.
+Při nahrávání souboru manažer kontroluje, zda již neexistuje dokument se **stejným obsahem**. Ze souboru vypočítá kontrolní součet MD5 (otisk jeho obsahu) a porovná jej s hlavními dokumenty v aktuální doméně, bez ohledu na jejich název nebo složku. Kontrola se provádí při vložení nového dokumentu i při nahrávání nové verze či nahrazení aktuálního dokumentu.
 
-V případě, že se detekuje již existující dokument, uložení bude přerušeno a zobrazí se chybová hláška. Zobrazena bude i notifikace obsahující seznam všech dokumentů se stejným obsahem. Chcete-li tento dokument přesto uložit, musíte povolit možnost **Uložit dokument i když již existuje** z karty pokročilé.
+!>**Upozornění:** samotné přejmenování souboru v počítači nemění jeho obsah. Pokud například přejmenujete `cennik.pdf` na `cennik-novy.pdf` bez úpravy obsahu, manažer jej stále rozpozná jako stejný soubor. Platí to i tehdy, když jej chcete nahrát jako novou verzi původního dokumentu.
+
+Pokud manažer najde shodný obsah, standardně přeruší uložení a zobrazí upozornění se seznamem shodných dokumentů. Také hlášení „Manažer dokumentů zjistil, že soubor … který jste nahráli, již v archivu existuje“ znamená shodu obsahu souborů, nikoli pouze jejich názvů.
 
 ![](file-duplicity-notif.png)
+
+Cílem kontroly je předejít ukládání stejného dokumentu na více míst. Na jeden uložený dokument můžete odkazovat z více stránek. Při jeho aktualizaci pak stačí nahrát novou verzi na jednom místě a stávající odkazy budou směřovat na aktuální soubor. Zároveň se šetří místo na disku a snižuje riziko, že na některé stránce zůstane odkaz na neaktualizovanou kopii.
+
+Při upozornění postupujte podle toho, čeho chcete dosáhnout:
+
+- **Použít stejný dokument na další stránce** - použijte odkaz na již existující dokument uvedený v upozornění.
+- **Aktualizovat dokument** - upravte jeho obsah, uložte změny do souboru av manažeru použijte akci [Nahrát novou verzi](#akce---nahrát-novou-verzi). Samotné přejmenování lokálního souboru na vytvoření nové verze nestačí.
+- **Záměrně uložit stejný obsah znovu** - na kartě **Pokročilé** zaškrtněte možnost **Uložit dokument i když již existuje** a uložení zopakujte. Tato volba umožní obejít kontrolu duplicity i při nahrávání nové verze.
 
 ## Publikování naplánovaných verzí
 
@@ -135,9 +174,13 @@ Karta základní nabízí možnost fyzicky **přejmenovat dokument** (tedy reál
 
 ### Akce - Nahrát novou verzi
 
-Tato akce vytvoří novou aktuální verzi dokumentu. Z právě aktuální verze (kterou lze nahradit) se stane historická verze dokumentu. Stačí nahrát nový dokument, jelikož cílový adresář je před-vyplněný (ale může být změněn). K možnosti **Nahrát dokument později** se dostaneme až v následující části.
+Tato akce vytvoří novou aktuální verzi dokumentu. Z právě aktuální verze (kterou lze nahradit) se stane historická verze dokumentu. Stačí nahrát nový dokument, přičemž cílový adresář musí zůstat stejný jako adresář aktuálního dokumentu. K možnosti **Nahrát dokument později** se dostaneme až v následující části.
+
+I při této akci se provádí [kontrola duplicitních dokumentů](#kontrola-duplicitních-dokumentů). Pokud soubor pouze přejmenujete a jeho obsah zůstane stejný, manažer standardně odmítne jeho uložení jako nové verze.
 
 !>**Upozornění:** povoleno je nahrát pouze dokument se stejným typem, jako právě nahrazovaný aktuální dokument.
+
+!>**Upozornění:** při nahrání nové verze nebo nahrazení dokumentu nelze změnit jeho cílový adresář. Pokud je nastavena konfigurační proměnná `fileArchivUseCategoryAsLink` na `true`, nelze změnit ani kategorii na hodnotu, která by dokument přesunula do jiného adresáře.
 
 Třeba si uvědomit, že nahrávaný dokument bude po uložení automaticky fyzicky přejmenován podle názvu aktuálně nahrazovaného dokumentu. Chcete-li aby se dokument volal jinak, musíte použít možnost **Fyzicky přejmenovat dokument** a zadat nové jméno.
 
@@ -174,6 +217,8 @@ Všechny čekající verze daného dokumentu jsou dostupné přímo v jeho kart�
 Tato akce dělá přesně to, co název napovídá. Nenahraje novou verzi dokumentu, ale vymění právě aktuální hlavní dokument za jiný, čili se vymění soubor reprezentující dokument. Dokument může mít jiný název, ale automaticky se zachová název původního dokumentu.
 
 Tato akce funguje i pro dokumenty typu **Vzor** i pro dokumenty, které čekají na nahrání. Tak víte například. vyměnit dokument, který se má nahrát v budoucnosti bez potřeby vymazání původního dokumentu a vytváření nového záznamu.
+
+Cílový adresář nahrazovaného dokumentu musí zůstat nezměněn. Stejné omezení platí i pro kategorii, pokud kategorie podle konfigurace určuje fyzický adresář dokumentu.
 
 !>**Upozornění:** povoleno je nahrát pouze dokument se stejným typem, jako právě nahrazovaný aktuální dokument.
 
@@ -252,6 +297,14 @@ Jako i při mazání vzorů, tyto naplánované verze lze vymazat **IBA** pomoc�
 
 Soubory můžete do aktuálně zvolené složky nahrát i přímo ze seznamu dokumentů. Přesuňte jeden nebo více souborů z počítače nad stránku manažera dokumentů. Nahrávání používá aktuálně označenou složku ve stromové struktuře a povolené přípony souborů z konfigurační proměnné `fileArchivAllowExt`.
 
+Pokud je `fileArchivUseCategoryAsLink` nastaveno na `true` a při hromadném nahrávání zadáte kategorii, cílová složka se odvodí z této kategorie. V této složce se kontrolují i ​​soubory se stejným jménem a provedou se zvolené akce **Nahradit** nebo **Nová verze**.
+
+Před spuštěním nahrávání se zobrazí editor stejný jako při vytváření dokumentu, přičemž obsahuje pouze pole určená pro hromadná nastavení. Na kartě **Základní** můžete volitelně nastavit stejnou **Platnost od** a **Platnost do** pro všechny vybrané soubory. Zapnutím možnosti **Nahrát dokument později** nastavíte i budoucí termín nahrání a e-mailové adresy pro notifikaci.
+
+![](drag-drop-upload-settings-dialog.png)
+
+Karta **Pokročilé** umožňuje pro všechny nahrávané soubory nastavit produkt, kategorii, kód produktu, zobrazování, indexování, prioritu, referenci na hlavní dokument, poznámku a povolení uložit dokument s již existujícím obsahem. Prázdná textová pole a neupravené přepínače ponechají výchozí nebo stávající hodnoty. Tlačítkem **Zrušit** zrušíte celé čekající nahrávání.
+
 Během nahrávání se zobrazí panel s průběhem pro jednotlivé soubory i celkovým průběhem. Po úspěšném nahrání se pro každý soubor vytvoří samostatný hlavní dokument, jeho název se předvyplní ze jména souboru bez přípony a tabulka se automaticky obnoví.
 
 ![](drag-drop-upload-dialog.png)
@@ -263,6 +316,8 @@ Pokud již ve zvolené složce existuje soubor se stejným reálným jménem, �
 - **Nová verze** - nový soubor se uloží jako aktuální verze dokumentu a původní soubor se přesune mezi historické verze.
 
 Ve spodní části panelu můžete stejnou volbu použít najednou pro všechny soubory čekající na rozhodnutí.
+
+Nastavená data platnosti se použijí i při možnostech **Nahradit** a **Nová verze**. U těchto možností se odmítne změna kategorie, která by stávající dokument přesunula do jiného fyzického adresáře. Naplánované nahrání duplicitního souboru je podporováno u možnosti **Nová verze**, nikoli při okamžitém nahrazení. U možnosti **Přeskočit** se stávající dokument nezmění.
 
 ![](drag-drop-upload-duplicity-dialog.png)
 

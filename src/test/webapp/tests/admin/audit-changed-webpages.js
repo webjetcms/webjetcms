@@ -69,6 +69,7 @@ Scenario("Check buttons stat", ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/audit-changed-webpages/");
     DT.filterContains("title", pageTitle);
     I.clickCss("button.dt-filter-id");
+    I.clickCss("button.buttons-more-actions");
     I.clickCss("button.buttons-stat");
     I.switchToNextTab();
     I.waitForElement("div#topDetails-lineVariantA");

@@ -766,6 +766,7 @@ function approveDelete(I, pageName, hasSecondLevelApprove=false) {
     within({frame : "#approveDelFormId"}, () => {
         I.waitForElement("textarea[name=notes]", 10);
         I.fillField("textarea[name=notes]", "Suhlasim so zmazanim");
+        I.waitForElement("#tabMenu1 input.btn.green");
         I.clickCss("#tabMenu1 input.btn.green");
         if (hasSecondLevelApprove)
             I.waitForText("Žiadosť o schválenie je posunutá na druhú úroveň. Žiadosť dostal Tester_L2 Playwright.");

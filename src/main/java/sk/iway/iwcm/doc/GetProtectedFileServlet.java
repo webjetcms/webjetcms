@@ -55,15 +55,27 @@ public class GetProtectedFileServlet extends HttpServlet
    {
       String url = request.getRequestURI();
       if (ContextFilter.isRunning(request)) url = ContextFilter.removeContextPath(request.getContextPath(), url);
+      if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(url)) {
+          response.setHeader("Cache-Control", "no-store");
+          response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+          return;
+      }
       //Logger.println(this,"RequestServlet: url="+url);
 
-      request.getSession().setAttribute("afterLogonRedirect", url);
+      if (PlannedAccess.isPathAccessible(url, request, response)==false) return;
+
+      boolean plannedPath = PlannedAssetPaths.containsPlannedPath(url);
+      EditForm ef = null;
+      if (plannedPath) {
+          url = PlannedAssetPaths.localPath(url);
+      } else {
+          request.getSession().setAttribute("afterLogonRedirect", url);
+          ef = PathFilter.isPasswordProtected(url, request);
+      }
 
       //Logger.println(this,"-->GetProtectedFileServlet: " + url);
 
-      EditForm ef = PathFilter.isPasswordProtected(url, request);
-
-      if (url.startsWith(DIR_NAME))
+      if (plannedPath || url.startsWith(DIR_NAME))
       {
       	Logger.println(this,"mam dir name, url="+url);
          //ziskaj identitu
@@ -148,8 +160,15 @@ public class GetProtectedFileServlet extends HttpServlet
 
          Logger.println(this,"testujem: " + realPath);
 
+         if (plannedPath && (inFile == null || inFile.isFile()==false))
+         {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+         }
+
          if (inFile != null && inFile.exists())
          {
+            PathFilter.setNoCacheHeaders(response);
             FilePathTools.writeFileOut(inFile, request, response);
          }
          else

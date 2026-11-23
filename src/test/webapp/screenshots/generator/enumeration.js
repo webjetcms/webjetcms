@@ -8,13 +8,16 @@ var enumPrefix = "Číselnik_";
 var enumeration_A = "Číselnik_A";
 var enumeration_B = "Číselnik_B";
 var enumeration_C = "Číselnik_C";
+var enumeration_customFields = "CustomFieldsScreenshots";
 
 Scenario('Enum Types screenshots', ({I, DT, DTE, Document, i18n}) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    I.amOnPage("/apps/enumeration/admin/#2921");
+    I.fillField("#tree-folder-search-input", enumPrefix);
+    I.clickCss("#tree-folder-search-button");
+    I.waitForInvisible("#SomStromcek .jstree-loading", 10);
     Document.screenshot("/redactor/apps/enumeration/dataTable_enumType.png");
 
-    DT.filterContains("typeName", enumeration_A);
-    I.click(enumeration_A);
+    openType(I, enumeration_A);
     DTE.waitForEditor('enumerationTypeDataTable');
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_enumType.png");
     I.clickCss("#pills-dt-enumerationTypeDataTable-strings-tab");
@@ -23,8 +26,21 @@ Scenario('Enum Types screenshots', ({I, DT, DTE, Document, i18n}) => {
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_booleanTab.png");
     DTE.cancel();
 
-    DT.filterContains("typeName", enumeration_B);
-    I.click(enumeration_B);
+    openType(I, enumeration_customFields);
+    DTE.waitForEditor('enumerationTypeDataTable');
+    I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
+    I.waitForVisible("#datatableFieldDTE_Field_editorFields-stringFieldTypes_wrapper", 10);
+    DT.waitForLoader("datatableFieldDTE_Field_editorFields-stringFieldTypes");
+    Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_stringFieldTypes.png");
+
+    I.clickCss("#datatableFieldDTE_Field_editorFields-stringFieldTypes tbody tr:first-child td:first-child");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-stringFieldTypes_wrapper button.buttons-edit");
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-stringFieldTypes");
+    Document.screenshotElement("#datatableFieldDTE_Field_editorFields-stringFieldTypes_modal .DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_stringFieldType.png");
+    DTE.cancel("datatableFieldDTE_Field_editorFields-stringFieldTypes", true);
+    DTE.cancel();
+
+    openType(I, enumeration_B);
     DTE.waitForEditor('enumerationTypeDataTable');
     I.click( locate( "div.DTE_Field_Name_editorFields\\.childEnumTypeId > div > div > div.dropdown > button.dropdown-toggle") );
     I.waitForVisible("div.dropdown-menu.show");
@@ -36,8 +52,7 @@ Scenario('Enum Types screenshots', ({I, DT, DTE, Document, i18n}) => {
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_select_2.png");
     DTE.cancel();
 
-    DT.filterContains("typeName", enumeration_C);
-    I.click(enumeration_C);
+    openType(I, enumeration_C);
     DTE.waitForEditor('enumerationTypeDataTable');
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_select_3.png");
 });
@@ -46,7 +61,17 @@ Scenario('Enum Datas screenshots', ({I, DTE, Document}) => {
     I.amOnPage("/apps/enumeration/admin/#2921");
     Document.screenshot("/redactor/apps/enumeration/dataTable_enumData.png");
 
-    I.clickCss("button.buttons-create");
+    I.clickCss("#enumerationDataDataTable_wrapper button.buttons-create");
     DTE.waitForEditor('enumerationDataDataTable');
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Create", "/redactor/apps/enumeration/editor_enumData.png");
 });
+
+function openType(I, name) {
+    I.fillField("#tree-folder-search-input", name);
+    I.clickCss("#tree-folder-search-button");
+    const node = '#SomStromcek a[title="' + name + '"]';
+    I.waitForVisible(node, 10);
+    I.clickCss(node);
+    I.waitForEnabled(".tree-col .buttons-edit", 10);
+    I.clickCss(".tree-col .buttons-edit");
+}

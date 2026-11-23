@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script.
+        window.helpLink = "/redactor/files/fbrowser/folder-settings/README";
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const urlDirPath = urlParams.get('dirPath');
@@ -87,12 +88,7 @@ block content
                 var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.elfinder.FolderPropertiesEntity')})];
                 let initIndexTab = false;
 
-                var tabs = [
-                    { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                    { id: 'index', title: '[[\#{elfinder.folder_prop.index.tab}]]' },
-                    { id: 'usage', title: '[[\#{elfinder.folder_prop.usage.tab}]]' },
-                    { id: 'unusedFiles', title: '[[\#{elfinder.folder_prop.unused_files.tab}]]' }
-                ];
+                var tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.system.elfinder.FolderPropertiesEntity')})];
 
                 folderPropertiesTable = WJ.DataTable({
                     url: WJ.urlAddParam(url, "dir", urlDirPath),

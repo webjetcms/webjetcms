@@ -24,6 +24,8 @@ mixin jstreesettings(type="webpages")
                                             select#jstree-settings-treeWidth.form-control.form-select.col-12
                                                 each val in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
                                                     option(value=val) #{val}:#{12-val}
+                                                each val in [120, 150, 200, 250, 300, 400, 500]
+                                                    option(value=val) #{val}px
                                     .col-sm-1.form-group-tooltip
                                         button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.treeWidth.tooltip}')
                                             i.ti.ti-info-circle

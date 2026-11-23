@@ -1,7 +1,11 @@
 package sk.iway.iwcm.doc;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Getter;
+import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeItemState;
@@ -13,6 +17,27 @@ public class GroupsJsTreeItem extends JsTreeItem {
     @JsonProperty("groupDetails")
     private GroupDetails group;
     //private UserDetails user;
+
+    /** Optional article filter, such as "23*", kept separate from the numeric node ID. */
+    @Getter
+    @Setter
+    private String groupIdList;
+
+    /** Accessible language counterparts in the main webpage tree, excluding this folder. */
+    @Getter
+    @Setter
+    private List<MirrorLink> mirrors;
+
+    /** Navigation metadata for one permitted mirrored folder. */
+    public record MirrorLink(int groupId, String language, String path) { }
+
+    /** Optional diagnostic displayed after the folder name without replacing its icon. */
+    @Getter
+    @Setter
+    private MirroringProblem mirroringProblem;
+
+    /** Icon, localized accessible description and mapping ID of a mirroring problem. */
+    public record MirroringProblem(String icon, String title, int syncId) { }
 
     public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages) {
         this(group, user, showPages, true);

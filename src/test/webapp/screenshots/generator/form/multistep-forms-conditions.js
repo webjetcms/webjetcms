@@ -10,6 +10,26 @@ Before(({ I, DT, login }) => {
     DT.addContext("formItems", "#formItemsDataTable_wrapper");
 });
 
+Scenario('Relations tab screenshot', ({ I, DT, DTE, Document }) => {
+    I.amOnPage("/apps/form/admin/form-steps/?formName=" + formName);
+    I.waitForFunction(() => {
+        const step = document.querySelector('#formStepsDataTable tbody tr.selected');
+        return step && new URL(formItemsDataTable.getAjaxUrl(), location.origin).searchParams.get('stepId') === step.id;
+    }, [], 15);
+    DT.waitForLoader("formItemsDataTable");
+
+    I.waitForText("Checkgroup", 10, "#formItemsDataTable");
+    I.click(locate("#formItemsDataTable tbody td").withText("Checkgroup"));
+    I.click(DT.btn.formItems_edit_button);
+    DTE.waitForEditor("formItemsDataTable");
+
+    I.clickCss("#pills-dt-formItemsDataTable-relations-tab");
+    I.waitForVisible("#formItemVisibilityUsage button.form-item-relations-name");
+    I.waitForVisible("#formItemRequirementUsageEmpty");
+    Document.screenshotElement("#formItemsDataTable_modal .modal-content", "/redactor/apps/multistep-form/tab-relations.png", 1280, 720);
+    DTE.cancel("formItemsDataTable");
+});
+
 Scenario('Before test preparation', async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/form/admin/form-steps/?formName=" + formName);
     DT.waitForLoader();

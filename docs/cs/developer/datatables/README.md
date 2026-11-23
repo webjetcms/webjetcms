@@ -3,6 +3,20 @@
 
 Knihovna [datatables.net](http://datatables.net) je pokročilá tabulka s napojením na REST služby.
 
+## Systémová nastavení
+
+Java třídy pro nastavení datatabulek jsou v balíku `sk.iway.iwcm.system.datatable.settings`:
+
+| Podbalík | Databázová tabulka | Účel |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Konfigurace a validace volitelných polí. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Nastavení vlastností polí a sloupců. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Nastavení karet editoru. |
+
+Každý podbalík obsahuje `jpa` pro entity a repozitáře a `rest` pro služby a REST controllery. Při použití těchto tříd ve vlastním kódu nebo šablonách aktualizujte importy a úplné názvy tříd na uvedené balíky.
+
+Původní tabulka `custom_fields` se při aktualizaci automaticky přejmenuje na `dt_customfields` se zachováním údajů. Vlastní SQL dotazy musí používat nový název tabulky.
+
 ## Základní inicializace v spolupráce s Spring REST
 
 WebJET implementace datatables se konfiguruje pomocí JSON objektu columns. V tomto objektu je definice sloupců pro datatabulku i pro datatables editor. Konstruktorem WJ.DataTable se následně tabulka inicializuje.
@@ -114,6 +128,7 @@ Minimální konfigurace:
 - ```tabs {json}``` definice [karet pro editor](../datatables-editor/README.md#karty-v-editore).
 - ```id {string}``` jednoznačný identifikátor datatabulky, pokud není zadán použije se hodnota ```datatableInit```. Potřebné hlavně pokud máte v jedné web stránce více datatabulky.
 - ```editorId {string}``` jednoznačný identifikátor editoru, pokud není zadaný použije se hodnota ```id```. Potřebné hlavně pokud máte v jedné web stránce více datatabulky.
+- `reloadRowKey {string}` název pole s jednoznačným klíčem záznamu, podle kterého se po editaci a vynuceném obnovení údajů při `serverSide: false` vyhledá strana upraveného záznamu. Ve výchozím nastavení používá `editorId`. Pokud se ID při načtení generují znovu, nastavte stabilní klíč, například `reloadRowKey: "name"` v konfiguraci. Klíč se převezme z odpovědi uložení, takže může obsahovat i nový název po přejmenování.
 - ```onXhr {function}``` JavaScript funkce, která se zavolá po [načtení dat](https://datatables.net/reference/event/xhr) ve formě ```function ( TABLE, e, settings, json, xhr ) {}```.
 - ```onPreXhr(TABLE, e, settings, data) {function}``` JavaScript funkce, která se zavolá [před načtením dat](https://datatables.net/reference/event/preXhr), umožňuje přidat do odesílaných dat parametry. Ty se zadávají s prefixem ```fixed_``` aby šli odlišit od standardních parametrů datatabulky. Příklad: ```onPreXhr: function(TABLE, e, settings, data) { data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked'); }```.
 - ```onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}```: JavaScript funkce, která se zavolá po kliknutí na odkaz editace záznamu. Jako parametry dostane: ```TABLE``` - instance datatabulky, ```row``` - jQuery objekt řádku na který se kliklo, ```dataAfterFetch``` - při zapnuté funkci ```fetchOnEdit``` json data získaná po jejich obnově, ```dataBeforeFetch``` původní JSON data řádku pro voláním jejich obnovení. Standardní editor otevřete následně voláním ```TABLE.wjEdit(row);```. Příklad použití je ve [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
@@ -384,6 +399,27 @@ V `init` funkci lze použít následující volání:
 - `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - ​​tlačítko je aktivní pouze pokud je označen alespoň jeden řádek
 - `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - ​​tlačítko je aktivní pouze pokud není označen žádný řádek
 - `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - ​​tlačítko je aktivní pouze pokud je označen přesně jeden řádek
+
+## Menu Další akce
+
+Méně časté akce můžete vložit do menu **Další akce** pomocí `table.addMoreAction(config)` nebo pole `moreActions` v nastavení `WJ.DataTable`. Menu se vytvoří až při první přidané akci a zobrazí se vpravo při nastavení a obnovení dat. Implementace je oddělena v `npm_packages/webjetdatatables/more-actions.js`.
+
+Konfigurace používá standardní vlastnosti tlačítka DataTables. Do `text` zadejte ikonu, do `attr.title` přeložený název, který se zobrazí vedle ikony. Zachovávají se `action`, `init` i aktivování podle výběru řádků:
+
+```javascript
+table.addMoreAction({
+    text: '<i class="ti ti-tag-plus" aria-hidden="true"></i>',
+    attr: { title: WJ.translate('my.action.js'), 'data-dtbtn': 'myAction' },
+    init: function(dt) {
+        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+    },
+    action: function() {
+        table.executeAction('myAction');
+    }
+});
+```
+
+Ke skrývání a zobrazování položek používejte `table.hideButton('myAction')` a `table.showButton('myAction')`. Fungují i ​​při zavřeném menu, jehož položky nejsou připojeny k DOM. Menu se skryje, když neobsahuje žádnou zobrazenou položku. Oprávnění ověřte před přidáním položky a znovu na serveru při provedení akce.
 
 ## Tlačítko pro provedení serverové akce
 
@@ -826,4 +862,22 @@ Pro aktivaci je třeba v `@DataTableColumn` anotaci mít nastavený atribut `inp
 private Integer sortPriority;
 ```
 
-Při změně pořadí řádků se automaticky vyvolá backend endpoint `/row-reorder` ze třídy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java), který aktualizuje hodnoty pro @@y . Pokud uložení bylo úspěšné, tabulka se obnoví a zobrazí nové pořadí řádků, plus se zobrazí oznámení o úspěšném uložení změn. V případě chyby se zobrazí chybová notifikace.
+Při změně pořadí řádků se automaticky vyvolá backend koncový bod `/row-reorder` ze třídy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Název měněného pole (`dataSrc`) posílá klient, proto koncový bod povolí zápis pouze při splnění všech následujících podmínek:
+
+- `dataSrc` přesně odpovídá Java poli entity; pole může být deklarováno iv rodičovské třídě,
+- pole má anotaci `@DataTableColumn`, jejíž pole `inputType` obsahuje hodnotu `DataTableColumnType.ROW_REORDER`,
+- vlastnost je zapisovatelná a má numerický datový typ,
+- nejde o pole `id`, `domainId` ani o pole označené anotací `@Id` nebo `@EmbeddedId`, a to ani v případě, že by zároveň bylo označeno jako `ROW_REORDER`,
+- požadavek obsahuje neprázdný seznam jedinečných nenulových ID, všechny záznamy existují a každý má zadanou novou hodnotu,
+- celá dávka vyhovuje dodatečnému rozsahu kontroléru ověřenému metodou `checkRowReorderScope`, pokud ji kontrolér implementuje,
+- uživatel má oprávnění upravit každý záznam; ověření se provede voláním `checkItemPermsThrows`, které používá implementaci `checkItemPerms` daného kontroléru.
+
+Celý požadavek se nejprve ověří beze změny entit. Hodnoty se nastaví a zavolá se `saveAll` až po úspěšném ověření všech záznamů. Při chybě validace se požadavek odmítne a `saveAll` se nezavolá, čímž se zabrání částečnému uložení dávky.
+
+Pokud je seznam tabulky omezen i jinak než podle domény, například parametry `formName`, `stepId`, `parentId` nebo právy na nadřazený záznam, kontrolér musí implementovat metodu `checkRowReorderScope`. Metoda obdrží celou dávku entit načtených z repozitáře a musí ověřit, že každá patří do požadovaného rozsahu a uživatel může daný rozsah upravovat. Chybějící nebo neplatný parametr musí vrátit `false`. Podrobné použití a příklad jsou v části [kontrola rozsahu při změně pořadí](restcontroller.md#kontrola-rozsahu-při-změně-pořadí).
+
+Parametry z URL nastavené v `DATA.url` klient zachová i při volání `/row-reorder`. Server je však musí považovat za nedůvěryhodné a porovnat je s každou načtenou entitou a oprávněními aktuálního uživatele.
+
+Koncový bod `/row-reorder` je samostatná operace a nevolá CRUD metody ani metody `beforeSave` a `afterSave`. Metoda `checkRowReorderScope` doplňuje, ale nenahrazuje kontrolu jednotlivých záznamů v metodě `checkItemPerms`.
+
+Po úspěšném uložení se tabulka obnoví, zobrazí nové pořadí řádků a oznámení o úspěchu. V případě chyby se zobrazí chybová notifikace.

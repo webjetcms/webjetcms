@@ -40,6 +40,8 @@ Clicking the Import button will start the import from the selected Excel file.
 
 Most spreadsheets allow you to **import columns partially** when updating an existing record. In Excel, you can delete columns that you want to keep unchanged in the database. Then, when importing, only the changes from the columns you left in Excel will be transferred to the existing records.
 
+For numeric and date fields that support a blank value, **a blank cell in the column left will clear the original value**. You can also use the text `NULL`. The list of imported columns is determined by the Excel header, even if the first data cell of the column is blank. Required fields cannot be blanked this way, the import will display a validation error.
+
 ### Skip erroneous records
 
 The import offers the option to skip erroneous records. If this option is **disabled** and the imported data contains an error, the import will be interrupted and an error message will be displayed. The disadvantage is when importing a large number of records, where one error will interrupt the import of other records.

@@ -80,7 +80,7 @@ The basic form code is in the keys:
 - ```components.formsimple.form.start``` - ​​HTML code for the beginning of the form (opening form tag)
 - ```components.formsimple.form.end``` - ​​HTML code for the end of the form (closing form tag)
 - ```components.formsimple.requiredLabelAdd``` - ​​text that will be added to the label element text for a required field (typically the * character)
-- ```components.formsimple.tooltipCode``` - ​​HTML code for generating ${tooltip} replacement
+- ```components.formsimple.tooltipCode``` - ​​HTML code for generating ```${tooltip}``` replacement
 - ```components.formsimple.techinfo``` - ​​HTML code for generating technical information in an email
 
 You define individual items using keys:
@@ -126,24 +126,121 @@ components.formsimple.input.wysiwyg=<div class="form-group"><label for="${id}">$
 components.formsimple.hide.wysiwyg=placeholder
 ```
 
+!>**Warning for multi-step forms:** a custom definition `components.formsimple.input.NAZOV` that contains a native element `<input type="file">` will not work. File uploads are only supported using the `Dropzone` component.
 The following tags can be used in the code, which will be replaced when the form is displayed:
 
 - ```${formname}``` - ​​form name without spaces, diacritics, in lowercase, used for form element in name attribute (it should still start with formMail for use in standard validation mechanism)
 - ```${savedb}``` - ​​same value as ```formname```, used for clarity in the form submission URL
 - ```${id}``` - ​​Element ID generated from its name (Value field in administration), without spaces, diacritics, in lowercase letters
+- ```${itemId}``` - ​​item identifier within the rendered form
+- ```${stepId}``` - ​​multi-step form step identifier; for easy forms the value is empty
 - ```${label}``` - ​​text for label element, value from name field in administration
 - ```${labelSanitized}``` - ​​text for label element, value from name field in administration, special characters modified so it can be used in HTML attribute
+- ```${hint}``` - ​​HTML content of the **Help** field of a multi-step form item. It is inserted after the field name in `<div class="form-hint">${hint}</div>`. If help is not specified, the tag is replaced with empty text.
 - ```${value}``` - ​​text from the value field in the administration
+- ```${valueSanitized}``` - ​​field value edited without spaces, diacritics and special characters for use in HTML attribute
 - ```${placeholder}``` - ​​placeholder text, displayed when the field has an empty value
 - ```${classes}``` - ​​additional CSS styles, currently ```required``` if checked Required field in administration
 - ```${tooltip}``` - ​​HTML code for tooltip, value from Tooltip field in administration
+- ```${tooltipId}``` - ​​unique and HTML attribute-safe tooltip ID, designed to link the control to the tooltip content
 - ```${cs-error}``` - ​​generated HTML code for error message
 - ```${iterable}``` - ​​a repeating list of fields (e.g. a group of selection fields) is inserted at the specified location, with the code that is repeated being defined by the key ```components.formsimple.iterable.MENO_POLA```
 - ```${counter}``` - ​​sequence number for a repeating record, needed to set the unique ```id``` and ```for``` attributes
 - ```${value-label}``` - ​​text value (label) for a repeating record, if it contains a different value for ```value``` and for ```label``` (e.g. in the ```option``` tag). The user enters possible values ​​as ```label:value```, i.e. as ```Pomaranč:orange,Jablko:apple``` to display the listed options.
 - ```{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}``` - ​​connection to get a list of ```option``` values ​​from the codebook application. The codebook ID, column name for the value, and column name for the text are specified.
 
+### Fields from form settings
+
+You can also use saved form settings in the HTML translation keys via `${settings.NAZOV_POLA}` tags. They are easily accessible in the Form, including multi-step forms, in the item preview in the administration, and in the form's email form.
+
+| Brand | Value |
+| --- | --- |
+| `${settings.fieldA}` to `${settings.fieldF}` | Optional fields A–F from the form settings. |
+| `${settings.formName}` | The stored form name; unlike `${formname}`, it is not converted to an HTML identifier when replaced. |
+| `${settings.recipients}` | Recipients' email addresses. |
+| `${settings.ccEmails}` | Email addresses of copy recipients. |
+| `${settings.bccEmails}` | Email addresses of hidden recipients. |
+| `${settings.replyTo}` | Email addresses for response. |
+| `${settings.subject}` | Email subject set. |
+| `${settings.forward}` | Redirect URL after successful submission. |
+| `${settings.forwardFail}` | Redirect URL after an error. |
+| `${settings.maxSizeInKilobytes}` | Maximum size of a single file in KB. |
+| `${settings.maxCombinedSizeInKilobytes}` | Maximum total file size in KB. |
+| `${settings.allowedExtensions}` | Set list of allowed extensions. |
+| `${settings.pictureHeight}` | Maximum image height in pixels. |
+| `${settings.pictureWidth}` | Maximum image width in pixels. |
+| `${settings.formAddClasses}` | Additional CSS classes for the form. |
+| `${settings.rowView}` | Saved display setting in line as `true` or `false`. |
+| `${settings.emailTextBefore}` | The text before the email content may contain HTML. |
+| `${settings.emailTextAfter}` | The text behind the email body may contain HTML. |
+
+The fields **A–F**, **Text before email**, and **Text after email** are inserted as HTML without escaping. Both email texts support HTML even when inserted normally before and after the email content. The other settings are escaped for HTML text and quoted attributes. The tags are not intended for direct insertion into JavaScript or CSS. Use HTML-enabled fields in places intended for HTML content, not as attribute values.
+
+Example of a custom information field if optional field A contains `<strong>Pokyny k vyplneniu</strong>`:
+
+```properties
+components.formsimple.label.pokyny=Pokyny
+components.formsimple.input.pokyny=<div class="form-instructions">${settings.fieldA}</div><p>Povolené prípony: ${settings.allowedExtensions}; maximálna veľkosť súboru: ${settings.maxSizeInKilobytes} kB.</p>
+```
+
+You can also add tags to the existing form start code, for example as the `data-form-name="${settings.formName}"` attribute, or insert `<div class="form-intro">${settings.fieldB}</div>` after the opening `<form>`. Keep the original template attributes and scripts. For an Easy Form, this is the key `components.formsimple.form.start`, for a multi-step form, it is `components.multistep.form.start`.
+
+The same tags work in the form footer, tooltip templates, first field titles, repeated items `${iterable}`, and technical information `components.formsimple.techinfo`. In a multi-step form, they are also available in the HTML wrappers of steps and rows, the step title, the Back button, and the loading indicator.
+
+Stored values ​​are used. Empty or missing settings are replaced with an empty string; for example, the default email subject or fallback redirect on error are not calculated. Unknown tags are left unchanged. The replacement is not recursive: if the value of field A contains `${settings.fieldB}` or `${id}`, this expression is left literal.
+
+By using the tag, you insert a value into the resulting HTML available to the visitor. This also applies to email addresses, including `${settings.bccEmails}` ; this allows the hidden email recipient to be published on the page. Only the specified settings are available, not the encryption key or internal entity data.
+
+### Custom HTML tooltip code
+
+You can edit the HTML code of the tooltip in the project with the translation key `components.formsimple.tooltipCode`. Its value includes the tags `${tooltipId}`, `${id}`, `${itemId}`, `${stepId}`, `${label}`, `${labelSanitized}`, `${value}`, `${valueSanitized}`, `${placeholder}` and `${classes}`. The tag `${label}` in this key contains the text from the **Tooltip** field, not the name of the form field.
+
+To accessibly and unambiguously link the control to the tooltip content, use the same `${tooltipId}` value in the `aria-describedby` attribute of the control and in the `id` attribute of the element with `role="tooltip"`. Do not manually create an ID from only `${id}`, `${itemId}`, or `${stepId}`, as they may not be unique on their own when the form is submitted repeatedly.
+
+Example:
+
+```properties
+components.formsimple.tooltipCode=<button type="button" class="info-tooltip" data-tooltip-trigger="true" aria-describedby="${tooltipId}" aria-owns="${tooltipId}"><svg class="icon info-tooltip__icon" aria-hidden="true"><use xlink:href="/sprite.svg#assistance"></use></svg><span class="sr-only">Info</span></button><span id="${tooltipId}" class="tooltip" role="tooltip" hidden="" data-tooltip="true"><span class="tooltip__arrow"> </span><span class="tooltip__dialog">${label}</span></span>
+```
+
+The `aria-describedby` attribute is crucial for the descriptive binding of the tooltip, the value of which must correspond to the `id` element with the tooltip content.
+
+The tooltip value is only substituted once. If the tooltip text itself contains an expression like `${id}`, it will remain displayed verbatim and no further substitution will be performed on it.
+
 In the email view, the value of the tooltip field is replaced with a blank character (so that there is no unnecessary non-functional tooltip in the email).
+
+### HTML code for buttons
+
+You can edit the HTML code of the buttons in [multistep forms](../multistep-form/README.md) in the **Settings → Text Editing** section. You can customize the appearance of the buttons to your website design by changing the CSS classes or adding an icon.
+
+#### Continue or submit button
+
+The key `components.multistep.form.end` contains the HTML code for the button to go to the next step and, in the last step, to submit the form. The default part of the value that determines the appearance of the button is:
+
+```html
+<button type="submit" class="btn btn-primary mt-3" name="saveForm">${submitButtonText}</button>
+```
+
+The `${submitButtonText}` tag will be replaced with the text set in the current step. If no text is specified, the `components.multistep.form.next_step` translation will be used (**Go to next step**) or in the last step `components.multistep.form.save_form` (**Submit form**).
+
+When changing the appearance, keep the `type="submit"`, `name="saveForm"`, and `${submitButtonText}` tags. The key also contains the `{tech-info}` tag for technical information, the `</form>` closing tag, and the script to initialize the tooltips. Leave these parts; when editing the button, change only its HTML code.
+
+#### Previous step button
+
+The HTML code for the **Back** button is set via the `components.multistep.form.back_button` key. The button appears from the second step; it is not inserted into the email form.
+
+The following tags are available in the key value:
+
+- `${previousStepId}` - ​​ID of the previous step.
+- `${backButtonText}` - ​​button text set in the current step, or default translation `components.multistep.form.back_step`. The text is escaped before being inserted into HTML.
+
+Default code:
+
+```properties
+components.multistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
+```
+
+When changing the appearance, keep `type="button"` and the `data-multistep-back-step="${previousStepId}"` attribute, which is used to return to the previous step.
 
 ### Dial connection
 

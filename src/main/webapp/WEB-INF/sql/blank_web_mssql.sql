@@ -1233,6 +1233,9 @@ insert into _db_ (create_date, note) values ('2005-1-1', '18.8.2004 [joruz] caso
 insert into _db_ (create_date, note) values ('2005-1-1', '31.3.2005 [jeeff] banner_banners - zrusenie identity stlpcov')
 ;
 
+insert into _db_ (create_date, note) values ('2026-09-14T00:00:00', '08.09.2026 [lbalat] browser identifier migration including stat_error')
+;
+
 INSERT INTO _conf_ VALUES ('defaultDisableUpload','false');
 INSERT INTO _conf_ VALUES ('showDocActionAllowedDocids','4');
 INSERT INTO _conf_ VALUES ('inlineEditingEnabled','true');

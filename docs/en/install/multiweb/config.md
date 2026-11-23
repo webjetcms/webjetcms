@@ -4,7 +4,7 @@ For proper functioning, the following requirements must be met:
 
 - [Template setup](../../frontend/setup/README.md) for managing multiple domains
 - The first domain is the so-called control domain, it should not contain a real website, it is used to set global parameters.
-- We recommend creating a domain alias for each domain. You create it in the configuration as the key `multiDomainAlias:DOMAIN-NAME` with a suitable domain name value without spaces, www and extension, e.g. `interway`. A domain alias allows you to prepare a website on a work domain and then move it to a production domain. The specified domain alias will be used to search for template files and modified application files.
+- We recommend creating a domain alias for each domain. You create it in the configuration as the key `multiDomainAlias:DOMAIN-NAME` with a suitable value of the domain name without spaces, www and suffix, e.g. `interway`, so you create a variable with the name `multiDomainAlias:new-web.interway.sk` and the value `interway`. The domain alias allows you to prepare the website on the work domain and then move it to the production domain. The specified domain alias will be used to search for template files and modified application files.
 
 ## Setting up a new domain
 

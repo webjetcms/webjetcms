@@ -708,6 +708,40 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table ai_assistants
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `ai_assistants`;
+
+CREATE TABLE `ai_assistants` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `action` varchar(255) NOT NULL,
+  `class_name` varchar(255) NOT NULL,
+  `field_from` varchar(255) DEFAULT NULL,
+  `field_to` varchar(255) NOT NULL,
+  `provider` varchar(255) NOT NULL,
+  `instructions` text NOT NULL,
+  `model` varchar(255) DEFAULT NULL,
+  `last_update` datetime DEFAULT NULL,
+  `group_name` varchar(255) DEFAULT NULL,
+  `user_prompt_enabled` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `user_prompt_label` text DEFAULT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `keep_html` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `use_streaming` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `use_temporal` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `active` tinyint(1) unsigned NOT NULL DEFAULT 1,
+  `domain_id` int(11) NOT NULL DEFAULT 1,
+  `used_tokens` bigint DEFAULT 0,
+  `token_limit` bigint DEFAULT 0,
+  `notif_email` varchar(255) DEFAULT NULL,
+  `notif_level` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 # Dump of table alarm_action
 # ------------------------------------------------------------
 
@@ -1585,6 +1619,7 @@ CREATE TABLE `documents` (
   `generate_url_from_title` tinyint(1) DEFAULT 0,
   `editor_virtual_path` varchar(255) DEFAULT NULL,
   `publish_after_start` tinyint(1) DEFAULT 0,
+  `planned_media_initialized` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`doc_id`),
   KEY `i_group_id` (`group_id`),
   KEY `IX_documents_cacheable` (`cacheable`),
@@ -1750,6 +1785,53 @@ CREATE TABLE `domain_redirects` (
   `active` tinyint(1) NOT NULL DEFAULT 0,
   `http_protocol` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`redirect_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+# Dump of table dt_fields
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `dt_fields`;
+
+CREATE TABLE `dt_fields` (
+  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  class_name VARCHAR(255) NOT NULL,
+  field_name VARCHAR(255),
+  tab VARCHAR(255),
+  title VARCHAR(255),
+  sort_after VARCHAR(255),
+  visible TINYINT(1),
+  hidden TINYINT(1),
+  hiddenEditor TINYINT(1),
+  filter TINYINT(1),
+  orderable TINYINT(1),
+  ai TINYINT(1),
+  disabled TINYINT(1),
+  domain_id INT NOT NULL DEFAULT 1,
+  CONSTRAINT uk_dt_fields_target UNIQUE (domain_id, class_name, field_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+# Dump of table dt_tabs
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `dt_tabs`;
+
+CREATE TABLE `dt_tabs` (
+  id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  class_name VARCHAR(255) NOT NULL,
+  tab_id VARCHAR(255) NOT NULL,
+  title VARCHAR(255),
+  sort_after VARCHAR(255),
+  selected TINYINT(1),
+  hide_on_create TINYINT(1),
+  perms VARCHAR(255),
+  css_class VARCHAR(255),
+  content TEXT,
+  domain_id INT NOT NULL DEFAULT 1,
+  CONSTRAINT uk_dt_tabs_target UNIQUE (domain_id, class_name, tab_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
@@ -2118,6 +2200,41 @@ CREATE TABLE `form_attributes` (
   `param_name` varchar(64) NOT NULL,
   `domain_id` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`form_name`,`param_name`,`domain_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+
+# Dump of table form_items
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `form_items`;
+
+CREATE TABLE `form_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `form_name` varchar(255) NOT NULL,
+  `field_type` varchar(255) NOT NULL,
+  `required` tinyint(1) DEFAULT NULL,
+  `label` text DEFAULT NULL,
+  `value` text DEFAULT NULL,
+  `placeholder` varchar(255) NOT NULL,
+  `tooltip` text DEFAULT NULL,
+  `regex_validation` varchar(255) DEFAULT NULL,
+  `item_form_id` varchar(255) NOT NULL,
+  `step_id` int(11) NOT NULL,
+  `sort_priority` int(11) NOT NULL,
+  `domain_id` int(11) NOT NULL DEFAULT 1,
+  `show_stat` tinyint(1) NOT NULL DEFAULT 1,
+  `top_count` int(11) NOT NULL DEFAULT 5,
+  `show_other_count` tinyint(1) NOT NULL DEFAULT 1,
+  `show_unanswered` tinyint(1) NOT NULL DEFAULT 0,
+  `chart_type` varchar(255) NOT NULL DEFAULT 'bar_horizontal',
+  `compare_insensitive` tinyint(1) NOT NULL DEFAULT 0,
+  `color_scheme` varchar(32) DEFAULT NULL,
+  `error_count` int(11) DEFAULT 0,
+  `custom_error` varchar(255) DEFAULT NULL,
+  `trim_value` tinyint(1) NOT NULL DEFAULT 0,
+  `hint` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
@@ -3264,7 +3381,8 @@ CREATE TABLE `seo_bots` (
   `name` varchar(255) DEFAULT NULL,
   `last_visit` datetime DEFAULT NULL,
   `visit_count` int(11) DEFAULT NULL,
-  PRIMARY KEY (`seo_bots_id`)
+  PRIMARY KEY (`seo_bots_id`),
+  UNIQUE KEY `ix_seo_bots_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
@@ -4429,6 +4547,35 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table user_login_devices
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `user_login_devices`;
+
+CREATE TABLE `user_login_devices` (
+  `device_id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `token_hash` char(64) NOT NULL,
+  `create_date` datetime(3) NOT NULL,
+  `last_seen` datetime(3) NOT NULL,
+  `browser_name` varchar(128) DEFAULT NULL,
+  `browser_version` varchar(64) DEFAULT NULL,
+  `operating_system` varchar(128) DEFAULT NULL,
+  `ip_address` varchar(64) DEFAULT NULL,
+  `location` varchar(160) DEFAULT NULL,
+  `confirmed_at` datetime(3) DEFAULT NULL,
+  `reported_at` datetime(3) DEFAULT NULL,
+  `confirmation_hash` char(64) DEFAULT NULL,
+  `confirmation_expires` datetime(3) DEFAULT NULL,
+  `code_hash` char(64) DEFAULT NULL,
+  `code_expires` datetime(3) DEFAULT NULL,
+  `code_attempts` int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`device_id`),
+  UNIQUE KEY `uq_login_devices_user_token` (`user_id`, `token_hash`),
+  KEY `ix_login_devices_seen` (`last_seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 # Dump of table user_perm_groups
 # ------------------------------------------------------------
 
@@ -4713,7 +4860,10 @@ ALTER TABLE `documents` ADD COLUMN `follow_links` TINYINT NOT NULL DEFAULT 0;
 ALTER TABLE `documents_history` ADD COLUMN `follow_links` TINYINT NOT NULL DEFAULT 0;
 UPDATE `documents` SET `follow_links` = 0 WHERE `follow_links` IS NULL;
 UPDATE `documents_history` SET `follow_links` = 0 WHERE `follow_links` IS NULL;
-
+ALTER TABLE templates_group ADD COLUMN seo_image VARCHAR(255) NULL;
+ALTER TABLE documents_history ADD COLUMN is_delete TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE templates ADD COLUMN url_remove_spojky_mode TINYINT NOT NULL DEFAULT 0;
+ALTER TABLE gallery_dimension ADD COLUMN resize_mode_normal VARCHAR(1) NULL;
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

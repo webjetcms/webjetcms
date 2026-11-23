@@ -1,6 +1,7 @@
 package sk.iway.iwcm.editor;
 
 import java.io.File;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,6 +19,11 @@ import java.util.StringTokenizer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import net.sourceforge.stripes.mock.MockHttpServletRequest;
+import net.sourceforge.stripes.mock.MockHttpSession;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -25,7 +31,9 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -44,12 +52,13 @@ import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
-import sk.iway.iwcm.doc.XmlExport;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UrlRedirectDB;
 import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverterWithSave;
+import sk.iway.iwcm.system.jpa.PageTitleAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -865,7 +874,7 @@ public class EditorDB
 
 				//Logger.println(this,"INSERTING sql=" + sql);
 				ps = db_conn.prepareStatement(sql);
-				ps.setString(1, my_form.getTitle());
+				ps.setString(1, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 				if (publishDocData != null)
 				{
 					DB.setClob(ps, 2, publishDocData);
@@ -879,7 +888,7 @@ public class EditorDB
 					DB.setClob(ps, 3, data_asc);
 				}
 				ps.setString(4, my_form.getExternalLink());
-				ps.setString(5, my_form.getNavbar());
+				ps.setString(5, PageTitleAttributeConverter.sanitizeTitle(my_form.getNavbar()));
 
 				ps.setTimestamp(6, new Timestamp(now.getTime()));
 				if (my_form.getPublishStart() != null && my_form.getPublishStart().trim().length() > 0)
@@ -1011,7 +1020,7 @@ public class EditorDB
 		   	{
 		   		fileName = groupsDB.getGroupNamePath(my_form.getGroupId());
 		   	}
-				ps.setString(51, DB.prepareString(fileName,255));
+				ps.setString(51, DB.prepareString(AllowSafeHtmlAttributeConverterWithSave.sanitize(fileName), 255));
 
 				DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);
 				ps.setInt(55, my_form.getFollowLinks());
@@ -1032,7 +1041,7 @@ public class EditorDB
 				ps = db_conn.prepareStatement("SELECT max(doc_id) FROM documents WHERE group_id=? AND title=?");
 				// AND date_created=?");
 				ps.setInt(1, my_form.getGroupId()); //aby sa pouzil index!!!
-				ps.setString(2, my_form.getTitle());
+				ps.setString(2, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 				//ps.setTimestamp(2, new Timestamp(now.getTime()));
 				rs = ps.executeQuery();
 				if (rs.next())
@@ -1094,7 +1103,7 @@ public class EditorDB
 							"WHERE doc_id=?";
 					//Logger.println(this,"UPDATING id=" + doc_id + " sql=" + sql);
 					ps = db_conn.prepareStatement(sql);
-					ps.setString(1, my_form.getTitle());
+					ps.setString(1, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 					//ps.setString(2, data);
 					//ps.setString(3, data_asc);
 
@@ -1102,7 +1111,7 @@ public class EditorDB
 					DB.setClob(ps, 3, data_asc);
 
 					ps.setString(4, my_form.getExternalLink());
-					ps.setString(5, my_form.getNavbar());
+					ps.setString(5, PageTitleAttributeConverter.sanitizeTitle(my_form.getNavbar()));
 
 					ps.setTimestamp(6, new Timestamp(now.getTime()));
 					if (my_form.getPublishStart() != null && my_form.getPublishStart().trim().length() > 0)
@@ -1234,7 +1243,7 @@ public class EditorDB
 			   	{
 			   		fileName = groupsDB.getGroupNamePath(my_form.getGroupId());
 			   	}
-					ps.setString(51, DB.prepareString(fileName, 255));
+					ps.setString(51, DB.prepareString(AllowSafeHtmlAttributeConverterWithSave.sanitize(fileName), 255));
 
 					DocDB.getRootGroupL(my_form.getGroupId(), ps, 52);
 					ps.setInt(55, my_form.getFollowLinks());
@@ -1373,14 +1382,14 @@ public class EditorDB
 						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 				//Logger.println(this,"INSERTING sql=" + sql);
 				ps = db_conn.prepareStatement(sql);
-				ps.setString(1, my_form.getTitle());
+				ps.setString(1, PageTitleAttributeConverter.sanitizeTitle(my_form.getTitle()));
 				//ps.setString(2, data);
 				//ps.setString(3, data_asc);
 				DB.setClob(ps, 2, data);
 				DB.setClob(ps, 3, data_asc);
 
 				ps.setString(4, my_form.getExternalLink());
-				ps.setString(5, my_form.getNavbar());
+				ps.setString(5, PageTitleAttributeConverter.sanitizeTitle(my_form.getNavbar()));
 
 				ps.setTimestamp(6, new Timestamp(now.getTime()));
 				if (my_form.getPublishStart() != null && my_form.getPublishStart().trim().length() > 0)
@@ -1650,7 +1659,7 @@ public class EditorDB
 						//http://intra.iway.sk/helpdesk/?bugID=7713
 
 						//musime im ale aktualizovat (mozne) zmenene hodnoty poradia usporiadania
-						String sql2 = "UPDATE documents_history SET sort_priority=?, temp_id=?, group_id=? WHERE history_id IN (" + historyIds + ") AND approved_by=-1";
+						String sql2 = "UPDATE documents_history SET sort_priority=?, temp_id=?, group_id=? WHERE " + DB.getInCondition("history_id", historyIds.toString()) + " AND approved_by=-1";
 
 						Logger.debug(EditorDB.class, "sql2="+sql2);
 
@@ -1663,7 +1672,7 @@ public class EditorDB
 					}
 					else
 					{
-						String sql2 = "DELETE FROM documents_history WHERE history_id IN (" + historyIds + ") AND approved_by=-1 AND author_id=?";
+						String sql2 = "DELETE FROM documents_history WHERE " + DB.getInCondition("history_id", historyIds.toString()) + " AND approved_by=-1 AND author_id=?";
 						//Logger.println(this,sql2+author_id);
 						ps = db_conn.prepareStatement(sql2);
 						ps.setInt(1, user.getUserId());
@@ -1705,7 +1714,7 @@ public class EditorDB
 
 				if (historyIds.length() > 0 )
 				{
-					ps = db_conn.prepareStatement("UPDATE documents_history SET actual=?, awaiting_approve=?, sync_status=1 WHERE history_id IN (" + historyIds + ")");
+					ps = db_conn.prepareStatement("UPDATE documents_history SET actual=?, awaiting_approve=?, sync_status=1 WHERE " + DB.getInCondition("history_id", historyIds.toString()));
 					ps.setBoolean(1, false);
 					ps.setNull(2, Types.VARCHAR);
 					//ps.setInt(3, user.getUserId());
@@ -1802,8 +1811,6 @@ public class EditorDB
 
 			if (requestPublish)
 			{
-				if (Constants.getBoolean("exportFlash")) XmlExport.flashExport("/flash_xml/"+my_form.getDocId()+".xml", my_form.getDocId());
-
 				//	toto dava info pre ApproveAction ze to zbehlo OK
 				request.setAttribute("saveOK", "true");
 			}
@@ -1911,6 +1918,7 @@ public class EditorDB
 		}
 
 		//publishEvent(EditorAfterSaveEvent.class, my_form);
+		my_form.setPublish(requestPublish ? "1" : "0");
 		(new WebjetEvent<>(my_form, WebjetEventType.AFTER_SAVE)).publishEvent();
 
 		return(history_id);
@@ -1932,13 +1940,13 @@ public class EditorDB
 	}
 
 	/**
-	 * Ak sa zmeni virtual path stranky aktualizuje vsetky doterajsie linky
-	 * @param request
-	 * @param docId
-	 * @param newVirtualPath
-	 * @return
+	 * Updates links and redirects after a URL change, before the document URL cache is refreshed.
+	 * @param request current request
+	 * @param docId changed document
+	 * @param newVirtualPath new URL
+	 * @return documents whose content links were updated
 	 */
-	private static List<DocDetails> fixRenamedVirtualPath(HttpServletRequest request, int docId, String newVirtualPath)
+	public static List<DocDetails> fixRenamedVirtualPath(HttpServletRequest request, int docId, String newVirtualPath)
 	{
 		List<DocDetails> updated = new ArrayList<>();
 
@@ -1977,7 +1985,7 @@ public class EditorDB
 						{
 							GroupDetails group = groupsDB.getGroup(doc.getGroupId());
 							domain = group.getDomainName();
-							inSql = " AND group_id IN ("+groupsDB.getSubgroupsIds(domain)+")";
+							inSql = " AND " + DB.getInCondition("group_id", groupsDB.getSubgroupsIds(domain));
 						}
 					}
 
@@ -2094,7 +2102,7 @@ public class EditorDB
 			if (Constants.getBoolean("multiDomainEnabled")==true && Tools.isNotEmpty(domain))
 			{
 				GroupsDB groupsDB = GroupsDB.getInstance();
-				inSql = " AND group_id IN ("+groupsDB.getSubgroupsIds(domain)+")";
+				inSql = " AND " + DB.getInCondition("group_id", groupsDB.getSubgroupsIds(domain));
 			}
 
 			String sql = "SELECT doc_id, title, data FROM documents WHERE data LIKE ? "+inSql;
@@ -2530,7 +2538,59 @@ public class EditorDB
 
 	public static String getDataAsc(String data, EditorForm ef, boolean isLucene)
 	{
-		return getDataAsc(data, ef, isLucene, null);
+		RequestBean originalBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (isLucene == false && originalBean != null && originalBean.getRequest() != null)
+		{
+			return getDataAsc(data, ef, isLucene, originalBean.getRequest());
+		}
+
+		String virtualPath = "/LuceneFulltextSearch";
+		if (ef != null && Tools.isNotEmpty(ef.getVirtualPath())) virtualPath = ef.getVirtualPath();
+		MockHttpServletRequest request = new MockHttpServletRequest("", virtualPath) {
+			@Override
+			public boolean isAsyncSupported() { return false; }
+
+			@Override
+			public boolean isAsyncStarted() { return false; }
+		};
+		request.setMethod("GET");
+		request.setSession(new MockHttpSession(Constants.getServletContext()));
+		request.setAttribute("path_filter_orig_path", virtualPath);
+		String serverName = "";
+		if (ef != null && ef.getGroupId() > 0)
+		{
+			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
+			if (group != null && Tools.isNotEmpty(group.getDomainName())) serverName = group.getDomainName();
+		}
+		if (Tools.isEmpty(serverName))
+		{
+			String configuredServerName = Constants.getString("httpServerName");
+			if (Tools.isNotEmpty(configuredServerName))
+			{
+				String url = configuredServerName.trim();
+				if (url.contains("://") == false) url = "http://" + url;
+				try
+				{
+					String configuredHost = URI.create(url).getHost();
+					if (Tools.isNotEmpty(configuredHost)) serverName = configuredHost;
+				}
+				catch (IllegalArgumentException ex)
+				{
+					Logger.debug(EditorDB.class, "Invalid httpServerName configuration: " + configuredServerName, ex);
+				}
+			}
+		}
+		request.setServerName(serverName);
+		SecurityContext originalSecurityContext = SecurityContextHolder.getContext();
+		SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
+		try (SetCharacterEncodingFilter.IsolatedDataContext context = SetCharacterEncodingFilter.openIsolatedDataContext(request))
+		{
+			return getDataAsc(data, ef, isLucene, request);
+		}
+		finally
+		{
+			SecurityContextHolder.setContext(originalSecurityContext);
+		}
 	}
 
     /**
@@ -2711,6 +2771,7 @@ public class EditorDB
 				doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128));
 				doc.setVirtualPath(my_form.getVirtualPath());
 				doc.setGroupId(my_form.getGroupId());
+				doc.setTempId(my_form.getTempId());
 				String virtualPath = DocDB.getURL(doc, groupDiskPath);
 				String koncovka = virtualPath.endsWith("/") ? "/" : ".html";
 				String editorPageExtension = Constants.getString("editorPageExtension");

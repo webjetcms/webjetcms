@@ -4,6 +4,7 @@ import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -24,9 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsEntity;
+import sk.iway.iwcm.system.datatable.settings.customfields.jpa.CustomFieldsSearchDto;
+import sk.iway.iwcm.system.datatable.settings.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataEditorFields;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
@@ -36,6 +41,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.tags.AutoCompleteHelper;
 
 @RestController
 @RequestMapping("/admin/rest/enumeration/enumeration-data")
@@ -70,14 +76,8 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         EnumerationTypeBean actualSelectedType = getActualSelectedType();
         DatatablePageImpl<EnumerationDataBean> page;
 
-        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);
-        if(enumerationTypeId == -1) {
-            //In FE, first  enumTypes is selected by default, soo get this default enumTypes and return its values
-            if (actualSelectedType != null) page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));
-            else page = new DatatablePageImpl<>(new ArrayList<>());
-        } else {
-            page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(enumerationTypeId, pageable));
-        }
+        if (actualSelectedType == null) page = new DatatablePageImpl<>(new ArrayList<>());
+        else page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -88,7 +88,10 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     public EnumerationDataBean getOneItem(long id) {
         EnumerationDataBean entity;
 
-        if(id == -1) entity = new EnumerationDataBean();
+        if(id == -1) {
+            if (getActualSelectedType() == null) throwError("components.enumerations.noTypes");
+            entity = new EnumerationDataBean();
+        }
         else entity = enumerationDataRepository.getNonHiddenByEnumId(id, false);
 
         processFromEntity(entity, ProcessItemAction.GETONE, 1);
@@ -101,17 +104,15 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         //Only hidden = false records (non soft deleted)
         predicates.add(builder.isFalse(root.get("hidden")));
 
-        int typeId = Tools.getIntValue(params.get(ENUMERATION_TYPE_ID), -1);
-        if(typeId > 0) {
-            predicates.add(builder.equal(root.get("typeId"), Integer.valueOf(typeId)));
-        }
+        EnumerationTypeBean type = getActualSelectedType();
+        predicates.add(builder.equal(root.get("typeId"), type == null ? 0 : type.getEnumerationTypeId()));
 
         //vyhladaj podla searchUserFullName
         super.addSpecSearch(params, predicates, root, builder);
     }
 
     /**
-     * Trims all string fields (string1 through string12) in the entity.
+     * Trims all configurable string fields in the entity.
      * This prevents issues with trailing spaces from copy-pasted text.
      */
     private void trimStringFields(EnumerationDataBean entity) {
@@ -122,7 +123,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
             PropertyDescriptor[] descriptors = wrapper.getPropertyDescriptors();
 
             for (PropertyDescriptor descriptor : descriptors) {
-                if (descriptor.getPropertyType() == String.class && descriptor.getName().matches("string\\d+")) {
+                if (descriptor.getPropertyType() == String.class && descriptor.getName().matches("field[A-L]")) {
                     String value = (String) wrapper.getPropertyValue(descriptor.getName());
                     if (value != null) {
                         wrapper.setPropertyValue(descriptor.getName(), value.trim());
@@ -137,6 +138,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
 
     @Override
     public void beforeSave(EnumerationDataBean entity) {
+        if (getActualSelectedType() == null) throwError("components.enumerations.noTypes");
         // trim all string fields before save, so last space in string using copy&paste from some text will not cause problems
         trimStringFields(entity);
 
@@ -148,14 +150,13 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         if (entity == null) entity = new EnumerationDataBean();
         EnumerationTypeBean actualSelectedType = getActualSelectedType();
 
+        if (actualSelectedType == null) return entity;
+
         //If action is CREATE - Set sort priority
         if(entity.getId() == null || entity.getId() == -1) {
-            Integer maxSortPriority = enumerationDataRepository.findMaxSortPriorityByTypeId(getActualSelectedType().getEnumerationTypeId()).orElse(0);
+            Integer maxSortPriority = enumerationDataRepository.findMaxSortPriorityByTypeId(actualSelectedType.getEnumerationTypeId()).orElse(0);
             entity.setSortPriority(maxSortPriority + 1);
         }
-
-        //If EnumerationType is not set, we cant set editor fields
-        if(actualSelectedType == null) return entity;
 
         if(entity.getEditorFields() == null) {
             EnumerationDataEditorFields edef = new EnumerationDataEditorFields();
@@ -182,6 +183,19 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
             edef.toEnumerationData(entity, actualSelectedType, enumerationTypeRepository, enumerationDataRepository, getProp());
         }
         return entity;
+    }
+
+    @Override
+    protected CustomFieldsSearchDto getCustomFieldsSearchDto(EnumerationDataBean entity) {
+        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);
+        if (enumerationTypeId < 1 && entity != null && entity.getTypeId() != null) {
+            enumerationTypeId = entity.getTypeId();
+        }
+        if (enumerationTypeId < 1) {
+            EnumerationTypeBean enumerationType = getActualSelectedType();
+            if (enumerationType != null) enumerationTypeId = enumerationType.getEnumerationTypeId();
+        }
+        return new CustomFieldsSearchDto(EnumerationDataBean.class.getName(), enumerationTypeId);
     }
 
     //Inset and Edit must be here !!
@@ -223,13 +237,42 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     }
 
     @GetMapping("/autocomplete-parent")
-    public List<String> getAutocomplete(@RequestParam String term, @RequestParam("DTE_Field_typeId") Integer typeId, @RequestParam("DTE_Field_string1") String name) {
+    public List<String> getAutocomplete(@RequestParam String term, @RequestParam("DTE_Field_typeId") Integer typeId, @RequestParam("DTE_Field_fieldA") String name) {
         return EnumerationService.getEnumDataAutocomplete(term, typeId, name, getProp());
     }
 
     @GetMapping("/autocomplete-child")
     public List<String> getAutocomplete(@RequestParam String term) {
         return EnumerationService.getEnumTypeAutocomplete(term, getProp());
+    }
+
+    @GetMapping("/autocomplete-field")
+    public List<String> getFieldAutocomplete(@RequestParam String term, @RequestParam("objectId") Long enumerationTypeId, @RequestParam String field) {
+        if (Tools.isEmpty(term) || Tools.isEmpty(field) || field.length() != 1 || enumerationTypeId == null || enumerationTypeId < 1 || enumerationTypeId > Integer.MAX_VALUE) {
+            return List.of();
+        }
+        if (enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId.intValue(), false) == null) return List.of();
+
+        char alphabet = Character.toUpperCase(field.charAt(0));
+        if (alphabet < 'A' || alphabet > 'L') return List.of();
+
+        CustomFieldsSearchDto searchDto = new CustomFieldsSearchDto(EnumerationDataBean.class.getName(), enumerationTypeId);
+        CustomFieldsEntity customField = CustomFieldsService.getCustomFieldsMap(searchDto).get(alphabet);
+        if (customField == null || "autocomplete".equals(customField.getType()) == false || Tools.isEmpty(customField.getValue())) return List.of();
+
+        String value = customField.getValue();
+        if (value.startsWith("autocomplete:") == false) return List.of();
+
+        String normalizedTerm = DB.internationalToEnglish(term).trim().toLowerCase(Locale.ROOT);
+        List<String> values = new ArrayList<>();
+        for (String option : Tools.getTokens(value.substring("autocomplete:".length()), "|")) {
+            String normalizedOption = DB.internationalToEnglish(option).toLowerCase(Locale.ROOT);
+            if (("%".equals(normalizedTerm) || normalizedOption.contains(normalizedTerm)) && values.contains(option) == false) {
+                values.add(option);
+            }
+        }
+        AutoCompleteHelper.sortByLeadingFirst(values, normalizedTerm);
+        return values;
     }
 
     @Override

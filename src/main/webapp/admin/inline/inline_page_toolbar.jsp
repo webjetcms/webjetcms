@@ -602,7 +602,7 @@
                                 <% if(isCloud){ %>
                                 <li><a target="_blank" href="<iwcm:text key="components.cloud.supportLink"/>"><iwcm:text key="welcome.support"/></a></li>
                                 <%}else{ %>
-                                <li><a href="http://docs.webjetcms.sk" target="_blank"><iwcm:text key="inlineToolbar.option.help.helper"/></a></li>
+                                <li><a href="<%=ResponseUtils.filter(sk.iway.iwcm.admin.DocumentationTools.getBaseUrl())%>/latest/<%=sk.iway.iwcm.admin.DocumentationTools.normalizeLanguage(PageLng.getUserLng(request))%>/" target="_blank" rel="noopener"><iwcm:text key="inlineToolbar.option.help.helper"/></a></li>
                                 <%} %>
                                 <% if (Tools.isEmail(Constants.getString("problemReportEmail"))) { %>
                                 <li><a href="javascript:openPagePopup('report',500,600)"><iwcm:text key="inlineToolbar.option.help.report"/></a></li>

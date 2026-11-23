@@ -1,5 +1,7 @@
 # WebJET CMS
 
+Developing a WebJET customer application with Codex, GitHub Copilot or Claude Code? See the [WebJET CMS skills installation guide](.github/skills-distribution/README.md) for reusable workflows and project conventions, including older basecms projects.
+
 Are you looking to power your business website, e-shop, or portal with a reliable content management system? Look no further! WebJET CMS offers a user-friendly and efficient solution to create and manage your online presence effortlessly. Save time, boost productivity, and ensure that your customers find what they're looking for, keeping them engaged longer.
 
 ![](docs/en/redactor/webpages/recursive-list.png)

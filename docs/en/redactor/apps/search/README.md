@@ -44,12 +44,12 @@ A RAG answer is not a separate type of search. It is an addition to semantic or 
 
 | | Database (`db`) | Lucene | Semantic (`semantic`) | Hybrid (`hybrid`) |
 | --- | --- | --- | --- | --- |
-| Technology | SQL LIKE / FULLTEXT | `Apache Lucene` | `OpenAI embeddings` + `pgvector` | `pgvector` + fulltext above chunks |
+| Technology | SQL LIKE / FULLTEXT | `Apache Lucene` | Embeddings of the configured AI provider + `pgvector` | `pgvector` + fulltext above chunks |
 | Match | Keywords | Keywords + inflection | Semantic meaning | Semantic meaning and exact words |
 | Results without word matches | No | Partially | Yes | Yes |
 | Suitable for short queries | Limited | Yes | Partially | Yes |
-| Requirements | Primary DB | Lucene index | `PostgreSQL` + `pgvector` + `OpenAI` | `PostgreSQL` + `pgvector` + `OpenAI` |
-| Price | Free | Free | OpenAI API (paid) | OpenAI API (paid) |
+| Requirements | Primary DB | Lucene index | `PostgreSQL` + `pgvector` + AI provider with embedding support | `PostgreSQL` + `pgvector` + AI provider with embedding support |
+| Price | Free | Free | Depending on the chosen provider and model | Depending on the chosen provider and model |
 
 ## View the application
 

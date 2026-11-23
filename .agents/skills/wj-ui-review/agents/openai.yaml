@@ -1,0 +1,4 @@
+interface:
+  display_name: "WebJET UI Review"
+  short_description: "Review and polish WebJET UI before merge"
+  default_prompt: "Use $wj-ui-review to critique the selected browser element or specified UI changes, capture the initial appearance, and report prioritized findings with inline screenshots; include matching before/after images when polishing."

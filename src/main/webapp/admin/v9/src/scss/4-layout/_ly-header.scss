@@ -50,13 +50,9 @@
         margin-left: 50px;
         height: 31px;
 
-        a.dropdown-item, button.btn {
+        .dropdown-item, button.btn {
             font-size: 14px;
             cursor: pointer;
-        }
-
-        button.btn:focus {
-            outline: none !important;
         }
     }
 
@@ -73,10 +69,16 @@
 
         &:hover,
         &:focus,
-        &:active {
+        &:active,
+        &.show {
             background-color: $nice-gray !important;
             color: $secondary !important;
             border-color: transparent !important;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--wj-primary) !important;
+            outline-offset: 0;
         }
     }
 
@@ -93,19 +95,13 @@
     }
     .js-profile-toggler {
         max-width: 200px;
-        padding-right: 26px;
-        background-position-x: calc(100% - 7px);
+        padding-right: 25px;
+        background-position-x: calc(100% - 6px);
         span {
             max-width: 147px;
             overflow: hidden;
             display: inline-flex;
         }
-    }
-    .btn-outline-secondary.dropdown-toggle.show {
-        background-color: $nice-gray;
-    }
-    div.dropdown ul.dropdown-menu li a {
-        color: $secondary !important;
     }
 
     .header-title {
@@ -240,5 +236,64 @@
                 display: none;
             }
         }
+    }
+}
+
+// Keep the environment anchored before the title, including the collapsed mobile header.
+.ly-header:has(.md-environment) {
+    > .ly-container {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 12px;
+    }
+    .ly-submenu { flex-basis: 100%; min-width: 0; }
+    .header-branding {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+        text-align: left;
+    }
+    .header-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .header-link-wrapper { flex-shrink: 0; margin-left: auto; }
+}
+
+@media (min-width: $bp-laptop) {
+    body.ly-submenu-active .ly-header:has(.md-environment) > .ly-container {
+        height: 100%;
+        align-content: space-between;
+    }
+}
+
+@media (max-width: ($bp-laptop - 1)) {
+    .ly-header:has(.md-environment) {
+        > .ly-container { justify-content: flex-end; }
+        .header-branding {
+            position: absolute;
+            top: 48px;
+            left: 15px;
+            right: 15px;
+            gap: 8px;
+        }
+        .js-sidebar-toggler {
+            position: static;
+            flex-shrink: 0;
+        }
+        .header-title { padding-left: 0; }
+    }
+    body.ly-submenu-active .ly-header:has(.md-environment) .header-branding { top: 103px; }
+    .ly-page-wrapper.active .ly-header:has(.md-environment) .header-branding {
+        top: 5px;
+        right: 165px;
+    }
+    html:not(.in-iframe):not(.in-iframe-show-table) body:has(.ly-header .md-environment) {
+        .ly-content-wrapper { padding-top: 48px !important; }
+        .ly-content { height: calc(100vh - 48px) !important; }
     }
 }

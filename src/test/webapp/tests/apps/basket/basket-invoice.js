@@ -48,6 +48,7 @@ Scenario('Eshop - create new invoice', async ({I, TempMail}) => {
 
     I.say("Go to basket");
     await I.clickIfVisible('.cookies-bar-wrapper .btn-akcept');
+    I.wait(1);
     I.clickCss("body > div.ly-page-wrapper > header > div.container > nav > div.menu-holder > div > a");
     I.waitForElement(".md-basket-dropdown.open", 10);
     I.clickCss("#orderButton > a");
@@ -99,8 +100,13 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document, TempMail}) => {
 
     I.say("Check notification tab");
         I.clickCss("#pills-dt-basketInvoiceDataTable-notify-tab");
-        const body = await I.grabHTMLFrom("#DTE_Field_editorFields-body > div.editor.ql-container.ql-snow > div.ql-editor");
-        I.assertEqual(body, "<p>Nastala zmena stavu objednávky.</p><p>Vaša objednávka je aktuálne v stave {STATUS}.</p><p><br></p><p>&nbsp;</p><p>Rekapitulácia vašej objednávky:</p><p> </p><p>&nbsp;</p><p> {ORDER_DETAILS}</p>");
+        const body = await I.grabTextFromAll("#DTE_Field_editorFields-body .ql-editor > p");
+        I.assertDeepEqual(body.map(paragraph => paragraph.trim()).filter(Boolean), [
+            "Nastala zmena stavu objednávky.",
+            "Vaša objednávka je aktuálne v stave {STATUS}.",
+            "Rekapitulácia vašej objednávky:",
+            "{ORDER_DETAILS}"
+        ], "The notification must retain its text and replacement tokens after Quill normalizes empty paragraphs.");
 
     I.say("Check payment tab - inner table");
         I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
@@ -302,7 +308,8 @@ function payment(I, DTE, price, isEdit, minErr, maxErr) {
         I.see("Celková zaplatená suma nesmie byť väčšia ako suma objednávky");
         I.clickCss("#datatableFieldDTE_Field_editorFields-payments_modal > div > div > div.DTE_Header.modal-header > button");
     } else {
-        I.seeElement( locate("div.col-sum").withText("Zaplatená suma: " + price + ",00 eur zo sumy: 3 126,36 eur") );
+        // The totals use a separate request after the payment table finishes saving.
+        I.waitForText("Zaplatená suma: " + price + ",00 eur zo sumy: 3 126,36 eur", 10, paymentDataTable + " div.col-sum");
     }
 }
 

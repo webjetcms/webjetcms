@@ -1,4 +1,5 @@
 <script data-th-inline="javascript">
+    window.helpLink = "/redactor/apps/eshop/product-list/README";
     let columns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ '';
     let url = "/admin/rest/eshop/product-list";
 </script>
@@ -6,6 +7,7 @@
     var productListDataTable;
 
     window.domReady.add(function () {
+        let filtersReady = false;
         //Add filter to tab
         $("#pills-dateRange-tab").html("");
         $("div#productListDataTable_extfilter").appendTo("#pills-dateRange-tab");
@@ -74,7 +76,7 @@
             }
         }
 
-        window.importWebPagesDatatable().then(module => {
+        window.importWebPagesDatatable().then(async module => {
             let wpdInstance = new module.WebPagesDatatable({
                 url: url,
                 columns: columns,
@@ -110,9 +112,8 @@
 
             $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label>[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupSelect"></select></div><div class="btn btn-sm buttons-select" id="currencySelect_wrapper"><label>[[#{components.basket.invoice.currency}]]</label><select id="currencySelect" class="form-select"></select></div>');
 
-            //Init select
-            ChartTools.setSelect("/admin/rest/eshop/product-list/product-groups", $('#groupSelect').val(), "groupSelect", false);
-            ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false);
+            // Both asynchronous option lists must be ready before applying the filters.
+            $("#groupSelect, #currencySelect").prop("disabled", true);
 
             $("#groupSelect").on("change", function() {
                 updateTable();
@@ -121,20 +122,28 @@
             $("#currencySelect").on("change", function() {
                 updateTable();
             });
+
+            await Promise.all([
+                ChartTools.setSelect("/admin/rest/eshop/product-list/product-groups", $('#groupSelect').val(), "groupSelect", false),
+                ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false)
+            ]);
+            filtersReady = true;
+            $("#groupSelect, #currencySelect").prop("disabled", false).selectpicker("refresh");
+            updateTable();
+        }).catch(() => {
+            WJ.notifyError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
         });
 
         function updateTable() {
+            const groupId = $('#groupSelect').val();
+            const currency = $('#currencySelect').val();
+            if (!filtersReady || groupId == null || groupId === "" || currency == null || currency === "") return;
             //set table filter params
-            productListDataTable.setAjaxUrl(WJ.urlUpdateParam( productListDataTable.getAjaxUrl() , "groupId", $('#groupSelect').val()));
-            productListDataTable.setAjaxUrl(WJ.urlUpdateParam( productListDataTable.getAjaxUrl() , "currency", $('#currencySelect').val()));
+            productListDataTable.setAjaxUrl(WJ.urlUpdateParam( productListDataTable.getAjaxUrl() , "groupId", groupId));
+            productListDataTable.setAjaxUrl(WJ.urlUpdateParam( productListDataTable.getAjaxUrl() , "currency", currency));
             //reload tables values
             productListDataTable.ajax.reload();
         }
-
-        window.onload = function() {
-            // Must be called after all elements are loaded - first value in select can be different currency that defautl currency for products
-            updateTable();
-        };
 
         //After addFolder action is executed, reload select with folders
         window.addEventListener('WJ.DT.executeAction', function (e) {

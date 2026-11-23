@@ -3,6 +3,20 @@
 
 The [datatables.net](http://datatables.net) library is an advanced table with connections to REST services.
 
+## System settings
+
+Java classes for datatable settings are in the `sk.iway.iwcm.system.datatable.settings` package:
+
+| Subpackage | Database table | Purpose |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Configuration and validation of optional fields. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Field and column property settings. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Editor tab settings. |
+
+Each subpackage contains `jpa` for entities and repositories and `rest` for services and REST controllers. When using these classes in your own code or templates, update the imports and full class names to the packages listed.
+
+The original table `custom_fields` will be automatically renamed to `dt_customfields` during the update, preserving the data. Custom SQL queries must use the new table name.
+
 ## Basic initialization in collaboration with Spring REST
 
 The WebJET implementation of datatables is configured using the JSON object columns. This object contains the definition of columns for both the datatable and the datatables editor. The table is then initialized using the WJ.DataTable constructor.
@@ -114,6 +128,7 @@ Minimum configuration:
 - ```tabs {json}``` definition of [editor tabs](../datatables-editor/README.md#editor-tabs).
 - ```id {string}``` unique identifier of the data table, if not specified the value ```datatableInit``` will be used. Especially necessary if you have multiple data tables in one web page.
 - ```editorId {string}``` unique editor identifier, if not specified, the value ```id``` will be used. Especially necessary if you have multiple data tables in one web page.
+- `reloadRowKey {string}` field name with unique record key, by which the page of the edited record is searched after editing and forced data refresh at `serverSide: false`. By default, `editorId` is used. If IDs are regenerated on load, set a stable key, for example `reloadRowKey: "name"` in the configuration. The key is taken from the save response, so it can also contain the new name after renaming.
 - ```onXhr {function}``` JavaScript function that is called after [data loading](https://datatables.net/reference/event/xhr) in the form of ```function ( TABLE, e, settings, json, xhr ) {}```.
 - ```onPreXhr(TABLE, e, settings, data) {function}``` JavaScript function, which is called [before loading data](https://datatables.net/reference/event/preXhr), allows you to add parameters to the sent data. These are specified with the prefix ```fixed_``` to distinguish them from the standard datatable parameters. Example: ```onPreXhr: function(TABLE, e, settings, data) { data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked'); }```.
 - ```onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}```: JavaScript function that is called after clicking on the record edit link. It receives as parameters: ```TABLE``` - datatable instance, ```row``` - jQuery object of the row that was clicked, ```dataAfterFetch``` - when the function is enabled ```fetchOnEdit``` json data obtained after its renewal, ```dataBeforeFetch``` original JSON data of the row before calling its renewal. You can then open the standard editor by calling ```TABLE.wjEdit(row);```. An example of its use is in [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
@@ -384,6 +399,27 @@ The following calls can be used in the `init` function:
 - `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - ​​button is active only if at least one row is selected
 - `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - ​​button is active only if no row is selected
 - `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - ​​button is active only if exactly one row is selected
+
+## Menu Other events
+
+You can add less common actions to the **More actions** menu using `table.addMoreAction(config)` or the `moreActions` field in the `WJ.DataTable` settings. The menu is created only when the first action is added and appears on the right in settings and data refresh. The implementation is separated in `npm_packages/webjetdatatables/more-actions.js`.
+
+The configuration uses the standard DataTables button properties. Enter the icon in `text`, the translated name that will appear next to the icon in `attr.title`. `action`, `init` and activation by row selection are preserved:
+
+```javascript
+table.addMoreAction({
+    text: '<i class="ti ti-tag-plus" aria-hidden="true"></i>',
+    attr: { title: WJ.translate('my.action.js'), 'data-dtbtn': 'myAction' },
+    init: function(dt) {
+        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+    },
+    action: function() {
+        table.executeAction('myAction');
+    }
+});
+```
+
+Use `table.hideButton('myAction')` and `table.showButton('myAction')` to hide and show items. They also work for a closed menu whose items are not attached to the DOM. The menu will hide when it has no displayed item. Verify permissions before adding an item and again on the server when performing the action.
 
 ## Button for performing a server action
 
@@ -826,4 +862,22 @@ To activate it, you need to set the `inputType` attribute to the value `DataTabl
 private Integer sortPriority;
 ```
 
-When changing the row order, the backend endpoint `/row-reorder` from the [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) class is automatically called, which updates the values ​​for the given column marked as `ROW_REORDER` and saves the changes to the database. If the save was successful, the table is refreshed and displays the new row order, plus a notification about the successful saving of the changes is displayed. In case of an error, an error notification is displayed.
+When changing the order of rows, the backend endpoint `/row-reorder` from the [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) is automatically called. The name of the changed field (`dataSrc`) is sent by the client, so the endpoint will only allow writing if all of the following conditions are met:
+
+- `dataSrc` corresponds exactly to a Java entity field; the field can also be declared in the parent class,
+- the field has the annotation `@DataTableColumn`, whose field `inputType` contains the value `DataTableColumnType.ROW_REORDER`,
+- the property is writable and has a numeric data type,
+- it is not a field `id`, `domainId` or a field marked with the annotation `@Id` or `@EmbeddedId`, even if it is also marked as `ROW_REORDER`,
+- the request contains a non-empty list of unique non-null IDs, all records exist and each has a new value specified,
+- the entire batch complies with the additional controller scope verified by the `checkRowReorderScope` method, if the controller implements it,
+- the user has permission to modify each record; validation is performed by calling `checkItemPermsThrows`, which uses the `checkItemPerms` implementation of the given controller.
+
+The entire request is first validated without changing the entities. The values ​​are set and `saveAll` is called only after all records have been successfully validated. If there is a validation error, the request is rejected and `saveAll` is not called, preventing a partial batch save.
+
+If the table list is restricted in a way other than by domain, such as by the `formName`, `stepId`, `parentId` parameters or by rights to the parent record, the controller must implement the `checkRowReorderScope` method. The method receives the entire batch of entities loaded from the repository and must verify that each one falls within the required scope and that the user can edit the given scope. A missing or invalid parameter must return `false`. For detailed usage and an example, see [scope-checking-on-reorder](restcontroller.md#scope-checking-on-reorder).
+
+The client will retain the parameters from the URL set in `DATA.url` when calling `/row-reorder`. However, the server must consider them untrusted and compare them with each retrieved entity and the permissions of the current user.
+
+The `/row-reorder` endpoint is a standalone operation and does not call CRUD methods or the `beforeSave` and `afterSave` methods. The `checkRowReorderScope` method supplements, but does not replace, the individual record check in the `checkItemPerms` method.
+
+After successful saving, the table will refresh, display the new row order, and display a success notification. In case of an error, an error notification will be displayed.

@@ -3,6 +3,20 @@
 
 Knižnica [datatables.net](http://datatables.net) je pokročilá tabuľka s napojením na REST služby.
 
+## Systémové nastavenia
+
+Java triedy pre nastavenia datatabuliek sú v balíku `sk.iway.iwcm.system.datatable.settings`:
+
+| Podbalík | Databázová tabuľka | Účel |
+| --- | --- | --- |
+| [`customfields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/customfields/) | `dt_customfields` | Konfigurácia a validácia voliteľných polí. |
+| [`fields`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/fields/) | `dt_fields` | Nastavenia vlastností polí a stĺpcov. |
+| [`tabs`](../../../../src/main/java/sk/iway/iwcm/system/datatable/settings/tabs/) | `dt_tabs` | Nastavenia kariet editora. |
+
+Každý podbalík obsahuje `jpa` pre entity a repozitáre a `rest` pre služby a REST controllery. Pri použití týchto tried vo vlastnom kóde alebo šablónach aktualizujte importy a úplné názvy tried na uvedené balíky.
+
+Pôvodná tabuľka `custom_fields` sa pri aktualizácii automaticky premenuje na `dt_customfields` so zachovaním údajov. Vlastné SQL dotazy musia používať nový názov tabuľky.
+
 ## Základná inicializácia v spolupráca s Spring REST
 
 WebJET implementácia datatables sa konfiguruje pomocou JSON objektu columns. V tomto objekte je definícia stĺpcov pre datatabuľku aj pre datatables editor. Konštruktorom WJ.DataTable sa následne tabuľka inicializuje.
@@ -114,6 +128,7 @@ Minimálna konfigurácia:
 - ```tabs {json}``` definícia [kariet pre editor](../datatables-editor/README.md#karty-v-editore).
 - ```id {string}``` jednoznačný identifikátor datatabuľky, ak nie je zadaný použije  sa hodnota ```datatableInit```. Potrebné hlavne ak máte v jednej web stránke viaceré datatabuľky.
 - ```editorId {string}``` jednoznačný identifikátor editora, ak nie je zadaný použije sa hodnota ```id```. Potrebné hlavne ak máte v jednej web stránke viaceré datatabuľky.
+- `reloadRowKey {string}` názov poľa s jednoznačným kľúčom záznamu, podľa ktorého sa po editácii a vynútenom obnovení údajov pri `serverSide: false` vyhľadá strana upraveného záznamu. Predvolene používa `editorId`. Ak sa ID pri načítaní generujú znova, nastavte stabilný kľúč, napríklad `reloadRowKey: "name"` v konfigurácii. Kľúč sa prevezme z odpovede uloženia, takže môže obsahovať aj nový názov po premenovaní.
 - ```onXhr {function}``` JavaScript funkcia, ktorá sa zavolá po [načítaní dát](https://datatables.net/reference/event/xhr) vo forme ```function ( TABLE, e, settings, json, xhr ) {}```.
 - ```onPreXhr(TABLE, e, settings, data) {function}``` JavaScript funkcia, ktorá sa zavolá [pred načítaním dát](https://datatables.net/reference/event/preXhr), umožňuje pridať do odosielaných dát parametre. Tie sa zadávajú s prefixom ```fixed_``` aby išli odlíšiť od štandardných parametrov datatabuľky. Príklad: ```onPreXhr: function(TABLE, e, settings, data) { data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked'); }```.
 - ```onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}```: JavaScript funkcia, ktorá sa zavolá po kliknutí na odkaz editácie záznamu. Ako parametre dostane: ```TABLE``` - inštancia datatabuľky, ```row``` - jQuery objekt riadku na ktorý sa kliklo, ```dataAfterFetch``` - pri zapnutej funkcii ```fetchOnEdit``` json dáta získané po ich obnove, ```dataBeforeFetch``` pôvodné JSON dáta riadku pre volaním ich obnovenia. Štandardný editor otvoríte následne volaním ```TABLE.wjEdit(row);```. Príklad použitia je vo [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
@@ -384,6 +399,27 @@ V `init` funkcii je možné použiť nasledovné volania:
 - `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - tlačidlo je aktívne len ak je označený aspoň jeden riadok
 - `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - tlačidlo je aktívne len ak nie je označený žiaden riadok
 - `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - tlačidlo je aktívne len ak je označený presne jeden riadok
+
+## Menu Ďalšie akcie
+
+Menej časté akcie môžete vložiť do menu **Ďalšie akcie** pomocou `table.addMoreAction(config)` alebo poľa `moreActions` v nastaveniach `WJ.DataTable`. Menu sa vytvorí až pri prvej pridanej akcii a zobrazí sa vpravo pri nastaveniach a obnovení údajov. Implementácia je oddelená v `npm_packages/webjetdatatables/more-actions.js`.
+
+Konfigurácia používa štandardné vlastnosti tlačidla DataTables. Do `text` zadajte ikonu, do `attr.title` preložený názov, ktorý sa zobrazí vedľa ikony. Zachovávajú sa `action`, `init` aj aktivovanie podľa výberu riadkov:
+
+```javascript
+table.addMoreAction({
+    text: '<i class="ti ti-tag-plus" aria-hidden="true"></i>',
+    attr: { title: WJ.translate('my.action.js'), 'data-dtbtn': 'myAction' },
+    init: function(dt) {
+        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+    },
+    action: function() {
+        table.executeAction('myAction');
+    }
+});
+```
+
+Na skrývanie a zobrazovanie položiek používajte `table.hideButton('myAction')` a `table.showButton('myAction')`. Fungujú aj pri zatvorenom menu, ktorého položky nie sú pripojené k DOM. Menu sa skryje, keď neobsahuje žiadnu zobrazenú položku. Oprávnenie overte pred pridaním položky a znova na serveri pri vykonaní akcie.
 
 ## Tlačidlo pre vykonanie serverovej akcie
 
@@ -825,4 +861,22 @@ Pre aktiváciu je potrebné v `@DataTableColumn` anotácii mať nastavený atrib
 private Integer sortPriority;
 ```
 
-Pri zmene poradia riadkov sa automaticky vyvolá backend endpoint `/row-reorder` z triedy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java), ktorý aktualizuje hodnoty pre daný stĺpec označený ako `ROW_REORDER` a uloží zmeny do databázy. Ak uloženie bolo úspešné, tabuľka sa obnoví a zobrazí nové poradie riadkov, plus sa zobrazí notifikácia o úspešnom uložení zmien. V prípade chyby sa zobrazí chybová notifikácia.
+Pri zmene poradia riadkov sa automaticky vyvolá backend koncový bod `/row-reorder` z triedy [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Názov meneného poľa (`dataSrc`) posiela klient, preto koncový bod povolí zápis iba pri splnení všetkých nasledujúcich podmienok:
+
+- `dataSrc` presne zodpovedá Java poľu entity; pole môže byť deklarované aj v rodičovskej triede,
+- pole má anotáciu `@DataTableColumn`, ktorej pole `inputType` obsahuje hodnotu `DataTableColumnType.ROW_REORDER`,
+- vlastnosť je zapisovateľná a má numerický dátový typ,
+- nejde o pole `id`, `domainId` ani o pole označené anotáciou `@Id` alebo `@EmbeddedId`, a to ani v prípade, ak by zároveň bolo označené ako `ROW_REORDER`,
+- požiadavka obsahuje neprázdny zoznam jedinečných nenulových ID, všetky záznamy existujú a každý má zadanú novú hodnotu,
+- celá dávka vyhovuje dodatočnému rozsahu kontroléra overenému metódou `checkRowReorderScope`, ak ju kontrolér implementuje,
+- používateľ má oprávnenie upraviť každý záznam; overenie sa vykoná volaním `checkItemPermsThrows`, ktoré používa implementáciu `checkItemPerms` daného kontroléra.
+
+Celá požiadavka sa najskôr overí bez zmeny entít. Hodnoty sa nastavia a zavolá sa `saveAll` až po úspešnom overení všetkých záznamov. Pri chybe validácie sa požiadavka odmietne a `saveAll` sa nezavolá, čím sa zabráni čiastočnému uloženiu dávky.
+
+Ak je zoznam tabuľky obmedzený aj inak ako podľa domény, napríklad parametrami `formName`, `stepId`, `parentId` alebo právami na nadradený záznam, kontrolér musí implementovať metódu `checkRowReorderScope`. Metóda dostane celú dávku entít načítaných z repozitára a musí overiť, že každá patrí do požadovaného rozsahu a používateľ môže daný rozsah upravovať. Chýbajúci alebo neplatný parameter musí vrátiť `false`. Podrobné použitie a príklad sú v časti [kontrola rozsahu pri zmene poradia](restcontroller.md#kontrola-rozsahu-pri-zmene-poradia).
+
+Parametre z URL nastavenej v `DATA.url` klient zachová aj pri volaní `/row-reorder`. Server ich však musí považovať za nedôveryhodné a porovnať ich s každou načítanou entitou a oprávneniami aktuálneho používateľa.
+
+Koncový bod `/row-reorder` je samostatná operácia a nevolá CRUD metódy ani metódy `beforeSave` a `afterSave`. Metóda `checkRowReorderScope` dopĺňa, ale nenahrádza kontrolu jednotlivých záznamov v metóde `checkItemPerms`.
+
+Po úspešnom uložení sa tabuľka obnoví, zobrazí nové poradie riadkov a notifikáciu o úspechu. V prípade chyby sa zobrazí chybová notifikácia.

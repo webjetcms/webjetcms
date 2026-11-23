@@ -58,7 +58,7 @@ div.ps-carousel-item-loading
 
 div.ps-carousel-item-error 
 { 
-	background: url(error.gif) no-repeat center center; 
+	background: url(/components/gallery/ajax/photoSwipe/error.gif) no-repeat center center;
 }
 
 

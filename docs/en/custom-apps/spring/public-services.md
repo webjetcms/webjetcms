@@ -4,9 +4,10 @@ WebJET offers several "public services" via REST services that you can use when 
 
 Calling these services must be allowed, otherwise the services are unavailable. Permission for IP addresses is set via configuration variables:
 
-- `restAllowedIpAddresses` - ​​list of allowed IP addresses for calling all public services
+- `restAllowedIpAddresses` - ​​common list of allowed IP addresses for public services, which will be used when setting a specific controller to empty
 - `restAllowedIpAddresses-DocRestController` - ​​allowed IP addresses for calling the web page text retrieval service
 - `restAllowedIpAddresses-PropertiesRestController` - ​​allowed IP addresses for calling the translation key service
+- `restAllowedIpAddresses-MarkdownSearchRestController` - ​​allowed IP addresses for [Markdown documentation search](../apps/rag/markdown-search.md)
 
 Entering the character `*` will allow all IP addresses, you can enter multiple beginnings of IP addresses separated by a comma, for example: `192.168.,62.65.161.4,10.10.0.`.
 
@@ -26,6 +27,30 @@ Usage examples:
 - `/rest/documents/50124`
 - `/rest/documents/en/gallery/kitchen`
 - `/rest/documents/en/home-html`
+
+## Searching in Markdown documentation
+
+The service semantically searches the configured Markdown documentation roots. It returns found documents with text samples and, if `ragAnswerAllowed` is enabled, an AI response compiled from accessible content.
+
+Example of calling an endpoint of type `GET`:
+
+```http
+GET /rest/rag/markdown/search?query=How%20to%20edit%20a%20page&language=en
+```
+
+Parameters:
+
+- `query` - ​​required question or search text.
+- `language` - ​​mandatory documentation language code, for example `sk`, `cs` or `en`.
+- `directory` - ​​optional restriction to the directory including subdirectories, for example `/en/redactor/`. The language in the path must match the `language` parameter.
+
+The response is JSON with a field `results`. Each result contains `title`, `url`, `sourcePath`, `snippet`, and `score`. The AI ​​response is in the field `answer` ; if not available, it has the value `null`.
+
+Even after allowing the IP address, a login is required by default; a regular user account is sufficient. For anonymous searches, set `ragMarkdownSearchRequireLogin=false` in addition. File access rights and request limits still apply.
+
+After the IP check, the service verifies the availability of semantic search. If it is not available, it returns HTTP `503` without further processing the request, even if there are results in the cache.
+
+For root settings, indexing, and the full response format, see the [Markdown Search Documentation](../apps/rag/markdown-search.md) documentation.
 
 ## Translation keys
 

@@ -3,7 +3,9 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,8 +18,11 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
@@ -38,25 +43,25 @@ import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
-import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 /**
- * Renders multi‑step form HTML for both on‑page and email contexts.
- * <p>
- * Responsibilities:
- * - Builds step and item markup using translation keys and form settings
- * - Transforms inputs to read‑only representations for email/PDF rendering
- * - Collects and inlines CSS for email/PDF variants
- * - Optionally encrypts rendered email HTML using a provided public key
+ * Renders a multistep form for page, email, and PDF contexts.
+ *
+ * <p>The handler builds localized step and item markup, converts interactive controls
+ * to read-only email representations, collects CSS, and optionally encrypts rendered
+ * email HTML with the configured public key.</p>
  */
 public class FormHtmlHandler {
 
-    private static final String FORM_START_KEY = "components.mustistep.form.start";
-    private static final String FORM_END_KEY = "components.mustistep.form.end";
+    private static final String FORM_START_KEY = "components.multistep.form.start";
+    private static final String FORM_END_KEY = "components.multistep.form.end";
+    private static final String FORM_BACK_BUTTON_KEY = "components.multistep.form.back_button";
+    private static final String FORM_LOADER_KEY = "components.multistep.form.loader";
 
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
@@ -64,6 +69,8 @@ public class FormHtmlHandler {
 
     //
     private String formName;
+    private FormSettingsEntity formSettings;
+    private Map<String, String> settingsFields;
     private Prop prop;
     private String requiredLabelAdd;
     private boolean rowView;
@@ -85,7 +92,17 @@ public class FormHtmlHandler {
     private Pair<String, String> cssDataPair;
     private String formHtmlBeforeCss;
 
-    public FormHtmlHandler(String formName, HttpServletRequest request) {
+    private int formCounter;
+
+    /**
+     * Creates a renderer for a specific form instance.
+     *
+     * @param formName  name of the form to render
+     * @param formCounter  one-based form instance number used to create unique DOM identifiers
+     * @param request  current HTTP request used to resolve language and form settings
+     * @throws IllegalStateException if a required repository is unavailable or {@code formCounter} is invalid
+     */
+    public FormHtmlHandler(String formName, int formCounter, HttpServletRequest request) {
         this.formStepsRepository = Tools.getSpringBean("formStepsRepository", FormStepsRepository.class);
         if(this.formStepsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormStepsRepository");
 
@@ -95,13 +112,17 @@ public class FormHtmlHandler {
         this.formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
         if(this.formSettingsRepository == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain FormSettingsRepository");
 
+        this.formCounter = formCounter;
+        if(this.formCounter < 1) throw new IllegalStateException("Invalid formCounter for form rendering");
+
         this.formName = formName;
 
-        this.prop = Prop.getInstance(request);
+        this.prop = Prop.getInstance( PageLng.getUserLng(request) );
         this.requiredLabelAdd = prop.getText("components.formsimple.requiredLabelAdd");
         this.firstTimeHeadingSet = new HashSet<>();
 
-        FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        this.formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        this.settingsFields = FormsService.getSettingsReplacementMap(formSettings);
         if (formSettings != null) {
             this.rowView = Tools.isTrue(formSettings.getRowView());
             this.recipients = formSettings.getRecipients();
@@ -109,8 +130,8 @@ public class FormHtmlHandler {
             this.formForceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
             this.publicKey = formSettings.getEncryptKey();
             this.formCss = formSettings.getFormCss();
-            this.emailTextBefore = formSettings.getEmailTextBefore();
-            this.emailTextAfter = formSettings.getEmailTextAfter();
+            this.emailTextBefore = settingsFields.get("settings.emailTextBefore");
+            this.emailTextAfter = settingsFields.get("settings.emailTextAfter");
 
             this.formAddClasses = formSettings.getFormAddClasses();
             if(Tools.isEmpty(this.formAddClasses)) this.formAddClasses = "";
@@ -118,10 +139,37 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Returns the last rendered form HTML without appended CSS.
-     * Useful for plain email etc.
+     * Creates a renderer and resolves the form instance number from the current request state.
      *
-     * @return HTML content without CSS, or empty string if not available
+     * @param formName  name of the form to render
+     * @param request  current HTTP request used to resolve the form instance, language, and settings
+     * @throws IllegalStateException if a required service or repository is unavailable or the resolved counter is invalid
+     */
+    public FormHtmlHandler(String formName, HttpServletRequest request) {
+        this(formName, getFormCounter(formName, request), request);
+    }
+
+    /** Renders one source template without reinterpreting values inserted by other templates. */
+    private String renderTemplate(String key, Map<String, String> values, HttpServletRequest request) {
+        Map<String, String> fields = new HashMap<>(settingsFields);
+        fields.put("formname", Tools.getStringValue(formName, ""));
+        fields.put("savedb", Tools.getStringValue(formName, ""));
+        fields.put("recipients", Tools.getStringValue(recipients, ""));
+        fields.putAll(values);
+        String html = FormsService.replaceFields(prop.getText(key), fields);
+        return DocTools.updateUserCodes(UsersDB.getCurrentUser(request), new StringBuilder(html)).toString();
+    }
+
+    private static int getFormCounter(String formName, HttpServletRequest request) {
+        final MultistepFormsService multistepFormsService = Tools.getSpringBean("multistepFormsService", MultistepFormsService.class);
+        if(multistepFormsService == null) throw new IllegalStateException("FormHtmlHandler was not able to obtain MultistepFormsService");
+        return multistepFormsService.getFormCounter(formName, request);
+    }
+
+    /**
+     * Returns the last rendered form content before CSS or encryption is applied.
+     *
+     * @return rendered HTML or plain text, depending on form settings, or an empty string if unavailable
      */
     public final String getFormHtmlBeforeCss() {
         if(formHtmlBeforeCss == null) return "";
@@ -131,11 +179,21 @@ public class FormHtmlHandler {
     /**
      * Returns CSS collected during the last render.
      *
-     * @return pair of (inline <style> CSS, <link> tags); empty values if not available
+     * @return pair whose first value contains inline {@code <style>} CSS and whose second
+     *         value contains {@code <link>} elements; both values are empty if unavailable
      */
     public final Pair<String, String> getCssDataPair() {
         if(cssDataPair == null) return new Pair<>("", "");
         return new Pair<>(cssDataPair.first, cssDataPair.second);
+    }
+
+    /**
+     * Returns the prefix used to map logical form item identifiers to DOM identifiers.
+     *
+     * @return form-instance-specific DOM ID prefix
+     */
+    public final String getDomIdPrefix() {
+        return "f" + this.formCounter + "-";
     }
 
     /**
@@ -178,19 +236,19 @@ public class FormHtmlHandler {
         for(String css : Tools.getTokens(this.formCss, "\n", true))
             formStartHtml.append("<link rel='stylesheet' type='text/css' href='").append(css).append("' />");
 
-        formStartHtml.append(FormsService.replaceFields(prop.getText(FORM_START_KEY), this.formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop, request));
-
         String newPath = "/rest/multistep-form/save-form?form-name=" + this.formName + "&step-id=" + stepId;
-        Tools.replace(formStartHtml, "${formActionSrc}", newPath);
-        Tools.replace(formStartHtml, "${formAddClasses}", this.formAddClasses);
+        formStartHtml.append(renderTemplate(FORM_START_KEY, Map.of(
+            "formActionSrc", newPath,
+            "formAddClasses", Tools.getStringValue(this.formAddClasses, "")
+        ), request));
         return formStartHtml;
     }
 
     /**
      * Creates the HTML wrapper for a step and injects the step items.
      *
-     * @param stepId step ID to render
-     * @param request HTTP request
+     * @param request  current HTTP request
+     * @param formStep  step whose wrapper and items are rendered
      * @return HTML builder with step content
      */
     private StringBuilder getStepHtml(HttpServletRequest request, FormStepEntity formStep) {
@@ -199,22 +257,34 @@ public class FormHtmlHandler {
         // Form step wrapper start
 
         StringBuilder stepWrapperStart = new StringBuilder();
-        stepWrapperStart.append(prop.getText("components.mustistep.step.start"));
+        stepWrapperStart.append(renderTemplate("components.multistep.step.start", Map.of(), request));
 
-        if (Tools.isNotEmpty(formStep.getHeader()))
-            stepWrapperStart.append(Tools.replace(prop.getText("components.mustistep.step.header"), "${step-header}", StringEscapeUtils.unescapeHtml4(formStep.getHeader()) ));
+        if (Tools.isNotEmpty(formStep.getHeader())) {
+            // Swap header title
+            stepWrapperStart.append(renderTemplate("components.multistep.step.header", Map.of("step-header", StringEscapeUtils.unescapeHtml4(formStep.getHeader())), request));
+
+            // Swap user info
+            stepWrapperStart = DocTools.updateUserCodes(UsersDB.getCurrentUser(request), stepWrapperStart);
+
+            // Swap form items values
+            if (isEmailRender && this.formData != null) {
+                stepWrapperStart = MultistepFormsService.updateFormValues(this.formData, stepWrapperStart);
+            } else {
+                stepWrapperStart = MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
+            }
+        }
 
         formStepHtml.append(stepWrapperStart);
 
-        if (rowView) formStepHtml.append(prop.getText("components.mustistep.rowView.start"));
+        if (rowView) formStepHtml.append(renderTemplate("components.multistep.rowView.start", Map.of(), request));
 
         // Into formStep we must insert step items
         formStepHtml.append( getStepItems(formStep.getId(), request) );
 
-        if (rowView) formStepHtml.append( prop.getText("components.mustistep.rowView.end"));
+        if (rowView) formStepHtml.append( renderTemplate("components.multistep.rowView.end", Map.of(), request));
 
         // Form step wrapper end
-        formStepHtml.append( prop.getText("components.mustistep.step.end") );
+        formStepHtml.append( renderTemplate("components.multistep.step.end", Map.of(), request) );
 
         return formStepHtml;
     }
@@ -240,6 +310,9 @@ public class FormHtmlHandler {
             if(isEmailRender == true && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, jsonObject))) continue;
 
             JSONObject item = new JSONObject(stepItem);
+            // Keep the entity's logical ID unchanged and map only the rendered DOM ID.
+            if(isEmailRender == false) item.put("itemFormId", getDomIdPrefix() + stepItem.getItemFormId());
+
             String fieldType = item.getString("fieldType");
 
             item.put("labelOriginal", stepItem.getLabel());
@@ -247,7 +320,7 @@ public class FormHtmlHandler {
                 item.put("label", prop.getText("components.formsimple.label." + fieldType));
             }
 
-            String itemHtml = FormsService.replaceFields(prop.getText("components.formsimple.input." + fieldType), this.formName, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
+            String itemHtml = FormsService.replaceFields(prop.getText("components.formsimple.input." + fieldType), this.formName, formSettings, recipients, item, requiredLabelAdd, isEmailRender, rowView, firstTimeHeadingSet, prop, request);
 
             if (isEmailRender == false) {
                 if(itemHtml.contains("!INCLUDE"))
@@ -259,7 +332,7 @@ public class FormHtmlHandler {
                     // Do not change HTML, this html can be unbalanced like "</div><div class="row">" and its not valid ... so editFieldHtmlToEmailRender would return "<div class="row"></div>" because of Jsoup.parseBodyFragment
                 } else {
                     // !! its for show or for email... remaster item html
-                    itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem);
+                    itemHtml = editFieldHtmlToEmailRender(itemHtml, stepItem, request);
                 }
 
                 stepItemsHtml.append(itemHtml);
@@ -273,14 +346,23 @@ public class FormHtmlHandler {
      * Creates the closing HTML of the form and decides the submit button text
      * based on whether the step is the last one.
      *
-     * @param stepId current step ID
-     * @param request HTTP request
+     * @param stepId  current step ID
+     * @param request  current HTTP request
+     * @param formStep  current step used to resolve navigation and optional trailing HTML
      * @return HTML builder with form end content
      */
     private StringBuilder getFormEnd(Long stepId, HttpServletRequest request, FormStepEntity formStep) {
         Pair<String, String> buttonsLabels = getButtonsLabels(stepId);
 
-        StringBuilder formEndHtml =  getFormEnd(buttonsLabels.getSecond(), request);
+        StringBuilder formEndHtml = new StringBuilder();
+        FormStepEntity previousStep = MultistepFormsService.getPreviousStep(formName, formStep, formStepsRepository);
+        if(isEmailRender == false && previousStep != null) {
+            formEndHtml.append(renderTemplate(FORM_BACK_BUTTON_KEY, Map.of(
+                "previousStepId", previousStep.getId().toString(),
+                "backButtonText", StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst())
+            ), request));
+        }
+        formEndHtml.append(getFormEnd(buttonsLabels.getSecond(), request));
 
         if(isEmailRender == false) {
             if(formStep.getStepBonusHtml() == null) formEndHtml.append("");
@@ -288,6 +370,29 @@ public class FormHtmlHandler {
         }
 
         return formEndHtml;
+    }
+
+    /**
+     * Adds the localized loader before the closing form tag for page rendering only.
+     *
+     * @param formEndHtml rendered form end
+     * @param isEmailRender {@code true} when rendering form content for an email
+     * @param prop localized text provider
+     */
+    static void appendFormLoader(StringBuilder formEndHtml, boolean isEmailRender, Prop prop) {
+        appendFormLoader(formEndHtml, isEmailRender, prop, Map.of());
+    }
+
+    /** Adds the loader after expanding settings in its source template only. */
+    static void appendFormLoader(StringBuilder formEndHtml, boolean isEmailRender, Prop prop, Map<String, String> settingsFields) {
+        if(isEmailRender == false) {
+            String loaderHtml = FormsService.replaceFields(prop.getText(FORM_LOADER_KEY), settingsFields);
+            if(Tools.isNotEmpty(loaderHtml)) {
+                int closingFormTagIndex = formEndHtml.lastIndexOf("</form>");
+                if(closingFormTagIndex >= 0) formEndHtml.insert(closingFormTagIndex, loaderHtml);
+                else formEndHtml.append(loaderHtml);
+            }
+        }
     }
 
     /**
@@ -300,30 +405,34 @@ public class FormHtmlHandler {
     private StringBuilder getFormEnd(String submitButtonString, HttpServletRequest request) {
         StringBuilder formEndHtml = new StringBuilder();
 
-        formEndHtml.append( FormsService.replaceFields(prop.getText(FORM_END_KEY), this.formName, recipients, null, requiredLabelAdd, isEmailRender, false, firstTimeHeadingSet, prop, request) );
-
-        Tools.replace(formEndHtml, "${submitButtonText}", submitButtonString);
+        formEndHtml.append(renderTemplate(FORM_END_KEY, Map.of("submitButtonText", submitButtonString), request));
 
         if(isEmailRender == false) Tools.replace(formEndHtml, "{tech-info}", "");
+        appendFormLoader(formEndHtml, isEmailRender, prop, settingsFields);
 
         return formEndHtml;
     }
 
     /**
-     * Renders full multi‑step form as email‑ready HTML into the provided {@link FormsEntity}.
-     * Applies optional encryption and collects CSS for inlining.
+     * Builds and stores the complete multistep form representation for email delivery.
+     * Uses the prepared unencrypted notification values, converts the content to plain
+     * text when configured, and encrypts only the stored HTML. Collects stylesheet
+     * data for readable email and PDF variants.
      *
-     * @param form target form entity to populate with rendered HTML
-     * @param request current HTTP request
-     * @param docId ID of the document used to resolve template/group CSS
+     * @param form  entity whose HTML field receives the rendered email content
+     * @param formData ordered form data values keyed by logical field IDs, containing HTML-escaped
+     *                           text, sanitized WYSIWYG HTML, saved filenames and empty answers
+     * @param request  current HTTP request
+     * @param docId  ID of the document used to resolve template and group CSS
+     * @throws IllegalStateException if the entity belongs to a different form than this handler
      */
-    public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer docId) {
+    public final void setFormHtml(FormsEntity form, Map<String, String> formData, HttpServletRequest request, Integer docId) {
         // Check that provided form has same name as formName provided in constructor
         if(form.getFormName().equals(this.formName) == false) throw new IllegalStateException("Provided form has different name taht provided in constructor.");
 
         StringBuilder formHtml = new StringBuilder("");
 
-        if (Tools.isNotEmpty(emailTextBefore)) formHtml.append(ResponseUtils.filter(emailTextBefore).replaceAll("\\n", "<br/>")).append("<br/>");
+        if (Tools.isNotEmpty(emailTextBefore)) formHtml.append(emailTextBefore.replaceAll("\\n", "<br/>")).append("<br/>");
 
         // This is email render format
         this.isEmailRender = true;
@@ -332,7 +441,7 @@ public class FormHtmlHandler {
         formHtml.append( getFormStart(-1L, request) );
 
         // prepare data
-        this.formData = MultistepFormsService.getFormDataAsMap(form);
+        this.formData = formData;
 
         for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(this.formName, CloudToolsForCore.getDomainId()))
             formHtml.append( getStepHtml(request, formSteps) ).append("<hr>");
@@ -343,11 +452,11 @@ public class FormHtmlHandler {
         // End form
         formHtml.append( getFormEnd("", request) );
 
-        if (Tools.isNotEmpty(emailTextAfter)) formHtml.append("<br/>").append(ResponseUtils.filter(emailTextAfter).replaceAll("\\n", "<br/>")).append("<br/>");
+        if (Tools.isNotEmpty(emailTextAfter)) formHtml.append("<br/>").append(emailTextAfter.replaceAll("\\n", "<br/>")).append("<br/>");
 
         String techInfo = "";
         if(this.addTechInfo) {
-            techInfo = prop.getText("components.formsimple.techinfo");
+            techInfo = renderTemplate("components.formsimple.techinfo", Map.of(), request);
             techInfo = ShowDoc.updateCodes(null, techInfo, docId, request, Constants.getServletContext());
         }
         formHtml = Tools.replace(formHtml, "{tech-info}", techInfo);
@@ -382,14 +491,10 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Method can be called ONLY if method:setFormHtml was already called
-     * @return
-     */
-    /**
-     * Returns HTML wrapped with inline CSS suitable for PDF generation
-     * based on the last {@link #setFormHtml(FormsEntity, HttpServletRequest, Integer)} call.
+     * Returns the PDF-oriented form representation,
+     * based on the last {@link #setFormHtml(FormsEntity, Map, HttpServletRequest, Integer)} call.
      *
-     * @return HTML with inline CSS, or empty string if not available
+     * @return HTML with inline CSS, plain text when configured, or an empty string if unavailable
      */
     public final String getFormPdfVersion() {
         //Check if form html and css styles were allready set
@@ -400,13 +505,13 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Wraps provided HTML with minimal email document structure and appends inline CSS.
+     * Wraps provided HTML with minimal email document structure and appends stylesheet markup.
      * Uses instance flag forcing plain text when configured.
      *
-     * @param htmlData HTML body content
-     * @param styleHtml inline CSS wrapped in <style> tag
-     * @param emailEncoding optional charset for meta header
-     * @return full HTML document or plain text when plain‑text mode is enabled
+     * @param htmlData  HTML body content
+     * @param styleHtml  stylesheet markup such as {@code <style>} or {@code <link>} elements
+     * @param emailEncoding  optional character set for the metadata header
+     * @return full HTML document, or the original content when plain-text mode is enabled
      */
     private String appendStyle(String htmlData, String styleHtml, String emailEncoding) {
         boolean forceTextPlain = this.formForceTextPlain || Constants.getBoolean("formMailSendPlainText");
@@ -414,13 +519,13 @@ public class FormHtmlHandler {
     }
 
     /**
-     * Static helper to wrap HTML with minimal email document structure and append CSS.
+     * Wraps HTML with minimal email document structure and appends stylesheet markup.
      *
-     * @param htmlData HTML body content
-     * @param styleHtml inline CSS wrapped in <style> tag
-     * @param emailEncoding optional charset for meta header
-     * @param forceTextPlain when true returns original htmlData without wrapping
-     * @return full HTML document or plain text when {@code forceTextPlain} is true
+     * @param htmlData  HTML body content
+     * @param styleHtml  stylesheet markup such as {@code <style>} or {@code <link>} elements
+     * @param emailEncoding  optional character set for the metadata header
+     * @param forceTextPlain  whether to return {@code htmlData} without wrapping
+     * @return full HTML document, or {@code htmlData} when {@code forceTextPlain} is true
      */
     public static String appendStyle(String htmlData, String styleHtml, String emailEncoding, boolean forceTextPlain) {
 		if (forceTextPlain == true) return htmlData;
@@ -441,8 +546,9 @@ public class FormHtmlHandler {
     /**
      * Resolves CSS for the current render using instance settings.
      *
-     * @param docId document ID used to resolve template/group CSS
-     * @return pair of (inline <style> CSS, <link> tags)
+     * @param docId  document ID used to resolve template and group CSS
+     * @return pair containing inline {@code <style>} CSS and {@code <link>} elements,
+     *         or {@code null} if the document cannot be resolved
      */
     private Pair<String, String> getCssDataLink(Integer docId) {
         return getCssDataLink(docId, this.formForceTextPlain, this.formCss);
@@ -451,9 +557,10 @@ public class FormHtmlHandler {
     /**
      * Resolves CSS for email/PDF rendering given a document context.
      *
-     * @param docId document ID
-     * @param forceTextPlain when true returns empty CSS
-     * @return pair of (inline <style> CSS, <link> tags) or empty pair when plain text
+     * @param docId  document ID
+     * @param forceTextPlain  whether to return empty CSS
+     * @return pair containing inline {@code <style>} CSS and {@code <link>} elements,
+     *         an empty pair for plain text, or {@code null} if the document cannot be resolved
      */
     public static Pair<String, String> getCssDataLink(Integer docId, boolean forceTextPlain) {
         return getCssDataLink(docId, forceTextPlain, null);
@@ -462,10 +569,11 @@ public class FormHtmlHandler {
     /**
      * Resolves CSS for email/PDF rendering including template, editor and form‑specific CSS.
      *
-     * @param docId document ID
-     * @param forceTextPlain when true returns empty CSS
-     * @param formSpecificCssStr newline‑separated list of additional CSS paths from form settings
-     * @return pair of (inline <style> CSS, <link> tags); returns null if document cannot be resolved
+     * @param docId  document ID
+     * @param forceTextPlain  whether to return empty CSS
+     * @param formSpecificCssStr  newline-separated list of additional CSS paths from form settings
+     * @return pair containing inline {@code <style>} CSS and {@code <link>} elements,
+     *         an empty pair for plain text, or {@code null} if the document cannot be resolved
      */
     public static Pair<String, String> getCssDataLink(Integer docId, boolean forceTextPlain, String formSpecificCssStr) {
         if(Constants.getBoolean("formMailSendPlainText") == true || forceTextPlain) return new Pair<>("", "");
@@ -484,7 +592,7 @@ public class FormHtmlHandler {
 
 		try
 		{
-			cssData = "<style type='text/css'>";
+			cssData = "<style type='text/css' media=\"all\">";
 			cssLink = "";
 
 			if (temp != null)
@@ -505,7 +613,7 @@ public class FormHtmlHandler {
 				}
                 for(String baseCssPath : baseCssPaths) {
                     baseCssPath = FormMailAction.checkEmailCssVersion(baseCssPath);
-                    cssStyle.append(FileTools.readFileContent(baseCssPath)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(baseCssPath, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + baseCssPath + "' type='text/css'/>\n";
                 }
 
@@ -520,7 +628,7 @@ public class FormHtmlHandler {
 				}
                 for(String tempCssLink : tempCssLinks) {
                     tempCssLink = FormMailAction.checkEmailCssVersion(tempCssLink);
-                    cssStyle.append(FileTools.readFileContent(tempCssLink)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(tempCssLink, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + tempCssLink + "' type='text/css'/>\n";
                 }
 
@@ -528,7 +636,7 @@ public class FormHtmlHandler {
 				String[] editorEditorCsses = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
                 for(String editorEditorCss : editorEditorCsses) {
                     editorEditorCss = FormMailAction.checkEmailCssVersion(editorEditorCss);
-                    cssStyle.append(FileTools.readFileContent(editorEditorCss)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(editorEditorCss, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + editorEditorCss + "' type='text/css'/>\n";
                 }
 
@@ -536,7 +644,7 @@ public class FormHtmlHandler {
                 String[] formSpecificCsses = Tools.getTokens(formSpecificCssStr, "\n");
                 for(String formSpecificCss : formSpecificCsses) {
                     formSpecificCss = FormMailAction.checkEmailCssVersion(formSpecificCss);
-                    cssStyle.append(FileTools.readFileContent(formSpecificCss)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(formSpecificCss, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + formSpecificCss + "' type='text/css'/>\n";
                 }
 
@@ -551,7 +659,7 @@ public class FormHtmlHandler {
 					cssLink += "<link rel='stylesheet' href='/css/email.css' type='text/css'/>\n";
 
 				if (is != null) {
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, Constants.FILE_ENCODING));
+					BufferedReader br = new BufferedReader(new InputStreamReader(is, SetCharacterEncodingFilter.getEncoding()));
 					String line;
 					StringBuilder startBuf = new StringBuilder(cssData);
 					while ((line = br.readLine()) != null)
@@ -565,13 +673,23 @@ public class FormHtmlHandler {
 		}
 
 		cssData += "</style>";
+        // A BOM belongs at the start of a file, not inside concatenated inline CSS.
+        cssData = cssData.replace("\uFEFF", "");
 
         if(Tools.isEmpty(cssLink)) cssLink = "";
 
         return new Pair<>(cssData, cssLink);
     }
 
-    private String editFieldHtmlToEmailRender(String itemHtml, FormItemEntity stepItem) {
+    /**
+     * Converts interactive controls in a form item to read-only email markup.
+     *
+     * @param itemHtml  source markup for the form item
+     * @param stepItem  item whose submitted value is rendered
+     * @param request  current HTTP request used to resolve saved selections
+     * @return serialized body markup containing read-only control values, or an empty string for CAPTCHA
+     */
+    private String editFieldHtmlToEmailRender(String itemHtml, FormItemEntity stepItem, HttpServletRequest request) {
         if("captcha".equals(stepItem.getFieldType())) return "";
 
         if (itemHtml.contains("!INCLUDE"))
@@ -582,25 +700,13 @@ public class FormHtmlHandler {
 
         Document doc = Jsoup.parseBodyFragment(itemHtml);
 
-        // Pre-query all labels with 'for' attribute to avoid re-querying inside the loop
-        org.jsoup.select.Elements labelsWithFor = doc.select("label[for]");
-
         // Loop input and handle text, radio and checkbox types
         for (Element input : doc.select("input")) {
             String inputType = input.attr("type");
             if(Tools.isEmpty(inputType)) inputType = "";
 
             if("radio".equals(inputType) || "checkbox".equals(inputType)) {
-                Element label = null;
-                for (Element l : labelsWithFor) {
-                    if (l.attr("for").equals(input.id())) {
-                        label = l;
-                        break;
-                    }
-                }
-                if (label != null) { label.text(input.val()); }
-
-                boolean isSelected = isCheckboxOrRadioSelected(input.val(), stepItem.getItemFormId());
+                boolean isSelected = isCheckboxOrRadioSelected(input.val(), stepItem.getItemFormId(), request);
 
                 if ("radio".equals(inputType))
                     input.before( getHtmlForRadioInput(isSelected, radioCheckboxAsText) );
@@ -626,7 +732,21 @@ public class FormHtmlHandler {
 
         // Loop selects
         for (Element select : doc.select("select")) {
-            select.before("<span class=\"form-control emailInput-select\">" + fieldValue + "</span>");
+            Element readonlyValue = new Element("span");
+            readonlyValue.addClass("form-control").addClass("emailInput-select");
+
+            Element selectedOption = null;
+            for (Element option : select.select("option")) {
+                if (fieldValue != null && fieldValue.equals(option.val())) {
+                    selectedOption = option;
+                    break;
+                }
+            }
+
+            if (selectedOption != null) readonlyValue.text(selectedOption.text());
+            else readonlyValue.html(fieldValue == null ? "" : fieldValue);
+
+            select.before(readonlyValue);
             select.remove();
         }
 
@@ -636,9 +756,26 @@ public class FormHtmlHandler {
         return doc.body().html();
     }
 
-    private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId) {
+    /**
+     * Determines whether a radio button or checkbox value was selected.
+     *
+     * <p>Values saved in the current request flow take precedence over persisted form data.</p>
+     *
+     * @param inputValue  value represented by the rendered control
+     * @param itemFormId  logical identifier of the form item
+     * @param request  current HTTP request used to resolve saved selections
+     * @return {@code true} when the value is selected
+     */
+    private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId, HttpServletRequest request) {
+        String[] selectedValues = MultistepFormsService.getSavedSelectedValues(this.formName, itemFormId, request);
+        if(selectedValues != null) return Arrays.asList(selectedValues).contains(inputValue);
+
         String values = this.formData.get(itemFormId);
         if(Tools.isEmpty(values)) return false;
+
+        //for radiogroup you can have long text with commas, so we need to check if the whole value is equal to the input value first
+        if (values.equals(inputValue)) return true;
+
         for(String value : Tools.getTokens(values, ",")) {
             if(value.equals(inputValue)) return true;
         }
@@ -651,6 +788,15 @@ public class FormHtmlHandler {
         return value;
     }
 
+    /**
+     * Resolves the back and next button labels for a form step.
+     *
+     * <p>The final step uses its configured next label or the localized submit label.</p>
+     *
+     * @param currentStepId  identifier of the current form step
+     * @return pair containing the back label followed by the next or submit label
+     * @throws IllegalStateException if the requested step does not exist
+     */
     private Pair<String, String> getButtonsLabels(Long currentStepId) {
         FormStepEntity actualStep = formStepsRepository.findById(currentStepId).orElse(null);
 
@@ -658,15 +804,15 @@ public class FormHtmlHandler {
 
         String backBtnLabel;
         if(Tools.isNotEmpty(actualStep.getBackStepBtnLabel())) backBtnLabel = actualStep.getBackStepBtnLabel();
-        else backBtnLabel = prop.getText("components.mustistep.form.back_step");
+        else backBtnLabel = prop.getText("components.multistep.form.back_step");
 
         String nextBtnLabel;
         if(Tools.isNotEmpty(actualStep.getNextStepBtnLabel())) nextBtnLabel = actualStep.getNextStepBtnLabel();
         else {
             if(actualStep.isLastStep()) // last step
-                nextBtnLabel = prop.getText("components.mustistep.form.save_form");
+                nextBtnLabel = prop.getText("components.multistep.form.save_form");
             else // not last step
-                nextBtnLabel = prop.getText("components.mustistep.form.next_step");
+                nextBtnLabel = prop.getText("components.multistep.form.next_step");
         }
 
         return new Pair<>(backBtnLabel, nextBtnLabel);

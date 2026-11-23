@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +47,9 @@ import java.util.stream.Collectors;
 @ControllerAdvice(annotations = {Datatable.class})
 public class DatatableExceptionHandlerV2
 {
+	private static final Pattern DATA_TOO_LONG_PATTERN = Pattern.compile("Data too long for column ['\"`]([^'\"`]+)['\"`]", Pattern.CASE_INSENSITIVE);
+	private static final Pattern COLUMN_CANNOT_BE_NULL_PATTERN = Pattern.compile("Column ['\"`]([^'\"`]+)['\"`] cannot be null", Pattern.CASE_INSENSITIVE);
+
 	@ResponseBody
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<DatatableResponse<Object>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
@@ -141,24 +146,9 @@ public class DatatableExceptionHandlerV2
 			}
 
 			response.setFieldErrors(errorsList);
-		} else if (ex instanceof TransactionSystemException) {
-			String err = ex.getMessage();
-			try {
-				if (err != null) {
-					int start = err.indexOf("Duplicate entry");
-					if (start > 0) {
-						int end = err.indexOf("Error Code", start);
-						if (end > start) err = err.substring(start, end).trim();
-					}
-				}
-			} catch (Exception e) {
-				//failsafe
-			}
-			response.setError(err);
-			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		} else {
-			response.setError(ex.getMessage());
-			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException, exception: " + ex.getMessage(), ex);
+			response.setError(getDatabaseErrorMessage(ex));
+			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		}
 
 		if (Tools.isEmpty(response.getError())) {
@@ -167,6 +157,35 @@ public class DatatableExceptionHandlerV2
 		}
 
 		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	private String getDatabaseErrorMessage(Exception ex) {
+		Throwable cause = ex;
+		while (cause != null) {
+			String message = cause.getMessage();
+			if (message != null) {
+				Matcher dataTooLongMatcher = DATA_TOO_LONG_PATTERN.matcher(message);
+				if (dataTooLongMatcher.find()) {
+					return Prop.getInstance().getText("datatable.error.valueTooLong", dataTooLongMatcher.group(1));
+				}
+
+				Matcher columnCannotBeNullMatcher = COLUMN_CANNOT_BE_NULL_PATTERN.matcher(message);
+				if (columnCannotBeNullMatcher.find()) {
+					return Prop.getInstance().getText("datatable.error.valueRequired", columnCannotBeNullMatcher.group(1));
+				}
+
+				if (message.contains("Duplicate entry")) {
+					return Prop.getInstance().getText("datatable.error.duplicateValue");
+				}
+
+				if (message.contains("Cannot delete or update a parent row")) {
+					return Prop.getInstance().getText("datatable.error.recordInUse");
+				}
+			}
+			cause = cause.getCause();
+		}
+
+		return ex.getMessage();
 	}
 
 	@ExceptionHandler(EditorException.class)
@@ -190,6 +209,8 @@ public class DatatableExceptionHandlerV2
 		if (ex instanceof ResponseStatusException) {
 			ResponseStatusException ex2 = (ResponseStatusException)ex;
 			message = ex2.getReason();
+		} else {
+			message = getDatabaseErrorMessage(ex);
 		}
 
 		message = prepareMessage(message, ex);

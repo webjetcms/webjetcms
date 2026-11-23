@@ -85,16 +85,25 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.say("zobrazenie poctu zaznamov");
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-page-length");
-    I.waitForElement("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]", 10);
+    const pageLengthDialog = container + " button.buttons-page-length ~ div.dt-button-collection";
+    I.waitForVisible(pageLengthDialog);
 
     Document.screenshot("/redactor/datatables/dt-pagelength.png");
 
-    I.click("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu] button.dt-close-modal")
+    I.clickCss(pageLengthDialog + " button.dt-close-modal");
+    I.waitForInvisible(pageLengthDialog);
 
     I.say("specialne ikony");
     I.click("button.buttons-select-all");
     Document.screenshotElement("button.buttons-history-preview", "/redactor/webpages/icon-preview.png");
     Document.screenshotElement("div.buttons-recursive", "/redactor/webpages/icon-recursive.png");
+
+    I.say("More actions menu");
+    I.clickCss(container + " button.buttons-more-actions");
+    I.waitForVisible(container + " .dt-more-actions-menu");
+    Document.screenshot("/redactor/webpages/more-actions.png");
+    I.pressKey("Escape");
+    I.waitForInvisible(container + " .dt-more-actions-menu");
 
     I.say("specialne ikony");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=263");
@@ -240,6 +249,7 @@ Scenario('perex-groups', ({ I, DTE, Document }) => {
 
 Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    I.resizeWindow(1280, 780); //so the editor will not be full screen
     I.jstreeNavigate(["Test stavov", "Voliteľné polia"]);
     I.click("Voliteľné polia", "#datatableInit_wrapper");
     DTE.waitForEditor();
@@ -281,6 +291,12 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldN').css("padding-top", "10px");
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldN').css("padding-bottom", "10px");
 
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldO').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldO').css("padding-bottom", "10px");
+
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldP').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldP').css("padding-bottom", "10px");
+
     });
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldA", "/frontend/webpages/customfields/webpages-text.png");
 
@@ -308,7 +324,7 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldI");
     I.fillField("div.DTE_Action_Edit div.DTE_Field_Name_fieldI input", "123456");
     Document.screenshot("/frontend/webpages/customfields/webpages-length.png");
-    I.wjSetDefaultWindowSize();
+    I.resizeWindow(1280, 780); //so the editor will not be full screen
 
     I.click("div.DTE_Action_Edit div.DTE_Field_Name_fieldJ button.dropdown-toggle")
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldJ", "/frontend/webpages/customfields/webpages-select-multi.png");
@@ -323,12 +339,21 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldN");
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldN", "/frontend/webpages/customfields/webpages-color.png");
 
+    I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldO");
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldO", "/frontend/webpages/customfields/webpages-boolean.png");
+
+    I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldP");
+    DTE.fillField("fieldP", `{
+  "productId": 9007199254740993,
+  "variants": [
+    {"code": "blue", "available": true}
+  ]
+}`);
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldP", "/frontend/webpages/customfields/webpages-jsoneditor.png");
+
     I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.waitForLoader();
-    I.click("button.buttons-settings");
-    I.click("button.buttons-page-length");
-    I.click("50", "div.dropdown-menu.dt-button-collection");
-    I.click("div.dropdown-menu.dt-button-collection button.dt-close-modal");
+    DT.setPageLength(50);
     DT.filterContains("key", "temp-3");
     Document.screenshot("/frontend/webpages/customfields/translations.png");
 
@@ -509,6 +534,21 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
     Document.screenshot("/redactor/admin/editor-phone.png");
 
     I.wjSetDefaultWindowSize();
+
+    I.amOnPage('/apps/stat/admin/');
+    I.resizeWindow(1360, 850);
+    I.waitForElement('#dropdownMenuUser[data-user-initialized="true"]', 15);
+    Document.screenshotElement('.ly-header', '/redactor/admin/header.png');
+
+    I.clickCss('#dropdownMenuUser');
+    I.waitForVisible('#admin-user-menu.show', 5);
+    I.waitForElement('#admin-user-menu[aria-busy="false"] .md-user-menu__two-factor-badge[data-enabled]', 10);
+    I.moveCursorTo('.md-user-menu__avatar');
+    Document.screenshotElement('#admin-user-menu', '/redactor/admin/user-menu.png');
+
+    I.pressKey('Escape');
+    I.waitForInvisible('#admin-user-menu', 5);
+    I.wjSetDefaultWindowSize();
 });
 
 Scenario('editor-virtualPath', ({ I, DTE, Document }) => {
@@ -533,132 +573,140 @@ Scenario('editor-virtualPath', ({ I, DTE, Document }) => {
 });
 
 Scenario('pagebuilder', async ({ I, DTE, Document }) => {
-
+    Document.resetPageBuilderMode();
+    I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.guides'));
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
-
     DTE.waitForEditor();
-    I.wait(5);
-
-    //add PB classes to simulate mouse over
-    await I.executeScript(()=>{
-        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
-        pbElement.addClass("pb-has-toolbar-active").closest(".container").addClass("pb-has-child-toolbar-active").closest("section").addClass("pb-has-child-toolbar-active");
-        pbElement.find("aside.pb-toolbar").trigger("click");
-    });
-
-    Document.screenshot("/redactor/webpages/pagebuilder.png");
-
-    await I.executeScript(()=>{
-        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
-        pbElement.find(".pb-toolbar-button__style.pb-toolbar-button").trigger("click");
-    });
-
-    Document.screenshot("/redactor/webpages/pagebuilder-style.png");
-
-    await I.executeScript(()=>{
-        var mainWindow = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow;
-        mainWindow.$(".pb-modal .pb-modal__footer__button-close").trigger("click");
-        var pbElement = mainWindow.$("section.pb-section.pb-grid-element").first();
-        pbElement.addClass("pb-has-toolbar-active");
-        pbElement.children("aside.pb-toolbar").first().trigger("click");
-        pbElement.children(".pb-prepend.pb-plus-button").first().trigger("click");
-        //mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
-    });
-
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
-    I.wait(1);
-    I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']");
-    I.wait(1);
-    I.switchTo();
+    I.waitForVisible('.pb-workbench', 20);
 
-    Document.screenshot("/redactor/webpages/pagebuilder-library.png");
+    // Select a real content block and show its hierarchy using the shared toolbar.
+    const column = '.pb-column.col-3.text-center';
+    await I.usePlaywrightTo('wait for the screenshot column editor and select its content', async ({page}) => {
+        const frame = await (await page.locator('#DTE_Field_data-pageBuilderIframe').elementHandle()).contentFrame();
+        await frame.waitForFunction(selector => {
+            const editable = document.querySelector(selector)?.querySelector('[data-ckeditor-instance]');
+            return editable && CKEDITOR.instances[editable.dataset.ckeditorInstance]?.status === 'ready';
+        }, column, {timeout: 20000});
+        await frame.locator(column).first().evaluate(element => element.scrollIntoView({block: 'center', behavior: 'instant'}));
+        await frame.locator(column).first().locator(':is(h1,h2,h3,h4,p):not(:has(img))').first().click();
+    });
+    I.waitForVisible('.pb-outline[data-type=column]:not([hidden])', 10);
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.waitForVisible('.pb-outline[data-type=section]:not([hidden])', 10);
+    I.executeScript((root, selector) => {
+        const container = document.querySelector(selector).closest('.pb-container');
+        const toolbar = document.querySelector('.pb-workbench').getBoundingClientRect();
+        window.scrollBy({top: container.getBoundingClientRect().top - toolbar.bottom - 24, behavior: 'instant'});
+    }, column);
+    I.moveCursorTo('.pb-workbench-path');
+    Document.screenshot('/redactor/webpages/pagebuilder.png');
 
+    //show menu
+    I.click('.pb-workbench [data-pb-action=more]');
+    Document.screenshot('/redactor/webpages/pagebuilder-more-actions.png');
+    I.click('.pb-workbench [data-pb-action=more]');
+
+    // Show the difference between the selected column and a hover guide.
+    I.click('.pb-workbench [data-pb-action=guides]');
+    I.seeElement('.pb-workbench [data-pb-guides=selected]');
+    I.moveCursorTo(locate(column+' h3').last());
+    I.waitForVisible('.pb-outline.is-hover[data-type=column]:not([hidden])', 10);
+    Document.screenshot('/redactor/webpages/pagebuilder-hover.png');
+    I.moveCursorTo('.pb-workbench-path');
+
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.waitForVisible('.pb-structure [role=treeitem][aria-selected=true]', 10);
+    I.moveCursorTo('.pb-structure-heading strong');
+    Document.screenshot('/redactor/webpages/pagebuilder-structure.png');
+    I.click('.pb-structure [data-pb-action=close-structure]');
+    I.waitForInvisible('.pb-structure', 10);
+
+    I.click('.pb-workbench [data-pb-action=resize]');
+    I.waitForVisible('.pb-is-resize-columns .pb-size-changer', 10);
+    I.waitForVisible('.pb-workbench.is-resizing', 10);
+    I.dontSeeElement('.pb-workbench [data-pb-action=resize]');
+    I.waitForVisible('.pb-resize-hint', 10);
+    I.dontSee('pagebuilder.ui.resize.', '.pb-resize-hint');
+    I.dontSeeElement('.pb-notify');
+    I.moveCursorTo('.pb-resize-hint > span');
+    Document.screenshot('/redactor/webpages/pagebuilder-width.png');
+    I.click('.pb-resize-hint [data-pb-action=end-resize]');
+    I.waitForInvisible('.pb-is-resize-columns', 10);
+    I.waitForInvisible('.pb-resize-hint', 10);
+
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=style]');
+    I.waitForVisible('#wjInline-docdata.pb-is-modal-open .pb-modal', 10);
+    I.moveCursorTo('.pb-modal__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-style.png');
+    I.click('.pb-modal .pb-style-accordion[data-input-group-id="10"] > button');
+    I.click('.pb-modal .pb-style-accordion[data-input-group-id="03"] > button');
+    I.waitForVisible('.pb-modal [name=padding-top]', 10);
+    I.executeScript(() => {
+        const content = document.querySelector('.pb-modal__content');
+        const group = content.querySelector('.pb-style-accordion[data-input-group-id="03"]');
+        content.scrollTop += group.getBoundingClientRect().top - content.getBoundingClientRect().top;
+    });
+    I.moveCursorTo('.pb-modal__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-style-settings.png');
+    I.click('.pb-modal .pb-modal__footer__button-close');
+    I.waitForInvisible('.pb-modal', 10);
+
+    // Open the section library from an insertion point, as an editor would.
+    I.executeScript(() => window.scrollTo({top: 0, behavior: 'instant'}));
+    I.click('.pb-workbench [data-pb-action=insert]');
+    I.waitForVisible('.pb-insert-point[data-type=section] button', 10);
+    I.moveCursorTo('.pb-insert-hint > span');
+    Document.screenshot('/redactor/webpages/pagebuilder-insert.png');
+    I.click(locate('.pb-insert-point[data-type=section] button').first());
+    I.waitForVisible('.pb-library--section', 10);
+    I.clickCss(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0'] .library-group-toggle");
+    I.waitForVisible(".library-tab-item-button__toggler.active[data-library-item-id='c2VjdGlvbi9Db250YWN0'] .library-full-width-item", 10);
+    await I.usePlaywrightTo('wait for the library preview images', async ({page}) => {
+        const frame = await (await page.locator('#DTE_Field_data-pageBuilderIframe').elementHandle()).contentFrame();
+        await frame.waitForFunction(() => {
+            const images = Array.from(document.querySelectorAll('.pb-library .library-tab-item-button__toggler.active img'));
+            return images.length > 0 && images.every(image => image.complete && image.naturalWidth > 0);
+        });
+    });
+    I.moveCursorTo('.pb-library__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-library.png');
+    I.fillField('.pb-library--section .library-tab-item--library .library-template-block--section .library-filter-input', 'form');
+    I.click('.pb-library--section .library-tab-item--library .library-template-block--section [data-library-tag="Formulár"]');
+    I.waitForVisible('.pb-library .library-tab-item-button__toggler.active .library-full-width-item', 10);
+    I.moveCursorTo('.pb-library__header');
+    Document.screenshot('/redactor/webpages/pagebuilder-library-filter.png');
+    I.click('.pb-library__close');
+    I.waitForInvisible('.pb-library', 10);
+    I.pressKey('Escape');
+    I.waitForInvisible('.pb-insert-layer', 10);
+
+    I.waitForVisible('#DTE_Field_data-editorTypeSelector', 10);
+    Document.screenshotElement('#DTE_Field_data-editorTypeSelector', '/redactor/webpages/pagebuilder-switcher.png');
+
+    // Verify the documented route to splitting a column without changing its content.
+    I.click(locate(column+' h3').first());
+    I.click('.cke_button__htmlbox');
+    I.waitForVisible('.pb-library--content', 10);
+    I.click('.pb-library .library-tab-link[data-library-type=basic]');
+    I.waitForVisible('.pb-library--content .library-tab-item.active [data-library-item-id="pb-basic-4.12"]', 10);
+    I.click('.pb-library__close');
+    I.waitForInvisible('.pb-library', 10);
     I.switchTo();
-    Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");
+    DTE.cancel();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=152046");
     DTE.waitForEditor();
-    I.wait(5);
-
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForVisible('.pb-empty-placeholder-wrapper .pb-empty-placeholder__button', 20);
     I.moveCursorTo(".pb-empty-placeholder-wrapper .pb-empty-placeholder__button");
-
     Document.screenshot("/redactor/webpages/pagebuilder-plusbutton.png");
 
     I.switchTo();
-});
-
-Scenario('welcome', ({ I, Document }) => {
-    I.amOnPage("/admin/v9/");
-
-    Document.screenshotElement("div.overview-logged.feedback", "/redactor/admin/feedback.png", 1360, 900);
-    I.clickCss(".ti.ti-writing");
-    I.waitForElement("#feedback_modal");
-    Document.screenshot("/redactor/admin/feedback-modal.png");
-
-    I.amOnPage("/admin/v9/");
-    I.executeScript(function() {
-        $('div.overview-logged.bookmark').css("padding-top", "40px");
-    });
-    I.moveCursorTo("div.overview-logged.bookmark .overview-logged__head__more");
-    Document.screenshotElement("div.overview-logged.bookmark", "/redactor/admin/bookmarks.png");
-
-    I.amOnPage("/admin/v9/");
-    I.click(".ti.ti-plus");
-    I.waitForElement("#bookmark_modal");
-    I.wait(2);
-    Document.screenshot("/redactor/admin/bookmarks-modal.png", 1280, 580);
-
-});
-
-Scenario ("welcome - logins", ({ I, Document }) => {
-
-    //open multiple sessions
-    session('first user', () => {
-        I.relogin("tester3");
-        I.wait(5);
-    });
-
-    session('second user', () => {
-        I.relogin("tester3");
-        I.wait(9);
-    });
-
-    session('segal user', () => {
-        I.relogin("stevensegal");
-    });
-
-    I.relogin("tester3");
-    I.amOnPage("/admin/v9/");
-    I.waitForElement("div.overview-logged__sessions");
-
-    //since change browser to firefox in session block doestn work, change text in UI to Firefox using executeScript
-    I.executeScript(function() {
-        let el = $('div.overview-logged__sessions > ul > li:nth-child(3) .active-session-entry');
-        let value = el.text();
-        //value is like 11:06:25 (Chrome 142, 127.0.0.1) replace chrome with version to Firefox 144
-        value = value.replace(/(Chrome )\d+/, 'Firefox 144');
-        el.text(value);
-    });
-
-    I.resizeWindow(1920, 1080);
-    Document.screenshotElement("div.overview-logged.users", "/redactor/admin/sessions.png");
-
-    I.moveCursorTo("div.overview-logged__sessions > ul > li:nth-child(2)");
-    Document.screenshotElement(".tooltip.session-tooltip", "/redactor/admin/sessions-tooltip.png");
-
-    session('first user', () => {
-        I.logout();
-    });
-    session('second user', () => {
-        I.logout();
-    });
-    session('segal user', () => {
-        I.logout();
-    });
-
-    I.switchTo();
-    I.logout();
+    DTE.cancel();
+    I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.guides'));
 });
 
 Scenario("logout", ({ I, Document }) => {
@@ -682,6 +730,7 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.click("button.buttons-jstree-settings");
     I.waitForElement("#jstreeSettingsModal");
+    I.waitForVisible("#jstree-settings-showid", 10);
     I.checkOption("#jstree-settings-showid");
     I.checkOption("#jstree-settings-showorder");
     I.checkOption("#jstree-settings-showpages");
@@ -695,7 +744,8 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
 
     Document.screenshot("/redactor/webpages/jstree-settings.png");
 
-    DTE.cancel();
+    I.click('#jstreeSettingsModal .btn-close-editor');
+    I.waitForInvisible('#jstreeSettingsModal', 10);
 
     I.jstreeReset();
 });

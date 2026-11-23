@@ -1,0 +1,4 @@
+interface:
+  display_name: "WJ Dependency Check"
+  short_description: "Assess dependency findings by severity before fixes"
+  default_prompt: "Use $wj-dependencycheck to analyze the current worktree Dependency Check report, confirm the report source and Highest Severity, and propose fixes in a table for my decision."

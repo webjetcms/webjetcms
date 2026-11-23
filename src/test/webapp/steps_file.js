@@ -1,5 +1,6 @@
 const moment = require("moment");
 const buttons = require('./pages/buttons.js')
+const { getVideoSettings } = require('./helpers/video_settings.js');
 
 module.exports = function () {
   return actor({
@@ -202,7 +203,12 @@ module.exports = function () {
     },
 
     wjSetDefaultWindowSize() {
-      this.resizeWindow(1280, 760);
+      if ("true" === process.env.CODECEPT_VIDEO) {
+        const videoSettings = getVideoSettings();
+        this.resizeWindow(videoSettings.width, videoSettings.height);
+      } else {
+        this.resizeWindow(1280, 760);
+      }
     },
 
     // odhlasenie z aplikacie
@@ -258,6 +264,14 @@ module.exports = function () {
         }
       }
       this.amOnPage(url);
+    },
+
+    /**
+     * Prevent error 429 too many requests
+     * @param {*} I
+     */
+    prevent429() {
+        this.wait(1);
     },
 
     //vygenerovanie nahodneho retazca
@@ -330,6 +344,8 @@ module.exports = function () {
 
     dtWaitForLoader(name) {
       if (typeof name == "undefined") { name = "div.dt-processing"; }
+      // CodeceptJS waits on the first match, which may belong to an idle table.
+      name += ":visible";
       this.waitForInvisible(name, 40);
       //ak by sa este nestihol zobrazit kym sa vykona prva podmienka, pre istotu pockame a potom skusime znova
       this.wait(0.5);
@@ -338,15 +354,14 @@ module.exports = function () {
     },
 
     dtEditorWaitForLoader() {
-      let name = "div.DTE_Processing_Indicator";
+      let name = "div.DTE_Processing_Indicator:visible";
       this.waitForInvisible(name, 200);
       this.wait(0.5);
     },
 
     dtWaitForEditor(name) {
       if (typeof name == "undefined") { name = "datatableInit"; }
-      this.waitForVisible("#" + name + "_modal", 60);
-      this.wait(1);
+      this.waitForVisible("#" + name + "_modal.DTED.show[data-dte-focus-state='ready']", 200);
     },
 
     waitForModal(id) {
@@ -469,7 +484,7 @@ module.exports = function () {
       var that = this;
       pathArray.forEach(function (name, index) {
         that.say("clicking on jstreitem: name=" + name + " index=" + index);
-        that.jstreeClick(name);
+        that.jstreeClick(name, true);
       });
     },
 
@@ -478,12 +493,15 @@ module.exports = function () {
       this.waitForInvisible(name, 40);
       this.wait(0.5);
       this.waitForInvisible(name, 40);
+      //this one is visible when filtering jstree
+      this.waitForInvisible(".webjetAnimatedLoader", 40);
       this.wait(0.3);
     },
 
     jstreeReset() {
       this.clickCss("button.buttons-jstree-settings");
-      this.waitForElement("#jstreeSettingsModal");
+      this.waitForElement("#jstreeSettingsModal", 10);
+      this.waitForVisible("#jstree-settings-showid", 10);
       this.uncheckOption("#jstree-settings-showid");
       this.uncheckOption("#jstree-settings-showorder");
       this.uncheckOption("#jstree-settings-showpages");
@@ -511,8 +529,7 @@ module.exports = function () {
         this.click(locate('div.dropdown-menu.show .dropdown-item').withText(type));
       }
       this.clickCss('#tree-folder-search-button');
-      this.wait(0.3);
-      this.waitForInvisible("div.dt-processing", 40);
+      this.jstreeWaitForLoader();
     },
 
     //vo vlastnostiach adresaru nastavi parent adresar na korenovy
@@ -530,7 +547,7 @@ module.exports = function () {
               break;
       }
 
-      this.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
+      this.clickCss('.btn.btn-outline-secondary.btn-webjet-jstree-item-edit'); // zmena na korenovy adresar
       this.waitForElement("div.jsTree-wrapper");
       this.wait(1);
       this.waitForText(rootgroupName, 5);
@@ -625,20 +642,24 @@ module.exports = function () {
       this.fillField('#DTE_Field_navbar', auto_webPage);
 
       if (disabled === true) {
-        // vypni zobrazenie web stranky a vyhladanie cez vyhladavace
+        // Disable page availability and search indexing.
         this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-        this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+        this.checkOption('#DTE_Field_searchable_1');
       }
 
       // Pridanie textu do obsahu
       this.clickCss('#pills-dt-datatableInit-content-tab');
-      this.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-      this.waitForElement("span.cke_toolbox");
-      this.wait(2);
-      this.waitForElement('#trEditor', 10);
-      this.clickCss('#trEditor');
-
+      this.waitForFunction(() => {
+        const editor = window.ckEditorInstance;
+        return editor?.status === 'ready' && editor.mode === 'wysiwyg'
+          && editor.editable()?.$?.isConnected;
+      }, [], 20);
+      // Focus the editable body, not its outer container, before typing the fixture text.
+      this.switchTo('.cke_wysiwyg_frame.cke_reset');
+      this.clickCss('#WebJETEditorBody');
       this.type(content);
+      this.waitForText(content, 10, '#WebJETEditorBody');
+      this.switchTo();
 
       if (perexDates) {
         // Nastav datumy v perex tabe
@@ -667,6 +688,12 @@ module.exports = function () {
       this.click(edit_webpage);
       this.dtWaitForEditor();
       this.waitForText('Obsah', 10);
+      this.clickCss('#pills-dt-datatableInit-content-tab');
+      this.waitForFunction(() => {
+        const editor = window.ckEditorInstance;
+        return editor?.status === 'ready' && editor.mode === 'wysiwyg'
+          && editor.editable()?.$?.isConnected;
+      }, [], 20);
       this.switchTo('.cke_wysiwyg_frame.cke_reset');
       this.waitForText('is an autotest', 10); //bez this, pretoze to sa potom zmeni na Toto
       this.switchTo();

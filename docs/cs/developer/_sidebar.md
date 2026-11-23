@@ -5,12 +5,14 @@
 - Instalace a spuštění
     - [Instalace a spuštění](/developer/install/README.md)
     - [Development Containers](/developer/install/devcontainers/README.md)
+    - [Generování SBOM](/developer/install/sbom.md)
+    - [Social Media Feeds](/developer/install/social-media-feed.md)
 - Použité frameworky
     - [Použité frameworky](/developer/frameworks/README.md)
     - [Bootstrap](/developer/frameworks/bootstrap.md)
     - [PugJS](/developer/frameworks/pugjs.md)
     - [Thymeleaf](/developer/frameworks/thymeleaf.md)
-    - [Vue.js](/developer/frameworks/vue.md)
+    - [Web komponenty](/developer/frameworks/web-components.md)
     - [Spring DATA + REST](/developer/frameworks/spring.md)
     - [WebJET JavaScript funkce](/developer/frameworks/webjetjs.md)
     - [Přechod ze Struts do Spring](/developer/frameworks/struts/README.md)
@@ -61,6 +63,7 @@
     - [Automatické testování DataTables](/developer/testing/datatable.md)
     - [DataTables - testování importu](/developer/testing/datatable-import.md)
     - [Generování screenshotů dokumentace](/developer/testing/screenshots.md)
+    - [Nahrávání prezentačních videí](/developer/testing/video.md)
     - [Reporty přes Allure](/developer/testing/allure.md)
     - [Pokrytí kódem](/developer/testing/codecoverage.md)
     - [Paralelní spuštění testů](/developer/testing/parallel.md)
@@ -87,7 +90,9 @@
 - Řešení problémů
   - [Možné chyby](/developer/troubles/README.md)
 - Požadavky na vývoj
+    - [Použití AI skills](/developer/guidelines/ai-skills.md)
     - [Práce s Git/Gitlab](/developer/guidelines/gitlab.md)
+    - [Práce s Git worktrees](/developer/guidelines/worktrees.md)
     - [Definice hotového - Definition of Done](/developer/guidelines/definition-of-done.md)
     - [Názvosloví termínů/výrazů](/developer/guidelines/terms.md)
 - Deployment

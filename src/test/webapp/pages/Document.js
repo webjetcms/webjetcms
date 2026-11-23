@@ -154,7 +154,7 @@ module.exports = {
       I.waitForElement(".toastr-buttons button.btn-primary", 10);
       I.waitForText(i18n.get("You need to reload the page to change the domain."), 10, ".toastr-message");
       I.wait(0.5);
-      var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText(i18n.get("Confirm"));
+      var btn = locate("#toast-container-webjet .toastr-buttons button.btn-primary").withText(i18n.get("Submit"));
       I.waitForElement(btn);
       I.click(btn);
       I.say("Domain switched to: "+domain+" DO NOT FORGET TO LOGOUT AFTER THIS SCENARIO otherwise you will be logged in with wrong domain");
@@ -162,16 +162,20 @@ module.exports = {
   },
 
   /**
-   * Set configuration value
-   * @param {*} name
-   * @param {*} value
+   * Sets a configuration value, optionally until the next application restart.
+   * @param {string} name - configuration variable name
+   * @param {string} value - configuration value
+   * @param {boolean} [temporary=false] - apply the value without persisting it
    */
-  setConfigValue(name, value) {
+  setConfigValue(name, value, temporary = false) {
     I.amOnPage("/admin/v9/settings/configuration/");
-    I.clickCss("button.buttons-create");
+    I.waitForVisible("#configurationDatatable_wrapper button.buttons-create", 20);
+    DT.waitForLoader("configurationDatatable");
+    I.clickCss("#configurationDatatable_wrapper button.buttons-create");
     DTE.waitForEditor("configurationDatatable");
     I.fillField("#DTE_Field_name", name);
     I.fillField("#DTE_Field_value", value);
+    if (temporary) DTE.clickSwitch("temporary_0");
     DTE.save();
 
   },
@@ -180,10 +184,7 @@ module.exports = {
    * reset editorType force mode to pageBuilder (default)
    */
   resetPageBuilderMode() {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/");
-    I.executeScript(function () {
-        window.WJ.setAdminSetting("editorTypeForced", "pageBuilder");
-    });
+    this.setEditorMode("pageBuilder");
   },
 
   /**
@@ -192,9 +193,13 @@ module.exports = {
    */
   setEditorMode(mode) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    // Navigation can finish before the administration bundle has initialized WJ.
+    I.waitForFunction(() => typeof window.WJ?.setAdminSetting === "function", [], 20);
     I.executeScript(function (mode) {
         window.WJ.setAdminSetting("editorTypeForced", mode);
     }, mode);
+    // setAdminSetting starts an asynchronous POST but does not return its promise.
+    I.waitForFunction(() => window.jQuery.active === 0, [], 20);
   },
 
   /**
@@ -370,11 +375,19 @@ module.exports = {
    * @returns
    */
   getProtocol() {
-    let url = process.env.CODECEPT_URL;
+    let url = this.getBaseUrl();
     let protocol = "http";
     if (url.startsWith("https")) {
       protocol = "https";
     }
     return protocol;
+  },
+
+  /**
+   * Returns the web application's base URL configured in the Playwright helper.
+   * @returns {string} Configured application URL.
+   */
+  getBaseUrl() {
+    return codeceptjs.config.get().helpers.Playwright.url;
   }
 }

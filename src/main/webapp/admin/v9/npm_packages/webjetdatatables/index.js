@@ -49,6 +49,7 @@ import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
 import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
+import * as fieldTypeButtonGroup from './field-type-button-group';
 import * as fieldTypeIcon from './field-type-icon';
 import * as fieldTypeOptions from './field-type-options';
 import * as fieldTypeOptionsSimple from './field-type-options-simple';
@@ -58,7 +59,9 @@ import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
 import * as RowReorder from './row-reorder';
 import * as FooterSum from './footer-sum';
+import {initDateTimeAccessibility} from './datetime-accessibility';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
+import {MoreActions} from './more-actions';
 import {EditorAi} from './editor-ai'
 
 const bootstrap = window.bootstrap = require('bootstrap');
@@ -89,6 +92,7 @@ require('datatables.net-rowreorder-bs5');
 //require('datatables.net-scroller-bs5');
 require('datatables.net-select-bs5');
 require('datatables.net-datetime');
+initDateTimeAccessibility();
 
 export const dataTableInit = options => {
 
@@ -122,6 +126,7 @@ export const dataTableInit = options => {
     ];
     DATA.url = options.url ? options.url : null;
     DATA.editorId = options.editorId ? options.editorId : "id";
+    DATA.reloadRowKey = options.reloadRowKey ? options.reloadRowKey : DATA.editorId;
     DATA.onXhr = options.onXhr ? options.onXhr : null;
     DATA.onPreXhr = options.onPreXhr ? options.onPreXhr : null;
     DATA.json = null;
@@ -150,6 +155,8 @@ export const dataTableInit = options => {
     DATA.keyboardSave = (typeof options.keyboardSave !== "undefined") ? options.keyboardSave : true;
     DATA.stateSave = (typeof options.stateSave !== "undefined") ? options.stateSave : true;
     DATA.autoHeight = (typeof options.autoHeight !== "undefined") ? options.autoHeight : true;
+    //https://datatables.net/ref/core/option/autoWidth
+    DATA.autoWidth = (typeof options.autoWidth !== "undefined") ? options.autoWidth : true;
     DATA.customFieldsUpdateColumns = (typeof options.customFieldsUpdateColumns !== "undefined") ? options.customFieldsUpdateColumns : false;
     DATA.customFieldsUpdateColumnsPreserveVisibility = (typeof options.customFieldsUpdateColumnsPreserveVisibility !== "undefined") ? options.customFieldsUpdateColumnsPreserveVisibility : false;
     //If we have editor that we dont close after save, but we want to update editor data after save
@@ -227,6 +234,7 @@ export const dataTableInit = options => {
         style: "btn btn-sm btn-outline-secondary",
         width: "100%",
         liveSearch: true,
+        liveSearchPlaceholder: WJ.translate('datatables.defaults.search.js'),
         noneSelectedText: '\xa0', //nbsp
         multipleSeparator: " + "
     };
@@ -243,12 +251,177 @@ export const dataTableInit = options => {
         container: "body",
         style: "btn btn-outline-secondary",
         liveSearch: true,
+        liveSearchPlaceholder: WJ.translate('datatables.defaults.search.js'),
         showSubtext: true,
         noneSelectedText: '\xa0', //nbsp
         multipleSeparator: " + "
     };
 
-    const DIALOG_BUTTONS = '<div class="dialog-buttons"><button class="btn btn-outline-secondary show-help" onclick="WJ.showHelpWindow()" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"><i class="ti ti-help" aria-hidden="true"></i></button><button class="btn btn-outline-secondary maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button><button class="btn btn-outline-secondary minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip" ><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button></div>';
+    const DIALOG_BUTTONS = '<div class="dialog-buttons"><button type="button" tabindex="0" class="btn btn-outline-secondary show-help" onclick="WJ.showHelpWindow()" aria-label="' + WJ.translate('button.help') + '" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"><i class="ti ti-help" aria-hidden="true"></i></button><button type="button" tabindex="0" class="btn btn-outline-secondary maximize" aria-label="'+WJ.translate("datatables.modal.maximize.js")+'" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"><i class="ti ti-arrows-maximize" aria-hidden="true"></i></button><button type="button" tabindex="0" class="btn btn-outline-secondary minimize" aria-label="'+WJ.translate("datatables.modal.minimize.js")+'" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip" ><i class="ti ti-arrows-minimize" aria-hidden="true"></i></button></div>';
+
+    function getEditorFocusableElements(modal) {
+        return $(modal).find('button, [href], input:not([type="hidden"]), select, textarea, [contenteditable="true"], [tabindex]')
+            .filter(function() {
+                return $(this).is(':visible') && !this.disabled && $(this).attr('tabindex') !== '-1';
+            });
+    }
+
+    /**
+     * Returns the first visible and enabled DTE field marked for initial focus.
+     *
+     * @param {Object} dte DataTables Editor instance.
+     * @returns {Object|null} Matching DataTables Editor field.
+     */
+    function getPriorityEditorField(dte) {
+        for (const fieldName of dte.fields()) {
+            const field = dte.field(fieldName);
+            const $field = $(field.node());
+            const hasPriority = $field.hasClass('focus-priority') || $field.find('.focus-priority').length > 0;
+
+            if (hasPriority && field.enabled() && $field.is(':visible')) return field;
+        }
+
+        return null;
+    }
+
+    function handleEditorFieldError(editor, error) {
+        const field = editor.field(error.name);
+
+        if (field.type() === 'datetime') {
+            field.node().scrollIntoView({block: 'nearest'});
+            return;
+        }
+
+        field.focus();
+    }
+
+    function customizeDateRequiredErrorMessages(editor, json) {
+        if (!Array.isArray(json?.fieldErrors)) return;
+
+        for (const error of json.fieldErrors) {
+            const field = DATA.fields.find(item => item.name === error.name);
+            if (field?.required !== true || editor.field(error.name).val()) continue;
+
+            if (field?.renderFormat === 'dt-format-date') {
+                error.status = WJ.translate('datatables.field.required.date.error.js');
+            } else if (field?.renderFormat === 'dt-format-date-time') {
+                error.status = WJ.translate('datatables.field.required.datetime.error.js');
+            }
+        }
+    }
+
+    function configureEditorAccessibility(dte, action) {
+        const modal = document.getElementById(dte.TABLE.DATA.id + '_modal');
+        if (modal == null) return;
+
+        const $modal = $(modal);
+        const title = $modal.find('.DTE_Header h5.modal-title').first();
+        const titleId = dte.TABLE.DATA.id + '_modal-title';
+
+        title.attr('id', titleId);
+        $modal.attr({
+            'aria-labelledby': titleId,
+            'aria-modal': 'true',
+            'role': 'dialog'
+        });
+
+        $modal.find('.DTE_Header button.show-help, .DTE_Header button.maximize, .DTE_Header button.minimize, .DTE_Header button.btn-close-editor')
+            .attr('type', 'button')
+            .attr('tabindex', '0');
+
+        $modal.find('.DTE_Field.required').each(function() {
+            const $field = $(this);
+            $field.find('input:not([type="hidden"]), select, textarea, [contenteditable="true"]')
+                .not('.bs-searchbox input, .dt-search input, .dataTables_filter input')
+                .attr('aria-required', 'true');
+            $field.find('.bootstrap-select > button[role="combobox"]').attr('aria-required', 'true');
+        });
+
+        $modal.off('keydown.wjDteFocusTrap').on('keydown.wjDteFocusTrap', function(event) {
+            if (event.key !== 'Tab' || $(event.target).closest('.DTED')[0] !== modal) return;
+
+            const focusableElements = getEditorFocusableElements(modal);
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (event.shiftKey && document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement.focus();
+            } else if (!event.shiftKey && document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+            }
+        });
+
+        const focusState = $modal.attr('data-dte-focus-state');
+        if (focusState === 'scheduled' || focusState === 'ready') return;
+
+        // CKEditor can finish after a dialog was closed or reopened. The token prevents
+        // an obsolete asynchronous request from stealing focus from the user.
+        const focusRequest = {};
+        $modal.data('dteFocusRequest', focusRequest);
+        const isCurrentFocusRequest = function() {
+            return $modal.data('dteFocusRequest') === focusRequest &&
+                $modal.attr('data-dte-focus-state') === 'scheduled' &&
+                $modal.hasClass('show');
+        };
+        const completeFocusRequest = function() {
+            if (!isCurrentFocusRequest()) return;
+            $modal.off('.wjDteDefaultFocus');
+            $modal.removeData('dteFocusRequest');
+            $modal.attr('data-dte-focus-state', 'ready');
+        };
+
+        $modal.attr('data-dte-focus-state', 'scheduled');
+        $modal.off('.wjDteDefaultFocus').on('pointerdown.wjDteDefaultFocus keydown.wjDteDefaultFocus', function(event) {
+            if (!isCurrentFocusRequest() || event.originalEvent?.isTrusted !== true) return;
+
+            const cancelDefaultFocus = function() {
+                if (!isCurrentFocusRequest() || !modal.contains(document.activeElement)) return;
+                completeFocusRequest();
+            };
+
+            if (event.type === 'pointerdown') setTimeout(cancelDefaultFocus, 0);
+            else cancelDefaultFocus();
+        });
+
+        setTimeout(async function() {
+            if (!isCurrentFocusRequest()) return;
+
+            const priorityField = action === 'remove' ? null : getPriorityEditorField(dte);
+            if (priorityField != null) {
+                let focused;
+                if (typeof priorityField.focusWhenReady === 'function') {
+                    focused = await priorityField.focusWhenReady(isCurrentFocusRequest);
+                } else {
+                    priorityField.focus();
+                    focused = priorityField.node().contains(document.activeElement);
+                }
+
+                if (!isCurrentFocusRequest()) return;
+                if (focused) {
+                    completeFocusRequest();
+                    return;
+                }
+            }
+
+            let focusTarget = $modal.find('.DTE_Body input:not([type="hidden"]), .DTE_Body select, .DTE_Body textarea, .DTE_Body [contenteditable="true"]')
+                .filter(function() {
+                    return $(this).is(':visible') && !this.disabled && $(this).attr('tabindex') !== '-1';
+                })
+                .first()[0];
+
+            if (action === 'remove') {
+                focusTarget = $modal.find('.DTE_Footer button.btn-close-editor:visible:not(:disabled)').first()[0];
+            }
+            if (focusTarget == null) {
+                focusTarget = getEditorFocusableElements(modal).first()[0];
+            }
+
+            if (focusTarget != null) focusTarget.focus({preventScroll: true});
+            completeFocusRequest();
+        }, 0);
+    }
 
     function filterColumnsByPerms(columns) {
         var filtered = [];
@@ -347,7 +520,7 @@ export const dataTableInit = options => {
 
         //console.log("RefreshRow, url=", url, "id=", id);
 
-        $.ajax({
+        return $.ajax({
             url: url,
             success: function (json) {
                 //console.log("refreshSuccess, TABLE=", TABLE, "row=", TABLE.row, "id=", DATA.editorId);
@@ -366,7 +539,7 @@ export const dataTableInit = options => {
                 } catch (e) {console.log(e);}
 
                 //toto sa nemoze volat, pretoze to vyvola ajax request na server (pri serverSide: true) TABLE.draw(false);
-                callback(json);
+                callback?.(json);
             }
         });
     }
@@ -757,7 +930,7 @@ export const dataTableInit = options => {
                     //console.log("checkbox: ", col.editor.options);
                 }
 
-                if ("select" === col.editor.type || "radio" === col.editor.type) {
+                if ("select" === col.editor.type || "radio" === col.editor.type || "buttonGroup" === col.editor.type) {
                     //ak mame true/false select box, aj tomu musime zmenit value na true/false namiesto String hodnot
                     if (col.editor.options) {
                         fixOptionsValueType(col.editor.options);
@@ -919,19 +1092,21 @@ export const dataTableInit = options => {
 
             if (typeof dte._bootstrapDisplay != "undefined") {
                 //okno uz bolo raz otvorene, len ho teraz znova showni
-                $("#" + dte._bootstrapDisplay.id).modal("show");
-                //firni event
-                WJ.dispatchEvent('WJ.DTE.open', {
-                    dte: dte,
-                    id: dte.TABLE.DATA.id,
-                });
-                setTimeout(()=> {
+                const modalElement = document.getElementById(dte._bootstrapDisplay.id);
+                modalElement.addEventListener('shown.bs.modal', function() {
+                    configureEditorAccessibility(dte, dte.mode());
                     WJ.dispatchEvent('WJ.DTE.opened', {
                         dte: dte,
                         id: dte.TABLE.DATA.id,
                         action: dte.mode()
                     });
-                }, 100);
+                }, {once: true});
+                $(modalElement).modal("show");
+                //firni event
+                WJ.dispatchEvent('WJ.DTE.open', {
+                    dte: dte,
+                    id: dte.TABLE.DATA.id,
+                });
                 return;
             }
 
@@ -952,7 +1127,7 @@ export const dataTableInit = options => {
                     '<div class="modal-dialog modal-dialog-scrollable" />' +
                 '</div>'
                 ),
-                close: $('<button class="close btn-close-editor" data-toggle="tooltip" title="' + WJ.translate("datatables.modal.close.js") + '"><i class="ti ti-x"></i>')
+                close: $('<button type="button" tabindex="0" class="close btn-close-editor" aria-label="' + WJ.translate("datatables.modal.close.js") + '" data-toggle="tooltip" title="' + WJ.translate("datatables.modal.close.js") + '"><i class="ti ti-x" aria-hidden="true"></i></button>')
             }
             dom.close.off('click.dte-bs5');
             dom.close.on('click', function () {
@@ -1041,6 +1216,37 @@ export const dataTableInit = options => {
             //if it is opened by WJ.openDialog like passkey.pug insert editor into modal-body-content
             if (isInModalDialog) modalContainer = "#modalIframe .modal-body .modal-body-content";
             $(dom.content)
+                .off('.wjDteLifecycle')
+                .on('show.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    const $modal = $(this);
+                    $modal
+                        .removeData('dteFocusRequest')
+                        .off('.wjDteDefaultFocus')
+                        .attr('data-dte-focus-state', 'pending')
+                        .attr('data-dte-close-state', 'open');
+                })
+                .on('hide.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    $(this)
+                        .removeData('dteFocusRequest')
+                        .off('.wjDteDefaultFocus')
+                        .attr('data-dte-close-state', 'closing');
+                })
+                .on('hidden.bs.modal.wjDteLifecycle', function (event) {
+                    if (event.target !== this) return;
+                    const $modal = $(this);
+                    let target = dte._wjFocusReturnElement;
+                    if (target == null || !document.contains(target) || target.disabled) {
+                        target = $('#' + dte.TABLE.DATA.id + '_wrapper button[data-dtbtn="' + dte._wjFocusReturnButton + '"]:visible:not(:disabled)')[0];
+                    }
+                    if (target != null) WJ.focusWithoutTooltip(target);
+
+                    // Focus handlers may reopen the editor; do not mark that new dialog as closed.
+                    if ($modal.attr('data-dte-close-state') === 'closing') {
+                        $modal.attr('data-dte-close-state', 'closed');
+                    }
+                })
                 .one('shown.bs.modal', function () {
                     // Can only give elements focus when shown
                     if ( dte.s.setFocus ) {
@@ -1122,7 +1328,7 @@ export const dataTableInit = options => {
         //fix prace s datumami, DTED z nepochopitelnych dovodov pouzije moment len pre string hodnotu
         let originalDateTimeSetFunction = $.fn.dataTable.Editor.fieldTypes.datetime.set;
         $.fn.dataTable.Editor.fieldTypes.datetime.set = function (conf, val) {
-            val = ""+val;
+            val = val == null ? "" : ""+val;
 
             if ("dt-format-duration" === conf.renderFormat) {
                 conf._input.val(dtConfig.renderDuration(val, "editor", null, null));
@@ -1147,6 +1353,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
         $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
+        $.fn.dataTable.Editor.fieldTypes.buttonGroup = fieldTypeButtonGroup.typeButtonGroup();
         $.fn.dataTable.Editor.fieldTypes.icon = fieldTypeIcon.typeIcon();
         $.fn.dataTable.Editor.fieldTypes.options = fieldTypeOptions.typeOptions();
         $.fn.dataTable.Editor.fieldTypes.optionsSimple = fieldTypeOptionsSimple.typeOptionsSimple();
@@ -1173,33 +1380,26 @@ export const dataTableInit = options => {
         $.fn.dataTable.ext.buttons.editRefresh = {
             extend: 'edit',
             text: WJ.translate('button.edit'),
-            action: function (e, dt, node, config) {
+            action: async function (e, dt, node, config) {
+                const ids = dt.rows({selected: true}).ids().toArray();
+                if (!ids.length) return;
                 this.processing(true);
 
-                // Get currently selected row ids
-                const selectedRows = dt.rows({selected: true}).ids();
-                //console.log("selectedRows=", selectedRows);
-                const that = this;
-                const rowsLength = selectedRows.length;
-
-                for (let i=0; i<rowsLength; i++) {
-                    refreshRow(selectedRows[i], function (json) {
-                        //console.log("fetched, i=", i, "json=", json);
-                        if ((i+1)>=rowsLength) {
-                            //console.log("Finished, opening editor");
-                            that.processing(false);
-                            const event = new CustomEvent('WJ.DTE.xhrfetch', {
-                                detail: {
-                                    json: json
-                                }
-                            });
-                            //console.log("Dispatching event: ", event);
-                            window.dispatchEvent(event);
-                            setTimeout(()=> {
-                                $.fn.dataTable.ext.buttons.edit.action.call(that, e, dt, node, config);
-                            }, 100);
-                        }
-                    });
+                try {
+                    const results = await Promise.allSettled(ids.map(id => refreshRow(id)));
+                    if (results.some(result => result.status === 'rejected')) {
+                        WJ.notifyError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
+                        return;
+                    }
+                    // refreshRow already reported any application error in a successful HTTP response.
+                    if (results.some(result => result.value.error)) return;
+                    const json = results[results.length - 1].value;
+                    window.dispatchEvent(new CustomEvent('WJ.DTE.xhrfetch', { detail: { json } }));
+                    setTimeout(() => {
+                        $.fn.dataTable.ext.buttons.edit.action.call(this, e, dt, node, config);
+                    }, 100);
+                } finally {
+                    this.processing(false);
                 }
             }
         };
@@ -1241,7 +1441,7 @@ export const dataTableInit = options => {
 
         //pocet poloziek v strankovani (v paticke)
         //sirku ratame podla kontajnera, lebo tabulka este nema _wrapper a ked ma vela stlpcov je siroka
-        let tableWidth = $("#"+DATA.id).parents("div.ly-container.container,div.col-md-8").width();
+        let tableWidth = $("#"+DATA.id).parents("main.ly-container.container,div.col-md-8").width();
         //console.log("tableWidth=", tableWidth, "id=", DATA.id);
         $.fn.DataTable.ext.pager.numbers_length = 10;
         if (false === DATA.nestedModal && tableWidth>800) {
@@ -1295,6 +1495,7 @@ export const dataTableInit = options => {
                 main: {
                     onEsc: false,
                     onBackground: false,
+                    onFieldError: handleEditorFieldError,
                     onReturn: false
                 }
             },
@@ -1312,7 +1513,7 @@ export const dataTableInit = options => {
                 },
                 remove: {
                     button: WJ.translate('button.delete'),
-                    title: '<clas="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.delete') + '</h5></div><div class="col-sm-8"></div></div>',
+                    title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.delete') + '</h5></div><div class="col-sm-8"></div></div>',
                     submit: '<i class="ti ti-trash"></i> ' + WJ.translate('button.delete'),
                     confirm: {
                         _: '<div class="form-group row"><div class="col-sm-7 offset-sm-4"><h5>' + WJ.translate('datatables.prompt.delete.files.js') + '</h5></div></div>',
@@ -1368,6 +1569,8 @@ export const dataTableInit = options => {
             // upravi multiple volne polia
             prepareCustomFieldsDataBeforeSend(data, me);
 
+            if (action !== "remove" && !CustomFields.validateJsonEditors(me)) return false;
+
             /*if (action !== 'remove') {
 
                 $.each($(e.target.dom.wrapper).find("[data-dt-validation]"), function (k, v) {
@@ -1392,7 +1595,12 @@ export const dataTableInit = options => {
             }*/
         });
 
+        EDITOR.on('postSubmit', function (e, json) {
+            customizeDateRequiredErrorMessages(EDITOR, json);
+        });
+
         EDITOR.on('opened', function (e, type, action) {
+            configureEditorAccessibility(EDITOR, action);
             setTimeout(()=> {
                 WJ.dispatchEvent('WJ.DTE.opened', {
                     dte: EDITOR,
@@ -1430,13 +1638,45 @@ export const dataTableInit = options => {
             });
             window.dispatchEvent(eventClose);
         });
+        EDITOR.on('postRemove', function () {
+            if (DATA.serverSide === false) {
+                // Adjust the page before Editor redraws a last page that no longer exists.
+                const info = TABLE.page.info();
+                if (info.length <= 0 || DATA.paging === false) return;
+                // The filtered record count still includes removed rows until the next draw.
+                const remainingRows = TABLE.rows({ search: "applied" }).data().length;
+                const page = Math.min(info.page, Math.max(0, Math.ceil(remainingRows / info.length) - 1));
+                if (info.page !== page) TABLE.page(page);
+            }
+        });
         EDITOR.on('submitSuccess', function (e, json, data, action) {
             //console.log("Editor.on submitSuccess, json=", json, "DATA=", DATA, "data=", data, "action=", action);
             if (DATA.isLocalJson === false) {
                 setTimeout(function() {
                     if (json.forceReload === true) {
                         //serverSide is reloading by datatable directly
-                        if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
+                        if (EDITOR.TABLE.DATA.serverSide===false) {
+                            // Follow the edited row or preserve the page after deletion.
+                            const originalPage = TABLE.page();
+                            const resetPaging = action !== "edit" && action !== "remove";
+                            const getReloadRowKey = $.fn.dataTable.util.get(DATA.reloadRowKey);
+                            const savedKey = action === "edit" && json.data?.length === 1
+                                ? getReloadRowKey(json.data[0]) : null;
+
+                            TABLE.ajax.reload(function () {
+                                if (resetPaging) return;
+                                const info = TABLE.page.info();
+                                if (info.length <= 0 || DATA.paging === false) return;
+
+                                const indexes = TABLE.rows({ order: "applied", search: "applied" }).indexes().toArray();
+                                const position = savedKey == null ? -1 : indexes.findIndex(index =>
+                                    getReloadRowKey(TABLE.row(index).data()) === savedKey
+                                );
+                                let page = Math.min(originalPage, Math.max(0, info.pages - 1));
+                                if (position >= 0) page = Math.floor(position / info.length);
+                                if (info.page !== page) TABLE.page(page).draw("page");
+                            }, resetPaging);
+                        }
 
                         //publishni reload event, napr. pre jstree
                         const eventReload = new CustomEvent('WJ.DTE.forceReload', {
@@ -1484,21 +1724,42 @@ export const dataTableInit = options => {
 
         if (DATA.fetchOnCreate) {
             //ak je zapnute volanie servera pre novy zaznam zavolame ajax a pockame na data pre novy zaznam (napr. pre web stranku)
-            EDITOR.on('initCreate', function (e) {
-                return new Promise(function (resolve, reject) {
+            EDITOR.on('initCreate', function () {
+                return new Promise(function (resolve) {
                     let url = TABLE.getAjaxUrl();
                     const q = url.indexOf("?");
                     if (q === -1) url = url + "/-1";
                     else url = url.substring(0, q) + "/-1" + url.substring(q);
 
+                    const onError = (xhr, status, error) => {
+                        console.error("Error loading editor defaults:", xhr?.status, error || status || xhr);
+                        const resetCancellation = () => {
+                            EDITOR.off('preOpen', cancelOpen);
+                            EDITOR.off('initCreate initEdit initRemove', resetCancellation);
+                        };
+                        const cancelOpen = () => {
+                            resetCancellation();
+                            return false;
+                        };
+                        // A hidden create does not fire preOpen; clear cancellation on the next initialization.
+                        EDITOR.one('preOpen', cancelOpen);
+                        EDITOR.one('initCreate initEdit initRemove', resetCancellation);
+                        WJ.notifyError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
+                        // Editor only handles fulfilled initialization promises; preOpen cancels this failed attempt.
+                        resolve();
+                    };
+
                     $.ajax({
                         url: url,
                         success: function (json) {
-                            //console.log("EDITOR=", EDITOR, " json=", json);
-                            //EDITOR.vals( json );
-                            EDITOR.setJson(json);
-                            resolve(); // Editor continues after this
-                        }
+                            try {
+                                EDITOR.setJson(json);
+                                resolve();
+                            } catch (error) {
+                                onError(error);
+                            }
+                        },
+                        error: onError
                     });
                 });
             });
@@ -1533,28 +1794,28 @@ export const dataTableInit = options => {
                     //console.log("tabsFolders 1", DATA.tabsFolders);
                     editorHasTabs = true;
 
+                    const visibleTabs = DATA.tabsFolders.filter(tab => {
+                        if (typeof tab.perms != "undefined" && true === nopermsJavascript[tab.perms]) return false;
+                        if (true === tab.hideOnCreate && "create" == action) return false;
+                        if (true === tab.hideOnEdit && "edit" == action) return false;
+                        return true;
+                    });
+                    // Fall back when the configured default is hidden for this user or action.
+                    // Keep tab.selected unchanged so the configured default is restored when available.
+                    const selectedTab = visibleTabs.find(tab => tab.selected) || visibleTabs[0];
+
                     //taby
                     let tabsHtml = "";
                     tabsHtml += '<div class="md-tabs">';
                     tabsHtml += '<ul class="nav" id="pills-dt-editor-' + DATA.id + '" role="tablist">';
-                    for (let i = 0; i < DATA.tabsFolders.length; i++) {
-                        var tab = DATA.tabsFolders[i];
-
-                        if (typeof tab.perms != "undefined") {
-                            //skontroluj prava
-                            let tabPerm = nopermsJavascript[tab.perms];
-                            //console.log("tab.perms=", tab.perms, "noperms=", tabPerm);
-                            if (true === tabPerm) continue;
-                        }
-
-                        if (true === tab.hideOnCreate && "create"==action) continue;
-                        if (true === tab.hideOnEdit && "edit"==action) continue;
-
+                    for (let i = 0; i < visibleTabs.length; i++) {
+                        const tab = visibleTabs[i];
+                        const selected = tab === selectedTab;
                         var hasContent = tab.hasOwnProperty("content");
                         var classNameAppend = "";
                         if (typeof tab.className != "undefined") classNameAppend = " "+tab.className;
                         tabsHtml += '<li class="nav-item' + classNameAppend + '" role="presentation">';
-                        tabsHtml += '<a class="nav-link' + (tab.selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + tab.selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
+                        tabsHtml += '<a class="nav-link' + (selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
                         tabsHtml += '</li>';
                     }
                     tabsHtml += '</ul>';
@@ -1585,18 +1846,17 @@ export const dataTableInit = options => {
                             });
 
                             window.dispatchEvent(event);
-                        })
+                        });
+                        // Initialize the effective default tab after its panes and handlers are ready.
+                        if (selectedTab) {
+                            $("#pills-dt-" + DATA.id + "-" + selectedTab.id + "-tab").trigger("click");
+                        }
                     }, 100);
 
-                    //ak je content na prvom tabe musime aj setnut dialogu has-content
-                    if (DATA.tabsFolders[0].hasOwnProperty("content")) $("#" + DATA.id + "_modal div.DTE_Body.modal-body").addClass("has-content");
-                    //pri reopene zobraz prvy tab
+                    if (selectedTab && selectedTab.hasOwnProperty("content")) $("#" + DATA.id + "_modal div.DTE_Body.modal-body").addClass("has-content");
                     if (editorWasOpened) {
-                        //console.log("#pills-dt-"+DATA.id+"-"+DATA.tabsFolders[0].id+"-tab");
-                        setTimeout(function () {
-                            //znova klikni na prvy tab
-                            $("#pills-dt-" + DATA.id + "-" + DATA.tabsFolders[0].id + "-tab").trigger("click");
-                        }, 100);
+                        // Clear persistent panes even when no tabs are available.
+                        $('#' + DATA.id + '_modal div.dte-tab-pane').removeClass("active show");
                     }
 
                     //prve otvorenie editora
@@ -1614,7 +1874,7 @@ export const dataTableInit = options => {
                             if (tab.hasOwnProperty("content")) {
                                 content = tab.content;
                             }
-                            tabsHtml = '<div id="pills-dt-' + DATA.id + '-' + tab.id + '" class="dte-tab-pane tab-pane fade' + (tab.selected ? ' show active' : '') + '" role="tabpanel" aria-labelledby="pills-dt-' + DATA.id + '-' + tab.id + '-tab">';
+                            tabsHtml = '<div id="pills-dt-' + DATA.id + '-' + tab.id + '" class="dte-tab-pane tab-pane fade' + (tab === selectedTab ? ' show active' : '') + '" role="tabpanel" aria-labelledby="pills-dt-' + DATA.id + '-' + tab.id + '-tab">';
                             tabsHtml += '<div class="panel-body" id="panel-body-dt-' + DATA.id + '-' + tab.id + '">' + content + '</div>';
                             tabsHtml += '</div>';
 
@@ -1693,7 +1953,10 @@ export const dataTableInit = options => {
 
                 //prepinanie maximalizacie okna, je to vzdy, kedze HTML kod headeru sa replacne pri kazdom otvoreni
                 $('#' + DATA.id + '_modal div.DTE_Header div.dialog-buttons .maximize, #' + DATA.id + '_modal div.DTE_Header div.dialog-buttons .minimize').on("click", function() {
-                    $('#' + DATA.id + '_modal div.modal-dialog').toggleClass("modal-fullscreen");
+                    const $modalDialog = $('#' + DATA.id + '_modal div.modal-dialog');
+                    $modalDialog.toggleClass("modal-fullscreen");
+                    const focusSelector = $modalDialog.hasClass("modal-fullscreen") ? 'button.minimize' : 'button.maximize';
+                    $('#' + DATA.id + '_modal div.DTE_Header div.dialog-buttons ' + focusSelector).focus();
                     dtWJ.resizeTabContent(EDITOR);
                     WJ.dispatchEvent('WJ.DTE.resize', {
                         dte: EDITOR
@@ -1719,10 +1982,11 @@ export const dataTableInit = options => {
 
                         if (tooltipText.length > 0 && !tooltipText.match("^data:")) {
                             //console.log("Tooltiptext=", tooltipText);
-                            tooltipText = WJ.parseMarkdown(tooltipText);
-                            tooltipText = WJ.escapeHtml(tooltipText);
-                            //console.log("Tooltiptext parsed=", tooltipText);
-                            $(el).parents('[data-dte-e="input"]').after('<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="ti ti-info-circle"></i></button></div>');
+                            var tooltipButton = $('<button type="button" class="btn btn-link btn-tooltip" data-toggle="tooltip" data-html="true"></button>');
+                            tooltipButton.attr('title', tooltipText);
+                            tooltipButton.attr('aria-label', WJ.translate('button.help'));
+                            tooltipButton.append('<i class="ti ti-info-circle" aria-hidden="true"></i>');
+                            $(el).parents('[data-dte-e="input"]').after($('<div class="col-sm-1 form-group-tooltip"></div>').append(tooltipButton));
                         }
 
                         $(el).hide();
@@ -1799,12 +2063,7 @@ export const dataTableInit = options => {
                         }
                     });
 
-                    $('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]').tooltip({
-                        placement: 'top',
-                        trigger: 'hover',
-                        html: true,
-                        delay: { "show": 300, "hide": 0 }
-                    });
+                    WJ.initTooltip($('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]'));
 
                     $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').each(function () {
                         const $select = $(this);
@@ -1824,12 +2083,7 @@ export const dataTableInit = options => {
                 }
 
                 //console.log("Setting tooltips header");
-                $('#' + DATA.id + '_modal .DTE_Header [data-toggle*="tooltip"]').tooltip({
-                    placement: 'top',
-                    trigger: 'hover',
-                    html: true,
-                    delay: { "show": 300, "hide": 0 }
-                });
+                WJ.initTooltip($('#' + DATA.id + '_modal .DTE_Header [data-toggle*="tooltip"]'));
 
                 if (editorWasOpened === false) {
 
@@ -2004,6 +2258,17 @@ export const dataTableInit = options => {
         if (DATA.fetchOnEdit) editButtonExtends = "editRefresh";
 
 
+        const setCellEditMode = function(enabled) {
+            const control = $('#' + DATA.id + '_wrapper [data-dtbtn="celledit"]');
+            const editableCells = $(dataTableInit).find('tbody td:not(.cell-not-editable)');
+
+            $('body').toggleClass('datatable-cell-editing', enabled);
+            control.toggleClass('enabled', enabled);
+            control.attr('aria-pressed', enabled ? 'true' : 'false');
+            if (enabled) editableCells.attr('tabindex', '0');
+            else editableCells.removeAttr('tabindex');
+        };
+
         var buttonsList = [];
 
         if (hasPermission("create")) {
@@ -2098,26 +2363,22 @@ export const dataTableInit = options => {
         if (hasPermission("edit")) {
             buttonsList.push({
                 tag: "div",
-                text: ` <input type="checkbox" class="form-check-input" id="dtAllowCellEdit" value="true" aria-label="${WJ.translate('datatables.button.celledit.js')}" />
-                        <label class="form-check-label is-icon-arrows-v" for="dtAllowCellEdit"></label>`,
+                text: ` <span class="form-check-input" aria-hidden="true"></span>
+                        <span class="form-check-label is-icon-arrows-v" aria-hidden="true"></span>`,
                 className: 'custom-control form-switch buttons-select-cel',
+                clickBlurs: false,
                 attr: {
-                    title: "", //set to empty because arua is on input checkbox
+                    title: "",
                     "data-bs-title": WJ.translate('datatables.button.celledit.js'),
                     "data-toggle": "tooltip",
                     "data-dtbtn": "celledit",
-                    "aria-label": "",
-                    "aria-controls": ""
+                    "aria-controls": DATA.id,
+                    "aria-label": WJ.translate('datatables.button.celledit.js'),
+                    "aria-pressed": "false",
+                    "role": "button"
                 },
                 action: function (e, node, el) {
-                    //console.log("action, el=", el, "disbled=", $(el).hasClass("is-disabled"));
-                    if ($(el).hasClass("enabled")) {
-                        $('body').removeClass("datatable-cell-editing");
-                        $(el).removeClass("enabled");
-                    } else {
-                        $('body').addClass("datatable-cell-editing");
-                        $(el).addClass("enabled");
-                    }
+                    setCellEditMode($(el).hasClass("enabled") === false);
                 }
             });
         }
@@ -2267,7 +2528,11 @@ export const dataTableInit = options => {
                     postfixButtons: [
                         {
                             className: 'dropdown-divider',
-                            tag: 'div'
+                            tag: 'div',
+                            attr: {
+                                "aria-hidden": "true",
+                                "tabindex": "-1"
+                            }
                         },
                         {
                             text: '<i class="ti ti-check"></i> ' + WJ.translate('button.save'),
@@ -2516,7 +2781,10 @@ export const dataTableInit = options => {
                         className: 'dropdown-menu dt-dropdown-menu',
                         button: {
                             tag: 'button',
-                            className: 'btn'
+                            className: 'btn',
+                            liner: {
+                                tag: null
+                            }
                         },
                     }
                 },
@@ -2535,11 +2803,7 @@ export const dataTableInit = options => {
                     //console.log("initComplete, TABLE=", TABLE.DATA.id);
                     dtWJ.fixDatatableHeaderInputs(TABLE);
 
-                    $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
-                        placement: 'top',
-                        trigger: 'hover',
-                        delay: { "show": 300, "hide": 0 }
-                    });
+                    WJ.initTooltip($('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]'));
 
                     $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
                         $(item).on("click", function () {
@@ -2815,11 +3079,15 @@ export const dataTableInit = options => {
             //we must construct filters before DT initialization to move it to extfilters, because the column could be hidden after initialization
             dtWJ.initializeHeaderFilters(dataTableSelector, true, DATA, null);
         }
+        let ajaxRequestNumber = 0;
         runDataTables();
         dtWJ.initializeHeaderFilters(dataTableSelector+"_wrapper div.dt-scroll-head table ", false, DATA, TABLE);
 
         function datatable2SpringData(data, fnCallback, oSettings) {
 
+            const requestDraw = data.draw;
+            const requestNumber = ++ajaxRequestNumber;
+            const isCurrentRequest = () => requestNumber === ajaxRequestNumber && !oSettings.bDestroying;
             var sSource = DATA.url;
 
             //console.log("datatable2SpringData, data:", data, "\nfnCallback:", fnCallback, "\noSettings:", oSettings, "\nTABLE:", TABLE, "\nsSource:", sSource);
@@ -3016,7 +3284,7 @@ export const dataTableInit = options => {
 
                 var sourceData = DATA.initialData;
                 var totalElements = sourceData.totalElements;
-                var data = {};
+                var data = { draw: requestDraw };
                 data.data = sourceData.content;
 
                 data.recordsTotal = totalElements;
@@ -3027,11 +3295,13 @@ export const dataTableInit = options => {
                 DATA.initialData = null;
 
                 setTimeout(()=> {
-                    //console.log("initialData: ", data);
+                    // Reject obsolete initial data before DataTables updates JSON, options or application callbacks.
+                    if (!isCurrentRequest()) return;
                     fnCallback(data);
                 }, 10);
 
                 setTimeout(()=> {
+                    if (!isCurrentRequest()) return;
                     //porovnaj sortovanie, ak nesedi voci inicialnemu, musis reloadnut
                     //console.log("sort=", TABLE.order(), "init=", TABLE.DATA.order);
                     if (JSON.stringify(TABLE.order())!=JSON.stringify(TABLE.DATA.order)) {
@@ -3043,27 +3313,44 @@ export const dataTableInit = options => {
             else {
                 //console.log(DATA.id+" url=", url, "data=", restParams);
 
+                // Preserve the last successful rows, metadata and totals without emitting success events.
+                function finishWithError(title, message, notify = true) {
+                    if (!isCurrentRequest()) return;
+                    if (!oSettings._bInitComplete) {
+                        $(oSettings.nTBody).find("td.dt-empty").text(message);
+                    }
+                    // DataTables 2.x keeps bDrawing set while awaiting server data and otherwise ignores processing(false).
+                    oSettings.bDrawing = false;
+                    new $.fn.dataTable.Api(oSettings).processing(false);
+                    if (notify) WJ.notifyError(title, message);
+                }
+
                 //finally, make the request
-                $.ajax({
+                return $.ajax({
                     "dataType": 'json',
                     "type": "GET",
                     "url": url,
                     "data": restParams,
                     "success": function (sourceData) {
-                        //console.log("sourceData=", sourceData);
+                        // DataTables emits xhr and replaces its JSON before checking draw, so filter obsolete responses here.
+                        if (!isCurrentRequest()) return;
+                        if (sourceData == null) {
+                            finishWithError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
+                            return;
+                        }
 
                         if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
                             if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
-                                WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
+                                finishWithError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
                                 return;
                             } else {
-                                WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);
+                                finishWithError(WJ.translate("datatables.error.title.js"), sourceData.error);
                                 return;
                             }
                         }
 
                         var totalElements = sourceData.totalElements;
-                        var data = {};
+                        var data = { draw: requestDraw };
                         data.data = sourceData.content;
 
                         data.recordsTotal = totalElements;
@@ -3074,6 +3361,12 @@ export const dataTableInit = options => {
 
                         //WJ.log("fnCallback2, data=", data);
                         fnCallback(data);
+                    },
+                    "error": function (xhr, textStatus) {
+                        // DataTables aborts the previous client-side request when starting a new reload.
+                        if (textStatus === "abort") return;
+                        // Global Ajax status handlers already display login and CSRF messages for these statuses.
+                        finishWithError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"), xhr.status !== 401 && xhr.status !== 403);
                     }
                 });
             }
@@ -3135,6 +3428,7 @@ export const dataTableInit = options => {
                         columns: DATA.columns,
                         serverSide: DATA.serverSide,
                         processing: true, //Feature control the processing indicator.
+                        autoWidth: DATA.autoWidth,
                         rowId: DATA.editorId,
                         order: DATA.order,
                         paging: DATA.paging,
@@ -3179,7 +3473,7 @@ export const dataTableInit = options => {
                          * - old values
                          * - new values
                          */
-                        const newUrl = DATA.url.split("?")[0] + "/row-reorder";
+                        const newUrl = WJ.urlAddPath(DATA.url, "/row-reorder");
                         const reorderData = {
                             dataSrc: edit.dataSrc,
                             values: diff.map(diffValue => ({
@@ -3238,6 +3532,7 @@ export const dataTableInit = options => {
                 TABLE = $datatableInit.DataTable({
                     data: DATA.src.data,
                     serverSide: false,
+                    autoWidth: DATA.autoWidth,
                     rowId: DATA.editorId,
                     columns: DATA.columns,
                     order: DATA.order,
@@ -3315,6 +3610,29 @@ export const dataTableInit = options => {
                 }, 50);
             });
 
+            $('#' + DATA.id + '_wrapper').on('keydown.wjCellEditToggle', '[data-dtbtn="celledit"]', function(event) {
+                if (event.key !== ' ') return;
+                event.preventDefault();
+                $(this).trigger('click');
+            });
+
+            $(dataTableInit).on('keydown.wjCellEdit', 'tbody td:not(.cell-not-editable)', function(event) {
+                if ($('body').hasClass('datatable-cell-editing') === false || event.target !== this || (event.key !== 'Enter' && event.key !== ' ')) return;
+                event.preventDefault();
+                event.stopPropagation();
+            });
+
+            $(dataTableInit).on('keyup.wjCellEdit', 'tbody td:not(.cell-not-editable)', function(event) {
+                if ($('body').hasClass('datatable-cell-editing') === false || event.target !== this || (event.key !== 'Enter' && event.key !== ' ')) return;
+                event.preventDefault();
+                event.stopPropagation();
+                $(this).trigger('click');
+            });
+
+            TABLE.on('draw.dt.wjCellEditAccessibility', function() {
+                if ($('body').hasClass('datatable-cell-editing')) setCellEditMode(true);
+            });
+
             // aktivuj rezim uprava bunky / bubble
             $(dataTableInit).on('click', 'tbody td', function (e) {
 
@@ -3346,18 +3664,28 @@ export const dataTableInit = options => {
                         //console.log("colIndex=", colIndex, "datatableColumn=", datatableColumn, "columnName=", columnName, "cell=", TABLE.cell(that));
 
                         EDITOR.bubble($(that), {
-                            focus: null,
+                            focus: columnName,
                             buttons: [
                                 {
-                                    text: "<i class='ti ti-check'></i>",
+                                    text: "<i class='ti ti-check' aria-hidden='true'></i>",
                                     className: 'btn btn-primary',
+                                    attr: {
+                                        'aria-label': WJ.translate('button.submit'),
+                                        'title': WJ.translate('button.submit'),
+                                        'type': 'button'
+                                    },
                                     action: function () {
                                         this.submit();
                                     }
                                 },
                                 {
-                                    text: "<i class='ti ti-x'></i>",
+                                    text: "<i class='ti ti-x' aria-hidden='true'></i>",
                                     className: 'btn btn-outline-secondary',
+                                    attr: {
+                                        'aria-label': WJ.translate('button.cancel'),
+                                        'title': WJ.translate('button.cancel'),
+                                        'type': 'button'
+                                    },
                                     action: function () {
                                         this.close();
                                     }
@@ -3371,21 +3699,18 @@ export const dataTableInit = options => {
                         let selector = "div.DTE_Field_Name_"+columnName.replace(/\./gi, "\\.");
                         selector = selector.replace("_editorFields-", "_editorFields\\.");
                         //console.log("selector=", selector, "columnName=", columnName);
-                        $(selector).addClass("show");
-                        setTimeout(function() {
-                            //presun kurzor do inputu
-                            let selector = "div.DTE_Field_Name_"+columnName.replace(/\./gi, "\\.")+".show input";
-                            let element = $(selector);
-                            //console.log("Done, selector=", selector, " element=", element);
-                            if (element.length>0 && (element[0].type === "text" || element[0].type === "textarea")) {
-                                try {
-                                    element[0].focus();
-                                    element[0].setSelectionRange(0,0);
-                                } catch (e) {}
-                            }
-                        }, 700);
+                        const visibleField = $(selector).addClass("show");
+                        const fieldLabel = visibleField.find('label').first().text().trim();
+                        if (fieldLabel.length > 0) {
+                            visibleField.find('input:not([type="hidden"]), textarea, select, [contenteditable="true"]').attr('aria-label', fieldLabel);
+                        }
+                        const bubble = $('div.DTE_Bubble').last();
+                        bubble
+                            .addClass('wj-cell-edit-dialog')
+                            .attr('role', 'dialog')
+                            .attr('aria-label', WJ.translate('datatables.button.celledit.js'));
                         //reposition the bubble according to element size
-                        var liner = $("div.DTE_Bubble_Liner");
+                        var liner = bubble.find("div.DTE_Bubble_Liner");
                         if (liner.find("div.DTE_Field_Type_quill").length>0) liner.addClass("type_quill");
                         else liner.removeClass("type_quill");
 
@@ -3613,6 +3938,10 @@ export const dataTableInit = options => {
         }
     };
 
+    const moreActions = new MoreActions(TABLE);
+    TABLE.addMoreAction = config => moreActions.addButton(config);
+    (options.moreActions || []).forEach(config => TABLE.addMoreAction(config));
+
     TABLE.hideButtons = function (names) {
         for (let i = 0; i < names.length; i++) {
             TABLE.hideButton(names[i]);
@@ -3621,17 +3950,20 @@ export const dataTableInit = options => {
 
     TABLE.hideButton = function (name) {
         $('#' + DATA.id + '_wrapper [data-dtbtn=' + name + ']').hide();
+        TABLE.buttons().nodes().filter('[data-dtbtn="' + name + '"]').hide();
+        moreActions.updateVisibility();
     };
 
     TABLE.showButton = function (name) {
         $('#' + DATA.id + '_wrapper [data-dtbtn=' + name + ']').show();
+        TABLE.buttons().nodes().filter('[data-dtbtn="' + name + '"]').show();
+        moreActions.updateVisibility();
     };
 
     //vypne rezim editacie bunky (ak je nahodou zapnuty)
     TABLE.cellEditOff = function() {
         //console.log("cellEditOff");
-        $('body').removeClass("datatable-cell-editing");
-        $('#' + DATA.id + '_wrapper [data-dtbtn=celledit]').removeClass("enabled");
+        setCellEditMode(false);
     }
 
     TABLE.wjCreate = function () {
@@ -3802,6 +4134,8 @@ export const dataTableInit = options => {
             }
         }
         if ("remove"===action) {
+            // WebJET uses separate modals; omit parent titles from the removal dialog.
+            $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content").html(EDITOR.title());
             var selectedRows = TABLE.rows({ selected: true }).data();
             var titles = $("<ul>");
             if (selectedRows.length>0) {
@@ -3820,7 +4154,50 @@ export const dataTableInit = options => {
 
     TABLE.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
         //console.log( 'Button ', buttonApi, 'config=', config );
+        const focusReturnButton = $(node).attr('data-dtbtn');
+        if (["create", "edit", "duplicate", "remove"].includes(focusReturnButton)) {
+            EDITOR._wjFocusReturnElement = $(node)[0];
+            EDITOR._wjFocusReturnButton = focusReturnButton;
+        }
+
+        if (typeof config.className != "undefined" && config.className.indexOf("buttons-page-length")!=-1) {
+            var pageLengthCollection = $(node).parent().children("div.dt-button-collection");
+            var pageLengthButtons = pageLengthCollection.find("button.button-page-length");
+            var pageLengthLabel = WJ.translate('datatables.button.pagelength.js');
+
+            pageLengthCollection.attr("aria-label", pageLengthLabel);
+            pageLengthCollection.children("ul[role=menu]")
+                .addClass("page-length-menu")
+                .attr("role", "presentation");
+
+            if (pageLengthButtons.parent("div.page-length-options").length == 0) {
+                pageLengthButtons.wrapAll("<div class='page-length-options' role='listbox'></div>");
+            }
+
+            pageLengthButtons.attr("role", "option");
+            pageLengthButtons.parent("div.page-length-options").attr("aria-label", pageLengthLabel);
+
+            var updatePageLengthSelectedState = function() {
+                pageLengthButtons.attr("aria-selected", function() {
+                    return $(this).hasClass("dt-button-active-a") ? "true" : "false";
+                });
+            };
+            updatePageLengthSelectedState();
+            TABLE.off("length.dt.wjPageLengthA11y").on("length.dt.wjPageLengthA11y", updatePageLengthSelectedState);
+            pageLengthButtons.first().trigger("focus");
+        }
+
         if (typeof config.className !="undefined" && config.className.indexOf("buttons-colvis")!=-1 && $('#' + DATA.id + '_wrapper button.buttons-columnVisibility').parents("div.colvisbtn_wrapper").length<1) {
+
+            // Keep valid menu semantics and avoid nested interactive <a> inside <button>.
+            $('#' + DATA.id + '_wrapper button.buttons-columnVisibility, #' + DATA.id + '_wrapper button.colvis-prefix, #' + DATA.id + '_wrapper button.colvis-postfix').each(function() {
+                var button = $(this);
+                var nestedLink = button.children('a.dropdown-item');
+                if (nestedLink.length > 0) {
+                    button.html(nestedLink.html());
+                }
+                button.attr('role', 'menuitem');
+            });
 
             $('#' + DATA.id + '_wrapper button.buttons-columnVisibility span[data-toggle*="tooltip"]').tooltip({
                 placement: 'top',
@@ -3846,7 +4223,35 @@ export const dataTableInit = options => {
         }
     } );
 
+    const updateRowSelectionAccessibility = function() {
+        $('#' + DATA.id + ' tbody tr').each(function() {
+            const $row = $(this);
+            const hasSelectionTarget = $row.is(DATA.toggleSelector) || $row.find(DATA.toggleSelector).length > 0;
+
+            if (hasSelectionTarget === false) {
+                $row.removeAttr('tabindex aria-selected');
+                return;
+            }
+
+            $row.attr({
+                'aria-selected': $row.hasClass('selected') ? 'true' : 'false',
+                'tabindex': '0'
+            });
+        });
+    };
+
+    $(dataTableSelector).off('keydown.wjRowSelection').on('keydown.wjRowSelection', 'tbody tr[tabindex="0"]', function(event) {
+        if (event.target !== this || (event.key !== 'Enter' && event.key !== ' ')) return;
+
+        event.preventDefault();
+        const row = TABLE.row(this);
+        if ($(this).hasClass('selected')) row.deselect();
+        else row.select();
+    });
+
     TABLE.on('select.dt.DT deselect.dt.DT draw.dt.DT', function () {
+        updateRowSelectionAccessibility();
+
         var anySelected = TABLE.rows({selected: true}).any();
         //change select-all icon depending on selected rows
         var icon = $("#"+DATA.id+"_wrapper div.dt-scroll-head table thead th.dt-format-selector button.buttons-select-all i.ti");
@@ -3858,6 +4263,7 @@ export const dataTableInit = options => {
             icon.addClass("ti-square-check")
         }
     });
+    updateRowSelectionAccessibility();
 
     window.addEventListener("WJ.DTE.opened", function() {
         dtWJ.resizeTabContent(EDITOR);

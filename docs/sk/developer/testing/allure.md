@@ -22,6 +22,12 @@ Proces generovania reportu je komplikovanejší z dôvodu zachovania histórie. 
 
 Celý proces je v skripte ```npx-allure.sh```, ktorý pred spustením testu stiahne posledné výsledky z dokumentačného servera a po vykonaní testu ich na dokumentačný server uloží.
 
+Skript postupne spustí Java testy (`./gradlew test`) a CodeceptJS, ktorý zahŕňa E2E aj [JavaScript helper testy](README.md#testy-javascript-funkcií-a-komponentov). Ak niektorá skupina zlyhá, pokračuje ďalšími testami a generovaním reportu, ale na konci vráti nenulový návratový kód, aby pipeline nezobrazila úspech. Samostatné spustenie `./gradlew test` helper testy nespúšťa.
+
+Výsledky helper testov nájdete priamo v Allure v suite `helpers.node-tests`. Súbor `tests/helpers/node-tests.js` automaticky vytvorí jeden CodeceptJS scenár pre každý súbor `helpers/*.test.js`. Scenár spustí daný súbor cez Node.js a priloží jeho kompletný výpis ako textovú prílohu, aj pri úspešnom výsledku. Zlyhanie niektorého testu označí príslušný scenár ako neúspešný; v prílohe vidno názov konkrétneho testu a podrobnosti chyby. Helper testy sa v skripte nespúšťajú druhýkrát samostatne.
+
+Aj pri E2E testovaní vo Firefoxe používajú helper testy, ktoré potrebujú prehliadač, vlastný Chromium. Pre lokálne spustenie iba tejto suite použite `npm run all -- tests/helpers/node-tests.js` z priečinka `src/test/webapp`.
+
 Skript sa používa s parametrami:
 
 - ```CODECEPT_BROWSER``` - meno použitého prehliadača - ```chromium``` alebo ```firefox``` (predvolene ```chromium```)

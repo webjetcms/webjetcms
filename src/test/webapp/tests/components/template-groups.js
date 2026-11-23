@@ -1,9 +1,36 @@
 Feature('components.template-groups');
 
+var seoGroupName;
+var seoDescriptionSk;
+var seoDescriptionCz;
+var seoImage;
+var seoImageAltSk;
+var seoImageAltCz;
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
+
+    if (typeof seoGroupName === "undefined") {
+        const randomText = I.getRandomText();
+        seoGroupName = `seo-defaults-autotest-${randomText}`;
+        seoDescriptionSk = `seo-description-sk-autotest-${randomText}`;
+        seoDescriptionCz = `seo-description-cz-autotest-${randomText}`;
+        seoImage = `/images/gallery/seo-default-autotest-${randomText}.png`;
+        seoImageAltSk = `seo-image-alt-sk-autotest-${randomText}`;
+        seoImageAltCz = `seo-image-alt-cz-autotest-${randomText}`;
+    }
 });
+
+function openSeoTab(I) {
+    I.clickCss("#pills-dt-datatableInit-seo-tab");
+}
+
+function switchBreadcrumbLanguage(language, I, DT) {
+    I.click({css: "div.breadcrumb-language-select"});
+    I.click(locate('.dropdown-item').withText(language));
+    DT.waitForLoader();
+}
 
 Scenario('template-groups-zakladne testy @baseTest', async ({ I, DataTables }) => {
     I.see("Názov skupiny");
@@ -13,6 +40,70 @@ Scenario('template-groups-zakladne testy @baseTest', async ({ I, DataTables }) =
         perms: 'menuTemplatesGroup',
         skipSwitchDomain: true
     });
+});
+
+Scenario('lokalizacia a persistencia SEO predvolenych hodnot', ({ I, DT, DTE }) => {
+    I.clickCss("#datatableInit_wrapper button.buttons-create");
+    DTE.waitForEditor();
+    DTE.fillField("name", seoGroupName);
+
+    openSeoTab(I);
+    I.see("Predvolený SEO opis", "div.DTE_Field_Name_description");
+    I.see("Predvolený SEO obrázok", "div.DTE_Field_Name_seoImage");
+    I.see("Predvolený alternatívny text SEO obrázka", "div.DTE_Field_Name_seoImageAlt");
+    DTE.fillField("description", seoDescriptionSk);
+    I.fillField(locate(".DTE_Field_Name_seoImage").find("input.form-control"), seoImage);
+    DTE.fillField("seoImageAlt", seoImageAltSk);
+    DTE.save();
+
+    DT.filterContains("name", seoGroupName);
+    I.click(seoGroupName);
+    DTE.waitForEditor();
+    openSeoTab(I);
+    I.seeInField("#DTE_Field_description", seoDescriptionSk);
+    I.seeInField(locate(".DTE_Field_Name_seoImage").find("input.form-control"), seoImage);
+    I.seeInField("#DTE_Field_seoImageAlt", seoImageAltSk);
+    DTE.cancel();
+
+    switchBreadcrumbLanguage("Český jazyk", I, DT);
+    DT.filterContains("name", seoGroupName);
+    I.click(seoGroupName);
+    DTE.waitForEditor();
+    openSeoTab(I);
+    I.seeElement("div.DTE_Field_Name_description");
+    I.dontSeeInField("#DTE_Field_description", seoDescriptionSk);
+    I.seeInField(locate(".DTE_Field_Name_seoImage").find("input.form-control"), seoImage);
+    I.dontSeeInField("#DTE_Field_seoImageAlt", seoImageAltSk);
+    DTE.fillField("description", seoDescriptionCz);
+    DTE.fillField("seoImageAlt", seoImageAltCz);
+    DTE.save();
+
+    I.click(seoGroupName);
+    DTE.waitForEditor();
+    openSeoTab(I);
+    I.seeInField("#DTE_Field_description", seoDescriptionCz);
+    I.seeInField(locate(".DTE_Field_Name_seoImage").find("input.form-control"), seoImage);
+    I.seeInField("#DTE_Field_seoImageAlt", seoImageAltCz);
+    DTE.cancel();
+
+    switchBreadcrumbLanguage("Slovenský jazyk", I, DT);
+    DT.filterContains("name", seoGroupName);
+    I.click(seoGroupName);
+    DTE.waitForEditor();
+    openSeoTab(I);
+    I.seeInField("#DTE_Field_description", seoDescriptionSk);
+    I.seeInField(locate(".DTE_Field_Name_seoImage").find("input.form-control"), seoImage);
+    I.seeInField("#DTE_Field_seoImageAlt", seoImageAltSk);
+    DTE.cancel();
+});
+
+Scenario('zmazanie SEO testovacej skupiny', async ({ I, DT }) => {
+    DT.filterContains("name", seoGroupName);
+    const visibleRows = await I.grabNumberOfVisibleElements(locate("#datatableInit_wrapper tbody tr").withText(seoGroupName));
+    if (visibleRows > 0) {
+        DT.deleteAll();
+        I.dontSee(seoGroupName, "#datatableInit_wrapper");
+    }
 });
 
 Scenario('ukladanie metadat', ({ I, DT, DTE }) => {

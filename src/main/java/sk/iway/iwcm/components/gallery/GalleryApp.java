@@ -2,8 +2,11 @@ package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -37,6 +40,9 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 @Getter
 @Setter
 public class GalleryApp extends WebjetComponentAbstract {
+
+    private static final String STYLE_FILE_PREFIX = "gallery-";
+    private static final String STYLE_FILE_SUFFIX = ".jsp";
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="components.gallery.visual_style")
     private String style;
@@ -144,37 +150,19 @@ public class GalleryApp extends WebjetComponentAbstract {
 
 		styleOptions.add(new OptionDto(prop.getText("components.gallery.visual_style.prettyPhoto"), "prettyPhoto", null));
 		styleOptions.add(new OptionDto(prop.getText("components.gallery.visual_style.photoSwipe"), "photoSwipe", null));
+		Set<String> addedStyles = new HashSet<>();
+		addedStyles.add("prettyPhoto");
+		addedStyles.add("photoSwipe");
 
-		//add all JSP files from the custom gallery folder
-		IwcmFile[] files = new IwcmFile(Tools.getRealPath("/components/" + Constants.getInstallName() + "/gallery/")).listFiles();
-		for (IwcmFile f : files)
-		{
-			if (f.getName().startsWith("gallery-")==false) continue;
-			if (f.getName().contains("-prettyPhoto.jsp") || f.getName().contains("-photoSwipe.jsp")) continue;
-
-            try
-			{
-				String name = f.getName().substring("gallery-".length(), f.getName().length()-4);
-                addPair(name, styleOptions, prop);
-			}
-			catch (Exception e)
-			{
-				sk.iway.iwcm.Logger.error(e);
-			}
+		//add all JSP files from the installation-specific and common gallery folders
+		for (String name : getStyleNames()) {
+            addPair(name, styleOptions, prop, addedStyles);
 		}
 
 		//check if the current style is in the list
 		if (Tools.isNotEmpty(getStyle()))
 		{
-			boolean found = false;
-			for (OptionDto option : styleOptions)
-			{
-				if (option.getValue().equals(getStyle())) found = true;
-			}
-			if (found == false)
-			{
-				addPair(getStyle(), styleOptions, prop);
-			}
+			addPair(getStyle(), styleOptions, prop, addedStyles);
 		}
 
         options.put("style", styleOptions);
@@ -191,13 +179,59 @@ public class GalleryApp extends WebjetComponentAbstract {
     }
 
     /**
+     * Returns additional gallery styles from the installation-specific directory and the common gallery directory.
+     * The installation-specific directory is processed first to match the rendering priority in gallery.jsp.
+     *
+     * @return unique gallery style names
+     */
+    public static List<String> getStyleNames() {
+        List<IwcmFile> styleDirectories = new ArrayList<>();
+        String installName = Constants.getInstallName();
+        if (Tools.isNotEmpty(installName)) {
+            styleDirectories.add(new IwcmFile(Tools.getRealPath("/components/" + installName + "/gallery/")));
+        }
+        styleDirectories.add(new IwcmFile(Tools.getRealPath("/components/gallery/")));
+
+        return getStyleNames(styleDirectories.toArray(new IwcmFile[0]));
+    }
+
+    static List<String> getStyleNames(IwcmFile... styleDirectories) {
+        Set<String> styleNames = new LinkedHashSet<>();
+        if (styleDirectories == null) return new ArrayList<>(styleNames);
+
+        for (IwcmFile styleDirectory : styleDirectories) {
+            if (styleDirectory == null) continue;
+
+            IwcmFile[] files = styleDirectory.listFiles();
+            if (files == null) continue;
+
+            for (IwcmFile file : files) {
+                if (file == null || file.isFile() == false || file.length()<10) continue;
+
+                String fileName = file.getName();
+                if (fileName.startsWith(STYLE_FILE_PREFIX) == false || fileName.endsWith(STYLE_FILE_SUFFIX) == false) continue;
+                if (fileName.length() <= STYLE_FILE_PREFIX.length() + STYLE_FILE_SUFFIX.length()) continue;
+                if ("gallery-basket.jsp".equals(fileName)) continue; //skip basket style, it is not a visual style
+
+                String styleName = fileName.substring(STYLE_FILE_PREFIX.length(), fileName.length() - STYLE_FILE_SUFFIX.length());
+                styleNames.add(styleName);
+            }
+        }
+
+        return new ArrayList<>(styleNames);
+    }
+
+    /**
      * Try to translate the name of the style and add it to the list of options
      * @param name
      * @param styleOptions
      * @param prop
+     * @param addedStyles
      */
-    private void addPair(String name, List<OptionDto> styleOptions, Prop prop)
+    private void addPair(String name, List<OptionDto> styleOptions, Prop prop, Set<String> addedStyles)
 	{
+		if (addedStyles.add(name) == false) return;
+
 		String desc = prop.getText("components.gallery.visual_style."+name);
 		if (desc.startsWith("components.gallery")) desc = name;
 

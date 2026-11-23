@@ -1,7 +1,38 @@
 import WJ from "../../src/js/webjet";
+import {escapeJsonForHtml} from "./jsoneditor-utils.mjs";
+
+/**
+ * Escapes a raw URL for a quoted HTML attribute without decoding existing entities.
+ * @param {*} url URL as stored in the entity.
+ * @returns {string} HTML attribute text whose parsed value equals the original URL.
+ */
+function escapeUrlAttribute(url) {
+    return String(url ?? "").replaceAll("&", "&amp;").replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
 
 function prepareForSearch(td) {
     return $.fn.DataTable.util.diacritics(td)
+}
+
+/**
+ * Detects a JSON custom-field column from either static column metadata or row field definitions.
+ * @param {Object} rowData Current DataTable row data.
+ * @param {Object} row DataTables render metadata.
+ * @returns {boolean} True when the column must render JSON as literal text.
+ */
+function isJsonEditorColumn(rowData, row) {
+    const column = row.settings.aoColumns[row.col];
+    if (column.editor?.type === "jsoneditor") return true;
+
+    const columnName = column.name || column.data || column.mData;
+    const fields = rowData?.editorFields?.fieldsDefinition;
+    if (columnName == null || Array.isArray(fields) === false) return false;
+
+    return fields.some(field => {
+        const prefix = field.customPrefix || "field";
+        return field.type === "jsoneditor" && prefix + String(field.key).toUpperCase() === columnName;
+    });
 }
 
 export function renderPrefix(row) {
@@ -148,6 +179,7 @@ export function renderTd(row, td, rowData) {
         }
 
         var template = "";
+        const editorType = isJsonEditorColumn(rowData, row) ? "jsoneditor" : row.settings.aoColumns[row.col].editor?.type;
 
         if (typeof row.settings.aoColumns[row.col].renderFormatLinkTemplate != "undefined") {
 
@@ -164,9 +196,14 @@ export function renderTd(row, td, rowData) {
 
             //console.log("Is link, td=", td, " row=", row);
 
-            let linkText = WJ.escapeHtml(td);
-            linkText = linkText.replaceAll("&quot;", "\"");
-            linkText = linkText.replaceAll("&#x3D;", "=");
+            let linkText;
+            if ("jsoneditor" === editorType) {
+                linkText = escapeJsonForHtml(td);
+            } else {
+                linkText = WJ.escapeHtml(td);
+                linkText = linkText.replaceAll("&quot;", "\"");
+                linkText = linkText.replaceAll("&#x3D;", "=");
+            }
 
             let ariaLabel = row.settings.aoColumns[row.col].renderFormatAriaLabel;
             let ariaLabelAttr = "";
@@ -174,21 +211,24 @@ export function renderTd(row, td, rowData) {
                 ariaLabelAttr = ' aria-label="' + ariaLabel + '"';
             }
 
-            if ("quill" === row.settings.aoColumns[row.col].editor?.type) linkText = WJ.htmlToText(td);
+            if ("quill" === editorType) linkText = WJ.htmlToText(td);
 
-            return  '<div class="datatable-column-width"><a href="' + template + '"' + ariaLabelAttr + '>'+ renderPrefix(row) + linkText + renderSuffix(row) + '</a></div>';
+            return  '<div class="datatable-column-width"><a href="' + escapeUrlAttribute(template) + '"' + ariaLabelAttr + '>'+ renderPrefix(row) + linkText + renderSuffix(row) + '</a></div>';
         } else {
-            var text = WJ.htmlToText(td);
+            const isJsonEditor = "jsoneditor" === editorType;
+            var text = isJsonEditor ? escapeJsonForHtml(td) : WJ.htmlToText(td);
             try {
-                var className = row.settings.aoColumns[row.col].className;
-                //console.log("className=", className);
-                if (typeof className != "undefined" && className != null && className.indexOf("allow-html")!=-1) {
-                    //console.log("allowing html, td=", td);
-                    text = td;
-                }
-                if (typeof className != "undefined" && className != null && className.indexOf("show-html")!=-1) {
-                    //console.log("allowing html, td=", td);
-                    text = WJ.escapeHtml(td);
+                if (isJsonEditor === false) {
+                    var className = row.settings.aoColumns[row.col].className;
+                    //console.log("className=", className);
+                    if (typeof className != "undefined" && className != null && className.indexOf("allow-html")!=-1) {
+                        //console.log("allowing html, td=", td);
+                        text = td;
+                    }
+                    if (typeof className != "undefined" && className != null && className.indexOf("show-html")!=-1) {
+                        //console.log("allowing html, td=", td);
+                        text = WJ.escapeHtml(td);
+                    }
                 }
             } catch (e) {}
             //console.log("class: ", row.settings.aoColumns[row.col].className);
@@ -439,10 +479,10 @@ export function renderLink(td, type, rowData, row) {
                 }
             });
 
-            return  "<a href=\"" + template + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
+            return  "<a href=\"" + escapeUrlAttribute(template) + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
         }
 
-        return  "<a href=\"" + td + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
+        return  "<a href=\"" + escapeUrlAttribute(td) + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
 
     }
 }
@@ -454,8 +494,8 @@ export function renderImage(td, type, rowData, row, text=true) {
         return prepareForSearch(td);
     } else {
 
-        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg") || td.endsWith(".webp"))) {
-            let link =  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\"/> ";
+        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg") || td.endsWith(".webp") || td.endsWith(".avif"))) {
+            let link =  "<a href=\"" + escapeUrlAttribute(td) + "\" target=\"_blank\"><img src=\""+escapeUrlAttribute(td)+"\" loading=\"lazy\" alt=\"\"/> ";
             if (true === text) link += renderTd(row, td, rowData);
             link += "</a>";
             return link;

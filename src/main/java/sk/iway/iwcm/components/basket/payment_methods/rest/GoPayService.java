@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.basket.payment_methods.rest;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -28,7 +30,6 @@ import cz.gopay.api.v3.model.payment.support.PayerContact;
 import cz.gopay.api.v3.model.payment.support.PaymentInstrument;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
@@ -119,7 +120,7 @@ public class GoPayService extends BasePaymentMethod {
                 .build();
     }
 
-    private final BasePayment getPayment(BasketInvoiceEntity bie, String returnUrl, PaymentMethodEntity paymentMethod, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
+    final BasePayment getPayment(BasketInvoiceEntity bie, String returnUrl, PaymentMethodEntity paymentMethod, BasketInvoiceItemsRepository biir, BasketInvoicePaymentsRepository bipr) {
         Date currentDate = new Date();
 
         //Prepare payment builder
@@ -131,28 +132,24 @@ public class GoPayService extends BasePaymentMethod {
                 .inLang( bie.getUserLng().toUpperCase() )
                 .toEshop( Long.valueOf(paymentMethod.getFieldD()) );
 
-        //Add itemns to payment
-        BigDecimal totalPriceToPay = new BigDecimal(0);
-        for(BasketInvoiceItemEntity item : biir.findAllByInvoiceIdAndDomainId(bie.getId(), CloudToolsForCore.getDomainId())) {
-            totalPriceToPay = totalPriceToPay.add( item.getItemPriceVatQty() );
-            payment.addItem(
-                basketItemToOrderItem(item)
-            );
-        }
-
+        List<BasketInvoiceItemEntity> items = biir.findAllByInvoiceIdAndDomainId(bie.getId(), CloudToolsForCore.getDomainId());
         BigDecimal totalPayedPrice = ProductListService.getPayedPrice(bie.getId(), bipr);
-        totalPriceToPay = totalPriceToPay.subtract(totalPayedPrice);
-        if(totalPriceToPay.compareTo(BigDecimal.ZERO) < 1) return null;
+        BigDecimal totalPriceToPay = bie.getTotalPriceVat().subtract(totalPayedPrice);
+        if (totalPriceToPay.signum() <= 0) return null;
 
-        totalPriceToPay = totalPriceToPay.setScale(2, java.math.RoundingMode.HALF_EVEN);
+        BigDecimal itemTotal = items.stream().map(item -> item.getItemPriceVatQty().setScale(2, java.math.RoundingMode.HALF_UP))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (itemTotal.compareTo(totalPriceToPay) == 0 && items.stream().allMatch(item -> item.getItemPriceVatQty().signum() >= 0)) {
+            for (BasketInvoiceItemEntity item : items) payment.addItem(basketItemToOrderItem(item));
+        }
 
         //Retrun builded payment
         return
             payment
                 .order(
                     bie.getId().toString(),
-                    bigDecimalPriceToLong( totalPriceToPay ),
-                    Currency.getByCode( BasketTools.getSystemCurrency().toUpperCase() ),
+                    exactMinorUnits(totalPriceToPay),
+                    Currency.getByCode(bie.getCurrency().toUpperCase(Locale.ROOT)),
                     paymentMethod.getFieldG()
                 ).build();
     }
@@ -253,6 +250,8 @@ public class GoPayService extends BasePaymentMethod {
         Long paymentId = Tools.getLongValue(paymentEntity.getRealPaymentId(), -1L);
         if(paymentId < 1) return new RefundationState(RefundationStatus.ERROR, REFUNDATION_FAILED);
 
+        Long refundAmountLong = exactMinorUnits(refundAmount);
+
         PaymentMethodRepository pmr = Tools.getSpringBean(PAYMENT_METHOD_REPOSITORY, PaymentMethodRepository.class);
         PaymentMethodEntity paymentMethod = pmr.findByPaymentMethodNameAndDomainId(this.getClass().getName(), CloudToolsForCore.getDomainId());
         if(paymentMethod == null) {
@@ -275,7 +274,6 @@ public class GoPayService extends BasePaymentMethod {
             if(sessionState == SessionState.PAID || sessionState == SessionState.PARTIALLY_REFUNDED) {
 
                 Long availableAmount = payment.getAmount();
-                Long refundAmountLong = bigDecimalPriceToLong(refundAmount);
 
                 if(availableAmount < refundAmountLong) {
                     adminLogError("Refund amount is higher than available amount.", request);
@@ -320,18 +318,25 @@ public class GoPayService extends BasePaymentMethod {
     }
 
     // SUPPORT THINGS
-    private final OrderItem basketItemToOrderItem(BasketInvoiceItemEntity item) {
+    private static OrderItem basketItemToOrderItem(BasketInvoiceItemEntity item) {
         OrderItem orderItem = new OrderItem();
         orderItem.setName(item.getTitle());
-        orderItem.setAmount( item.getItemPrice().longValue() );
+        orderItem.setAmount(exactMinorUnits(item.getItemPriceVatQty().setScale(2, java.math.RoundingMode.HALF_UP)));
         orderItem.setVatRate(item.getItemVat());
         orderItem.setCount( item.getItemQty().longValue() );
         orderItem.setItemType( ItemType.ITEM );
         return orderItem;
     }
 
-    private final Long bigDecimalPriceToLong(BigDecimal price) {
-        return price.multiply(new BigDecimal(100)).longValue();
+    /**
+     * Converts a finalized EUR or CZK amount to minor units without further rounding.
+     *
+     * @param price finalized payment or line amount
+     * @return exact amount in cents or halere
+     * @throws ArithmeticException if the amount has fractional minor units or exceeds a long
+     */
+    static long exactMinorUnits(BigDecimal price) {
+        return price.movePointRight(2).longValueExact();
     }
 
     @Override

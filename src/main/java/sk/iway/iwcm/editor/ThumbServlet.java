@@ -129,6 +129,10 @@ public class ThumbServlet extends HttpServlet
 			}
 		}
 
+        if (sk.iway.iwcm.doc.PlannedAccess.isPathAccessible("/" + imagePath, request, response)==false) {
+			// user is probably not logged, cant show planned images
+			return;
+		}
 		String ext = FileTools.getFileExtension(imagePath).toLowerCase();
 		if (ImageTools.isResizableImage(imagePath) == false)
 		{
@@ -314,8 +318,8 @@ public class ThumbServlet extends HttpServlet
 			else if (ip == 2) width = height;
 
 			Logger.debug(ThumbServlet.class, "Farba: "+fillColor);
-			//osetrenie stavov
-			if (width > Constants.getInt("imageMaxThumbsWidth") || height > Constants.getInt("imageMaxThumbsHeight") || width < 1 || height < 1 || fillColor.length()!=6)
+			//For ip=1/2, validate the calculated dimension later instead of the placeholder dimension.
+			if ((ip != 2 && width > Constants.getInt("imageMaxThumbsWidth")) || (ip != 1 && height > Constants.getInt("imageMaxThumbsHeight")) || width < 1 || height < 1 || fillColor.length()!=6)
 			{
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				return;
@@ -372,6 +376,7 @@ public class ThumbServlet extends HttpServlet
 					boolean isSizeAllowd = isSizeAllowed(realPathSmall, user);
 					if (isSizeAllowd == false)
 					{
+						Logger.debug(ThumbServlet.class, "Image size not allowed: " + realPathSmall);
 						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 						return;
 					}
@@ -436,7 +441,13 @@ public class ThumbServlet extends HttpServlet
 							//mame zadany len parameter w, h dopocitame podla pomeru stran povodneho vyrezu
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?w=200&ip=1
 							double pomer = (double)cwidth / (double) cheight;
-							height = (int)Math.round(width / pomer);
+							long calculatedHeight = Math.round(width / pomer);
+							if (calculatedHeight < 1 || calculatedHeight > Constants.getInt("imageMaxThumbsHeight"))
+							{
+								response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+								return;
+							}
+							height = (int)calculatedHeight;
 
 							Logger.debug(ThumbServlet.class, "vypocitany h="+height);
 
@@ -447,7 +458,13 @@ public class ThumbServlet extends HttpServlet
 							//mame zadany len parameter h, w dopocitame podla pomeru stran povodneho vyrezu
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?h=200&ip=2
 							double pomer = (double)cwidth / (double) cheight;
-							width = (int)Math.round(height * pomer);
+							long calculatedWidth = Math.round(height * pomer);
+							if (calculatedWidth < 1 || calculatedWidth > Constants.getInt("imageMaxThumbsWidth"))
+							{
+								response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+								return;
+							}
+							width = (int)calculatedWidth;
 
 							Logger.debug(ThumbServlet.class, "vypocitany w="+width);
 
@@ -473,7 +490,7 @@ public class ThumbServlet extends HttpServlet
 							//vyrez moze byt 400x300 a my chceme 300x300, cize ho posunieme o 50 doprava a zmensime na 300x300
 							//http://iwcm.interway.sk:8080/thumb/images/gallery/19-24-mesiacov/DSC06443.JPG?w=200&h=200&ip=5
 
-							Logger.debug(ThumbServlet.class, "\n\nURCI OREZ\n width="+width+" height="+height+" cleft="+cleft+" ctop="+ctop+" cwidth="+cwidth+" cheight="+cheight);
+							Logger.debug(ThumbServlet.class, "URCI OREZ: width="+width+" height="+height+" cleft="+cleft+" ctop="+ctop+" cwidth="+cwidth+" cheight="+cheight);
 
 							//pomer stran urcim ako pomer sirok jednotlivych elementov
 							double pomer = (double)cwidth / (double) width;
@@ -607,6 +624,8 @@ public class ThumbServlet extends HttpServlet
 					}
 					else
 					{
+						Logger.error(ThumbServlet.class, "Thumbnail generation failed for " + imagePath
+							+ ": result=" + ret + ", error=" + ImageTools.getErrorKey(ret));
 						imgPath = Tools.getRealPath("/components/_common/mime/big_unknown.gif");
 					}
 				}
@@ -620,14 +639,11 @@ public class ThumbServlet extends HttpServlet
          }
          if (inFile != null && inFile.exists())
          {
-            //response.setHeader("Pragma", "No-Cache");
-            //response.setDateHeader("Expires", 0);
-            //response.setHeader("Cache-Control", "no-Cache");
-
-            String mimeType = Constants.getServletContext().getMimeType(imagePath.toLowerCase());
+            String mimeType = Constants.getServletContext().getMimeType(inFile.getName().toLowerCase());
             if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
             response.setContentType(mimeType);
 
+            // Cache placeholders by the same policy to avoid repeated conversion attempts on reload.
             PathFilter.setStaticContentHeaders(imagePath, UsersDB.getCurrentUser(request), request, response);
 
             ServletOutputStream out = response.getOutputStream();
@@ -674,11 +690,18 @@ public class ThumbServlet extends HttpServlet
 				conn.setDoOutput(false);
 				conn.connect();
 
-				String mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
-            if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
-            response.setContentType(mimeType);
+				String mimeType = conn.getContentType();
+				if (Tools.isEmpty(mimeType)) mimeType = Constants.getServletContext().getMimeType("/"+imagePath.toLowerCase());
+				if (Tools.isEmpty(mimeType)) mimeType = "application/octet-stream";
+				response.setContentType(mimeType);
 
-            PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
+				// Honor an explicit no-store policy from the rendering node.
+				String cacheControl = conn.getHeaderField("Cache-Control");
+				if (Tools.isNotEmpty(cacheControl) && cacheControl.contains("no-store")) {
+					response.setHeader("Cache-Control", cacheControl);
+				} else {
+					PathFilter.setStaticContentHeaders("/"+imagePath, null, request, response);
+				}
 
 				BufferedInputStream is = new BufferedInputStream(conn.getInputStream());
 				ServletOutputStream os = response.getOutputStream();

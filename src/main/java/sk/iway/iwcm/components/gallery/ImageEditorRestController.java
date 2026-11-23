@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,6 +13,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.users.UsersDB;
 
 @RestController
 @RequestMapping(value = "/admin/rest/image-editor")
@@ -25,8 +28,11 @@ public class ImageEditorRestController {
     }
 
     @PostMapping("/save-area-of-interest")
-    public ResponseEntity<String> saveImageAreaOfInterest(GalleryEntity entity) {
+    public ResponseEntity<String> saveImageAreaOfInterest(GalleryEntity entity, HttpServletRequest request) {
         try {
+            if (!UsersDB.getCurrentUser(request).isFolderWritable(entity.getImagePath())) {
+                return ResponseEntity.notFound().build();
+            }
             GalleryEntity dbEntity = galleryRepository.findByImagePathAndImageNameAndDomainId(entity.getImagePath(), entity.getImageName(), CloudToolsForCore.getDomainId());
             if (dbEntity == null) {
                 dbEntity = new GalleryEntity();

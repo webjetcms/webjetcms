@@ -24,10 +24,18 @@ Sloupec počet použití zobrazuje počet stránek, které danou šablonu použ�
 
 - Jméno instalace - při zobrazení šablony lze změnit jméno instalace, což ovlivňuje použité verze aplikací. Umožňuje pro šablonu použít specificky upravenou aplikaci ve složce `/components/MENO_INSTALACIE/aplikacia/`.
 - Vypnout spam ochranu - spam ochranu vypněte, pokud se stránka v této šabloně načítá pomocí REST služby, případně pokud se jedná o stránku použitou pro hromadný email.
+- Spojky v URL adrese - určuje, zda se při generování části URL z názvu stránky odstraní slova uvedená v konfigurační proměnné `urlRemoveSpojkyList`:
+  - Podle konfigurační proměnné `urlRemoveSpojky` - ​​výchozí možnost, která zachovává globální nastavení.
+  - Odstranit - odstraní spojky i při globálním nastavení `false`.
+  - Ponechat - ponechá spojky i při globálním nastavení `true`.
 - Přesunout styly do `head` - ​​určuje zpracování `<style>` a `<link rel="stylesheet">` značek, které se mohou vygenerovat v těle stránky (např. z komponentů):
   - Podle konfigurační proměnné - použije globální nastavení konfigurační proměnné `showDocMoveStyleToHead`.
   - Zapnuto - pro tuto šablonu vynutí přesun stylů do `<head>` bez ohledu na globální nastavení.
   - Vypnuto - pro tuto šablonu přesun stylů vypne bez ohledu na globální nastavení.
+
+Například pro název stránky „Novinky a články“ vznikne `novinky-clanky.html` nebo `novinky-a-clanky.html`. Nastavení spojek v šabloně nemění předponu URL ze složky. Změna nastavení šablony nespustí hromadný přepočet existujících adres, projeví se při dalším generování URL, například při vytvoření stránky nebo uložení stránky se zapnutým automatickým generováním URL. Již odstraněné spojky se obnoví až novým vygenerováním z názvu.
+
+Pro blog můžete nastavit možnost **Ponechat** a pro zbytek webu používat globálně `urlRemoveSpojky=true`. Pokud blog používá stejnou šablonu jako ostatní stránky, vytvořte pro něj samostatný záznam šablony se stejným HTML/JSP souborem.
 
 Konfigurační proměnná `showDocMoveStyleToHead` slouží jako výchozí hodnota pro celé řešení. Nastavení v šabloně ji může přepsat pro konkrétní layout.
 

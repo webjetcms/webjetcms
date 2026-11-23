@@ -1,7 +1,10 @@
-import { VueTools } from '../../src/js/libs/tools/vuetools';
+import { createWebjetDteJsTree } from '../../src/js/web-components/webjet-dte-jstree';
 import WJ from '../../src/js/webjet';
 
 import * as fieldTypeQuill from './field-type-quill';
+import {initColorPickerAccessibility} from './color-picker-accessibility';
+import {initJsonEditor, resetJsonEditors} from './jsoneditor';
+export {validateJsonEditors} from './jsoneditor';
 
 function getEmptyStringFieldValue() {
     return "";
@@ -103,6 +106,7 @@ function generateUUID() {
 }
 
 export function update(EDITOR, action) {
+    resetJsonEditors(EDITOR);
 
     function fixNullData(data, click) {
         //console.log("fixNullData, data=", data, "click=", click);
@@ -147,22 +151,23 @@ export function update(EDITOR, action) {
     //WJ.log("CustomFields.update, json=", json);
 
     //pomen mena poli
-    var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" data-warningMessage="{warningMessage}" value="{value}" {disabled} class="form-control" type="text">';
+    var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" {disabled} class="form-control" type="text">';
     var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control wrap">{value}</textarea>';
+    var jsonEditorTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control field-type-jsoneditor" spellcheck="false" autocomplete="off"></textarea>';
     var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
     var choiceTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" class="custom-field-choice-value" type="hidden"><div class="custom-field-choice-options">{options}</div>';
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
-    var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
-    var booleanTextTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
+    var booleanTemplate = '<div class="DTE_Field_Type_boolean"><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
+    var booleanTextTemplate = '<div class="DTE_Field_Type_boolean DTE_Field_Type_booleantext"><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
-    var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid" type="text">';
+    var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid custom-field-ai-disabled" type="text">';
     var colorTemplate = `
-        <div class="input-group">
-            <span class="input-group-text color-preview" style="background-color: {value}"></span>
+        <div class="input-group custom-field-ai-disabled">
+            <button class="btn input-group-text color-preview" type="button" style="background-color: {value}" {disabled} aria-label="${WJ.translate("datatables.field.color.title.js")}" aria-haspopup="dialog" aria-expanded="false"></button>
             <input id="DTE_Field_{customPrefix}{identifier}" value="{value}" {disabled} class="form-control" type="text"/>
-            <button class="btn btn-outline-secondary btn-clear" type="button"><i class="ti ti-circle-x"></i></button>
+            <button class="btn btn-outline-secondary btn-clear" type="button" {disabled} aria-label="${WJ.translate("button.reset")}" title="${WJ.translate("button.reset")}"><i class="ti ti-circle-x" aria-hidden="true"></i></button>
         </div>
         <color-picker id="DTE_Field_{customPrefix}{identifier}_picker" label-title="${WJ.translate("datatables.field.color.title.js")}" label-hue="${WJ.translate("datatables.field.color.hue.js")}" label-saturation="${WJ.translate("datatables.field.color.saturation.js")}" label-lightness="${WJ.translate("datatables.field.color.lightness.js")}" label-opacity="${WJ.translate("datatables.field.color.alpha.js")}" label-ok="${WJ.translate("datatables.field.color.ok.js")}"></color-picker>
     `
@@ -195,11 +200,11 @@ export function update(EDITOR, action) {
             //nebolo poslane v datach, ziskajme priamo z JSONu
             value = json[customPrefix+identifier];
         }
-        if(value == null || value == "null") {
+        if(value == null || (value == "null" && v.type !== "jsoneditor")) {
             value = getEmptyStringFieldValue();
         }
         let valueUnescaped = value;
-        if(v.type !== "number" && v.type !== "boolean" && v.type !== "boolean_text" && v.type !== "date" && v.type !== "none")
+        if(v.type !== "number" && v.type !== "boolean" && v.type !== "boolean_text" && v.type !== "date" && v.type !== "none" && v.type !== "jsoneditor")
             value = value.replace(/"/gi, "&quot;");
 
         if("uuid" === v.type) {
@@ -242,10 +247,12 @@ export function update(EDITOR, action) {
         }
 
         //DEFAULT template, "textTemplate"
-        var template = textTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{warningMessage}', 'g'), warningMessage).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        var template = textTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
 
         if (v.type == 'textarea') {
             template = textAreaTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        } else if (v.type == 'jsoneditor') {
+            template = jsonEditorTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'number') {
             template = numberTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'boolean') {
@@ -338,13 +345,13 @@ export function update(EDITOR, action) {
                 backgroundImage = "url("+value+")";
                 prependClassName = " has-image";
             }
-            template = '<div class="input-group"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="ti ti-photo"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
+            template = '<div class="input-group custom-field-image custom-field-ai-disabled"> <span class="input-group-text'+prependClassName+'" style="background-image: '+backgroundImage+';"><i class="ti ti-photo"></i></span> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'link') {
-            template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
+            template = '<div class="input-group custom-field-link custom-field-ai-disabled"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div class="custom-field-ai-disabled"> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'json_group' || v.type == 'json_doc') {
-            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div class="custom-field-ai-disabled"> ' + template + ' <div class="webjet-component" id="DTE_Field_' + customPrefix + identifier + '"></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
@@ -385,6 +392,13 @@ export function update(EDITOR, action) {
         }
 
         inputBox.html(template);
+        if (v.type === "jsoneditor") inputBox.find('textarea').val(valueUnescaped);
+
+        const textInput = inputBox.find("input[data-warninglength]").first();
+        if(textInput.length > 0) {
+            textInput.attr("data-warningmessage", warningMessage);
+            textInput.val(getFieldValue(value, action, v.type));
+        }
 
         if (v.required === true) {
             inputBox.find('input, select, textarea').attr('required', 'required');
@@ -406,7 +420,7 @@ export function update(EDITOR, action) {
         } else {
             field.canReturnSubmit = field.canReturnSubmitOriginal;
         }
-        if ("textarea" == v.type) {
+        if ("textarea" == v.type || "jsoneditor" == v.type) {
             field.canReturnSubmit = function() {
                 return false;
             }
@@ -513,7 +527,9 @@ export function update(EDITOR, action) {
             EDITOR.field(customPrefix + identifier).s.opts._input = inputBox.find('input, select, textarea');
         }
 
-        if (v.type == 'select') {
+        if (v.type == 'jsoneditor') {
+            initJsonEditor(EDITOR, customPrefix + identifier, inputBox.find('textarea')[0], v.required === true);
+        } else if (v.type == 'select') {
             const select = inputBox.find('select');
             const hasSelectedOption = select.find("option:selected").length > 0;
             select.selectpicker(EDITOR.DT_SELECTPICKER_OPTS_EDITOR);
@@ -523,21 +539,26 @@ export function update(EDITOR, action) {
         }
         else if (v.type == 'autocomplete') {
 
-            new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete")
-                    .setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + json.id + '&template=' + json.tempId + '&field=' + identifier)
-                    .transform();
+            const configuredAutocompleteUrl = json.editorFields?.fieldsDefinitionAutocompleteUrl;
+            const autocompleteUrl = configuredAutocompleteUrl || '/admin/FCKeditor/_editor_autocomplete.jsp';
+            const querySeparator = autocompleteUrl.includes('?') ? '&' : '?';
+            const autocomplete = new AutoCompleter("#" + datatable.DATA.id + "_modal .DTE_Field_Name_field" + identifier + " input.autocomplete");
+            if(configuredAutocompleteUrl) autocomplete.setName("term");
+            autocomplete
+                .setUrl(autocompleteUrl + querySeparator + 'keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&className=' + encodeURIComponent(json.editorFields?.fieldsDefinitionClassName || '') + '&objectId=' + (json.editorFields?.fieldsDefinitionEntityId ?? json[datatable.DATA.editorId]) + '&template=' + json.tempId + '&field=' + identifier)
+                .transform();
 
         } else if (v.type == "dir") {
             let conf = {};
             let id = 'DTE_Field_' + customPrefix + identifier;
 
             //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
-            //And first-child because it's text input to hide and second child will be VUE component
+            //The first child is the hidden text input and the second child is the Web Component.
             var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
             textFieldInput.hide();
 
             conf._id = id;
-            conf._el = inputBox.find('div.vueComponent')[0];
+            conf._el = inputBox.find('div.webjet-component')[0];
             conf.className = "dt-tree-dir-simple";
             let dataTableName = datatable.DATA.id;
             conf.jsonData = [{
@@ -545,52 +566,14 @@ export function update(EDITOR, action) {
                 type: "DIR",
                 id: value
             }];
-            const vm = window.VueTools.createApp({
-                components: {},
-                data() {
-                    return {
-                        data: null,
-                        idKey: null,
-                        dataTable: null,
-                        dataTableName: null,
-                        click: null,
-                        attr: null
-                    }
-                },
-                created() {
-                    this.data = fixNullData(conf.jsonData, conf.className);
-                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                    this.idKey = conf._id;
-                    this.dataTableName = dataTableName;
-                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                    const confClassNameArr = conf.className.split(" ");
-                    for (var i=0; i<confClassNameArr.length; i++) {
-                        let className = confClassNameArr[i];
-                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
-                    }
-                    //console.log("click=", this.click);
-                    this.dataTable = EDITOR.TABLE;
-                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-                },
-                methods: {
-                    remove(id) {
-                        //console.log("REMOVE impl, id=", id, "click=", this.click);
-                        let that = this;
-                        this.data = this.data.filter(function( obj ) {
-                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
-                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
-                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
-                            else return obj.id !== id;
-                        });
-                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
-                    }
-                }
-            });
-            VueTools.setDefaultObjects(vm);
-
-            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-            vm.mount(conf._el);
+            conf._el.appendChild(createWebjetDteJsTree({
+                inputElement: textFieldInput[0],
+                dataTableName,
+                dataTable: datatable,
+                mode: conf.className,
+                attributes: conf.attr,
+                value: fixNullData(conf.jsonData, conf.className)
+            }));
         } else if ("uuid"==v.type) {
             //console.log("inputBox=", inputBox);
             var inputField = inputBox.find("input.field-type-uuid");
@@ -615,39 +598,30 @@ export function update(EDITOR, action) {
                 conf._preview.css("background-color", val);
             }
 
-            setTimeout(function() {
-                conf._input.on("click", function() {
-                    conf._picker.setAttribute('open', true);
-                    conf._picker.setAttribute('hex', conf._input.val());
-                });
-                conf._input.parent().find(".color-preview").on("click", function() {
-                    conf._picker.setAttribute('open', true);
-                    conf._picker.setAttribute('hex', conf._input.val());
-                });
-                conf._input.on("change", function() {
-                    const val = conf._input.val();
-                    conf._preview.css("background-color", val);
-                });
+            initColorPickerAccessibility(conf);
+            conf._input.on("change", function() {
+                const val = conf._input.val();
+                conf._preview.css("background-color", val);
+            });
 
-                conf._clear.on("click", function() {
-                    setColor(conf, "");
-                });
+            conf._clear.on("click", function() {
+                setColor(conf, "");
+            });
 
-                conf._picker.addEventListener('update-color', function(e) {
-                    setColor(conf, e.detail.hex);
-                });
-            }, 500);
+            conf._picker.addEventListener('update-color', function(e) {
+                setColor(conf, e.detail.hex);
+            });
         } else if (v.type == "json_group" || v.type == "json_doc") {
             let conf = {};
             let id = 'DTE_Field_' + customPrefix + identifier;
 
             //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
-            //And first-child because it's text input to hide and second child will be VUE component
+            //The first child is the hidden text input and the second child is the Web Component.
             var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
             textFieldInput.hide();
 
             conf._id = id;
-            conf._el = inputBox.find('div.vueComponent')[0];
+            conf._el = inputBox.find('div.webjet-component')[0];
 
             //Prepare className
             if(v.className == undefined || v.className == null || v.className.length < 1) {
@@ -712,52 +686,15 @@ export function update(EDITOR, action) {
             }
 
             let dataTableName = datatable.DATA.id;
-            const vm = window.VueTools.createApp({
-                components: {},
-                data() {
-                    return {
-                        data: null,
-                        idKey: null,
-                        dataTable: null,
-                        dataTableName: null,
-                        click: null,
-                        attr: null
-                    }
-                },
-                created() {
-                    this.data = fixNullData(conf.jsonData, conf.className);
-                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                    this.idKey = conf._id;
-                    this.dataTableName = dataTableName;
-                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                    const confClassNameArr = conf.className.split(" ");
-                    for (var i=0; i<confClassNameArr.length; i++) {
-                        let className = confClassNameArr[i];
-                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
-                    }
-                    //console.log("click=", this.click);
-                    this.dataTable = EDITOR.TABLE;
-                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-                },
-                methods: {
-                    remove(id) {
-                        //console.log("REMOVE impl, id=", id, "click=", this.click);
-                        let that = this;
-                        this.data = this.data.filter(function( obj ) {
-                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
-                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
-                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
-                            else return obj.id !== id;
-                        });
-                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
-                    }
-                }
+            const component = createWebjetDteJsTree({
+                inputElement: textFieldInput[0],
+                dataTableName,
+                dataTable: datatable,
+                mode: conf.className,
+                attributes: conf.attr,
+                value: fixNullData(conf.jsonData, conf.className)
             });
-            VueTools.setDefaultObjects(vm);
-
-            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-            vm.mount(conf._el);
+            inputBox.find('div.webjet-component')[0].appendChild(component);
 
             //return original docId value to field instead of JSON string
             if (typeof v.originalValue != "undefined" && v.originalValue != null) textFieldInput.val(v.originalValue);
@@ -844,7 +781,7 @@ export function update(EDITOR, action) {
             input.on('input', function(){
                 if (dataWarningLength <= input.val().length) {
                     toastr.remove();
-                    WJ.notifyWarning(dataWarningMessage, null, 5000, null);
+                    WJ.notifyWarning(WJ.escapeHtml(dataWarningMessage || ""), null, 5000, null);
                 } else {
                     toastr.remove();
                 }

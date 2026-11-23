@@ -32,6 +32,16 @@ Since only pages with the same content in a different language variant should be
 
 Since the linked structures should be the same, different depths of the parent directories of the linked pages indicate an error between the structures. Unlike **bad mapping**, this may not necessarily be an error, such links are marked for better detection of potential errors.
 
+### Notifications in a tree structure
+
+If you enable both **Web Pages** and **Show Mirroring** in the tree settings, pages with a problem will display a red or yellow warning.
+
+![](../jstree-settings.png)
+
+Clicking on it will open the relevant mapping editor on the **Pages** tab in the **Mirroring** section. When both issues occur, the red warning for bad mapping takes precedence.
+
+![](tree-problems.png)
+
 ## Delete/Unlink
 
 When deleting/unlinking the entire binding, the existing synchronization parameter `syncId` disappears, as it no longer has anything to bind.

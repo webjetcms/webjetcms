@@ -52,6 +52,86 @@ Scenario('file usage', async ({I, DT}) => {
     getFileUsage(I, DT, "#datatableFieldDTE_Field_docDetailsList_processing");
 })
 
+Scenario('folder info omits recursive size while file info keeps size', async ({ I }) => {
+    I.amOnPage('/admin/elFinder/#elf_iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
+    I.waitForElement('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E', 10);
+
+    const sizeRequests = await I.executeScript(() => {
+        const finder = $('#finder').elfinder('instance');
+        const originalGetSize = finder.getSize;
+        let calls = 0;
+        finder.getSize = function() {
+            calls++;
+            return originalGetSize.apply(this, arguments);
+        };
+        finder.getCommand('info').exec(['iwcm_2_L2ltYWdlcy9iYW5uZXJ5']);
+        finder.getSize = originalGetSize;
+        return calls;
+    });
+    I.waitForElement('.elfinder-dialog-info .elfinder-info-tb', 10);
+    I.dontSee('Veľkosť', '.elfinder-dialog-info .elfinder-info-tb');
+    I.assertEqual(sizeRequests, 0, 'Folder info must not calculate recursive size');
+
+    I.clickCss('.elfinder-dialog-info .ui-dialog-titlebar-close');
+    I.executeScript(() => $('#finder').elfinder('instance').getCommand('info').exec([
+        'iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E'
+    ]));
+    I.waitForText('Veľkosť', 10, '.elfinder-dialog-info .elfinder-info-tb');
+});
+
+Scenario('file update accepts one file and does not show progress for validation errors', async ({ I }) => {
+    I.amOnPage('/admin/elFinder/#elf_iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
+    I.waitForElement('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E', 10);
+    I.rightClick('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E');
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjfileupdate');
+    I.waitForElement('.elfinder-upload-dialog-wrapper input[type=file]', 10);
+    I.dontSeeElement('.elfinder-upload-dialog-wrapper .elfinder-upload-dirselect');
+
+    const acceptsMultipleFiles = await I.executeScript(() =>
+        document.querySelector('.elfinder-upload-dialog-wrapper input[type=file]').hasAttribute('multiple'));
+    I.assertFalse(acceptsMultipleFiles, 'The update file picker must accept only one file');
+
+    I.executeScript(() =>
+        document.querySelector('.elfinder-upload-dialog-wrapper input[type=file]').dispatchEvent(new Event('change', { bubbles: true })));
+    I.dontSeeElement('.elfinder-notify-customErrorDialog');
+
+    I.attachFile('.elfinder-upload-dialog-wrapper input[type=file]', 'tests/apps/file-archive/docs/archive_replace.pdf');
+    I.waitForElement('.elfinder-notify-customErrorDialog', 10);
+    const error = await I.executeScript(() => {
+        const finder = $('#finder').elfinder('instance');
+        const message = document.querySelector('.elfinder-notify-customErrorDialog .elfinder-notify-msg').textContent;
+        return { message, expected: finder.i18n('wjfileupdate-typeMismatch') + 'image/png' };
+    });
+    I.assertEqual(error.message, error.expected, 'A wrong file type must show the type mismatch error');
+    I.dontSeeElement('.elfinder-notify-customErrorDialog .elfinder-notify-progressbar');
+});
+
+Scenario('link dialog marks archive volume paths read-only', async ({ I, DTE }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=16');
+    DTE.waitForEditor();
+    I.clickCss('#trEditor');
+    I.clickCss('.cke_button_icon.cke_button__link_icon');
+    I.waitForText('Informácie o odkaze', 10);
+    I.switchTo('#wjLinkIframe');
+    I.waitForElement('#finder .elfinder-navbar', 20);
+
+    const markers = await I.executeScript(() => {
+        const readOnlyMarker = $('#finder').elfinder('instance').options.readOnlyMarker;
+        const file = { read: 1, write: 0, notfound: false };
+        return {
+            archiveRoot: readOnlyMarker({ ...file, virtualPath: '//files/archiv' }),
+            archiveChild: readOnlyMarker({ ...file, virtualPath: '//files//archiv/category' }),
+            otherFolder: readOnlyMarker({ ...file, virtualPath: '//files/archiv-other' }),
+            writableFile: readOnlyMarker({ ...file, virtualPath: '//files/archiv/file.pdf', write: 1 })
+        };
+    });
+    I.assertTrue(markers.archiveRoot, 'The archive volume root must show the read-only marker');
+    I.assertTrue(markers.archiveChild, 'Archive subfolders must show the read-only marker');
+    I.assertFalse(markers.otherFolder, 'Folders outside the archive must keep their usual marker');
+    I.assertFalse(markers.writableFile, 'Writable files must not show the read-only marker');
+});
+
 Scenario('search files', ({I}) => {
 
     //all media/images/apps/
@@ -135,20 +215,21 @@ Scenario('search webpages', ({I}) => {
     I.dontSeeElement("#iwcm_doc_group_volume_L2dyb3VwOjQ5MzM0");
 })
 
-Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
+Scenario('remember last elfinder dir in webpages', ({I, DTE}) => {
+    const imageButton = '.cke_button__image:not(.cke_button_disabled):visible';
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=16");
     DTE.waitForEditor();
-    I.wait(3);
+    DTE.waitForCkeditor();
 
     I.clickCss('#trEditor');
-    if (Browser.isFirefox()) I.wait(2);
     I.clickCss('#trEditor');
     I.pressKey('ArrowDown');
 
     //
     I.say("Opening image dialog and navigating to test folder");
 
-    I.clickCss('.cke_button.cke_button__image.cke_button_off');
+    I.waitForVisible(imageButton, 20);
+    I.clickCss(imageButton);
     I.waitForText('Vlastnosti obrázka', 20);
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
@@ -171,7 +252,8 @@ Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
     //
     I.say("Checking if test folder is selected after reopening image dialog");
 
-    I.clickCss('.cke_button.cke_button__image.cke_button_off');
+    I.waitForVisible(imageButton, 20);
+    I.clickCss(imageButton);
     I.waitForText('Vlastnosti obrázka', 20);
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
@@ -189,13 +271,14 @@ Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
 
     I.click("Trhy sú naďalej vydesené");
     DTE.waitForEditor();
+    DTE.waitForCkeditor();
 
     I.click(locate('#trEditor'), null, { position: { x: 50, y: 250 } });
-    if (Browser.isFirefox()) I.wait(2);
     I.click(locate('#trEditor'), null, { position: { x: 50, y: 250 } });
     I.pressKey('ArrowDown');
 
-    I.clickCss('.cke_button.cke_button__image.cke_button_off');
+    I.waitForVisible(imageButton, 20);
+    I.clickCss(imageButton);
     I.waitForText('Vlastnosti obrázka', 20);
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
@@ -302,6 +385,7 @@ async function testFileDiacritics(I, allowDiacritics) {
     const renamedFolderName = allowDiacritics ? 'ľščťú-žýáíéô' : 'lsctu-zyaieo';
 
     I.amOnPage(pageUrl);
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVz', 20);
 
     I.say('Uploading file with diacritics in name');
     I.click('.elfinder-navbar-wrapper span[id^="nav-iwcm_2_"][title*="files"] .elfinder-navbar-icon');
@@ -329,6 +413,7 @@ async function testFileDiacritics(I, allowDiacritics) {
 
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage(pageUrl);
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVz', 20);
     I.clickCss("#nav-iwcm_2_L2ZpbGVz"); //files
     createFolder(I, 'ľščťú žýáíéô');
     checkCorrectTitle(I, createdFolderName);
@@ -452,6 +537,7 @@ async function deleteTestFiles(I) {
     I.say('Deleting uploaded files');
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVz.ui-state-active', 20);
     let fileNames = ['lsctu-zyaieo.png', 'ľščťú-žýáíéô.png', 'ľščťú žýáíéô.png', 'lsctu zyaieo.png',
         'lsctu-zyaieo', 'ľščťú-žýáíéô', 'ľščťú žýáíéô', 'lsctu zyaieo'];
     for (const fileName of fileNames) {
@@ -461,6 +547,7 @@ async function deleteTestFiles(I) {
     //otherwise hash change will not work
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E");
+    I.waitForVisible('#nav-iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E.ui-state-active', 20);
     fileNames = ['outer', 'inner'];
     for (const fileName of fileNames) {
         await deleteFile(I, fileName);
@@ -484,6 +571,14 @@ async function deleteFile(I, fileName) {
 
 Scenario('BUG 57669 - file size in dir', async ({ I }) => {
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3Rv");
-    I.waitForText("Súčet: 27.09 MB", 10, ".elfinder-statusbar .elfinder-stat-size.elfinder-stat-size-recursive");
-    I.waitForText("Položky: 327", 10, ".elfinder-statusbar .elfinder-stat-size");
+    I.waitForText("Položky: 327", 20, ".elfinder-statusbar .elfinder-stat-size");
+    // Image processing can change fixture sizes; compare the total with the listed files.
+    const expected = await I.executeScript(() => {
+        const finder = $('#finder').elfinder('instance');
+        const files = Object.values(finder.files(finder.cwd().hash));
+        const bytes = files.reduce((sum, file) => sum + Number(file.size), 0);
+        return { bytes, formatted: finder.formatSize(bytes) };
+    });
+    I.assertAbove(expected.bytes, 0);
+    I.waitForText("Súčet: " + expected.formatted, 10, ".elfinder-statusbar .elfinder-stat-size.elfinder-stat-size-recursive");
 });

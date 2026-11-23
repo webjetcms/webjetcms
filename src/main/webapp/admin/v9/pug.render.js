@@ -45,6 +45,15 @@ function compileAllPugPages(options) {
         writeHtmlFile(path.resolve(options.distDir, "views" + page + ".html"), html);
     });
 
+    // Render standalone Thymeleaf fragments without a page layout.
+    const includesDir = path.resolve(options.baseDir, "views/includes");
+    glob.sync("**/*.pug", { cwd: includesDir }).forEach(file => {
+        const outputFile = path.resolve(options.distDir, "views/includes", file.replace(/\.pug$/, ".html"));
+        const html = pug.renderFile(path.join(includesDir, file),
+            createPugRenderLocals(options.data, options.files, outputFile, options.data.publicPath));
+        writeHtmlFile(outputFile, html);
+    });
+
     return Date.now() - startTime;
 }
 

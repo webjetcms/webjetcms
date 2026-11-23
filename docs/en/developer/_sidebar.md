@@ -5,12 +5,14 @@
 - Installation and launch
     - [Installation and launch](/developer/install/README.md)
     - [Development Containers](/developer/install/devcontainers/README.md)
+    - [Generating SBOM](/developer/install/sbom.md)
+    - [Social Media Feeds](/developer/install/social-media-feed.md)
 - Frameworks used
     - [Frameworks used](/developer/frameworks/README.md)
     - [Bootstrap](/developer/frameworks/bootstrap.md)
     - [PugJS](/developer/frameworks/pugjs.md)
     - [Thymeleaf](/developer/frameworks/thymeleaf.md)
-    - [Vue.js](/developer/frameworks/vue.md)
+    - [Web Components](/developer/frameworks/web-components.md)
     - [Spring DATA + REST](/developer/frameworks/spring.md)
     - [WebJET JavaScript functions](/developer/frameworks/webjetjs.md)
     - [Transition from Struts to Spring](/developer/frameworks/struts/README.md)
@@ -61,6 +63,7 @@
     - [Automatic Testing of DataTables](/developer/testing/datatable.md)
     - [DataTables - import testing](/developer/testing/datatable-import.md)
     - [Generate documentation screenshots](/developer/testing/screenshots.md)
+    - [Recording presentation videos](/developer/testing/video.md)
     - [Reports via Allure](/developer/testing/allure.md)
     - [Code Coverage](/developer/testing/codecoverage.md)
     - [Parallel test execution](/developer/testing/parallel.md)
@@ -87,7 +90,9 @@
 - Troubleshooting
   - [Possible errors](/developer/troubles/README.md)
 - Development requirements
+    - [Using AI skills](/developer/guidelines/ai-skills.md)
     - [Working with Git/Gitlab](/developer/guidelines/gitlab.md)
+    - [Working with Git worktrees](/developer/guidelines/worktrees.md)
     - [Definition of Done](/developer/guidelines/definition-of-done.md)
     - [Nomenclature of terms/expressions](/developer/guidelines/terms.md)
 - Deployment

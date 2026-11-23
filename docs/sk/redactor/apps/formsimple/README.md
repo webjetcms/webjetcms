@@ -80,7 +80,7 @@ Základný kód formuláru je v kľúčoch:
 - ```components.formsimple.form.start``` - HTML kód začiatku formuláru (otvárací form tag)
 - ```components.formsimple.form.end``` - HTML kód konca formuláru (zatvárací form tag)
 - ```components.formsimple.requiredLabelAdd``` - text, ktorý sa pridá k textu label elementu pre povinné pole (typicky znak *)
-- ```components.formsimple.tooltipCode``` - HTML kód pre generovanie ${tooltip} náhrady
+- ```components.formsimple.tooltipCode``` - HTML kód pre generovanie ```${tooltip}``` náhrady
 - ```components.formsimple.techinfo``` - HTML kód pre generovanie technických informácií do emailu
 
 Jednotlivé položky definujete cez kľúče:
@@ -126,24 +126,121 @@ components.formsimple.input.wysiwyg=<div class="form-group"><label for="${id}">$
 components.formsimple.hide.wysiwyg=placeholder
 ```
 
+!>**Upozornenie pre viackrokové formuláre:** vlastná definícia `components.formsimple.input.NAZOV`, ktorá obsahuje natívny element `<input type="file">`, nebude fungovať. Nahrávanie súborov je podporované iba pomocou komponentu `Dropzone`.
 V kóde je možné použiť nasledovné značky, ktoré sa pri zobrazení formuláru nahradia:
 
 - ```${formname}``` - meno formuláru bez medzier, diakritiky, malými písmenami, používa sa pre form element do atribútu name (to by malo ešte začínať výrazom formMail pre použitie v štandardnom validačnom mechanizme)
 - ```${savedb}``` - rovnaká hodnota ako ```formname```, používa sa pre prehľadnosť v URL odoslania formuláru
 - ```${id}``` - ID elementu generované z jeho názvu (pole Hodnota v administrácii), bez medzier, diakritiky, malými písmenami
+- ```${itemId}``` - identifikátor položky v rámci vykresleného formulára
+- ```${stepId}``` - identifikátor kroku viackrokového formulára; pri formulári ľahko je hodnota prázdna
 - ```${label}``` - text pre label element, hodnota z poľa názov v administrácii
 - ```${labelSanitized}``` - text pre label element, hodnota z poľa názov v administrácii, upravené špeciálne znaky aby ho bolo možné použiť v HTML atribúte
+- ```${hint}``` - HTML obsah poľa **Nápoveda** položky viackrokového formulára. Vkladá sa za názov poľa do `<div class="form-hint">${hint}</div>`. Ak nápoveda nie je zadaná, značka sa nahradí prázdnym textom.
 - ```${value}``` - text z poľa hodnota v administrácii
+- ```${valueSanitized}``` - hodnota poľa upravená bez medzier, diakritiky a špeciálnych znakov na použitie v HTML atribúte
 - ```${placeholder}``` - zástupný text, zobrazí sa keď má pole prázdnu hodnotu
 - ```${classes}``` - dodatočné CSS štýly, aktuálne ```required``` ak je zaškrtnuté Povinné pole v administrácii
 - ```${tooltip}``` - HTML kód pre tooltip, hodnota z poľa Tooltip v administrácii
+- ```${tooltipId}``` - unikátne a pre HTML atribút bezpečné ID tooltipu, určené na prepojenie ovládacieho prvku s obsahom tooltipu
 - ```${cs-error}``` - generovaný HTML kód pre chybovú hlášku
 - ```${iterable}``` - na uvedené miesto sa vloží opakujúci zoznam polí (napr. skupina výberových polí), pričom kód, ktorý sa opakuje je definovaný kľúčom ```components.formsimple.iterable.MENO_POLA```
 - ```${counter}``` - poradové číslo pre opakujúci záznam, je potrebný na nastavenie unikátneho ```id``` a ```for``` atribútu
 - ```${value-label}``` - textová hodnota (label) pre opakujúci záznam, ak obsahuje inú hodnotu pre ```value``` a pre ```label``` (napr v ```option``` tagu). Používateľ zadáva možné hodnoty ako ```label:value```, teda ako napr. ```Pomaranč:orange,Jablko:apple``` pre zobrazenie uvedených možností.
 - ```{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}``` - napojenie získania zoznamu ```option``` hodnôt z aplikácie číselník. Zadané je ID číselníka, názov stĺpca pre hodnotu a názov stĺpca pre text.
 
+### Polia z nastavení formuláru
+
+V HTML prekladových kľúčov môžete použiť aj uložené nastavenia formuláru cez značky `${settings.NAZOV_POLA}`. Sú dostupné vo Formulári ľahko aj vo viackrokových formulároch, v náhľade položiek v administrácii a v emailovej podobe formulára.
+
+| Značka | Hodnota |
+| --- | --- |
+| `${settings.fieldA}` až `${settings.fieldF}` | Voliteľné polia A–F z nastavení formuláru. |
+| `${settings.formName}` | Uložené meno formuláru; na rozdiel od `${formname}` sa pri náhrade neupravuje na HTML identifikátor. |
+| `${settings.recipients}` | Emailové adresy príjemcov. |
+| `${settings.ccEmails}` | Emailové adresy príjemcov kópie. |
+| `${settings.bccEmails}` | Emailové adresy skrytých príjemcov. |
+| `${settings.replyTo}` | Emailové adresy pre odpoveď. |
+| `${settings.subject}` | Nastavený predmet emailu. |
+| `${settings.forward}` | URL presmerovania po úspešnom odoslaní. |
+| `${settings.forwardFail}` | URL presmerovania po chybe. |
+| `${settings.maxSizeInKilobytes}` | Maximálna veľkosť jedného súboru v kB. |
+| `${settings.maxCombinedSizeInKilobytes}` | Maximálna celková veľkosť súborov v kB. |
+| `${settings.allowedExtensions}` | Nastavený zoznam povolených prípon. |
+| `${settings.pictureHeight}` | Maximálna výška obrázka v pixeloch. |
+| `${settings.pictureWidth}` | Maximálna šírka obrázka v pixeloch. |
+| `${settings.formAddClasses}` | Dodatočné CSS triedy formuláru. |
+| `${settings.rowView}` | Uložené nastavenie zobrazenia v riadku ako `true` alebo `false`. |
+| `${settings.emailTextBefore}` | Text pred obsahom emailu, môže obsahovať HTML. |
+| `${settings.emailTextAfter}` | Text za obsahom emailu, môže obsahovať HTML. |
+
+Polia **A–F**, **Text pred emailom** a **Text za emailom** sa vkladajú ako HTML bez escapovania. Oba emailové texty podporujú HTML aj pri ich bežnom vložení pred a za obsah emailu. Ostatné nastavenia sa escapujú pre HTML text a atribúty uzavreté v úvodzovkách. Značky nie sú určené na priame vkladanie do JavaScriptu alebo CSS. Polia umožňujúce HTML používajte na miestach určených pre HTML obsah, nie ako hodnoty atribútov.
+
+Príklad vlastného informačného poľa, ak voliteľné pole A obsahuje `<strong>Pokyny k vyplneniu</strong>`:
+
+```properties
+components.formsimple.label.pokyny=Pokyny
+components.formsimple.input.pokyny=<div class="form-instructions">${settings.fieldA}</div><p>Povolené prípony: ${settings.allowedExtensions}; maximálna veľkosť súboru: ${settings.maxSizeInKilobytes} kB.</p>
+```
+
+Značky môžete pridať aj do existujúceho kódu začiatku formulára, napríklad ako atribút `data-form-name="${settings.formName}"`, alebo za otvárací `<form>` vložiť `<div class="form-intro">${settings.fieldB}</div>`. Ponechajte pritom pôvodné atribúty a skripty šablóny. Pre Formulár ľahko ide o kľúč `components.formsimple.form.start`, pre viackrokový formulár o `components.multistep.form.start`.
+
+Rovnaké značky fungujú v konci formulára, tooltipových šablónach, prvých nadpisoch polí, opakovaných položkách `${iterable}` a technických informáciách `components.formsimple.techinfo`. Vo viackrokovom formulári sú dostupné aj v HTML obaloch krokov a riadkov, nadpise kroku, tlačidle Späť a indikátore načítavania.
+
+Používajú sa uložené hodnoty. Prázdne alebo chýbajúce nastavenie sa nahradí prázdnym reťazcom; nedopočítava sa napríklad predvolený predmet emailu ani náhradné presmerovanie po chybe. Neznáma značka zostane nezmenená. Náhrada nie je rekurzívna: ak hodnota poľa A obsahuje `${settings.fieldB}` alebo `${id}`, tento výraz zostane doslovný.
+
+Použitím značky vložíte hodnotu do výsledného HTML dostupného návštevníkovi. Platí to aj pre emailové adresy vrátane `${settings.bccEmails}`; skrytý príjemca emailu sa tak môže zverejniť na stránke. Dostupné sú iba uvedené nastavenia, nie šifrovací kľúč ani interné údaje entity.
+
+### Vlastný HTML kód tooltipu
+
+HTML kód tooltipu môžete v projekte upraviť prekladovým kľúčom `components.formsimple.tooltipCode`. V jeho hodnote sú dostupné značky `${tooltipId}`, `${id}`, `${itemId}`, `${stepId}`, `${label}`, `${labelSanitized}`, `${value}`, `${valueSanitized}`, `${placeholder}` a `${classes}`. Značka `${label}` v tomto kľúči obsahuje text z poľa **Tooltip**, nie názov formulárového poľa.
+
+Na prístupné a jednoznačné prepojenie ovládacieho prvku s obsahom tooltipu použite rovnakú hodnotu `${tooltipId}` v atribúte `aria-describedby` ovládacieho prvku a v atribúte `id` elementu s `role="tooltip"`. Nevytvárajte ID ručne iba z `${id}`, `${itemId}` alebo `${stepId}`, pretože samostatne nemusia byť pri opakovanom vložení formulára unikátne.
+
+Príklad:
+
+```properties
+components.formsimple.tooltipCode=<button type="button" class="info-tooltip" data-tooltip-trigger="true" aria-describedby="${tooltipId}" aria-owns="${tooltipId}"><svg class="icon info-tooltip__icon" aria-hidden="true"><use xlink:href="/sprite.svg#assistance"></use></svg><span class="sr-only">Info</span></button><span id="${tooltipId}" class="tooltip" role="tooltip" hidden="" data-tooltip="true"><span class="tooltip__arrow"> </span><span class="tooltip__dialog">${label}</span></span>
+```
+
+Pre opisnú väzbu tooltipu je rozhodujúci atribút `aria-describedby`, ktorého hodnota musí zodpovedať `id` elementu s obsahom tooltipu.
+
+Hodnota tooltipu sa nahrádza iba raz. Ak samotný text tooltipu obsahuje výraz ako `${id}`, zostane zobrazený doslovne a nevykoná sa nad ním ďalšia substitúcia.
+
 V zobrazení do emailu sa hodnota poľa tooltip nahrádza za prázdny znak (aby v emaile nebol zbytočne nefunkčný tooltip).
+
+### HTML kód tlačidiel
+
+HTML kód tlačidiel vo [viackrokových formulároch](../multistep-form/README.md) môžete upraviť v sekcii **Nastavenia → Editácia textov**. Zmenou CSS tried alebo pridaním ikony prispôsobíte vzhľad tlačidiel dizajnu webu.
+
+#### Tlačidlo na pokračovanie alebo odoslanie
+
+Kľúč `components.multistep.form.end` obsahuje HTML kód tlačidla na prechod na ďalší krok a v poslednom kroku na odoslanie formulára. Predvolená časť hodnoty, ktorá určuje vzhľad tlačidla, je:
+
+```html
+<button type="submit" class="btn btn-primary mt-3" name="saveForm">${submitButtonText}</button>
+```
+
+Značka `${submitButtonText}` sa nahradí textom nastaveným v aktuálnom kroku. Ak text nie je zadaný, použije sa preklad `components.multistep.form.next_step` (**Prejsť na ďalší krok**) alebo v poslednom kroku `components.multistep.form.save_form` (**Odoslať formulár**).
+
+Pri zmene vzhľadu zachovajte `type="submit"`, `name="saveForm"` a značku `${submitButtonText}`. Kľúč obsahuje aj značku `{tech-info}` pre technické informácie, zatvárací tag `</form>` a skript na inicializáciu tooltipov. Tieto časti ponechajte; pri úprave tlačidla meňte iba jeho HTML kód.
+
+#### Tlačidlo na predchádzajúci krok
+
+HTML kód tlačidla **Späť** sa nastavuje cez kľúč `components.multistep.form.back_button`. Tlačidlo sa zobrazí od druhého kroku; do emailovej podoby formulára sa nevkladá.
+
+V hodnote kľúča sú dostupné značky:
+
+- `${previousStepId}` - ID predchádzajúceho kroku.
+- `${backButtonText}` - text tlačidla nastavený v aktuálnom kroku, prípadne predvolený preklad `components.multistep.form.back_step`. Text sa pred vložením do HTML escapuje.
+
+Predvolený kód:
+
+```properties
+components.multistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
+```
+
+Pri zmene vzhľadu zachovajte `type="button"` a atribút `data-multistep-back-step="${previousStepId}"`, podľa ktorého sa vykonáva návrat na predchádzajúci krok.
 
 ### Napojenie na číselník
 
