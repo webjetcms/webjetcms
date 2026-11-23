@@ -55,6 +55,7 @@ VIDEO_INCLUDE = re.compile(
     r"autoplay=0,\s*controls=1,\s*fullscreen=1,\s*branding=0,\s*rel=1,\s*showinfo=0\)!"
 )
 VIDEO_TITLES = {
+    "il3FqLyqy4Y": "Spoznajte WebJET CMS za 90 sekúnd | Z PDF na web pomocou AI",
     "B_m_vPPel80": "PageBuilder: tvorba stránky z blokov",
     "LhXo7zx7bEc": "AI asistenti vo WebJET CMS",
     "z3QGUdDG2pk": "Plánované publikovanie textu, obrázkov a súborov",

@@ -9,8 +9,8 @@ const videoPlan = {
     notes: "16:9 homepage film. Frame the complete CMS viewport. Keep the insertion point, library choice, insertion and move in a single shot. Use short, modest punch-ins for text entry. Remove slates, loading, setup and cleanup. Append the standard WebJET outro once.",
     shots: [
         {
-            id: "pdf-page", type: "auto", durationSeconds: 15, title: "From a salon brief to a page",
-            "text-sk": "Máte ponuku služieb v PDF a chcete ju dostať na web? Vo WebJET CMS priložíte súbor do četu s webovým dizajnérom. Z textu pripraví návrh stránky. Keď vám vyhovuje, vložíte ho do editora ako samostatné bloky.",
+            id: "pdf-page", type: "auto", durationSeconds: 17, title: "From a salon brief to a page",
+            "text-sk": "Máte ponuku služieb v PDF a chcete ju dostať na web? Vo WebJET CMS priložíte súbor do četu s asistentom Webový dizajnér. Umelá inteligencia z vašej ponuky vytvorí návrh stránky. Keď vám vyhovuje, vložíte ho do editora ako samostatné bloky.",
             notes: "Show the designer, the attached salon PDF, the proposal and the accepted salon page. Cut the generation wait.",
             prepare: async ({ I, openPage, frame }) => {
                 await openPage(true);
@@ -87,8 +87,8 @@ const videoPlan = {
             }
         },
         {
-            id: "salon-image", type: "auto", durationSeconds: 10, title: "Generate a photograph for the salon",
-            "text-sk": "Aj ilustračný obrázok vytvoríte priamo v editore. Stačí opísať, čo má zachytiť. Pre salón si tak pripravíte fotografiu interiéru a vložíte ju k textu.",
+            id: "salon-image", type: "auto", durationSeconds: 12, title: "Generate a photograph for the salon",
+            "text-sk": "Aj ilustračný obrázok vytvoríte priamo v editore. Umelej inteligencii stačí opísať, čo má zachytiť. Pre salón si tak pripravíte fotografiu interiéru a vložíte ju k textu.",
             notes: "Show the actual image prompt, generated preview and the photograph in the page. Remove the provider wait and filename entry.",
             prepare: async ({ I, ensureSalon, frame }) => {
                 await ensureSalon();

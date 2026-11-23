@@ -1,18 +1,19 @@
 # Videá z dokumentácie
 
-V slovenskej verzii sú preferované tematicky zodpovedajúce videá pred statickými snímkami. Päť videí má spolu jedenásť umiestnení v šiestich HTML fragmentoch v `sk/`. Osem pôvodných snímok v obsahu nahrádzajú videá; na stránke Funkcie pribudli navyše ukážky publikovania a PageBuildera a v Benefitoch ukážka viackrokových formulárov. Anglické fragmenty v `en/` používajú namiesto týchto videí screenshoty.
+V slovenskej verzii sú preferované tematicky zodpovedajúce videá pred statickými snímkami. Šesť videí má spolu jedenásť umiestnení v šiestich HTML fragmentoch v `sk/`. Osem pôvodných snímok v obsahu nahrádzajú videá; na stránke Funkcie pribudli navyše ukážky publikovania a PageBuildera a v Benefitoch ukážka viackrokových formulárov. Anglické fragmenty v `en/` používajú namiesto týchto videí screenshoty.
 
 | Video | Použitie | Podklad v dokumentácii |
 | --- | --- | --- |
-| [Page Builder – nová verzia](https://www.youtube.com/watch?v=B_m_vPPel80) | Úvodná ukážka na Domov; Benefity; Funkcie; Pre agentúry | [PageBuilder](../sk/redactor/webpages/pagebuilder.md), [sales 2026](../sk/sales/2026/README.md) |
+| [Spoznajte WebJET CMS za 90 sekúnd](https://www.youtube.com/watch?v=il3FqLyqy4Y) | Úvodná ukážka na stránke Domov | [Scenár videa](../../src/test/webapp/video/406-website-content.js) |
+| [Page Builder – nová verzia](https://www.youtube.com/watch?v=B_m_vPPel80) | Benefity, Funkcie (sekcia PageBuilder), Pre agentúry | [PageBuilder](../sk/redactor/webpages/pagebuilder.md), [sales 2026](../sk/sales/2026/README.md) |
 | [AI asistenti](https://www.youtube.com/watch?v=LhXo7zx7bEc) | AI sekcia na Domov a Funkciách | [AI asistent](../sk/redactor/ai/README.md) |
 | [Plánované publikovanie textu, obrázkov aj súborov](https://www.youtube.com/watch?v=z3QGUdDG2pk) | Benefity a Funkcie | [Plánované publikovanie](../sk/redactor/webpages/planned-publishing.md) |
 | [Viackrokové formuláre](https://www.youtube.com/watch?v=XRnwipQ-mH4) | Benefity – Viackrokové formuláre; Aplikácie – Dopyty a formuláre | [Vytvorenie formulára](../sk/redactor/apps/form/README.md#vytvorenie-formuláru) |
 | [AppStore](https://www.youtube.com/watch?v=2r6-0zk5ZNQ) | Pre vývojárov – vlastné aplikácie | [Zobrazenie aplikácie v zozname](../sk/custom-apps/appstore/README.md) |
 
-YouTube oEmbed pri kontrole 15. 11. 2026 vrátil pre všetkých päť videí HTTP 200, názov a autora **WebJET od InterWay**. Obsahová zhoda sa posudzovala podľa dokumentácie a metadát; nejde o prepis celých videí. Caption AI videa preto opisuje asistentov všeobecne a nesľubuje ukážku všetkých najnovších funkcií četu.
+YouTube oEmbed pri kontrole 15. 11. 2026 vrátil pre pôvodných päť videí HTTP 200, názov a autora **WebJET od InterWay**. Úvodné video toho istého kanála bolo overené cez oEmbed 23. 11. 2026. Obsahová zhoda pôvodných videí sa posudzovala podľa dokumentácie a metadát; nejde o prepis celých videí. Caption AI videa preto opisuje asistentov všeobecne a nesľubuje ukážku všetkých najnovších funkcií četu.
 
-Video `X2GNFn8IpCI` zo zadania je o [úvodnom prehľade administrácie](../sk/redactor/admin/welcome.md). Pre hlavnú ukážku webu bol vybraný PageBuilder, ktorý priamo ukazuje tvorbu stránky. Pre správu oprávnení, Manažér dokumentov a headless režim sa v relevantnej dokumentácii nenašlo vhodné video; ich snímky zostávajú.
+Video `X2GNFn8IpCI` zo zadania je o [úvodnom prehľade administrácie](../sk/redactor/admin/welcome.md). Pre správu oprávnení, Manažér dokumentov a headless režim sa v relevantnej dokumentácii nenašlo vhodné samostatné video; ich snímky zostávajú.
 
 ## Vloženie v SK verzii
 
@@ -34,7 +35,8 @@ EN produktové sekcie nevyžadujú, aby si návštevník zapínal preklad sloven
 
 | Video v SK | EN obrázok | EN stránky | Počet |
 | --- | --- | --- | --- |
-| `B_m_vPPel80` – PageBuilder | [pagebuilder.png](en/images/pagebuilder.png) | Home, Benefits, Functions, For agencies | 4 |
+| `il3FqLyqy4Y` – úvodná ukážka WebJET CMS | [pagebuilder.png](en/images/pagebuilder.png) | Home | 1 |
+| `B_m_vPPel80` – PageBuilder | [pagebuilder.png](en/images/pagebuilder.png) | Benefits, Functions, For agencies | 3 |
 | `LhXo7zx7bEc` – AI asistenti | [ai-chat.png](en/images/ai-chat.png) | Home, Functions | 2 |
 | `z3QGUdDG2pk` – plánované publikovanie | [publication-history.png](en/images/publication-history.png) | Benefits, Functions | 2 |
 | `XRnwipQ-mH4` – viackrokové formuláre | [multi-step-form.png](en/images/multi-step-form.png) | Benefits, Applications | 2 |
