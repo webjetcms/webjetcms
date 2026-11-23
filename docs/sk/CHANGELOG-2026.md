@@ -72,7 +72,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Pracovné verzie - verejné volania z `/components`, `/apps` a `/templates` už neblokujú načítanie CSS/JS cez `combine.jsp` ani nezobrazujú dialóg hlavnej verzie. V `/components` a `/apps` sa administrácia rozlišuje podľa `admin` v ceste. Náhľad obrázkov používa existujúci `ThumbServlet` so všetkými jeho parametrami vrátane `ip=6`; pracovné súbory a cache zostávajú súkromné.
 
-- Pracovné verzie - pôvodná migrácia spolu s vytvorením branch tabuliek konvertuje obsahové tabuľky, histórie a mediálne väzby na InnoDB; existujúce InnoDB tabuľky a ich FULLTEXT indexy sa neprebudovávajú. Generátor ID môže zostať na MyISAM.
+- Pracovné verzie - automatická migrácia vytvorí tabuľky balíkov. Správca pred zapnutím funkcie podľa potreby [skonvertuje existujúce tabuľky na InnoDB](admin/setup/publishing-packages.md#konverzia-existujúcich-tabuliek-na-innodb) v servisnom okne. (#388)
 
 - Pracovné verzie - porovnanie webových stránok má novú kartu **Obsah stránky** s vykreslenou hlavnou a pracovnou verziou, synchronizovaným posúvaním a voliteľným zvýraznením rozdielov. Karty **Obsah stránky** a **HTML kód** sú dostupné iba pre webové stránky.
 

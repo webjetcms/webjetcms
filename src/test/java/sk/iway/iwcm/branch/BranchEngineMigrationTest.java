@@ -54,10 +54,10 @@ class BranchEngineMigrationTest extends BaseWebjetTest {
             execute(connection, "CREATE TABLE " + quoted(schema) + ".pkey_generator LIKE " + source + ".pkey_generator");
         }
         try (Connection connection = open()) {
-            for (String sql : BranchStorageTest.migration().getMysql().split(";"))
-                if (sql.stripLeading().startsWith("CREATE TABLE")) execute(connection, sql);
+            applyMigration(connection);
             for (String table : CONTENT_TABLES) execute(connection, "ALTER TABLE `" + table + "` ENGINE=MyISAM");
-            execute(connection, "ALTER TABLE pkey_generator ENGINE=MyISAM");
+            // The 255-character key must fit within MyISAM's 1000-byte limit.
+            execute(connection, "ALTER TABLE pkey_generator ENGINE=MyISAM, CONVERT TO CHARACTER SET utf8mb3");
             execute(connection, "INSERT INTO pkey_generator(name,value,table_name,table_pkey_name) VALUES ('media',1,'media','media_id')");
             execute(connection, "INSERT INTO branches(id,domain_id,name,state,created_by,updated_by,created_at,updated_at) VALUES (1,1,'autotest engine','DRAFT',1,1,NOW(),NOW())");
         }
@@ -84,24 +84,32 @@ class BranchEngineMigrationTest extends BaseWebjetTest {
         }
     }
 
-    /** Creates fresh branch tables, upgrades LIVE content, and preserves existing data on a retry. */
-    @Test void migratesContentAndPreservesFulltext() throws Exception {
+    /** Checks the automatic upgrade and the separate conversion used to prepare LIVE tables for activation. */
+    @Test void installsBranchesBeforeManualContentConversion() throws Exception {
         try (Connection connection = open()) {
             for (String table : BRANCH_TABLES)
                 execute(connection, "DROP TABLE `" + table + "`");
             execute(connection, "INSERT INTO documents(title,data,data_asc,navbar) VALUES ('autotest publishing','pracovna verzia publikovanie','pracovna verzia publikovanie','autotest')");
             execute(connection, "INSERT INTO `groups`(group_id,group_name) VALUES (100,'autotest original')");
+            String search = "SELECT COUNT(*) FROM documents WHERE MATCH(title,data_asc) AGAINST ('+pracovna +verzia' IN BOOLEAN MODE)";
+            Constants.setBoolean("branchesEnabled", false);
+            long alters = alterCount(connection);
             applyMigration(connection);
             BranchStorageTest.assertColumns(connection);
             execute(connection, "INSERT INTO branches(id,domain_id,name,state,created_by,updated_by,created_at,updated_at) VALUES (1,1,'autotest engine','DRAFT',1,1,NOW(),NOW())");
-            long alters = alterCount(connection);
             applyMigration(connection);
-            assertEquals(alters, alterCount(connection), "A retry must not rebuild existing InnoDB tables");
+            assertEquals(alters, alterCount(connection), "Automatic migration must not alter existing tables");
             assertEquals(1, count(connection, "SELECT COUNT(*) FROM branches WHERE id=1 AND name='autotest engine'"));
-            for (String table : CONTENT_TABLES) assertEquals("InnoDB", engine(connection, table));
+            for (String table : CONTENT_TABLES) assertEquals("MyISAM", engine(connection, table));
             for (String table : BRANCH_TABLES) assertEquals("InnoDB", engine(connection, table));
+            assertEquals(1, count(connection, search));
+
+            Constants.setBoolean("branchesEnabled", true);
+            SQLException failure = assertThrows(SQLException.class, () -> BranchReadiness.verify(connection));
+            assertTrue(failure.getMessage().contains("InnoDB: documents"));
+            for (String table : CONTENT_TABLES) execute(connection, "ALTER TABLE `" + table + "` ENGINE=InnoDB");
             assertEquals("MyISAM", engine(connection, "pkey_generator"));
-            assertEquals(1, count(connection, "SELECT COUNT(*) FROM documents WHERE MATCH(title,data_asc) AGAINST ('+pracovna +verzia' IN BOOLEAN MODE)"));
+            assertEquals(1, count(connection, search));
             connection.setAutoCommit(false);
             execute(connection, "UPDATE `groups` SET group_name='autotest changed' WHERE group_id=100");
             connection.rollback();

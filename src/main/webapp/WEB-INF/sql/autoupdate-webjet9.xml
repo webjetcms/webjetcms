@@ -4446,33 +4446,7 @@
                 <void property="author"><string>codex</string></void>
                 <void property="date"><string>04.11.2026</string></void>
                 <void property="desc"><string>Publishing branches</string></void>
-                <!-- Skip existing InnoDB tables to avoid rebuilding content and FULLTEXT indexes. -->
                 <void property="mysql"><string>
-SET @webjet_branch_engine_sql = IF(EXISTS(SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='documents' AND ENGINE&lt;&gt;'InnoDB'), 'ALTER TABLE `documents` ENGINE=InnoDB', 'DO 0');
-PREPARE webjet_branch_engine_update FROM @webjet_branch_engine_sql;
-EXECUTE webjet_branch_engine_update;
-DEALLOCATE PREPARE webjet_branch_engine_update;
-SET @webjet_branch_engine_sql = IF(EXISTS(SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='groups' AND ENGINE&lt;&gt;'InnoDB'), 'ALTER TABLE `groups` ENGINE=InnoDB', 'DO 0');
-PREPARE webjet_branch_engine_update FROM @webjet_branch_engine_sql;
-EXECUTE webjet_branch_engine_update;
-DEALLOCATE PREPARE webjet_branch_engine_update;
-SET @webjet_branch_engine_sql = IF(EXISTS(SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='media' AND ENGINE&lt;&gt;'InnoDB'), 'ALTER TABLE `media` ENGINE=InnoDB', 'DO 0');
-PREPARE webjet_branch_engine_update FROM @webjet_branch_engine_sql;
-EXECUTE webjet_branch_engine_update;
-DEALLOCATE PREPARE webjet_branch_engine_update;
-SET @webjet_branch_engine_sql = IF(EXISTS(SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='media_group_to_media' AND ENGINE&lt;&gt;'InnoDB'), 'ALTER TABLE `media_group_to_media` ENGINE=InnoDB', 'DO 0');
-PREPARE webjet_branch_engine_update FROM @webjet_branch_engine_sql;
-EXECUTE webjet_branch_engine_update;
-DEALLOCATE PREPARE webjet_branch_engine_update;
-SET @webjet_branch_engine_sql = IF(EXISTS(SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='documents_history' AND ENGINE&lt;&gt;'InnoDB'), 'ALTER TABLE `documents_history` ENGINE=InnoDB', 'DO 0');
-PREPARE webjet_branch_engine_update FROM @webjet_branch_engine_sql;
-EXECUTE webjet_branch_engine_update;
-DEALLOCATE PREPARE webjet_branch_engine_update;
-SET @webjet_branch_engine_sql = IF(EXISTS(SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='groups_scheduler' AND ENGINE&lt;&gt;'InnoDB'), 'ALTER TABLE `groups_scheduler` ENGINE=InnoDB', 'DO 0');
-PREPARE webjet_branch_engine_update FROM @webjet_branch_engine_sql;
-EXECUTE webjet_branch_engine_update;
-DEALLOCATE PREPARE webjet_branch_engine_update;
-
 CREATE TABLE IF NOT EXISTS branches (
     `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `domain_id` INT NOT NULL,

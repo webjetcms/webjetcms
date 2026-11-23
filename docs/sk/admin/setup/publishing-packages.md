@@ -23,7 +23,7 @@ Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasa
 ## Zapnutie na schválenom nasadení
 
 1. Zálohujte konzistentne DB, verejné súbory a súkromné branch úložisko. Overte obnovu na oddelenom prostredí. Zaznamenajte generátory a ID podľa časti Obnova.
-2. Nasaďte kód a databázové migrácie. Migrácia `Publishing branches` v `WEB-INF/sql/autoupdate-webjet9.xml` konvertuje `documents`, `groups`, `media`, `media_group_to_media`, `documents_history` a `groups_scheduler` na InnoDB. Tabuľky, ktoré už používajú InnoDB, neprebudováva. Ide o štandardnú aktualizáciu schémy aj pri vypnutom `branchesEnabled`; pri veľkých tabuľkách naplánujte konverziu mimo špičky, pretože môže blokovať zápisy a potrebuje priestor na prebudovanie tabuľky a indexov. Branch tabuľky `branches`, `branch_documents`, `branch_groups`, `branch_media` a `branch_files` sa vytvárajú s InnoDB. `pkey_generator` môže zostať na MyISAM: rozsahy ID prideľuje samostatným atómovým zápisom a spotrebované čísla sa nevracajú. Perex API potrebuje aj oprávnenia na `perex_group_doc`.
+2. Nasaďte kód s vypnutým `branchesEnabled`. Automatická migrácia `Publishing branches` vytvorí päť tabuliek balíkov s InnoDB. Pred zapnutím funkcie overte úložný engine existujúcich tabuliek a podľa potreby vykonajte [konverziu na InnoDB](#konverzia-existujúcich-tabuliek-na-innodb). Perex API potrebuje aj oprávnenia na `perex_group_doc`.
 3. Overte zápis aplikačného účtu do `/WEB-INF`, kde sa automaticky vytvorí predvolené úložisko `/WEB-INF/branches`. Voliteľný `branchStorageRoot` môže smerovať na existujúci súkromný absolútny adresár mimo webrootu. Kontrola pri aktivácii porovnáva cestu s koreňom webovej aplikácie a pri predvolenom úložisku overuje, že aj po rozlíšení symbolických odkazov zostáva v `/WEB-INF`. Právo zápisu sa overuje vytvorením dočasného súboru. Zachovajte existujúci generátor `pkey_generator` pre `media`.
 4. Overte jednu zapisovateľnú DB, aspoň `READ_COMMITTED` pre JDBC aj JPA a rovnaké konfiguračné hodnoty a kód na všetkých uzloch obsluhujúcich obsah. Aktuálny POC deklaruje iba jednu inštanciu; ďalšia topológia potrebuje vlastné overenie súborov/cache/session.
 5. Overte `enableStaticFilesExternalDir=true` a existujúce mapovanie súborov jednotlivých domén. Nastavte `branchesEnabled=true` globálne a obnovte všetky dotknuté uzly. Konfigurácia pracovných verzií je globálna, nie prepínač jednej domény. Priraďte **Pracovné verzie** (`menuBranches`) a existujúce práva stránok, priečinkov a súborov. Prvé vytvorenie balíka vykoná kontrolu aktivácie a pri probléme vráti konkrétny dôvod.
@@ -31,7 +31,31 @@ Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasa
 
 Preflight publikovania odmietne `fulltextExecuteApps=true` a vlastný `fulltextDataAscMethod`. Súbory používajú existujúce externé priečinky domén. Branch save nesmie vykonať živé JSP/fulltext hooky. Test vlastného kódu patrí pred aktiváciu.
 
-InnoDB je potrebné pre izoláciu technických rezervácií ID a spoločný rollback obsahu, histórie a záznamu o dokončenom publikačnom kroku. Celý balík sa publikuje postupne. InnoDB podporuje FULLTEXT aj `MATCH(title, data_asc) AGAINST (? IN BOOLEAN MODE)`; zachovajte spoločný FULLTEXT index na `(title, data_asc)`. Po konverzii z MyISAM overte vyhľadávanie vrátane krátkych slov a stopwords, pretože enginy používajú odlišné nastavenia indexovania.
+### Konverzia existujúcich tabuliek na InnoDB
+
+InnoDB je potrebné pre izoláciu rezervácií ID a spoločný rollback obsahu, histórie a záznamu o dokončenom publikačnom kroku. V databáze WebJET CMS (datasource `iwcm`) overte engine všetkých šiestich tabuliek.
+
+```sql
+SELECT TABLE_NAME, ENGINE
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME IN ('documents', 'groups', 'media', 'media_group_to_media',
+                     'documents_history', 'groups_scheduler')
+ORDER BY TABLE_NAME;
+```
+
+V servisnom okne spustite príslušný príkaz iba pre tabuľku, ktorá používa iný engine než InnoDB. Konverzia môže zdržať zápisy a potrebuje voľné miesto na prestavbu tabuliek a indexov.
+
+```sql
+ALTER TABLE `documents` ENGINE=InnoDB;
+ALTER TABLE `groups` ENGINE=InnoDB;
+ALTER TABLE `media` ENGINE=InnoDB;
+ALTER TABLE `media_group_to_media` ENGINE=InnoDB;
+ALTER TABLE `documents_history` ENGINE=InnoDB;
+ALTER TABLE `groups_scheduler` ENGINE=InnoDB;
+```
+
+Zopakujte kontrolný dotaz a overte, že všetkých šesť tabuliek používa InnoDB. `pkey_generator` môže používať MyISAM, pretože rozsahy ID prideľuje samostatným atómovým zápisom. Pri tabuľke `documents` overte spoločný FULLTEXT index na `(title, data_asc)`. Porovnajte výsledky vyhľadávania pred konverziou a po nej vrátane krátkych slov a slov, ktoré FULLTEXT ignoruje.
 
 ## Proxy a cache
 
