@@ -61,9 +61,8 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     protected final DocAtrDefRepository docAtrDefRepository;
 
     private static final String GROUP_ID_PARAM_NAME = "groupId";
-    // Matches Unicode space separators (including non-breaking spaces), uppercase letters,
-    // and characters in the Combining Diacritical Marks block.
-    private static final Pattern URL_TEXT_CHARACTERS = Pattern.compile("[\\p{Zs}\\p{javaUpperCase}\\p{InCombiningDiacriticalMarks}]");
+    // Matches Unicode space separators (including non-breaking spaces) and combining diacritical marks.
+    private static final Pattern URL_TEXT_CHARACTERS = Pattern.compile("[\\p{Zs}\\p{InCombiningDiacriticalMarks}]");
 
     @Autowired
     public WebpagesDatatable(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
@@ -172,7 +171,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     }
 
     /**
-     * Checks the URL field for spaces, uppercase letters, or diacritics.
+     * Checks the URL field for spaces or diacritics.
      * Unicode decomposition exposes accents on precomposed letters such as {@code č}.
      *
      * @param path submitted URL field value, which may be null

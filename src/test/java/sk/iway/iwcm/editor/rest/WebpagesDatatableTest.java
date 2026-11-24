@@ -133,13 +133,15 @@ class WebpagesDatatableTest {
         assertEquals("", saved.getFieldA());
     }
 
-    /** Both URL fields use the same cleanup when the submitted value contains title text. */
+    /** Both URL fields are cleaned only when the submitted value contains spaces or diacritics. */
     @ParameterizedTest
     @CsvSource({
         "'Orange vypína 3G sieť, aby mohol ďalej vylepšovať parametre modernejších sietí, vrátane 5G', orange-vypina-3g-siet-aby-mohol-dalej-vylepsovat-parametre-modernejsich-sieti-vratane-5g",
-        "nova sprava.html, nova-sprava.html",
+        "Nova sprava.html, nova-sprava.html",
         "správa.html, sprava.html",
-        "Sprava.html, sprava.html",
+        "Sprava.html, Sprava.html",
+        "Pobocky/*, Pobocky/*",
+        "pobocky/Detail*, pobocky/Detail*",
         "<b>Nová správa</b>.html, nova-sprava.html",
         "archiv--2026.html, archiv--2026.html"
     })

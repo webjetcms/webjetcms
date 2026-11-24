@@ -1,5 +1,8 @@
 Feature('webpages.virtual-path').tag('@singlethread');
 
+const testGroupUrl = '/admin/v9/webpages/web-pages-list/?groupid=67';
+let urlCleanupPageTitle;
+
 Before(({ I, login }) => {
      login('admin');
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
@@ -85,4 +88,51 @@ Scenario('prepinanie poli a zmena URL adries', ({ I, DTE }) => {
     testVirtualPathChange(I, DTE, "virtualpath");
 
     testVirtualPathChange(I, DTE, "virtualzmena");
+});
+
+Scenario('Cleans pasted text in both URL fields', async ({ I, DT, DTE }) => {
+    const uniqueSuffix = I.getRandomText();
+    urlCleanupPageTitle = `url-autotest-${uniqueSuffix}`;
+    const pastedText = 'Operátor vypína 3G sieť, aby mohol ďalej vylepšovať parametre modernejších sietí, vrátane 5G';
+    const slug = 'operator-vypina-3g-siet-aby-mohol-dalej-vylepsovat-parametre-modernejsich-sieti-vratane-5g';
+    const manualPrefix = `/test-stavov/${urlCleanupPageTitle}/`;
+    const inheritedSuffix = `${slug}-${uniqueSuffix}`;
+
+    I.amOnPage(testGroupUrl);
+    DT.waitForLoader();
+    DT.clickAddButton();
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
+    fillTitle(I, urlCleanupPageTitle);
+    I.uncheckOption('#DTE_Field_generateUrlFromTitle_0');
+    I.uncheckOption('#DTE_Field_urlInheritGroup_0');
+    DTE.fillField('virtualPath', `${manualPrefix}${pastedText}.html`);
+    DTE.save('datatableInit', true);
+
+    DT.filterEquals('title', urlCleanupPageTitle);
+    I.click(urlCleanupPageTitle, '#datatableInit tbody');
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
+    I.assertEqual(await I.grabValueFrom('#DTE_Field_virtualPath'), `${manualPrefix}${slug}.html`);
+
+    // A suffix longer than 64 characters also exercises the expanded history column during the save.
+    I.checkOption('#DTE_Field_urlInheritGroup_0');
+    DTE.fillField('editorVirtualPath', `${pastedText} ${uniqueSuffix}`);
+    DTE.save('datatableInit', true);
+
+    I.click(urlCleanupPageTitle, '#datatableInit tbody');
+    DTE.waitForEditor();
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
+    I.seeCheckboxIsChecked('#DTE_Field_urlInheritGroup_0');
+    I.assertEqual(await I.grabValueFrom('#DTE_Field_editorVirtualPath'), inheritedSuffix);
+    I.assertEqual(await I.grabValueFrom('#DTE_Field_virtualPath'), `/test-stavov/${inheritedSuffix}.html`);
+    DTE.cancel();
+});
+
+Scenario('Cleans pasted text in both URL fields - delete test page', async ({ I, DT }) => {
+    if (!urlCleanupPageTitle) return;
+
+    I.amOnPage(testGroupUrl);
+    DT.filterEquals('title', urlCleanupPageTitle);
+    if (await I.grabNumberOfVisibleElements('#datatableInit tbody tr[id]') > 0) DT.deleteAll();
 });
