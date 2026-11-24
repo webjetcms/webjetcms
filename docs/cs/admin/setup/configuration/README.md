@@ -47,6 +47,8 @@ Mohou nastat 3 situace:
   - pokud změněný název, za název **existující** konfigurační proměnné, tak se **provede úprava**
   - pokud změněný název, za název **neexistující** konfigurační proměnné, pak se **provede přidání** nové proměnné
 
+V editoru můžete zobrazit historii proměnné a zrušit její naplánovanou změnu, dokud nenastane čas provedení.
+
 ## Dočasné nastavení hodnoty
 
 Pokud potřebujete změnit hodnotu konfigurační proměnné pouze pro ověření jejího chování, v editoru zapněte možnost **Nastavit dočasně**. Hodnota se nastaví pouze v paměti aktuálního uzlu, neuloží se do databáze ani se nepřenese na ostatní uzly clusteru. Po restartu aplikačního serveru se opět použije hodnota uložená v databázi.
