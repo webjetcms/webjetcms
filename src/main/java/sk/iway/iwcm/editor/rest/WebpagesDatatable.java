@@ -80,6 +80,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
     @PostMapping("/http-headers")
     public Map<String, String> httpHeaders(@RequestBody DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
+        cleanSubmittedVirtualPaths(doc);
         EditorForm form = new EditorForm(doc);
         if (Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) form.setVirtualPath("");
         else if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) form.setVirtualPath(doc.getEditorVirtualPath() == null ? "" : doc.getEditorVirtualPath());
