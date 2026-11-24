@@ -20,6 +20,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.filebrowser.FileReferenceScanner;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.elfinder.UnusedFilesService;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -52,7 +53,7 @@ class PageMediaMountTest extends BaseWebjetTest {
 
         try (var paths = mockStatic(Tools.class, CALLS_REAL_METHODS); var groups = mockStatic(GroupsDB.class);
                 var docs = mockStatic(DocDB.class); var uploads = mockStatic(UploadFileTools.class);
-                var completed = mockStatic(DeleteRequestContext.class); var usage = mockConstruction(PageMediaUsage.class)) {
+                var completed = mockStatic(DeleteRequestContext.class); var usage = mockStatic(FileReferenceScanner.class)) {
             paths.when(() -> Tools.getRealPath(anyString())).thenAnswer(call ->
                 webroot.resolve(call.<String>getArgument(0).substring(1)).toString());
             paths.when(() -> Tools.getRealPath("/")).thenReturn(webroot + "/");

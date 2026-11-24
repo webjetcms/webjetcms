@@ -30,6 +30,7 @@ import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.filebrowser.FileReferenceScanner;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
@@ -141,8 +142,7 @@ public class PageMediaCleanup {
                 }
             }
             if (!shared.isEmpty()) {
-                PageMediaUsage usage = new PageMediaUsage(shared, publicPaths);
-                own.addAll(usage.referencedByPage(id, Tools.getStringValue(domain, CloudToolsForCore.getDomainName())));
+                own.addAll(FileReferenceScanner.referencedByPage(shared, publicPaths, id, Tools.getStringValue(domain, CloudToolsForCore.getDomainName())));
             }
             candidates.put(id, own);
         } catch (Exception ex) {
@@ -333,7 +333,7 @@ public class PageMediaCleanup {
                 locked.add(file);
             }
             try (var operation = unusedFiles.acquireDeleteOperation(locked, user)) {
-                Set<String> referenced = new PageMediaUsage(files, publicPaths).referencedElsewhere(deleted);
+                Set<String> referenced = FileReferenceScanner.referencedElsewhere(files, publicPaths, deleted);
                 for (String path : files) {
                     if (referenced.contains(path)) continue;
                     if (allowedPath(path) && unusedFiles.deleteFile(path.replace("+", "%2B"), user)) removed++;

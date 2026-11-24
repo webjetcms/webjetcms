@@ -1,10 +1,12 @@
-package sk.iway.iwcm.editor.service;
+package sk.iway.iwcm.filebrowser;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.parser.Parser;
@@ -38,7 +41,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
  * Finds references to candidate files by their storage or public paths. Matches accumulate
  * within an instance, so page ownership and remaining usage are checked with separate instances.
  */
-final class PageMediaUsage {
+public final class FileReferenceScanner {
     private static final String PAGE_COLUMNS = "d.doc_id,d.virtual_path,d.external_link,d.data,d.html_data,d.html_head,d.perex_image,"
         + "d.field_a,d.field_b,d.field_c,d.field_d,d.field_e,d.field_f,d.field_g,d.field_h,d.field_i,d.field_j,"
         + "d.field_k,d.field_l,d.field_m,d.field_n,d.field_o,d.field_p,d.field_q,d.field_r,d.field_s,d.field_t";
@@ -47,17 +50,21 @@ final class PageMediaUsage {
     private static final Set<String> TEXT_FILES = Set.of("html", "htm", "jsp", "jspf", "tag", "tld", "css", "scss",
         "less", "js", "mjs", "json", "xml", "svg", "properties", "ftl", "vm", "txt", "md", "yaml", "yml");
     private static final Pattern ESCAPED_BYTE = Pattern.compile("%[a-fA-F0-9]{2}");
-    private static final Pattern EMBED_START = Pattern.compile("!INCLUDE\\((?:\\s|%20)*+/components/app-(docs|html)embed/embed\\.jsp(?:\\s|%20)*+,");
+    private static final Pattern COMPONENT_START = Pattern.compile(
+        "!INCLUDE\\((?:\\s|%20)*+/components/(app-(?:docs|html)embed/embed|gallery/gallery)\\.jsp(?:\\s|%20)*+(?:,|(?=\\)!))");
     private static final int MAX_URL_LENGTH = 8192;
-    private static final int MAX_INCOMPLETE_EMBED_LENGTH = 8 * MAX_URL_LENGTH;
+    private static final int MAX_INCOMPLETE_COMPONENT_LENGTH = 8 * MAX_URL_LENGTH;
     private static final Pattern TOKEN = Pattern.compile("[^\\s<>\"'(),;={}]+");
+    // Keep query parameters together when looking for references in unquoted URLs.
+    private static final Pattern TOKEN_WITH_QUERY = Pattern.compile("\\?[^\\s<>\"'(),;{}]*|[^\\s<>\"'(),;={}?]+");
     private static final Pattern QUOTED = Pattern.compile("\"([^\"<>\\r\\n]+)\"|'([^'<>\\r\\n]+)'");
 
     private final Map<String, Set<String>> files = new HashMap<>();
     private final Map<String, Set<String>> protectedPaths = new HashMap<>();
     private final Set<String> found = new HashSet<>();
-    private final Set<String> names = new HashSet<>();
+    private final Map<String, Set<String>> protectedNames = new HashMap<>();
     private final int count;
+    private String sourceFile;
 
     /**
      * Indexes the storage and public paths of the files to check. A reference to a folder
@@ -66,7 +73,7 @@ final class PageMediaUsage {
      * @param candidates virtual storage paths of the files considered for deletion
      * @param publicPaths public path for each candidate whose storage path contains a domain alias
      */
-    PageMediaUsage(Set<String> candidates, Map<String, String> publicPaths) {
+    private FileReferenceScanner(Set<String> candidates, Map<String, String> publicPaths) {
         count = candidates.size();
         for (String candidate : candidates) {
             for (String path : List.of(candidate, publicPaths.getOrDefault(candidate, candidate))) {
@@ -74,7 +81,8 @@ final class PageMediaUsage {
                 String parent = path.substring(0, path.lastIndexOf('/'));
                 for (String reference : List.of(path, parent)) {
                     protectedPaths.computeIfAbsent(reference.toLowerCase(Locale.ROOT), key -> new HashSet<>()).add(candidate);
-                    names.add(reference.substring(reference.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT));
+                    String name = reference.substring(reference.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT);
+                    protectedNames.computeIfAbsent(name, key -> new HashSet<>()).add(candidate);
                 }
             }
         }
@@ -84,12 +92,20 @@ final class PageMediaUsage {
      * Finds files referenced directly by the page or its attached media before deletion.
      * Relative URLs are resolved against the page's virtual path.
      *
+     * @param candidates storage paths to check
+     * @param publicPaths public URLs keyed by storage path
      * @param id page ID to inspect
      * @param domain host used to match absolute URLs
      * @return accumulated matches as candidate storage paths
      * @throws SQLException if the page is missing or its content or media cannot be read
      */
-    Set<String> referencedByPage(int id, String domain) throws SQLException {
+    public static Set<String> referencedByPage(Set<String> candidates, Map<String, String> publicPaths, int id, String domain) throws SQLException {
+        FileReferenceScanner scan = new FileReferenceScanner(candidates, publicPaths);
+        scan.scanPage(id, domain);
+        return scan.found;
+    }
+
+    private void scanPage(int id, String domain) throws SQLException {
         try (Connection connection = DBPool.getConnection()) {
             String base;
             try (PreparedStatement query = connection.prepareStatement("SELECT " + PAGE_COLUMNS + " FROM documents d WHERE d.doc_id=?")) {
@@ -108,20 +124,30 @@ final class PageMediaUsage {
                 }
             }
         }
-        return found;
     }
 
     /**
      * Finds candidates still referenced by pages, pending changes, component data or site source files.
      * A reference to a candidate's parent folder also preserves the file.
      *
+     * @param candidates storage paths to check
+     * @param publicPaths public URLs keyed by storage path
      * @param deleted page IDs to exclude along with their page-specific records
      * @return accumulated candidate storage paths to preserve
      * @throws SQLException if a database source cannot be read
      * @throws IOException if a source directory or file cannot be scanned completely
      */
-    Set<String> referencedElsewhere(Set<Integer> deleted) throws SQLException, IOException {
+    public static Set<String> referencedElsewhere(Set<String> candidates, Map<String, String> publicPaths, Set<Integer> deleted) throws SQLException, IOException {
+        if (candidates.isEmpty()) return Set.of();
+        FileReferenceScanner scan = new FileReferenceScanner(candidates, publicPaths);
+        scan.scanUsage(deleted);
+        return scan.found;
+    }
+
+    private void scanUsage(Set<Integer> deleted) throws SQLException, IOException {
         try (Connection connection = DBPool.getConnection()) {
+            // PostgreSQL fetches rows in batches only inside a transaction.
+            if (Constants.DB_TYPE == Constants.DB_PGSQL) connection.setAutoCommit(false);
             scanPages(connection, "documents d", deleted);
             String yes = DB.getBooleanSql(true);
             String no = DB.getBooleanSql(false);
@@ -157,22 +183,55 @@ final class PageMediaUsage {
                     "description FROM calendar",
                     "question FROM document_forum",
                     "tip_text FROM tips_of_the_day",
-                    "base_css_path,css,after_body_data FROM templates",
                     "seo_image FROM templates_group")) {
                 if (found.size() == count) break;
                 scanRows(connection, source, row -> inspectColumns(row, 1, null, null, true));
             }
+            boolean checkLayouts = files.keySet().stream().anyMatch(path -> path.startsWith("/templates/"));
+            scanRows(connection, "forward,template_install_name,base_css_path,css,after_body_data FROM templates", row -> {
+                if (checkLayouts) protectTemplateForward(DB.getDbString(row, "forward"), DB.getDbString(row, "template_install_name"));
+                inspectColumns(row, 3, null, null, true);
+            });
         }
         Set<String> visited = new HashSet<>();
         for (String root : List.of("/templates", "/components/" + Constants.getInstallName(), "/files", "/images")) {
             scanSources(IwcmFile.fromVirtualPath(root), visited);
         }
-        return found;
+    }
+
+    private void protectTemplateForward(String forward, String templateInstallName) {
+        String layout = FilenameUtils.normalize(forward, true);
+        if (layout == null || !Set.of("jsp", "html").contains(FileTools.getFileExtension(layout))) return;
+        if (layout.startsWith("/")) {
+            matchPath(layout.startsWith("/templates/") ? layout : "/templates" + layout, true);
+            return;
+        }
+        boolean domainInstall = Constants.getBoolean("multiDomainUseAliasAsInstallName") || Constants.isConstantsAliasSearch();
+        for (String install : new String[] {templateInstallName, Constants.getLogInstallName(), Constants.getInstallName()}) {
+            if (Tools.isEmpty(install)) continue;
+            String path = "/templates/" + install + "/" + layout;
+            if (new File(Tools.getRealPath(path)).isFile()) {
+                matchPath(path, true);
+                if (install.equals(templateInstallName) || !domainInstall) return;
+                break;
+            }
+        }
+        matchPath("/templates/" + layout, true);
+        if (domainInstall) {
+            // Another domain can resolve the same relative forward under its own installation.
+            files.forEach((path, matches) -> {
+                if (path.startsWith("/templates/") && StringUtils.endsWithIgnoreCase(path, "/" + layout)) recordMatches(matches);
+            });
+        }
     }
 
     private void scanRows(Connection connection, String source, RowCallbackHandler inspectRow) throws SQLException {
-        try (PreparedStatement query = connection.prepareStatement("SELECT " + source); ResultSet rows = query.executeQuery()) {
-            while (found.size() < count && rows.next()) inspectRow.processRow(rows);
+        if (found.size() == count) return;
+        try (PreparedStatement query = connection.prepareStatement("SELECT " + source)) {
+            query.setFetchSize(100);
+            try (ResultSet rows = query.executeQuery()) {
+                while (found.size() < count && rows.next()) inspectRow.processRow(rows);
+            }
         }
     }
 
@@ -187,7 +246,9 @@ final class PageMediaUsage {
                     String link = rows.getString(3);
                     // The external link of a generated fulltext row points back to the indexed file.
                     boolean indexed = link != null && link.startsWith("/files/") && (link + ".html").equals(base);
+                    sourceFile = indexed ? link : null;
                     inspectColumns(rows, indexed ? 4 : 3, base, null, true);
+                    sourceFile = null;
                 }
             }
         }
@@ -201,7 +262,7 @@ final class PageMediaUsage {
     /** A directory reached through several source roots is scanned once. */
     private void scanSources(IwcmFile directory, Set<String> visited) throws IOException {
         if (found.size() == count || !directory.exists()) return;
-        if (!visited.add(new java.io.File(directory.getAbsolutePath()).getCanonicalPath())) return;
+        if (!visited.add(new File(directory.getAbsolutePath()).getCanonicalPath())) return;
         IwcmFile[] children = directory.listFiles();
         if (children == null) throw new IOException("Cannot read " + directory.getVirtualPath());
         for (IwcmFile child : children) {
@@ -216,7 +277,8 @@ final class PageMediaUsage {
     private void scanSourceFile(IwcmFile file) throws IOException {
         String extension = FileTools.getFileExtension(file.getName());
         if (!TEXT_FILES.contains(extension)) return;
-        String base = List.of("css", "scss", "less", "svg").contains(extension) ? file.getVirtualPath() : null;
+        sourceFile = file.getVirtualPath();
+        String base = List.of("css", "scss", "less", "svg").contains(extension) ? sourceFile : null;
         try (var input = BoundedInputStream.builder().setInputStream(new IwcmInputStream(file)).setPropagateClose(true).get();
                 var reader = new InputStreamReader(input, Charset.forName(Constants.FILE_ENCODING))) {
             char[] buffer = new char[4 * MAX_URL_LENGTH];
@@ -229,23 +291,25 @@ final class PageMediaUsage {
                 tail = sourceTail(chunk);
             }
             if (input.getCount() != file.length()) throw new IOException("Incomplete read of " + file.getVirtualPath());
+        } finally {
+            sourceFile = null;
         }
     }
 
-    /** Keeps URLs and unfinished embed parameters that may continue in the next read. */
+    /** Keeps URLs and unfinished component parameters that may continue in the next read. */
     private static String sourceTail(String chunk) throws IOException {
         int start = Math.max(0, chunk.length() - MAX_URL_LENGTH);
         // An encoded parameter can span more than the usual URL overlap.
-        Matcher openEmbed = EMBED_START.matcher(chunk);
-        if (openEmbed.find(Math.max(0, chunk.lastIndexOf(")!"))) && openEmbed.start() < start) {
-            start = openEmbed.start();
-            if (chunk.length() - start > MAX_INCOMPLETE_EMBED_LENGTH) throw new IOException("Embed parameters exceed scan limit");
+        Matcher component = COMPONENT_START.matcher(chunk);
+        if (component.find(Math.max(0, chunk.lastIndexOf(")!"))) && component.start() < start) {
+            start = component.start();
+            if (chunk.length() - start > MAX_INCOMPLETE_COMPONENT_LENGTH) throw new IOException("Component parameters exceed scan limit");
         }
         return chunk.substring(start);
     }
 
     /**
-     * Extracts candidate references from text, including quoted paths and encoded Document and HTML Embed parameters.
+     * Extracts candidate references from text, including encoded embeds and recursive gallery folders.
      *
      * @param value page field or source text to inspect
      * @param base virtual path used to resolve relative URLs, or {@code null} if unknown
@@ -254,13 +318,17 @@ final class PageMediaUsage {
      */
     private void inspect(String value, String base, String domain, boolean protectFolders) {
         if (value == null || value.isBlank()) return;
-        Matcher embeds = EMBED_START.matcher(value);
-        while (found.size() < count && embeds.find()) {
-            int end = value.indexOf(")!", embeds.end());
+        Matcher component = COMPONENT_START.matcher(value);
+        while (found.size() < count && component.find()) {
+            int end = value.indexOf(")!", component.end());
             if (end < 0) break;
-            String params = value.substring(embeds.end(), end).replace("%20", " ").replace("\r", "").replace("\n", "");
-            boolean htmlEmbed = "html".equals(embeds.group(1));
-            String encoded = new PageParams(params).getValue(htmlEmbed ? "html" : "url", "");
+            PageParams params = new PageParams(value.substring(component.end(), end).replace("%20", " ").replace("\r", "").replace("\n", ""));
+            if ("gallery/gallery".equals(component.group(1))) {
+                if (protectFolders) protectGalleryImages(params.getValue("dir", "/images/gallery"), params.getBooleanValue("recursive", false));
+                continue;
+            }
+            boolean htmlEmbed = "app-htmlembed/embed".equals(component.group(1));
+            String encoded = params.getValue(htmlEmbed ? "html" : "url", "");
             String decoded = new String(Base64.decodeBase64(encoded), StandardCharsets.UTF_8);
             if (htmlEmbed) {
                 if (decoded.startsWith("utf8:")) decoded = Tools.URLDecode(decoded.substring(5));
@@ -271,8 +339,11 @@ final class PageMediaUsage {
             }
         }
         String text = value.indexOf('&') < 0 ? value : Parser.unescapeEntities(value, false);
-        String lower = text.toLowerCase(Locale.ROOT);
-        if (names.stream().noneMatch(lower::contains) && !ESCAPED_BYTE.matcher(text).find()) return;
+        // For large directory scans, token lookups cost less than searching the text once per candidate name.
+        if (protectedNames.size() <= 32 && text.indexOf('+') < 0) {
+            String lower = text.toLowerCase(Locale.ROOT);
+            if (protectedNames.keySet().stream().noneMatch(lower::contains) && !ESCAPED_BYTE.matcher(text).find()) return;
+        }
         text = text.replace("\\/", "/");
         // Quoted URLs and standalone media fields can contain literal spaces.
         if (text.length() < 2048) inspectToken(text.trim(), base, domain, protectFolders);
@@ -291,29 +362,59 @@ final class PageMediaUsage {
         if (found.size() < count) inspectTokens(text.substring(start), base, domain, protectFolders);
     }
 
+    private void protectGalleryImages(String directory, boolean recursive) {
+        if (directory.contains("%")) directory = Tools.URLDecode(directory);
+        Path root = Path.of("/", directory.trim().toLowerCase(Locale.ROOT)).normalize();
+        if (!recursive) {
+            String folder = StringUtils.stripEnd(root.toString().replace('\\', '/'), "/");
+            for (String candidate : protectedPaths.getOrDefault(folder, Set.of())) {
+                if (FileTools.isImage(candidate)) recordMatches(Set.of(candidate));
+            }
+            return;
+        }
+        files.forEach((path, matches) -> {
+            if (FileTools.isImage(path) && Path.of(path.toLowerCase(Locale.ROOT)).startsWith(root)) recordMatches(matches);
+        });
+    }
+
     private void inspectTokens(String text, String base, String domain, boolean protectFolders) {
-        Matcher tokens = TOKEN.matcher(text);
+        Matcher tokens = (protectFolders ? TOKEN_WITH_QUERY : TOKEN).matcher(text);
         while (tokens.find() && found.size() < count) inspectToken(tokens.group(), base, domain, protectFolders);
     }
 
     private void inspectToken(String token, String base, String domain, boolean protectFolders) {
-        if (token.length() > MAX_URL_LENGTH || (token.indexOf('/') < 0 && token.indexOf('.') < 0 && token.indexOf('%') < 0 && !names.contains(token.toLowerCase(Locale.ROOT)))) return;
+        if (token.length() > MAX_URL_LENGTH || (token.indexOf('/') < 0 && token.indexOf('.') < 0 && token.indexOf('%') < 0 && !protectedNames.containsKey(token.toLowerCase(Locale.ROOT)))) return;
+        int end = StringUtils.indexOfAny(token, '?', '#');
+        if (protectFolders && end >= 0 && token.charAt(end) == '?') {
+            String query = StringUtils.substringBefore(token.substring(end + 1), "#");
+            for (String parameter : query.split("&")) {
+                int equals = parameter.indexOf('=');
+                if (equals >= 0) inspectPath(parameter.substring(equals + 1).replace("+", "%20"), base, domain, true);
+            }
+        }
+        inspectPath(end < 0 ? token : token.substring(0, end), base, domain, protectFolders);
+    }
+
+    private void inspectPath(String url, String base, String domain, boolean protectFolders) {
         try {
-            int end = StringUtils.indexOfAny(token, '?', '#');
-            String url = end < 0 ? token : token.substring(0, end);
+            // Most tokens in large scans are unrelated links. Decode escapes and resolve dot segments when needed.
+            if (!url.contains("%")) {
+                String path = StringUtils.stripEnd(url, "/");
+                String name = path.substring(path.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT);
+                if (!protectedNames.containsKey(name) && !name.equals(".") && !name.equals("..")) return;
+            }
             URI uri = URI.create(url.replace(" ", "%20"));
             if (uri.isOpaque() || (uri.getAuthority() != null && domain != null && !domain.equalsIgnoreCase(uri.getHost()))) return;
             if (uri.getRawPath() == null || uri.getRawPath().isEmpty()) return;
             if (!uri.getPath().startsWith("/")) {
                 if (Tools.isEmpty(base) || !base.startsWith("/")) {
-                    if (protectFolders && (token.contains("/") || token.contains("."))) {
+                    if (protectFolders && (url.contains("/") || url.contains("."))) {
                         // Components without a hosting page can resolve the same relative URL in different folders.
                         String name = uri.normalize().getPath();
                         if (name.endsWith("/")) name = name.substring(0, name.length() - 1);
-                        String suffix = "/" + name.substring(name.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT);
-                        protectedPaths.forEach((path, matches) -> {
-                            if (path.endsWith(suffix)) found.addAll(matches);
-                        });
+                        String basename = name.substring(name.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT);
+                        Set<String> matches = protectedNames.get(basename);
+                        recordMatches(matches);
                     }
                     return;
                 }
@@ -330,6 +431,14 @@ final class PageMediaUsage {
     private void matchPath(String path, boolean protectFolders) {
         String key = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
         Set<String> matches = protectFolders ? protectedPaths.get(key.toLowerCase(Locale.ROOT)) : files.get(key);
-        if (matches != null) found.addAll(matches);
+        recordMatches(matches);
+    }
+
+    private void recordMatches(Set<String> matches) {
+        if (matches == null) return;
+        for (String candidate : matches) {
+            // A text file can mention its own name without being used by any other source.
+            if (!candidate.equals(sourceFile)) found.add(candidate);
+        }
     }
 }
