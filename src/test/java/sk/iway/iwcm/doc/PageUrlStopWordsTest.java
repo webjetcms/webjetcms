@@ -33,6 +33,7 @@ import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -290,6 +291,49 @@ class PageUrlStopWordsTest extends BaseWebjetTest {
             legacyPage.setVirtualPath("");
             EditorDB.setVirtualPath(legacyPage);
             assertEquals(expectedUrl.replace("-2.html", ".html"), legacyPage.getVirtualPath());
+        }
+    }
+
+    /** A numbered inherited suffix survives loading from history and saving after the original URL becomes free. */
+    @ParameterizedTest
+    @CsvSource({
+        "79, .html, sprava.html, sprava-3.html, sprava-3.html",
+        "79, /, sprava, sprava-3/, sprava-3",
+        "-1, .html, '', sprava-3.html, sprava-3.html",
+        "-1, /, '', sprava-3/, sprava-3"
+    })
+    void editorKeepsAssignedInheritedSuffix(int docId, String extension, String submittedSuffix, String assignedPath, String assignedSuffix) {
+        Constants.setString("editorPageExtension", extension);
+        Constants.setBoolean("urlRemoveSpojky", true);
+        page.setDocId(docId);
+        page.setTitle("Sprava");
+        page.setNavbar(page.getTitle());
+        page.setGenerateUrlFromTitle(false);
+        page.setUrlInheritGroup(true);
+        page.setEditorVirtualPath(submittedSuffix);
+        page.setVirtualPath(submittedSuffix);
+
+        DocDB documents = mock(DocDB.class);
+        try (var docAccess = mockStatic(DocDB.class, CALLS_REAL_METHODS)) {
+            docAccess.when(DocDB::getInstance).thenReturn(documents);
+            when(documents.getDocIdFromURLImpl(anyString(), anyString())).thenReturn(77, 78, -1);
+            assertEquals(77, EditorService.computeVirtualPathForNewPage(page, groups));
+            assertEquals("/news-events/" + assignedPath, page.getVirtualPath());
+            assertEquals(assignedSuffix, page.getEditorVirtualPath());
+
+            page.setDocId(79);
+            page.setDocLink(page.getVirtualPath());
+            var mapper = DocDetailsToDocHistoryMapper.INSTANCE;
+            DocDetails restored = mapper.docHistoryToDocDetails(mapper.docDetailsToDocHistory(page));
+            assertEquals(assignedSuffix, restored.getEditorVirtualPath());
+            restored.setVirtualPath(restored.getEditorVirtualPath());
+            assertEquals(-1, EditorService.computeVirtualPathForNewPage(restored, groups));
+            assertEquals("/news-events/" + assignedPath, restored.getVirtualPath());
+
+            groupAccess.when(() -> GroupsDB.getURLPathGroup(List.of(group), 42)).thenReturn("/archive/");
+            restored.setVirtualPath(restored.getEditorVirtualPath());
+            assertEquals(-1, EditorService.computeVirtualPathForNewPage(restored, groups));
+            assertEquals("/archive/" + assignedPath, restored.getVirtualPath());
         }
     }
 }
