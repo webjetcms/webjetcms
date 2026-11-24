@@ -89,8 +89,7 @@ For each change, verify:
 
 - **Null safety**: Are new nullable values properly handled? No unguarded dereferences?
 - **Edge cases**: Does the logic handle empty collections, null inputs, boundary values?
-- **Transaction boundaries**: Are database operations properly transactional? Could partial failures leave inconsistent state?
-- **Thread safety**: Are shared mutable resources properly synchronized?
+- **Transactions and concurrency** — Trace which writes can overlap or fail partway in a supported workflow, what the user would see, and whether an existing guard or retry already handles it.
 - **Resource management**: Are streams, connections, and other resources properly closed (try-with-resources)?
 - **Error handling**: Are exceptions caught at the right level? Are error messages meaningful?
 - **SQL/JPQL correctness**: Are queries correct? Are parameters properly bound (no injection risk)?
@@ -130,10 +129,20 @@ Check for:
 
 **DO NOT modify any files.** Only produce a written report.
 
+#### Assess likelihood in the deployment
+
+A typical WebJET CMS site has 1–8 cooperating editors from one organization. A MultiWeb installation can host independent companies, typically with 1–3 editors per domain. For a collision on one site, count the people or jobs that can act on that domain and the same resource. For a cross-domain access issue, assess what one tenant can do from its own account. Use the deployment described by the user when it differs from these defaults.
+
+For each candidate finding, identify who can trigger it, through which normal action, and which conditions must coincide. Rate the likelihood separately from the impact. Use **high** for a routine workflow, **medium** for an occasional but credible workflow, and **low** for an unusual combination or narrow timing window. State the assumption if usage is unknown. Use a numerical probability only when supported by measurements.
+
+For example, two editors choosing the same destination at the same instant, deleting a package during the final step of publication, or revoking an editor’s rights during a save are ordinarily unlikely. Check whether retries, scheduled jobs, or a documented operational practice make the overlap realistic. Omit purely hypothetical cases from the report. Keep ordinary authorization failures, tenant isolation defects, and failures a single editor can trigger through normal use in scope.
+
+Choose the priority from both likelihood and impact. Reserve merge blockers for credible exposure with material consequences. For a rare but relevant limitation, consider documenting the behavior or accepting it. Recommend an additional transaction, lock, or coordination mechanism only when the expected harm justifies its complexity and a simpler measure is insufficient.
+
 Structure the report as follows:
 
 #### Critical Issues
-Problems that will likely cause bugs, data loss, or security vulnerabilities. These must be fixed before commit.
+Report findings that meet the merge-blocker criteria above. Explain the realistic trigger and the consequence that warrants fixing them before merge.
 
 #### Backward Compatibility Concerns
 Changes that could break existing functionality, API consumers, or deployments.
@@ -148,10 +157,12 @@ Good patterns, clean code, or improvements worth acknowledging.
 Check changelog and roadmap entries only when the target project's conventions require them. In WebJET core, use the current release's changelog and an existing matching roadmap item. Missing core documentation directories are not findings in customer projects.
 
 For each finding, include:
+
 - **File and location** (line numbers or method names)
 - **What was found** (clear description of the issue)
-- **Why it matters** (impact or risk)
-- **Suggested fix** (concrete recommendation, with code example if helpful)
+- **Likelihood** (high / medium / low) with a one-sentence reason tied to the deployment and trigger
+- **Impact** (who is affected and what happens if triggered)
+- **Recommendation** (the simplest proportionate response, including documentation or acceptance where appropriate)
 
 ### 8. Check CHANGELOG Entry
 
