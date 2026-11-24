@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -16,6 +16,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -603,6 +604,52 @@ public class WebpagesService {
 		}
 	}
 
+	/**
+	 * Prepares the editor's URL suffix for page URL generation when {@link DocBasic#getUrlInheritGroup()} is true.
+	 * For a page in {@code /news/}, the suffix {@code /} means the folder URL itself ({@code /news/}),
+	 * and {@code archive/} becomes {@code /news/archive/}. A bare filename is passed to the URL generator,
+	 * which adds the folder prefix. An explicit path such as {@code /contact/} or a {@code javascript:}
+	 * link is passed through as entered.
+	 *
+	 * @param doc page or history version with folder URL inheritance enabled
+	 * @return the path to pass to the URL generator, or an empty string when the editor suffix is missing
+	 */
+	public static String getInheritedVirtualPath(DocBasic doc)
+	{
+		String urlSuffix = doc.getEditorVirtualPath();
+		if (urlSuffix == null) return "";
+
+		if ("/".equals(urlSuffix)) return DocDB.getGroupDiskPath(GroupsDB.getInstance().getGroupsAll(), doc.getGroupId());
+		if (urlSuffix.indexOf('/') <= 0 || urlSuffix.startsWith("javascript:")) return urlSuffix;
+		return DocDB.getGroupDiskPath(GroupsDB.getInstance().getGroupsAll(), doc.getGroupId()) + urlSuffix;
+	}
+
+	/** Applies the generated URL rules to manually entered path text containing spaces, accents or uppercase letters. */
+	public static String fixManualURL(String url)
+	{
+		if (Tools.isEmpty(url) || url.startsWith("javascript:") || !needsUrlFix(url)) return url;
+		StringBuilder fixed = new StringBuilder();
+		int copied = 0;
+		// [/*] matches '/' or the wildcard '*'. %\p{XDigit}{2} matches one encoded byte (e.g. %2F).
+		// [?#].* matches the rest of the URL from the first '?' or '#'. Splitting only on '/'
+		// would pass encoded bytes and query values to fixURL. These delimiters are copied verbatim.
+		try (Scanner parts = new Scanner(url).useDelimiter("[/*]|%\\p{XDigit}{2}|[?#].*")) {
+			while (parts.hasNext()) {
+				String part = parts.next();
+				if (!needsUrlFix(part)) continue;
+				fixed.append(url, copied, parts.match().start()).append(DocDB.fixURL(part));
+				copied = parts.match().end();
+			}
+		}
+		return copied == 0 ? url : fixed.append(url, copied, url.length()).toString();
+	}
+
+	private static boolean needsUrlFix(String text)
+	{
+		return text.codePoints().anyMatch(c -> Character.isWhitespace(c) || Character.isSpaceChar(c) || Character.isUpperCase(c))
+			|| !text.equals(StringUtils.stripAccents(text));
+	}
+
 	/** Returns a regenerated URL, or null when this version must keep its existing URL. */
 	private static String regenerateVirtualPath(DocBasic doc, boolean onlyChangeUrlInheritGroup)
 	{
@@ -615,7 +662,7 @@ public class WebpagesService {
 		form.setTempId(doc.getTempId());
 		form.setTitle(doc.getTitle());
 		form.setNavbar(doc.getNavbar());
-		form.setVirtualPath(Boolean.TRUE.equals(doc.getUrlInheritGroup()) && Tools.isNotEmpty(doc.getEditorVirtualPath()) ? doc.getEditorVirtualPath() : "");
+		form.setVirtualPath(Boolean.TRUE.equals(doc.getUrlInheritGroup()) ? getInheritedVirtualPath(doc) : "");
 		EditorDB.setVirtualPath(form);
 		return form.getVirtualPath();
 	}

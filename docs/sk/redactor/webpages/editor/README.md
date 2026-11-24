@@ -49,6 +49,8 @@ V poli URL adresa nastavujete adresu web stránky na internete (časť za domén
 
 Pole sa **pri uložení novej web stránky automaticky vyplní** podľa URL adresy priečinku a poľa Názov položky v menu, nemusíte ho manuálne vypĺňať.
 
+Pri uložení ručne zadanej adresy editor nahradí medzery pomlčkami, odstráni diakritiku a zmení veľké písmená na malé. Napríklad z `/Novinky/Nová správa.html` vznikne `/novinky/nova-sprava.html`. Rovnako upraví koncovku pri voľbe **Zdediť začiatok URL adresy z adresára**.
+
 Z pohľadu optimalizácie pre vyhľadávače by URL adresa stránky mala obsahovať kľúčové slová. Tie ale musia byť ideálne aj v titulku stránky, nadpisoch a v texte stránky.
 
 Ak URL adresu stránky zmeníte, automaticky sa vytvorí presmerovanie v aplikácii Presmerovania ciest. Ak iná stránka odkazuje na pôvodnú URL adresu bude presmerovaná na novú adresu stránky.

@@ -257,6 +257,7 @@ Scenario('Zmaz strukturu', ({ I }) => {
 Scenario('WYSIWYG content survives saving, reopening and history restoration', async ({ I, DT, DTE, Document }) => {
      const suffix = randomNumber + '-wysiwyg';
      const title = 'webPage-autotest-' + suffix;
+     const urlPrefix = '/autotest-' + suffix + '/';
      const original = 'Autotest original rich-text content';
      const updated = 'Autotest updated rich-text content';
      Document.resetPageBuilderMode();
@@ -298,10 +299,15 @@ Scenario('WYSIWYG content survives saving, reopening and history restoration', a
      I.waitForText(original, 10);
      I.dontSee(updated);
      I.switchTo();
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
+     I.uncheckOption('#DTE_Field_generateUrlFromTitle_0');
+     DTE.fillField('virtualPath', urlPrefix + 'Nová správa.html');
      DTE.save();
 
      I.click(title);
      DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
+     I.seeInField('#DTE_Field_virtualPath', urlPrefix + 'nova-sprava.html');
      I.clickCss('#pills-dt-datatableInit-content-tab');
      I.switchTo('.cke_wysiwyg_frame');
      I.waitForText(original, 10);

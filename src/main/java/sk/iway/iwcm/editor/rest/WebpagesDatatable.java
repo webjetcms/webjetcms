@@ -75,7 +75,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public Map<String, String> httpHeaders(@RequestBody DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
         EditorForm form = new EditorForm(doc);
         if (Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) form.setVirtualPath("");
-        else if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) form.setVirtualPath(doc.getEditorVirtualPath() == null ? "" : doc.getEditorVirtualPath());
+        else if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) form.setVirtualPath(WebpagesService.getInheritedVirtualPath(doc));
         EditorDB.setVirtualPath(form);
         String path = form.getVirtualPath();
         if (path == null || path.isEmpty()) path = "/showdoc.do?docid=" + doc.getDocId();

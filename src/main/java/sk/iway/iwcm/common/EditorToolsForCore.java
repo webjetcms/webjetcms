@@ -36,6 +36,7 @@ import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -58,18 +59,19 @@ public class EditorToolsForCore {
         String domain = groupsDB.getDomain(my_form.getGroupId());
         if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && my_form.getVirtualPath().startsWith("javascript:")==false)
         {
-            boolean mustGenerateVirtualPath = false;
-            if (Tools.isNotEmpty(my_form.getVirtualPath()))
+            String path = WebpagesService.fixManualURL(my_form.getVirtualPath());
+            if (!path.equals(my_form.getVirtualPath()) && path.contains("/") && !path.contains("*")) path = DocDB.normalizeVirtualPath(path);
+            my_form.setVirtualPath(path);
+            if (my_form.getVirtualPath().contains("/"))
             {
                 int actualDocId = DocDB.getDocIdFromURL(my_form.getVirtualPath(), domain);
                 if (actualDocId > 0 && actualDocId != my_form.getDocId())
                 {
-                    mustGenerateVirtualPath = true;
                     my_form.setVirtualPath("");
                 }
             }
 
-            if (mustGenerateVirtualPath || Tools.isEmpty(my_form.getVirtualPath()) || my_form.getVirtualPath().indexOf('/')==-1)
+            if (!my_form.getVirtualPath().contains("/"))
             {
                 //nastavime ako treba
                 String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), my_form.getGroupId());
@@ -131,16 +133,6 @@ public class EditorToolsForCore {
                 my_form.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
 
                 Logger.println(EditorToolsForCore.class, "nastaveny virtual path na:"+virtualPath+";");
-            }
-            else if ("cloud".equals(Constants.getInstallName()))
-            {
-                //tiket 15910 - kontrola specialnych znakov v URL
-                String cleaned = DocTools.removeCharsDir(DB.internationalToEnglish(my_form.getVirtualPath())).toLowerCase();
-                if(!cleaned.equals(my_form.getVirtualPath()))
-                {
-                    my_form.setVirtualPath(DocDB.normalizeVirtualPath(cleaned));
-                    Logger.println(EditorToolsForCore.class, "virtual path upraveny na:"+my_form.getVirtualPath()+";");
-                }
             }
         }
     }

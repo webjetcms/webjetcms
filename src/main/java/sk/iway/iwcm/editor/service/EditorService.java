@@ -26,7 +26,6 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
 import sk.iway.iwcm.components.structuremirroring.MirroringService;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -897,31 +896,20 @@ public class EditorService {
 		String domain = groupsDB.getDomain(editedDoc.getGroupId());
 		int virtualPathConflictDocId = -1;
 		if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && editedDoc.getVirtualPath().startsWith("javascript:") == false) {
-			boolean mustGenerateVirtualPath = false;
+			String path = WebpagesService.fixManualURL(editedDoc.getVirtualPath());
+			editedDoc.setVirtualPath(path);
+			editedDoc.setEditorVirtualPath(WebpagesService.fixManualURL(editedDoc.getEditorVirtualPath()));
 
-			//trim URL address - it is also in setter, but setVirtualPath can be called from other places
-			editedDoc.setVirtualPath(editedDoc.getVirtualPath().trim());
-			if (editedDoc.getEditorVirtualPath() != null) editedDoc.setEditorVirtualPath(editedDoc.getEditorVirtualPath().trim());
-
-			if (Tools.isNotEmpty(editedDoc.getVirtualPath())) {
-				int actualDocId = DocDB.getDocIdFromURL(editedDoc.getVirtualPath(), domain);
+			if (path.contains("/")) {
+				int actualDocId = DocDB.getDocIdFromURL(path, domain);
 				if (actualDocId > 0 && actualDocId != editedDoc.getDocId()) {
-					mustGenerateVirtualPath = true;
 					virtualPathConflictDocId = actualDocId;
 				}
 			}
 
-			if (mustGenerateVirtualPath || Tools.isEmpty(editedDoc.getVirtualPath()) || editedDoc.getVirtualPath().indexOf('/') == -1) {
+			if (virtualPathConflictDocId > 0 || !path.contains("/")) {
 				int virtualPathConflictDocIdDoc = computeVirtualPathForNewPage(editedDoc, groupsDB);
 				if (virtualPathConflictDocId < 1) virtualPathConflictDocId = virtualPathConflictDocIdDoc;
-			}
-			else if ("cloud".equals(Constants.getInstallName())) {
-				//tiket 15910 - kontrola specialnych znakov v URL
-				String cleaned = DocTools.removeCharsDir(DB.internationalToEnglish(editedDoc.getVirtualPath())).toLowerCase();
-				if(!cleaned.equals(editedDoc.getVirtualPath())) {
-					editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(cleaned));
-					Logger.println(EditorService.class, "virtual path upraveny na:"+editedDoc.getVirtualPath()+";");
-				}
 			}
 		}
 		//pre uz existujucu stranku, ktora ma automaticky generovane URL nezobrazuj varovanie (lebo sa vzdy generuje a zobrazi sa pri kazdom ulozeni)

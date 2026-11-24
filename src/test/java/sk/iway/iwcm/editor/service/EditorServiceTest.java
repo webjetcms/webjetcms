@@ -5,13 +5,18 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDBForTest;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.EditorDB;
@@ -187,6 +192,85 @@ public class EditorServiceTest extends BaseWebjetTest {
 
         EditorDB.setVirtualPath(ef);
         assertEquals(expectedPath, ef.getVirtualPath(), "EF virtual path doesnt contain date. Expected: " + expectedPath + " but was: " + ef.getVirtualPath());
+    }
+
+    /** A pasted headline is cleaned before the editor stores its manual URL. */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void normalizesManualPageUrl(boolean lastSlash) {
+        Constants.setBoolean("virtualPathLastSlash", lastSlash);
+        String folder = "/autotest-manual-url/novinky-tlacove-spravy/";
+        String headline = "Orange vypína 3G sieť, aby mohol ďalej vylepšovať parametre modernejších sietí, vrátane 5G";
+        String slug = "orange-vypina-3g-siet-aby-mohol-dalej-vylepsovat-parametre-modernejsich-sieti-vratane-5g";
+        DocDetails page = new DocDetails();
+        page.setGroupId(67);
+        page.setGenerateUrlFromTitle(false);
+        page.setVirtualPath(folder + headline + "/");
+        EditorForm form = new EditorForm(page);
+        editorService.setVirtualPath(page);
+        String expected = folder + slug + (lastSlash ? "/" : "");
+        assertEquals(expected, page.getVirtualPath());
+        EditorDB.setVirtualPath(form);
+        assertEquals(expected, form.getVirtualPath());
+        form.setVirtualPath(folder + headline + "/");
+        EditorToolsForCore.setVirtualPath(form);
+        assertEquals(expected, form.getVirtualPath());
+    }
+
+    /** The editable suffix can be reused when the page inherits a different folder prefix. */
+    @ParameterizedTest
+    @ValueSource(strings = { "", ".html", "/" })
+    public void normalizesInheritedPageUrl(String ending) {
+        Constants.setString("editorPageExtension", ".html");
+        DocDetails page = new DocDetails();
+        page.setGenerateUrlFromTitle(false);
+        page.setUrlInheritGroup(true);
+        page.setEditorVirtualPath("Nová správa" + ending);
+        DocEditorFields fields = new DocEditorFields();
+        fields.setGroupDetails(GroupsDB.getInstance().getGroup(67));
+        fields.toDocDetails(page);
+        editorService.setVirtualPath(page);
+        assertEquals("nova-sprava" + ending, page.getEditorVirtualPath());
+        String expectedEnding = ending.isEmpty() ? ".html" : ending;
+        assertEquals(DocDB.normalizeVirtualPath("/test-stavov/nova-sprava" + expectedEnding), page.getVirtualPath());
+    }
+
+    /** Collision detection uses the URL that will be stored. */
+    @Test
+    public void resolvesCollisionAfterCleaningManualUrl() {
+        Constants.setString("editorPageExtension", ".html");
+        DocDetails existing = new DocDetails();
+        existing.setGroupId(67);
+        existing.setVirtualPath("/autotest-manual-url/nova-sprava.html");
+        docDBForTest.addUrlToInternalCache(existing, GroupsDB.getInstance().getGroup(67));
+
+        DocDetails page = new DocDetails();
+        cleanDoc(page);
+        page.setGroupId(67);
+        page.setGenerateUrlFromTitle(false);
+        page.setVirtualPath("/autotest-manual-url/Nová správa.html");
+        editorService.setVirtualPath(page);
+        assertEquals("/autotest-manual-url/nova-sprava-2.html", page.getVirtualPath());
+        assertFalse(editorService.getNotify().isEmpty());
+    }
+
+    /** Only path text with whitespace, accents or uppercase letters is normalized. */
+    @ParameterizedTest
+    @CsvSource(value = {
+        "/novinky/nova sprava.html | /novinky/nova-sprava.html",
+        "/novinky/správa.html | /novinky/sprava.html",
+        "/novinky/ORANGE.html | /novinky/orange.html",
+        "/novinky/akcia+bonus.html | /novinky/akcia+bonus.html",
+        "/novinky/akcia+bonus%2F2026.html?kod=ABC#Obsah | /novinky/akcia+bonus%2F2026.html?kod=ABC#Obsah",
+        "/API.v1/Case%20Sensitive/Žltá%20správa.html?q=A+B&lang=sk#Obsah | /api.v1/case%20sensitive/zlta%20sprava.html?q=A+B&lang=sk#Obsah",
+        "/API.v1/Nová správa/* | /api.v1/nova-sprava/*"
+    }, delimiter = '|')
+    public void preservesManualUrlSyntax(String input, String expected) {
+        DocDetails page = new DocDetails();
+        page.setGroupId(67);
+        page.setVirtualPath(input);
+        editorService.setVirtualPath(page);
+        assertEquals(expected, page.getVirtualPath());
     }
 
     @AfterAll

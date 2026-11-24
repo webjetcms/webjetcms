@@ -36,7 +36,6 @@ import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.AtrBean;
@@ -2746,95 +2745,7 @@ public class EditorDB
 	 */
 	public static void setVirtualPath(EditorForm my_form)
 	{
-		GroupsDB groupsDB = GroupsDB.getInstance();
-		String domain = groupsDB.getDomain(my_form.getGroupId());
-		if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && my_form.getVirtualPath().startsWith("javascript:")==false)
-		{
-			boolean mustGenerateVirtualPath = false;
-			if (Tools.isNotEmpty(my_form.getVirtualPath()))
-			{
-				int actualDocId = DocDB.getDocIdFromURL(my_form.getVirtualPath(), domain);
-				if (actualDocId > 0 && actualDocId != my_form.getDocId())
-				{
-					mustGenerateVirtualPath = true;
-					my_form.setVirtualPath("");
-				}
-			}
-
-			if (mustGenerateVirtualPath || Tools.isEmpty(my_form.getVirtualPath()) || my_form.getVirtualPath().indexOf('/')==-1)
-			{
-				//nastavime ako treba
-				String groupDiskPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), my_form.getGroupId());
-				DocDetails doc = new DocDetails();
-				doc.setDocId(my_form.getDocId());
-				doc.setTitle(my_form.getTitle());
-				doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128));
-				doc.setVirtualPath(my_form.getVirtualPath());
-				doc.setGroupId(my_form.getGroupId());
-				doc.setTempId(my_form.getTempId());
-				String virtualPath = DocDB.getURL(doc, groupDiskPath);
-				String koncovka = virtualPath.endsWith("/") ? "/" : ".html";
-				String editorPageExtension = Constants.getString("editorPageExtension");
-
-				for (int i=1; i<1000; i++)
-				{
-					if(virtualPath != null && virtualPath.length() > 255)
-					{
-						String vpTmp = virtualPath.substring(0, virtualPath.length()-koncovka.length());
-						vpTmp = DB.prepareString(vpTmp, 255-koncovka.length())+koncovka;
-						virtualPath = vpTmp;
-					}
-
-					int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
-					Logger.debug(EditorDB.class, "setVirtualPath: allreadyDocId for virtualPath: "+virtualPath + " ,docid: "+allreadyDocId);
-					if (allreadyDocId <= 0 || allreadyDocId==my_form.getDocId())
-					{
-						break;
-					}
-					doc.setTitle(my_form.getTitle()+" "+i);
-					doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128)+" "+i);
-
-					if ("/".equals(editorPageExtension))
-					{
-						//nastav cistu, handluje sa to nastavenim title s cislom vyssie
-						doc.setVirtualPath("");
-					}
-					else
-					{
-						if (my_form.getVirtualPath().endsWith(".html"))
-						{
-							doc.setVirtualPath(Tools.replace(my_form.getVirtualPath(), ".html", "-" + i + ".html"));
-							koncovka = "-" + i + ".html";
-						} else if (my_form.getVirtualPath().endsWith("/"))
-						{
-							doc.setVirtualPath(my_form.getVirtualPath() + i + ".html");
-							koncovka = i + ".html";
-						} else if (Tools.isEmpty(my_form.getVirtualPath()))
-						{
-							doc.setVirtualPath(Tools.replace(my_form.getTitle() + ".html", "/", "-"));
-							my_form.setVirtualPath(doc.getVirtualPath());
-							koncovka = ".html";
-						}
-					}
-
-					virtualPath = DocDB.getURL(doc, groupDiskPath);
-				}
-
-				my_form.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
-
-				Logger.println(EditorDB.class, "nastaveny virtual path na:"+virtualPath+";");
-			}
-			else if ("cloud".equals(Constants.getInstallName()))
-			{
-				//tiket 15910 - kontrola specialnych znakov v URL
-				String cleaned = DocTools.removeCharsDir(DB.internationalToEnglish(my_form.getVirtualPath())).toLowerCase();
-				if(!cleaned.equals(my_form.getVirtualPath()))
-				{
-					my_form.setVirtualPath(DocDB.normalizeVirtualPath(cleaned));
-					Logger.println(EditorDB.class, "virtual path upraveny na:"+my_form.getVirtualPath()+";");
-				}
-			}
-		}
+		EditorToolsForCore.setVirtualPath(my_form);
 	}
 
 	/**

@@ -2924,7 +2924,8 @@ public class DocDB extends DB
 		}
 	}
 
-	private static String fixURL(String url)
+	/** Cleans page URL text while retaining stop words and normalizing file extensions. */
+	public static String fixURL(String url)
 	{
 		if (url==null) return("");
 
@@ -4713,7 +4714,8 @@ public class DocDB extends DB
 			ps.setString(39, docDetails.getFieldL());
 
 			ps.setBoolean(40, docDetails.isDisableAfterEnd());
-			if (Tools.isEmpty(docDetails.getVirtualPath()))
+			String virtualPath = docDetails.getVirtualPath();
+			if (Tools.isEmpty(virtualPath) || !virtualPath.equals(WebpagesService.fixManualURL(virtualPath)))
 			{
 				EditorForm ef = new EditorForm(docDetails);
 				EditorDB.setVirtualPath(ef);

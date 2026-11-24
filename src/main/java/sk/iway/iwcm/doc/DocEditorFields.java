@@ -15,6 +15,7 @@ import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.editor.rest.DocHistoryDto;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -392,7 +393,7 @@ public class DocEditorFields extends BaseEditorFields {
 
         //Nastav editorVirtualPath do virtualPath, aby sa vygenerovala cela cesta
         if(Boolean.TRUE.equals(doc.getUrlInheritGroup())) {
-            doc.setVirtualPath(doc.getEditorVirtualPath());
+            doc.setVirtualPath(WebpagesService.getInheritedVirtualPath(doc));
         }
 
         //Ak generateUrlFromTitle je true, vygeneruj hodnotu podla titulku nastavenim virtualPath na prazdnu hodnotu
