@@ -32,10 +32,14 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.PlannedAssetPaths;
 import sk.iway.iwcm.doc.PlannedChangesService;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
 /**
  * Finds references to candidate files by their storage or public paths. Matches accumulate
@@ -60,10 +64,12 @@ public final class FileReferenceScanner {
     private static final Pattern QUOTED = Pattern.compile("\"([^\"<>\\r\\n]+)\"|'([^'<>\\r\\n]+)'");
 
     private final Map<String, Set<String>> files = new HashMap<>();
+    private final Map<String, String> domainAliases = new HashMap<>();
     private final Map<String, Set<String>> protectedPaths = new HashMap<>();
     private final Set<String> found = new HashSet<>();
     private final Map<String, Set<String>> protectedNames = new HashMap<>();
     private final int count;
+    private final boolean hasNonAsciiPaths;
     private String sourceFile;
 
     /**
@@ -77,6 +83,7 @@ public final class FileReferenceScanner {
         count = candidates.size();
         for (String candidate : candidates) {
             for (String path : List.of(candidate, publicPaths.getOrDefault(candidate, candidate))) {
+                if (!path.equals(candidate)) domainAliases.put(candidate, StringUtils.substringBetween(candidate.substring(1), "/", "/"));
                 files.computeIfAbsent(path, key -> new HashSet<>()).add(candidate);
                 String parent = path.substring(0, path.lastIndexOf('/'));
                 for (String reference : List.of(path, parent)) {
@@ -86,6 +93,7 @@ public final class FileReferenceScanner {
                 }
             }
         }
+        hasNonAsciiPaths = files.keySet().stream().anyMatch(path -> path.chars().anyMatch(c -> c > 127));
     }
 
     /**
@@ -145,6 +153,7 @@ public final class FileReferenceScanner {
     }
 
     private void scanUsage(Set<Integer> deleted) throws SQLException, IOException {
+        Set<String> stylesheets = new HashSet<>();
         try (Connection connection = DBPool.getConnection()) {
             // PostgreSQL fetches rows in batches only inside a transaction.
             if (Constants.DB_TYPE == Constants.DB_PGSQL) connection.setAutoCommit(false);
@@ -178,8 +187,11 @@ public final class FileReferenceScanner {
                     "description FROM quiz_results",
                     "question_text FROM inquiry",
                     "image_path,url,answer_text FROM inquiry_answers",
-                    "html_head FROM groups",
-                    "html_head FROM groups_scheduler WHERE (when_to_publish IS NOT NULL AND date_published IS NULL) OR awaiting_approve LIKE '_%'",
+                    "html_head,field_a,field_b,field_c,field_d FROM groups",
+                    "html_head,field_a,field_b,field_c,field_d FROM groups_scheduler WHERE (when_to_publish IS NOT NULL AND date_published IS NULL) OR awaiting_approve LIKE '_%'",
+                    "new_url FROM url_redirect",
+                    "watermark FROM gallery_dimension WHERE watermark IS NOT NULL",
+                    "photo FROM users WHERE photo IS NOT NULL",
                     "description FROM calendar",
                     "question FROM document_forum",
                     "tip_text FROM tips_of_the_day",
@@ -190,8 +202,25 @@ public final class FileReferenceScanner {
             boolean checkLayouts = files.keySet().stream().anyMatch(path -> path.startsWith("/templates/"));
             scanRows(connection, "forward,template_install_name,base_css_path,css,after_body_data FROM templates", row -> {
                 if (checkLayouts) protectTemplateForward(DB.getDbString(row, "forward"), DB.getDbString(row, "template_install_name"));
+                String baseCss = StringUtils.defaultIfBlank(row.getString("base_css_path"), "/css/page.css");
+                stylesheets.addAll(List.of(Tools.getTokens(baseCss, ",\n")));
+                stylesheets.addAll(List.of(Tools.getTokens(row.getString("css"), ",\n")));
                 inspectColumns(row, 3, null, null, true);
             });
+        }
+        for (String url : stylesheets) {
+            if (found.size() == count) break;
+            if (!url.startsWith("/") || url.startsWith("//")) continue;
+            String path;
+            try {
+                path = PlannedAssetPaths.localPath(url);
+            } catch (IllegalArgumentException ignored) {
+                continue;
+            }
+            if (!"css".equals(FileTools.getFileExtension(path))) continue;
+            matchPath(path, true);
+            IwcmFile file = new IwcmFile(PathFilter.getCustomPathRealPath(path));
+            if (file.isFile()) scanSourceFile(file, path);
         }
         Set<String> visited = new HashSet<>();
         for (String root : List.of("/templates", "/components/" + Constants.getInstallName(), "/files", "/images")) {
@@ -270,30 +299,43 @@ public final class FileReferenceScanner {
             String name = child.getName();
             if (name.startsWith(".") || "node_modules".equals(name) || "CVS".equals(name)) continue;
             if (child.isDirectory()) scanSources(child, visited);
-            else if (child.isFile()) scanSourceFile(child);
+            else if (child.isFile()) scanSourceFile(child, child.getVirtualPath());
         }
     }
 
-    private void scanSourceFile(IwcmFile file) throws IOException {
+    private void scanSourceFile(IwcmFile file, String publicPath) throws IOException {
         String extension = FileTools.getFileExtension(file.getName());
         if (!TEXT_FILES.contains(extension)) return;
-        sourceFile = file.getVirtualPath();
+        sourceFile = publicPath;
         String base = List.of("css", "scss", "less", "svg").contains(extension) ? sourceFile : null;
+        try {
+            // The same bytes can name different files in Windows-1250 and UTF-8. Preserve both matches.
+            if (scanSourceText(file, base, Charset.forName(Constants.FILE_ENCODING))) {
+                scanSourceText(file, base, StandardCharsets.UTF_8);
+            }
+        } finally {
+            sourceFile = null;
+        }
+    }
+
+    /** Returns whether non-ASCII text and remaining candidates warrant checking another encoding. */
+    private boolean scanSourceText(IwcmFile file, String base, Charset encoding) throws IOException {
+        boolean hasNonAsciiText = false;
         try (var input = BoundedInputStream.builder().setInputStream(new IwcmInputStream(file)).setPropagateClose(true).get();
-                var reader = new InputStreamReader(input, Charset.forName(Constants.FILE_ENCODING))) {
+                var reader = new InputStreamReader(input, encoding)) {
             char[] buffer = new char[4 * MAX_URL_LENGTH];
             String tail = "";
             int length;
             while ((length = reader.read(buffer)) != -1) {
                 String chunk = tail + new String(buffer, 0, length);
                 inspect(chunk, base, null, true);
-                if (found.size() == count) return;
+                if (found.size() == count) return false;
+                if (hasNonAsciiPaths && !hasNonAsciiText) hasNonAsciiText = chunk.chars().anyMatch(c -> c > 127);
                 tail = sourceTail(chunk);
             }
             if (input.getCount() != file.length()) throw new IOException("Incomplete read of " + file.getVirtualPath());
-        } finally {
-            sourceFile = null;
         }
+        return hasNonAsciiText;
     }
 
     /** Keeps URLs and unfinished component parameters that may continue in the next read. */
@@ -432,6 +474,22 @@ public final class FileReferenceScanner {
         String key = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
         Set<String> matches = protectFolders ? protectedPaths.get(key.toLowerCase(Locale.ROOT)) : files.get(key);
         recordMatches(matches);
+        if (!protectFolders || !key.startsWith("/")) return;
+
+        // A directory symlink can expose the same file under a different media URL.
+        String name = StringUtils.substringAfterLast(key, "/").toLowerCase(Locale.ROOT);
+        for (String candidate : protectedNames.getOrDefault(name, Set.of())) {
+            if (found.contains(candidate) || candidate.equals(sourceFile) || IwcmFsDB.useDBStorage(candidate)) continue;
+            String localPath = MultiDomainFilter.rewriteUrlToLocal(key, domainAliases.get(candidate));
+            if (IwcmFsDB.useDBStorage(localPath)) continue;
+            try {
+                File target = new File(Tools.getRealPath(localPath)).getCanonicalFile();
+                if (target.equals(new File(Tools.getRealPath(candidate)).getCanonicalFile())) found.add(candidate);
+            } catch (IOException ex) {
+                // Keep the candidate if its identity cannot be checked safely.
+                found.add(candidate);
+            }
+        }
     }
 
     private void recordMatches(Set<String> matches) {

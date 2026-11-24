@@ -4,12 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -32,6 +35,7 @@ import org.springframework.mock.web.MockServletContext;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.filebrowser.FileReferenceScanner;
@@ -62,18 +66,29 @@ class PageMediaUsageTest extends BaseWebjetTest {
     }
 
     /**
-     * Verifies banner, embed, gallery and template layout references while leaving unrelated files eligible for cleanup.
+     * Verifies references in CMS records, embeds and templates while leaving unrelated files eligible for cleanup.
      *
      * @throws Exception if the template or database fixtures cannot be prepared or scanned
      */
     @Test
     void preservesReferencesOutsidePageContent() throws Exception {
-        String folder = "/files/autotest-" + UUID.randomUUID() + "/";
+        String fixtureName = "autotest-" + UUID.randomUUID();
+        String folder = "/files/" + fixtureName + "/";
         String banner = folder + "mobile.jpg";
+        String redirectTarget = folder + "redirect.pdf";
+        String watermark = folder + "watermark.png";
+        String profilePhoto = folder + "profile.jpg";
+        String groupFile = folder + "group.pdf";
+        String pendingGroupFile = folder + "pending-group.pdf";
         String document = folder + "catalogue.pdf";
         String image = folder + "map.jpg";
         String legacyImage = folder + "legacy.jpg";
         String download = folder + "price list.pdf";
+        String background = folder + "čaj.jpg";
+        Charset windows1250 = Charset.forName(Constants.FILE_ENCODING);
+        // The UTF-8 URL in page.css also names a different file when read as Windows-1250.
+        String legacyBackground = new String(background.getBytes(StandardCharsets.UTF_8), windows1250);
+        String printLogo = folder + "tlačové-logo.svg";
         String unused = folder + "unused.txt";
         String gallery = folder + "events";
         String nestedImage = gallery + "/conference/team.jpg";
@@ -81,6 +96,10 @@ class PageMediaUsageTest extends BaseWebjetTest {
         String layouts = "/templates/autotest-layouts/";
         String desktop = layouts + "story.html";
         String phone = layouts + "story-phone.jsp";
+        Files.writeString(Files.createDirectories(webroot.resolve("css")).resolve("page.css"),
+            "body { background-image: url(" + background + "); }");
+        Path printCss = Files.createDirectories(webroot.resolve("overrides/assets")).resolve("print.css");
+        Files.writeString(printCss, "header { background-image: url('.." + printLogo + "'); }", windows1250);
         Path template = Files.createDirectories(webroot.resolve("templates")).resolve("embed.html");
         // The embed starts in one read and its encoded URL ends in the next.
         Files.writeString(template, " ".repeat(22000) + "!INCLUDE(/components/app-docsembed/embed.jsp,"
@@ -92,7 +111,8 @@ class PageMediaUsageTest extends BaseWebjetTest {
             + "<a href='" + unused + ".bak'>Backup</a>"
             + "!INCLUDE(/components/gallery/gallery.jsp, dir=" + otherGallery + ", recursive=false)!");
 
-        Set<String> candidates = Set.of(banner, document, image, legacyImage, download, nestedImage, unused,
+        Set<String> candidates = Set.of(banner, redirectTarget, watermark, profilePhoto, groupFile, pendingGroupFile,
+            document, image, legacyImage, download, background, legacyBackground, printLogo, nestedImage, unused,
             gallery + "/conference/unused.pdf", otherGallery + "/conference/team.jpg", desktop, phone, layouts + "archive/story.html");
         for (String candidate : candidates) {
             Path file = webroot.resolve(candidate.substring(1));
@@ -106,15 +126,24 @@ class PageMediaUsageTest extends BaseWebjetTest {
             int originalDbType = Constants.DB_TYPE;
             try {
                 JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-                String insertLayout = "INSERT INTO templates (temp_name,forward,template_install_name) VALUES (?,?,?)";
-                jdbc.update(insertLayout, "Autotest story", "story.html", "autotest-layouts");
-                jdbc.update(insertLayout, "Autotest story device=phone", phone, "autotest-layouts");
+                String insertLayout = "INSERT INTO templates (temp_name,forward,template_install_name,css) VALUES (?,?,?,?)";
+                jdbc.update(insertLayout, "Autotest story", "story.html", "autotest-layouts", null);
+                jdbc.update(insertLayout, "Autotest story device=phone", phone, "autotest-layouts", "/assets/screen.css,\n/assets/print.css?v=1");
                 jdbc.update(
                     "INSERT INTO banner_banners (banner_id,banner_type,active,image_link_mobile) VALUES (?,?,?,?)",
                     PkeyGenerator.getNextValue("banner_banners"), 4, true, banner);
-                try (var pool = mockStatic(DBPool.class)) {
+                jdbc.update("INSERT INTO url_redirect (url_redirect_id,old_url,new_url,redirect_code,insert_date) VALUES (?,?,?,301,CURRENT_TIMESTAMP)",
+                    PkeyGenerator.getNextValue("url_redirect"), "/" + fixtureName, redirectTarget);
+                jdbc.update("INSERT INTO gallery_dimension (image_path,watermark) VALUES (?,?)", "/images/" + fixtureName, watermark);
+                jdbc.update("INSERT INTO users (login,photo) VALUES (?,?)", fixtureName, profilePhoto);
+                jdbc.update("INSERT INTO groups (group_name,field_a) VALUES (?,?)", fixtureName, groupFile);
+                jdbc.update("INSERT INTO groups_scheduler (group_id,group_name,field_d,when_to_publish) "
+                    + "SELECT group_id,group_name,?,CURRENT_TIMESTAMP FROM groups WHERE group_name=?", pendingGroupFile, fixtureName);
+                try (var pool = mockStatic(DBPool.class); var paths = mockStatic(PathFilter.class, CALLS_REAL_METHODS)) {
+                    paths.when(() -> PathFilter.getCustomPathRealPath("/assets/print.css")).thenReturn(printCss.toString());
                     pool.when(DBPool::getConnection).thenReturn(dataSource.getConnection());
-                    assertEquals(Set.of(banner, document, image, legacyImage, download, nestedImage, desktop, phone),
+                    assertEquals(Set.of(banner, redirectTarget, watermark, profilePhoto, groupFile, pendingGroupFile,
+                        document, image, legacyImage, download, background, legacyBackground, printLogo, nestedImage, desktop, phone),
                         FileReferenceScanner.referencedElsewhere(candidates, Map.of(), Set.of()));
                     assertEquals(List.of(otherGallery + "/conference/team.jpg", gallery + "/conference/unused.pdf", unused),
                         FileTools.getDirFileUsage(folder, null).stream().map(file -> file.getVirtualParent() + "/" + file.getName()).toList());
