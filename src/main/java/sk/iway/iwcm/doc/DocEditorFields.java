@@ -325,7 +325,10 @@ public class DocEditorFields extends BaseEditorFields {
         if (Tools.isNotEmpty(editingMode)) {
             editingModeLink = doc.getVirtualPath();
 
-            if (doc.getDocId()<1 || Tools.isEmpty(editingModeLink)) {
+            if (doc instanceof DocDetails revision && revision.getDocId() > 0 && revision.getHistoryId() > 0) {
+                // A historical URL may no longer resolve to the page.
+                editingModeLink = "/showdoc.do?docid=" + revision.getDocId() + "&historyid=" + revision.getHistoryId();
+            } else if (doc.getDocId()<1 || Tools.isEmpty(editingModeLink)) {
                 //asi je to podstranka, otvor fejkovanu hlavnu stranku adresara
                 DocDetails groupDoc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);
                 if (groupDoc != null) {
@@ -335,12 +338,6 @@ public class DocEditorFields extends BaseEditorFields {
 
             if (Tools.isNotEmpty(editingModeLink)) {
                 editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, "inlineEditorAdmin", "true");
-                if (doc instanceof DocDetails) {
-                    DocDetails docDocDetails = (DocDetails)doc;
-                    if (docDocDetails.getHistoryId()>0) {
-                        editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, "historyid", String.valueOf(docDocDetails.getHistoryId()));
-                    }
-                }
             } else {
                 //nepodarilo sa najst stranku pre editaciu
                 editingMode = "";
