@@ -15,6 +15,8 @@ import lombok.Setter;
 public class DeleteMirrorsResult {
     private List<Item> items = new ArrayList<>();
     private boolean hiddenMirrors;
+    private boolean pageFileCleanupAvailable;
+    private boolean pageFileCleanupDefaultChecked;
 
     @Getter
     @AllArgsConstructor

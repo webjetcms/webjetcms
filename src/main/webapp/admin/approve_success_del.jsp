@@ -21,6 +21,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <iwcm:present name="approved">
 	<img src="/admin/images/warning.gif" align="absmiddle"/>
    <iwcm:text key="approve.del.approved"/>
+   <iwcm:present name="pageFileCleanupSummary"><br><iway:request name="pageFileCleanupSummary"/></iwcm:present>
 </iwcm:present>
 
 <iwcm:present name="approvedToNextLevel">

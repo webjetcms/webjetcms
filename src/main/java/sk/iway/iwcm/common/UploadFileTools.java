@@ -24,6 +24,8 @@ import sk.iway.iwcm.io.IwcmFile;
 
 public class UploadFileTools {
 
+    public static final List<String> PAGE_MEDIA_PREFIXES = List.of("/images", "/files", "/images/gallery");
+
     private UploadFileTools() {
         //utility class
     }
@@ -115,6 +117,22 @@ public class UploadFileTools {
      */
     public static String getPageUploadSubDir(int docId, int groupId, String newPageTitle, String prefix)
     {
+        return getPageUploadSubDir(docId, groupId, newPageTitle, prefix, AdminTools.getDomainNameFileAliasAppend(), null);
+    }
+
+    /**
+     * Resolves the page's upload directory using the supplied storage alias and group URL path.
+     *
+     * @param docId page ID, or a nonpositive value for an unsaved page
+     * @param groupId ID of the page's folder
+     * @param newPageTitle title used to derive a folder name for an unsaved page
+     * @param prefix virtual media root such as {@code /images/gallery}, or {@code null} to omit it
+     * @param domainAlias slash-prefixed alias for domain-specific storage under the web root, or an empty string
+     * @param groupUrlPath group URL path, or {@code null} to look it up using {@code groupId}
+     * @return virtual upload directory for the page
+     */
+    public static String getPageUploadSubDir(int docId, int groupId, String newPageTitle, String prefix, String domainAlias, String groupUrlPath)
+    {
         StringBuilder path = new StringBuilder();
         if (Constants.getBoolean("galleryUploadDirVirtualPath") && docId > 0)
         {
@@ -137,10 +155,9 @@ public class UploadFileTools {
         }
 
         if (FilePathTools.isExternalDirs()==false) {
-            String domainAlias = AdminTools.getDomainNameFileAliasAppend();
             if (Tools.isNotEmpty(domainAlias))
             {
-                if (prefix.startsWith("/images/gallery")) {
+                if (prefix != null && prefix.startsWith("/images/gallery")) {
                     path.setLength(0);
                     path.append("/images"+domainAlias+prefix.substring("/images".length()));
                 } else {
@@ -149,7 +166,7 @@ public class UploadFileTools {
             }
         }
 
-        String urlPath = groupsDB.getURLPath(groupId);
+        String urlPath = groupUrlPath == null ? groupsDB.getURLPath(groupId) : groupUrlPath;
         //if the group has a virtual path, add it to the path
         if ("--------------------------".equals(urlPath)==false) path.append(urlPath);
 

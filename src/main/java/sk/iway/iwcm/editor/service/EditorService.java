@@ -84,6 +84,8 @@ public class EditorService {
 	private DocAtrRepository docAtrRepository;
 
 	//service
+    @Autowired
+    private PageMediaCleanup fileCleanup;
 	private MediaService mediaService;
 	private ApproveService approveService;
 
@@ -1571,6 +1573,38 @@ public class EditorService {
 		return approveService.approveDocDelAction(historyRepo, docRepo, this);
 	}
 
+    /**
+     * Checks whether the current administrator can permanently delete the page from Trash with its unused files.
+     *
+     * @param doc page shown in the deletion preview
+     * @return true if storage and permission checks pass and the deletion needs no further approval
+     */
+    public boolean canChooseFileCleanup(DocDetails doc) {
+        if (!fileCleanup.canClean(doc, currentUser) || !isPageEditable(currentUser, doc, true)) return false;
+        approveService.loadApproveTables(doc.getGroupId());
+        return !approveService.needApprove() || approveService.isSelfApproved();
+    }
+
+    /**
+     * Registers the page for file cleanup in the current deletion batch.
+     *
+     * @param docId page selected for cleanup
+     * @return true on first selection, false if cleanup is already scheduled for this page in the batch
+     */
+    public boolean selectForFileCleanup(int docId) {
+        return fileCleanup.select(docId);
+    }
+
+    /**
+     * Processes unused files for selected pages whose deletion completed.
+     *
+     * @param interrupted whether the deletion batch stopped on an error
+     * @return localized cleanup notification, or {@code null} when there is nothing to report
+     */
+    public NotifyBean finishFileCleanup(boolean interrupted) {
+        return fileCleanup.finish(currentUser, prop, interrupted);
+    }
+
 	/**
 	 * Delete webpage logic + checkPermissions and check approve posibility.
 	 *
@@ -1603,6 +1637,10 @@ public class EditorService {
 		if(approveService.needApprove()==false || approveService.isSelfApproved()) {
 			//Doc, do not need approve OR
 			//current user IS self approver, can do delete action
+			GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
+			GroupDetails trashGroupDetails = Constants.getBoolean("editorDisableHistory") ? null : groupsDB.getTrashGroup();
+			boolean permanent = trashGroupDetails == null || groupsDB.getParentGroups(docDetails.getGroupId(), true).stream()
+					.anyMatch(parent -> parent.getGroupId() == trashGroupDetails.getGroupId());
 
 			if (publishEvents) {
 				// Check every mirror before ON_DELETE listeners can delete any member of the mirrored set.
@@ -1616,23 +1654,13 @@ public class EditorService {
 						}
 					}
 				}
-				(new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
 			}
 
-			// zisti ci sme v adresari /System/Trash (kos), ak nie presun, inak vymaz
-			String navbarNoHref = DB.internationalToEnglish(groupsDB.getURLPath(docDetails.getGroupId())).toLowerCase();
-			Logger.println(EditorService.class,"MAZEM: " + navbarNoHref);
+			// Delete listeners can change mirror and media records needed to identify the page's files.
+			if (permanent) fileCleanup.capture(docDetails, currentUser);
+			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
 
-			//tu sa vytvara adresar podla default jazyka, nie podla prihlaseneho pouzivatela!
-			Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
-			String trashDirName = propSystem.getText("config.trash_dir");
-			GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
-
-			//vypne zapisovanie zaznamov do documents_history tabulky. true - nezapise zaznam do documents_history
-			boolean disableHistory = Constants.getBoolean("editorDisableHistory");
-			GroupDetails trashGroupDetails = disableHistory == false ? groupsDB.getCreateGroup(trashDirName) : null;
-
-			if (trashGroupDetails==null || navbarNoHref.startsWith(DB.internationalToEnglish(groupsDB.getURLPath(trashGroupDetails.getGroupId())).toLowerCase()))  {
+			if (permanent) {
 				//Permanent DOC delete
 				docRepo.deleteById(Long.valueOf(delDocId));
 

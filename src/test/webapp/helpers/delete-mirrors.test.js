@@ -96,6 +96,54 @@ test("An empty preview removes the warning and permits deletion", t => {
     assert.equal(f.submissions.length, 1);
 });
 
+for (const checked of [true, false]) {
+    test(`A pending file preview submits cleanup only when selected (${checked})`, t => {
+        const f = fixture(t);
+        f.open();
+        f.requests[0].respond({items: [], hiddenMirrors: false, pageFileCleanupAvailable: true, pageFileCleanupDefaultChecked: true});
+        assertBlocked(f);
+        if (checked) {
+            f.requests[1].respond([{fullPath: "/News", files: ["/files/story.pdf"]}]);
+        } else {
+            f.modal.find(".delete-page-files input").prop("checked", false).trigger("change");
+        }
+        f.editor.submit();
+        const rows = f.submissions[0].data;
+        assert.deepEqual(Object.keys(rows), ["101", "102"]);
+        for (const row of Object.values(rows)) assert.equal(row.editorFields?.deleteUnusedPageFiles, checked ? true : undefined);
+    });
+}
+
+test("An unchecked cleanup default stays unchecked after the file preview loads", t => {
+    const f = fixture(t);
+    f.open();
+    f.requests[0].respond({items: [], hiddenMirrors: false, pageFileCleanupAvailable: true, pageFileCleanupDefaultChecked: false});
+    const input = f.modal.find(".delete-page-files input");
+    assert.equal(input.prop("checked"), false);
+    f.requests[1].respond([{fullPath: "/News", files: ["/files/story.pdf"]}]);
+    assert.equal(input.prop("disabled"), false);
+    assert.equal(input.prop("checked"), false);
+
+    f.editor.submit();
+    const rows = f.submissions[0].data;
+    assert.deepEqual(Object.keys(rows), ["101", "102"]);
+    for (const row of Object.values(rows)) assert.equal(row.editorFields?.deleteUnusedPageFiles, undefined);
+});
+
+for (const [result, message] of [[{error: "Scan failed"}, "error"], [[], "empty"]]) {
+    test(`The ${message} file preview clears the default and permits ordinary deletion`, t => {
+        const f = fixture(t);
+        f.open();
+        f.requests[0].respond({items: [], hiddenMirrors: false, pageFileCleanupAvailable: true, pageFileCleanupDefaultChecked: true});
+        f.requests[1].respond(result);
+        const choice = f.modal.find(".delete-page-files");
+        assert.equal(choice.find("[role=status]").text(), `editor.delete_files.${message}.js`);
+        assert.equal(choice.find("input").prop("disabled"), true);
+        assert.equal(choice.find("input").prop("checked"), false);
+        assert.equal(f.submit().prop("disabled"), false);
+    });
+}
+
 // DataTable endpoints can report permission errors with HTTP 200.
 for (const [response, status] of [[{}, 503], [{error: "Access denied"}, 200]]) {
     test(`A failed preview (HTTP ${status}) keeps deletion blocked`, t => {

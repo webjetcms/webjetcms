@@ -35,6 +35,7 @@ import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.annotations.IsEntity;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -289,8 +290,8 @@ public class FieldsSettingsService {
     }
 
     /**
-     * Scans configured application packages for classes annotated with {@link Entity} or {@link DataTableTabs}.
-     * Custom-field entities retain Spring's default candidate restrictions and need nested {@link BaseEditorFields},
+     * Scans for field settings on classes annotated with {@link Entity} or {@link DataTableTabs}.
+     * Custom fields also support {@link IsEntity}. Candidates must meet Spring's default restrictions and have nested {@link BaseEditorFields},
      * even when they have no annotated columns. {@link GroupDetails} and {@link TemplateDetails}
      * remain unconditional custom-field options.
      *
@@ -300,16 +301,23 @@ public class FieldsSettingsService {
         Map<String, ClassOptions> foundClasses = new HashMap<>();
         Set<String> customFieldClasses = new HashSet<>(Set.of(GroupDetails.class.getName(), TemplateDetails.class.getName()));
         Set<String> customFieldCandidates = new HashSet<>();
+        Set<String> fieldSettingsCandidates = new HashSet<>();
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false) {
             @Override
             protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
-                if (beanDefinition.getMetadata().isAnnotated(Entity.class.getName()) && super.isCandidateComponent(beanDefinition)) {
+                var metadata = beanDefinition.getMetadata();
+                boolean jpaEntity = metadata.isAnnotated(Entity.class.getName());
+                if (jpaEntity || metadata.isAnnotated(DataTableTabs.class.getName())) {
+                    fieldSettingsCandidates.add(beanDefinition.getBeanClassName());
+                }
+                if ((jpaEntity || metadata.isAnnotated(IsEntity.class.getName())) && super.isCandidateComponent(beanDefinition)) {
                     customFieldCandidates.add(beanDefinition.getBeanClassName());
                 }
                 return true;
             }
         };
         provider.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
+        provider.addIncludeFilter(new AnnotationTypeFilter(IsEntity.class));
         provider.addIncludeFilter(new AnnotationTypeFilter(DataTableTabs.class));
 
         for (String packageName : AppManager.getPackageNames()) {
@@ -320,6 +328,7 @@ public class FieldsSettingsService {
                 try {
                     Class<?> type = Class.forName(className, false, ClassUtils.getDefaultClassLoader());
                     if (customFieldCandidates.contains(className) && hasCustomFields(type)) customFieldClasses.add(className);
+                    if (fieldSettingsCandidates.contains(className) == false) continue;
                     Map<String, String> fieldTitles = new HashMap<>();
                     if (collectFieldTitles(type, "", fieldTitles, new HashSet<>()) == false) continue;
                     foundClasses.put(className, new ClassOptions(fieldTitles, collectTabTitles(type), collectInferredTabFields(type)));

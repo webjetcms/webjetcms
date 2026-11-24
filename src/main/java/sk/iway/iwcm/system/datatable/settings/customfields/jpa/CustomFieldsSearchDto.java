@@ -4,20 +4,24 @@ import java.lang.reflect.Field;
 
 import org.springframework.beans.BeanWrapperImpl;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.system.annotations.IsEntity;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.settings.customfields.rest.CustomFieldsService;
 
 /**
  * DTO used to pass entity identification data for custom fields lookup.
  *
  * <p>It can be created directly from class name and entity ID, or from an entity-like object.
- * In object mode it resolves the field annotated by {@link Id}, {@code groupId} for {@link GroupDetails},
- * or {@code tempId} for {@link TemplateDetails}, and an optional bonus parameter configured
- * in {@link CustomFieldsService#BONUS_PARAMS}.</p>
+ * It uses {@code groupId} for {@link GroupDetails} and {@code tempId} for {@link TemplateDetails}.
+ * For other classes it looks for an {@link Id} field, then a {@link DataTableColumnType#ID} column.
+ * It also reads the optional property configured in {@link CustomFieldsService#BONUS_PARAMS}.</p>
  */
 public class CustomFieldsSearchDto {
 
@@ -50,6 +54,10 @@ public class CustomFieldsSearchDto {
         this.className = objectClass.getName();
         this.entityIdColumnName = getIdColumnName(objectClass);
 
+        if(Tools.isEmpty(this.entityIdColumnName)) {
+            Logger.error(CustomFieldsSearchDto.class, "Object of of class " + objectClass.getName() + " do not have ID column.");
+        }
+
         try {
             BeanWrapperImpl bw = new BeanWrapperImpl(object);
             Object extractValue = bw.getPropertyValue(entityIdColumnName);
@@ -75,10 +83,8 @@ public class CustomFieldsSearchDto {
     /**
      * Checks whether the provided object looks like a domain entity candidate.
      *
-     * <p>This is a lightweight guard that filters out primitive wrappers, strings, numbers,
-     * enums and {@code null}, and verifies an {@link Id} annotated field exists or the object
-     * is a {@link GroupDetails} or {@link TemplateDetails} with a supported ID property. Passing this check does not
-     * guarantee that the object is a JPA entity, but indicates it is suitable for reflective ID extraction.</p>
+     * <p>Accepts objects whose class has an {@link Entity} or {@link IsEntity} annotation
+     * or whose ID property can be resolved by {@link #getIdColumnName(Class)}.</p>
      *
      * @param obj object to verify
      * @return {@code true} when the object is a non-null, non-primitive-like candidate
@@ -99,7 +105,9 @@ public class CustomFieldsSearchDto {
             return false;
         }
 
-        return getIdColumnName(clazz) != null;
+        return clazz.isAnnotationPresent(Entity.class)   ||
+               clazz.isAnnotationPresent(IsEntity.class) ||
+               getIdColumnName(clazz) != null;
     }
 
     private String getIdColumnName(Class<?> entityClass) {
@@ -109,6 +117,17 @@ public class CustomFieldsSearchDto {
         for (Field field : entityClass.getDeclaredFields()) {
             if (field.isAnnotationPresent(Id.class)) {
                 return field.getName();
+            }
+        }
+
+        for (Field field : entityClass.getDeclaredFields()) {
+            DataTableColumn dataTableColumn = field.getAnnotation(DataTableColumn.class);
+            if(dataTableColumn == null) continue;
+
+            for(DataTableColumnType inputType : dataTableColumn.inputType()) {
+                if(inputType == DataTableColumnType.ID) {
+                    return field.getName();
+                }
             }
         }
 

@@ -1,5 +1,16 @@
 # Zoznam zmien verzia 2026
 
+## 2026-SNAPSHOT
+
+### Webové stránky
+
+- Pri trvalom zmazaní priečinka WebJET automaticky [zmaže nepoužívané súbory jeho stránok](redactor/webpages/README.md#zmazanie-súborov-stránky) aj v podpriečinkoch, ak je zapnutá konfiguračná premenná `editorDeleteUnusedPageFilesDefault` (#58674).
+- Presun stránky do Koša zachová všetky jej súbory. Pri trvalom zmazaní z Koša je predvolene zaškrtnutá voľba [zmazania nepoužívaných súborov](redactor/webpages/README.md#zmazanie-súborov-stránky). Pred potvrdením vidíte zoznam súborov pre každú vybranú stránku a môžete voľbu odškrtnúť. WebJET ponechá súbory používané na iných stránkach alebo v aplikáciách (#58674).
+
+### Prieskumník
+
+- Kontrola [nepoužívaných súborov](redactor/files/fbrowser/folder-settings/README.md#čo-sa-kontroluje) zohľadňuje aj koncepty, čakajúce verzie stránok a odkazy vo vložených dokumentoch a HTML kóde (#58674).
+
 ## 2026.40
 
 > WebJET CMS 2026.40 prináša [**novú verziu PageBuildera**](#webové-stránky) s panelom Štruktúra, prehľadnejšou knižnicou blokov a kopírovaním blokov medzi stránkami. [**Plánované publikovanie stránok aj so súbormi**](#webové-stránky) umožňuje pripraviť budúci obsah s obrázkami a dokumentmi, ktoré zostanú chránené až do termínu zverejnenia. Funkciu zapína správca.

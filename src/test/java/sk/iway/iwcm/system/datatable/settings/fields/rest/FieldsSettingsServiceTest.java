@@ -25,6 +25,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.annotations.IsEntity;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -88,7 +89,7 @@ class FieldsSettingsServiceTest {
         verify(cache).setObject(anyString(), discovered.capture(), eq(60));
         when(cache.getObject(anyString(), any())).thenReturn(discovered.getValue());
 
-        assertEquals(List.of(CustomOnlyEntity.class.getName(), CLASS_NAME),
+        assertEquals(List.of(CustomOnlyEntity.class.getName(), CLASS_NAME, MarkedEntity.class.getName()),
             service.getCustomFieldClassOptions(" FIELDSSETTINGSSERVICETEST "));
         assertEquals(List.of(TemplateDetails.class.getName()), service.getCustomFieldClassOptions("TemplateDetails"));
         assertEquals(List.of(GroupDetails.class.getName()), service.getCustomFieldClassOptions("GroupDetails"));
@@ -189,6 +190,15 @@ class FieldsSettingsServiceTest {
 
     @Entity
     static class CustomOnlyEntity {
+        @DataTableColumnNested
+        private BaseEditorFields editorFields;
+    }
+
+    @IsEntity
+    static class MarkedEntity {
+        @DataTableColumn(inputType = DataTableColumnType.ID)
+        private Long id;
+
         @DataTableColumnNested
         private BaseEditorFields editorFields;
     }

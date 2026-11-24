@@ -28,7 +28,10 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 		DocDetails doc = docDB.getDoc(docId);
 		if (doc != null)
 		{
+            boolean canClean = user != null && user.isEnabledItem("menuFbrowser")
+                && Tools.getSpringBean("editorService", sk.iway.iwcm.editor.service.EditorService.class).canChooseFileCleanup(doc);
 		   doc = docDB.getDoc(-1, historyId);
+            if (canClean && doc != null && doc.getDocId() == docId) request.setAttribute("showPageFileCleanup", "true");
 			if (doc==null)
 			{
 				request.setAttribute("allreadyRejected", "true");
@@ -100,6 +103,11 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 								<input type="submit" name="zamietni" value="<iwcm:text key="approve.page.reject"/>" class="btn red">
 							</td>
 						</tr>
+                        <iwcm:present name="showPageFileCleanup">
+                            <tr><td colspan="8"><label><input type="checkbox" name="deleteUnusedPageFiles" value="true"<%= Constants.getBoolean("editorDeleteUnusedPageFilesDefault") ? " checked" : "" %>>
+                                <iwcm:text key="editor.delete_files.choice.js"/></label>
+                                <iwcm:text key="editor.delete_files.restore.js"/></td></tr>
+                        </iwcm:present>
 					</table>
 					<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 					</form>

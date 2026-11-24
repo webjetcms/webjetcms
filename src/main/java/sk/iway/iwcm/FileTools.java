@@ -13,30 +13,28 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.common.EditTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.common.ImageTools;
-import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.filebrowser.FileReferenceScanner;
 import sk.iway.iwcm.filebrowser.UnusedFile;
 import sk.iway.iwcm.gallery.VideoConvert;
 import sk.iway.iwcm.io.IwcmFile;
@@ -46,7 +44,8 @@ import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.io.JarPackaging;
 import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.stat.Column;
-import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UserDetails;
 
 /**
@@ -1103,280 +1102,64 @@ public class FileTools
    	return(contextFile.toString());
 	}
 
-	/**
-	 * Metoda vrati zoznam stranok triedy UnusedFile (nazov suboru + virtualna parent cesta) a suborov, ktore nie su pouzivane t.z. nenachadzaju sa na ziadnej stranke<br />
-	 * prehladava aj tieto umiestnenia: <br />
-	 * 	banner_banners stlpec banner_location a banner_redirect<br />
-	 * 	calendar stlpec description<br />
-	 *		document_forum stlpec question<br />
-	 *		gallery stlpec image_path (iba pre subory v /images)<br />
-	 *		media stlpec media_link<br />
-	 *		tips_of_the_day stlpec tip_text<br />
-	 *
-	 * @param rootUrl - url adresa, napr. /files/mac, ktoreho obsah sa prehladava rekurzivne
-	 * @param request - request, z ktoreho zistime domeny
-	 *
-	 * @return
-	 */
+	/** Returns unused files below the directory, including its subdirectories. */
 	public static List<UnusedFile> getDirFileUsage(String rootUrl, HttpServletRequest request)
 	{
 		return getDirFileUsage(rootUrl, request, true);
 	}
 
 	/**
-	 * Returns unused files from the selected directory.
+	 * Checks eligible files in the directory against CMS content and site source files.
 	 *
-	 * @param rootUrl root directory URL
-	 * @param request request used to determine domains
-	 * @param includeSubfolders when true, files in subfolders are included
-	 * @return unused files
+	 * @param rootUrl virtual directory to inspect
+	 * @param request optional request retained for compatibility
+	 * @param includeSubfolders whether to include candidates from subdirectories
+	 * @return unused files ordered by virtual path
+	 * @throws IllegalStateException if a reference source cannot be scanned
 	 */
 	public static List<UnusedFile> getDirFileUsage(String rootUrl, HttpServletRequest request, boolean includeSubfolders)
 	{
-		DebugTimer dt = new DebugTimer("getDirFileUsage");
-
-		dt.diff("reading files");
-
-		List<UnusedFile> unusedFiles = new ArrayList<>();
-		List<Column> allFiles = directoryScan(rootUrl, includeSubfolders, "*");
-		SortedSet<String> unusedFileNames = new TreeSet<>();
-		Set<String> toRemove = new HashSet<>();
-		for(Column c : allFiles)
-		{
-			if (c.getColumn2().startsWith("/WEB-INF")) continue;
-			if (c.getColumn2().startsWith("/META-INF")) continue;
-			if (c.getColumn2().startsWith("/wjerrorpages")) continue;
-			if (c.getColumn2().startsWith("/admin")) continue;
-			if (c.getColumn2().startsWith("/components") && c.getColumn2().startsWith("/components/"+Constants.getInstallName())==false) continue;
-
-			if(c.getColumn2().indexOf("CVS")==-1 && c.getColumn2().indexOf("/.")==-1)
-			{
-				unusedFileNames.add(c.getColumn2());
-			}
+		if (!rootUrl.startsWith("/")) rootUrl = "/" + rootUrl;
+		Set<String> candidates = new TreeSet<>();
+		for (Column file : directoryScan(rootUrl, includeSubfolders, "*")) {
+			String path = file.getColumn2();
+			if (path.startsWith("/WEB-INF") || path.startsWith("/META-INF") || path.startsWith("/wjerrorpages") || path.startsWith("/admin")) continue;
+			if (path.startsWith("/components") && !path.startsWith("/components/" + Constants.getInstallName() + "/")) continue;
+			if (!path.contains("CVS") && !path.contains("/.")) candidates.add(path);
+		}
+		try {
+			candidates.removeAll(FileReferenceScanner.referencedElsewhere(candidates, getPublicFilePaths(candidates), Set.of()));
+		} catch (IOException | SQLException ex) {
+			throw new IllegalStateException("Cannot check file usage in " + rootUrl, ex);
 		}
 
-		dt.diff("files done, size="+unusedFileNames.size());
-
-		//#15279 - treba nacitavat z data lebo v data_asc a nenachadzaju "a href" tagy
-		StringBuilder sql = new StringBuilder("SELECT data FROM documents d WHERE (data LIKE ?) ");
-		if (rootUrl.length()>4 && Constants.DB_TYPE == Constants.DB_MSSQL) sql = new StringBuilder("SELECT data FROM documents d WHERE CONTAINS(data, ?) ");
-		else if (rootUrl.length()>4 && Constants.DB_TYPE == Constants.DB_MYSQL) sql = new StringBuilder("SELECT data FROM documents d WHERE MATCH(title, data) AGAINST (? IN BOOLEAN MODE) ");
-		sql.append(" AND (virtual_path IS NULL OR virtual_path='' OR virtual_path NOT LIKE '/files/%') AND available = 1");
-
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			//ziskaj udaje z db
-			db_conn = DBPool.getConnection();
-			ps = StatNewDB.prepareStatement(db_conn, sql.toString());
-			if (rootUrl.length()>4 && Constants.DB_TYPE == Constants.DB_MSSQL) ps.setString(1, "\""+rootUrl+"*\"");
-			else if (rootUrl.length()>4 && Constants.DB_TYPE == Constants.DB_MYSQL) ps.setString(1, "\""+rootUrl+"\"");
-			else ps.setString(1, "%"+rootUrl+"%");
-
-			toRemove.clear();
-
-			dt.diff("Executing sql="+sql);
-
-			rs = ps.executeQuery();
-
-			dt.diff("Reading database");
-
-			while (rs.next())
-			{
-				if(unusedFileNames.size() == 0) break;
-
-				String dataAsc = DB.getDbString(rs, "data");
-				//WAY faster than dataAsc.indexOf...
-				List<String> excerpts = findFilesExcerpts(dataAsc, rootUrl);
-
-				for(String fileName : unusedFileNames)
-				{
-					if(!unusedFileNames.contains(fileName)) continue;
-					for(String excerpt : excerpts)
-					{
-						if(toRemove.contains(fileName)) continue;
-						//Logger.debug(FileTools.class, "Excerpt: "+excerpt);
-						if(excerpt.contains(fileName))
-						{
-							toRemove.add(fileName);
-						}
-					}
-				}
-				unusedFileNames.removeAll(toRemove);
-				toRemove.clear();
-			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-
-			dt.diff("database readed");
+		List<UnusedFile> unusedFiles = new ArrayList<>(candidates.size());
+		for (String path : candidates) {
+			IwcmFile file = IwcmFile.fromVirtualPath(path);
+			unusedFiles.add(new UnusedFile(file.getName(), file.getVirtualParent(), file.lastModified(), file.length()));
 		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-				sk.iway.iwcm.Logger.error(ex2);
-			}
-		}
-
-		dt.diff("Scanning /components/"+Constants.getInstallName());
-
-		List<Column> jspFiles = directoryScan(rootUrl, "/components/"+Constants.getInstallName()+"/*","/templates/*");
-		toRemove.clear();
-
-		for(Column c : jspFiles)
-		{
-			if (c.getColumn2().startsWith("/WEB-INF")) continue;
-			if (c.getColumn2().startsWith("/META-INF")) continue;
-			if (c.getColumn2().startsWith("/wjerrorpages")) continue;
-			if (c.getColumn2().startsWith("/admin")) continue;
-
-			String jspData = readFileContent(c.getColumn2());
-			for(String fileName : unusedFileNames)
-			{
-				if (jspData.indexOf(fileName) > -1)
-				{
-					toRemove.add(fileName);
-				}
-			}
-			unusedFileNames.removeAll(toRemove);
-			toRemove.clear();
-		}
-
-		dt.diff("scanning usage in database (components)");
-
-		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, "documents", "external_link", "AND (virtual_path IS NULL OR virtual_path='' OR virtual_path NOT LIKE '/files/%') AND available = 1"));
-
-		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, "banner_banners", "banner_location", null));
-		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, "calendar", "description", null));
-		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, "document_forum", "question", null));
-
-		if(rootUrl.startsWith("/images/"))	//iba pre subory v images
-			toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, "gallery", "image_path", null));
-		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, "media", "media_link", null));
-		toRemove.addAll(checkDbUsage(unusedFileNames, rootUrl, "tips_of_the_day", "tip_text", null));
-
-		unusedFileNames.removeAll(toRemove);
-		toRemove.clear();
-
-		Logger.debug(FileTools.class, "Checking files");
-
-		for(String fileName : unusedFileNames)
-		{
-			IwcmFile unusedFile = new IwcmFile(Tools.getRealPath(fileName));
-			if(unusedFiles.add(new UnusedFile(unusedFile.getName(), unusedFile.getVirtualParent(), unusedFile.lastModified(), unusedFile.length())))
-			{
-				Logger.debug(FileTools.class, "\t\t" + unusedFile.getVirtualPath() + " added ");
-			}
-		}
-
 		return unusedFiles;
 	}
 
-	private static List<String> findFilesExcerpts(String dataAsc, String fileDirectory)
+	/** A directory scan can span several domains' storage folders. Index each file's public URL as well. */
+	private static Map<String, String> getPublicFilePaths(Set<String> candidates)
 	{
-		List<String> excerpts = new ArrayList<>();
-		Pattern pattern = Pattern.compile(fileDirectory+".*?[<>\\n]", Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(dataAsc);
-
-		while (matcher.find())
-		{
-			excerpts.add(matcher.group(0));
+		if (candidates.isEmpty() || !Constants.getBoolean("multiDomainEnabled") || FilePathTools.isExternalDirs()) return Map.of();
+		Set<String> aliases = new HashSet<>();
+		for (var setting : ConstantsV9.getValuesStartsWith("multiDomainAlias:")) {
+			if (isNotEmpty(setting.getValue())) aliases.add(setting.getValue());
 		}
-
-		return excerpts;
-	}
-
-	/**
-	 * Metoda vrati boolean hodnotu, ze ci sa zadana URL pouziva v casti databazy urcenej parametrami: <br />
-	 *
-	 * @author jraska
-	 *
-	 * @param unusedFileNames - mnozina obsahujuca relativne cesty suborov ktore sa budu prehladavat po tom, ako sa z DB nacitaju zaznamy obsahujuce korenovy adresar
-	 * @param rootUrl - String, ktory vyhladavame v databaze, ide o relativnu virtualnu cestu ku korenovemu adresaru napr. images/gallery/
-	 * @param tableName - nazov tabulky v ktorej sa vyhladava
-	 * @param columnName - nazov stlpca v ktorom sa vyhladava
-	 * @return
-	 */
-	private static Set<String> checkDbUsage(Set<String> unusedFileNames, String rootUrl, String tableName, String columnName, String addWhereSql)
-	{
-		Set<String> toRemove = new HashSet<>();
-
-		String sql = "SELECT "+ columnName + " FROM " + tableName + " WHERE " + columnName + " LIKE ?";
-
-		if (isNotEmpty(addWhereSql)) sql += " " + addWhereSql;
-
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			//ziskaj udaje z db
-			db_conn = DBPool.getConnection();
-			ps = StatNewDB.prepareStatement(db_conn, sql);
-
-			ps.setString(1, "%"+rootUrl+"%");
-
-			toRemove.clear();
-			rs = ps.executeQuery();
-			while (rs.next())
-			{
-				String data = DB.getDbString(rs, columnName);
-				for(String fileName : unusedFileNames)
-				{
-					if(data.indexOf(fileName) > -1)
-					{
-						toRemove.add(fileName);
-					}
-				}
-			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-				sk.iway.iwcm.Logger.error(ex2);
+		Set<String> domainFolders = new HashSet<>(Arrays.asList(MultiDomainFilter.getMultiDirs()));
+		Map<String, String> publicPaths = new HashMap<>();
+		for (String path : candidates) {
+			int rootEnd = path.indexOf('/', 1);
+			int aliasEnd = path.indexOf('/', rootEnd + 1);
+			if (rootEnd > 0 && aliasEnd > rootEnd && domainFolders.contains(path.substring(1, rootEnd))
+					&& aliases.contains(path.substring(rootEnd + 1, aliasEnd))) {
+				publicPaths.put(path, path.substring(0, rootEnd) + path.substring(aliasEnd));
 			}
 		}
-
-		return toRemove;
+		return publicPaths;
 	}
 
 	/**

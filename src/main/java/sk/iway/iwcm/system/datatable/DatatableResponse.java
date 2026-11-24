@@ -61,6 +61,11 @@ public class DatatableResponse<T> {
 		data.add(newData);
 	}
 
+	public void addNotify(NotifyBean notification) {
+		notify = notify == null ? new ArrayList<>() : new ArrayList<>(notify);
+		notify.add(notification);
+	}
+
 	public Boolean getForceReload() {
 		return forceReload;
 	}

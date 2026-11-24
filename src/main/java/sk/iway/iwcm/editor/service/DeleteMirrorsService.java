@@ -1,5 +1,8 @@
 package sk.iway.iwcm.editor.service;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -9,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -27,9 +31,11 @@ import sk.iway.iwcm.editor.rest.DeleteMirrorsResult;
 @Service
 public class DeleteMirrorsService {
     private final EditorService editorService;
+    private final PageMediaCleanup fileCleanup;
 
-    public DeleteMirrorsService(EditorService editorService) {
+    public DeleteMirrorsService(EditorService editorService, PageMediaCleanup fileCleanup) {
         this.editorService = editorService;
+        this.fileCleanup = fileCleanup;
     }
 
     /**
@@ -44,14 +50,15 @@ public class DeleteMirrorsService {
         Set<Integer> selectedIds = getSelectedIds(ids);
         Set<Integer> seenIds = new HashSet<>(selectedIds);
         DeleteMirrorsResult result = new DeleteMirrorsResult();
-        DocDB docDB = DocDB.getInstance();
         GroupsDB groupsDB = GroupsDB.getInstance();
 
         for (int id : selectedIds) {
-            DocDetails doc = docDB.getBasicDocDetails(id, false);
-            if (doc == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-            if (canAccessPage(doc, user) == false) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            DocDetails doc = getSelectedPage(id, user);
 
+            if (!result.isPageFileCleanupAvailable() && editorService.canChooseFileCleanup(doc)) {
+                result.setPageFileCleanupAvailable(true);
+                result.setPageFileCleanupDefaultChecked(Constants.getBoolean("editorDeleteUnusedPageFilesDefault"));
+            }
             int syncId = DocMirroringServiceV9.getSyncId(id);
             // Match ON_DELETE even in Trash: only configured mirroring trees participate.
             if (syncId <= 1 || MirroringService.isEnabled(doc.getGroupId()) == false) continue;
@@ -66,6 +73,23 @@ public class DeleteMirrorsService {
             }
         }
         return result;
+    }
+
+    /** Lists unused files only for selected pages the administrator can delete immediately with file cleanup. */
+    public List<PageMediaCleanup.PageFiles> getPageFiles(List<Integer> ids, Identity user) throws IOException, SQLException {
+        List<DocDetails> pages = new ArrayList<>();
+        for (int id : getSelectedIds(ids)) {
+            DocDetails page = getSelectedPage(id, user);
+            if (editorService.canChooseFileCleanup(page)) pages.add(page);
+        }
+        return fileCleanup.preview(pages, user);
+    }
+
+    private DocDetails getSelectedPage(int id, Identity user) {
+        DocDetails doc = DocDB.getInstance().getBasicDocDetails(id, false);
+        if (doc == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (!canAccessPage(doc, user)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        return doc;
     }
 
     /**

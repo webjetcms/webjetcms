@@ -91,16 +91,14 @@ Súbory z výsledku odstránite dvoma spôsobmi:
 
 ### Čo sa kontroluje
 
-Kontrola porovnáva súbory s ich použitím v publikovaných webových stránkach a vo vybraných častiach systému:
+WebJET hľadá odkazy aj na stránkach v Koši, v konceptoch a vo verziách čakajúcich na schválenie alebo publikovanie. Preverí aj tieto miesta:
 
-- externé odkazy stránok,
-- bannery,
-- kalendár,
-- diskusné fórum,
-- galéria,
-- médiá,
-- tipy dňa,
-- odkazy v súboroch šablón a komponentov príslušnej inštalácie.
+- priradené médiá, atribúty a voliteľné polia stránok,
+- galérie, bannery, dotazníky, ankety, kalendár, diskusné fórum a tipy dňa,
+- nastavenia šablón a HTML kód v hlavičkách priečinkov,
+- odkazy v textových súboroch šablón, komponentov danej inštalácie a v priečinkoch `/files` a `/images`. Rozpozná aj odkazy vložené cez aplikácie **Vloženie dokumentu** a **Vloženie HTML kódu**.
+
+Ak čítanie databázy alebo súboru zlyhá, kontrola skončí chybou. Z neúplnej kontroly sa žiadny súbor neponúkne na zmazanie.
 
 Systémové a skryté cesty sa do výsledku **nezaraďujú**, konkrétne:
 
