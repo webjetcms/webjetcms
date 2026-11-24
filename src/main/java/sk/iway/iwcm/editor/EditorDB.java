@@ -15,6 +15,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.function.Function;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -53,6 +54,7 @@ import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.editor.util.EditorUtils;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UrlRedirectDB;
@@ -2544,8 +2546,31 @@ public class EditorDB
 			return getDataAsc(data, ef, isLucene, originalBean.getRequest());
 		}
 
-		String virtualPath = "/LuceneFulltextSearch";
-		if (ef != null && Tools.isNotEmpty(ef.getVirtualPath())) virtualPath = ef.getVirtualPath();
+		return withFulltextRequest(ef == null ? null : ef.getVirtualPath(), ef == null ? 0 : ef.getGroupId(),
+				request -> getDataAsc(data, ef, isLucene, request));
+	}
+
+	/**
+	 * Computes SQL search text for a committed page with an anonymous request.
+	 * The publisher calls this outside its write transaction so applications can read committed content.
+	 *
+	 * @param document the committed page to index
+	 * @return the search text written to the SQL full-text index
+	 * @throws IllegalStateException if an application cannot be rendered
+	 */
+	public static String getDataAscForPublication(DocDetails document)
+	{
+		if (!Constants.getBoolean("fulltextExecuteApps") || Tools.isNotEmpty(document.getExternalLink()))
+			return EditorUtils.getDataAsc(document.getData(), document, false, null);
+		return withFulltextRequest(document.getVirtualPath(), document.getGroupId(), request -> {
+			request.setAttribute(EditorToolsForCore.REQUIRE_FULLTEXT_RENDER, Boolean.TRUE);
+			return EditorUtils.getDataAsc(document.getData(), document, false, request);
+		});
+	}
+
+	private static String withFulltextRequest(String path, int groupId, Function<HttpServletRequest, String> work)
+	{
+		String virtualPath = Tools.isNotEmpty(path) ? path : "/LuceneFulltextSearch";
 		MockHttpServletRequest request = new MockHttpServletRequest("", virtualPath) {
 			@Override
 			public boolean isAsyncSupported() { return false; }
@@ -2557,9 +2582,9 @@ public class EditorDB
 		request.setSession(new MockHttpSession(Constants.getServletContext()));
 		request.setAttribute("path_filter_orig_path", virtualPath);
 		String serverName = "";
-		if (ef != null && ef.getGroupId() > 0)
+		if (groupId > 0)
 		{
-			GroupDetails group = GroupsDB.getInstance().getGroup(ef.getGroupId());
+			GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
 			if (group != null && Tools.isNotEmpty(group.getDomainName())) serverName = group.getDomainName();
 		}
 		if (Tools.isEmpty(serverName))
@@ -2585,7 +2610,7 @@ public class EditorDB
 		SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
 		try (SetCharacterEncodingFilter.IsolatedDataContext context = SetCharacterEncodingFilter.openIsolatedDataContext(request))
 		{
-			return getDataAsc(data, ef, isLucene, request);
+			return work.apply(request);
 		}
 		finally
 		{

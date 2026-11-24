@@ -29,7 +29,9 @@ Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasa
 5. Overte `enableStaticFilesExternalDir=true` a existujúce mapovanie súborov jednotlivých domén. Nastavte `branchesEnabled=true` globálne a obnovte všetky dotknuté uzly. Konfigurácia pracovných verzií je globálna, nie prepínač jednej domény. Priraďte **Pracovné verzie** (`menuBranches`) a existujúce práva stránok, priečinkov a súborov. Prvé vytvorenie balíka vykoná kontrolu aktivácie a pri probléme vráti konkrétny dôvod.
 6. Pred pilotom overte verejnú stránku bez cookies na jej skutočnej doméne. Hostiteľ administrácie môže byť iný; `domain_redirects` alias musí zodpovedať logickej doméne obsahu. Pôvodné lokálne POC fixture mali alias `iwcm.interway.sk → demo.webjetcms.sk`; P08 používa samostatnú doménu `127.0.0.1`.
 
-Preflight publikovania odmietne `fulltextExecuteApps=true` a vlastný `fulltextDataAscMethod`. Súbory používajú existujúce externé priečinky domén. Branch save nesmie vykonať živé JSP/fulltext hooky. Test vlastného kódu patrí pred aktiváciu.
+Pri `fulltextExecuteApps=true` WebJET pri dokončovaní publikovania vykreslí aplikácie v anonymnej požiadavke a ich výstup zahrnie do SQL vyhľadávania. Medzi zápisom stránky a dokončením indexovania môže vyhľadávanie ešte používať jej pôvodný text. Pri chybe renderovania skontrolujte dôvod v priebehu publikovania a po odstránení chyby použite **Pokračovať**.
+
+Kontrola kompatibility odmietne vlastný `fulltextDataAscMethod`. Súbory používajú existujúce externé priečinky domén. Ukladanie do pracovnej verzie nevykonáva živé JSP ani fulltext hooky. Vlastné aplikácie overte pred aktiváciou.
 
 ### Konverzia existujúcich tabuliek na InnoDB
 

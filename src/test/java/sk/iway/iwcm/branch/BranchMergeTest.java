@@ -8,6 +8,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.*;
+import org.apache.catalina.startup.Tomcat;
+import org.apache.jasper.servlet.JasperInitializer;
+import org.apache.jasper.servlet.JspServlet;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -17,18 +20,22 @@ import org.apache.lucene.util.Version;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.perex_groups.*;
 import sk.iway.iwcm.doc.*;
+import sk.iway.iwcm.editor.util.EditorUtils;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.fulltext.FulltextSearch;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
+import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Real MariaDB manual publication, stale-input checks and checkpoint recovery on isolated P06 data. */
@@ -239,6 +246,124 @@ class BranchMergeTest extends BranchJpaTest {
         assertEquals("autotest P06 WORK attachment",Files.readString(Path.of(Tools.getRealPath(f.file))));
         long histories=count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")");
         new BranchPublishService().run(f.branch,user.getUserId());assertEquals(histories,count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")"));
+    }
+
+    /** Changing page metadata in a package preserves the editor's SQL search text and perex setting. */
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void metadataOnlyPublicationUsesEditorSearchText(boolean includePerex) throws Exception {
+        original.put("fulltextIncludePerex", Constants.getString("fulltextIncludePerex"));
+        Constants.setBoolean("fulltextIncludePerex", includePerex);
+        int id = f.home;
+        var page = live(BranchType.DOCUMENT, id);
+        page.put("html_data", "elektromobilita");
+        DocDetails editorPage = new DocDetails();
+        editorPage.setDocId(id);
+        editorPage.setTitle((String) page.get("title"));
+        editorPage.setData((String) page.get("data"));
+        editorPage.setHtmlData((String) page.get("html_data"));
+        String editorSearchText = EditorUtils.getDataAsc(editorPage.getData(), editorPage, false, null);
+        page.put("data_asc", editorSearchText);
+        try (Connection connection = DBPool.getConnection()) {
+            BranchPublishRows.update(connection, BranchType.DOCUMENT, page);
+        }
+        String search = "SELECT COUNT(*) FROM documents WHERE doc_id=" + id
+                + " AND MATCH(title, data_asc) AGAINST ('+elektromobilita' IN BOOLEAN MODE)";
+        assertEquals(includePerex ? 1 : 0, count(search));
+
+        String originalHash = BranchStore.snapshot(BranchType.DOCUMENT, page).hash();
+        page.put("show_in_menu", false);
+        store.put(admin(), BranchType.DOCUMENT, id, page, originalHash, false);
+        merge(ready(), new BranchPublishService());
+
+        assertEquals("MERGED", detail().state(), detail().lastError());
+        var published = live(BranchType.DOCUMENT, id);
+        assertEquals(false, published.get("show_in_menu"));
+        assertEquals("elektromobilita", published.get("html_data"));
+        assertEquals(editorSearchText, published.get("data_asc"));
+        assertEquals(editorSearchText, query("SELECT data_asc FROM documents_history WHERE actual=true AND doc_id=" + id));
+        assertEquals(includePerex ? 1 : 0, count(search));
+    }
+
+    /** SQL search indexes real JSP application output after retrying a failed render. */
+    @Test void publicationRetriesApplicationRenderingAfterContentCommit(@TempDir Path testRoot) throws Exception {
+        Constants.setBoolean("fulltextExecuteApps", true);
+        int id = f.pages.get(0);
+        String application = "/components/publishing-search-test.jsp";
+        Map<String, Object> page;
+        try (Connection connection = DBPool.getConnection()) {
+            page = BranchStore.readWork(connection, f.branch, BranchType.DOCUMENT, id).orElseThrow();
+        }
+        String workHash = BranchStore.snapshot(BranchType.DOCUMENT, page).hash();
+        page.put("data", "!INCLUDE(" + application + ")!");
+        store.put(admin(), BranchType.DOCUMENT, id, page, workHash, false);
+        Path publishedFile = Path.of(Tools.getRealPath(f.file));
+        String search = "SELECT COUNT(*) FROM documents WHERE doc_id=" + id
+                + " AND MATCH(title, data_asc) AGAINST ('+javorovapobocka' IN BOOLEAN MODE)";
+        Path webroot = Files.createDirectory(testRoot.resolve("webapp"));
+        for (String file : List.of("WEB-INF/iwcm.tld", "components/_common/fulltext_preview.jsp")) {
+            Path target = webroot.resolve(file);
+            Files.createDirectories(target.getParent());
+            Files.copy(Path.of("src/main/webapp").resolve(file), target);
+        }
+        Files.writeString(webroot.resolve(application.substring(1)), """
+                <% if (application.getAttribute("failSearchRender") != null) throw new IllegalStateException("Application unavailable");
+                   if (sk.iway.iwcm.users.UsersDB.getCurrentUser(session) != null) throw new IllegalStateException("Expected an anonymous request"); %>
+                <p>Javorovapobocka</p>
+                """);
+        var originalServletContext = Constants.getServletContext();
+        var originalSpring = SpringContext.getApplicationContext();
+        Tomcat server = new Tomcat();
+        server.setBaseDir(testRoot.resolve("tomcat").toString());
+        var context = server.addContext("", webroot.toString());
+        ((org.apache.tomcat.util.scan.StandardJarScanner) context.getJarScanner()).setScanManifest(false);
+        context.setParentClassLoader(getClass().getClassLoader());
+        context.addServletContainerInitializer(new JasperInitializer(), null);
+        Tomcat.addServlet(context, "jsp", new JspServlet()).setLoadOnStartup(1);
+        context.addServletMappingDecoded("*.jsp", "jsp");
+        var servletContext = context.getServletContext();
+        servletContext.setAttribute("org.apache.catalina.jsp_classpath", System.getProperty("java.class.path"));
+        try (var spring = new GenericApplicationContext();
+             var files = mockStatic(FileTools.class, CALLS_REAL_METHODS)) {
+            spring.refresh();
+            new SpringContext().setApplicationContext(spring);
+            server.start();
+            var publishingContext = spy(originalServletContext);
+            String preview = "/components/_common/fulltext_preview.jsp";
+            doReturn(servletContext.getRequestDispatcher(preview)).when(publishingContext).getRequestDispatcher(preview);
+            Constants.setServletContext(publishingContext);
+            files.when(() -> FileTools.exists(application)).thenReturn(true);
+            servletContext.setAttribute("failSearchRender", true);
+            assertEquals(0, count(search));
+            merge(ready(), new BranchPublishService());
+            var failed = detail();
+            assertEquals("MERGE_FAILED", failed.state(), failed.lastError());
+            var failedPage = item(failed, BranchType.DOCUMENT, Integer.toString(id));
+            assertEquals("ERROR", failedPage.applyState(), failed.lastError());
+            assertEquals("DATA", failedPage.applyPhase());
+            assertEquals("Cannot render application: " + application, failedPage.error());
+            assertEquals("!INCLUDE(" + application + ")!", live(BranchType.DOCUMENT, id).get("data"));
+            assertEquals("autotest P06 WORK attachment", Files.readString(publishedFile));
+            assertEquals(0, count(search));
+            String history = "SELECT COUNT(*) FROM documents_history WHERE doc_id=" + id;
+            assertEquals(1, count(history));
+
+            servletContext.removeAttribute("failSearchRender");
+            var retry = ready();
+            service.claim(f.branch, DOMAIN, user, retry.revision(), retry.preparationHash(), true);
+            new BranchPublishService().run(f.branch, user.getUserId());
+
+            assertEquals("MERGED", detail().state(), detail().lastError());
+            assertEquals(1, count(search));
+            assertEquals(1, count(history));
+            assertEquals(live(BranchType.DOCUMENT, id).get("data_asc"),
+                    query("SELECT data_asc FROM documents_history WHERE actual=true AND doc_id=" + id));
+        } finally {
+            Constants.setServletContext(originalServletContext);
+            new SpringContext().setApplicationContext(originalSpring);
+            try { server.stop(); }
+            finally { server.destroy(); }
+        }
     }
 
     /** A media-only edit publishes the row and refreshes the shared readers once. */

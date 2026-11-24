@@ -29,6 +29,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentInterface;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.i18n.Prop;
@@ -81,6 +82,7 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
             html = renderComponents(request, response, html, includes, dt);
         }
         catch (Exception ex) {
+            EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot parse page applications", ex);
             sk.iway.iwcm.Logger.error(ex);
         }
 
@@ -422,11 +424,13 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
     }
 
     private String getErrorMessage(HttpServletRequest request, Exception ex, String include) {
+        String componentClass = getComponentClass(include);
+        EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render application: " + componentClass, ex);
         Logger.debug(WebjetComponentParser.class,"INCLUDE ERROR: " + ex.getMessage());
 
         StringBuilder content = new StringBuilder();
         Prop prop = Prop.getInstance(request);
-        content.append(WriteTag.getSpringErrorMessage(prop, "writetag.error", getComponentClass(include)));
+        content.append(WriteTag.getSpringErrorMessage(prop, "writetag.error", componentClass));
 
         UserDetails user = getUser(request);
         if (user != null && user.isAdmin() && request.getAttribute("writeTagDontShowError") == null)

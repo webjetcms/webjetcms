@@ -22,7 +22,11 @@ final class BranchPublishRows {
 
     static Map<String,Object> row(ResultSet result) throws SQLException {
         Map<String,Object> row=new LinkedHashMap<>();
-        for(int i=1;i<=result.getMetaData().getColumnCount();i++) row.put(result.getMetaData().getColumnName(i),BranchStore.readColumn(result,i));
+        ResultSetMetaData columns = result.getMetaData();
+        for (int i = 1; i <= columns.getColumnCount(); i++) {
+            String label = columns.getColumnLabel(i);
+            row.put(label, BranchStore.readColumn(result, i, label));
+        }
         return row;
     }
 
@@ -86,7 +90,8 @@ final class BranchPublishRows {
         values.put(type.idColumn(),number(work,type.idColumn()));
         if(type==BranchType.DOCUMENT) {
             values.put("perex_group",BranchFields.idTokens(target.fields().get("perex_group")));
-            values.put("data_asc",DB.internationalToEnglish(org.jsoup.Jsoup.parse(Objects.toString(values.get("data"),"")).text()).toLowerCase(Locale.ROOT));
+            // Keep the previous search text until the new page can be rendered after commit.
+            if (live == null) values.put("data_asc", "");
             values.put("file_name",values.get("virtual_path"));
             List<Integer> ancestors=new ArrayList<>();Set<Integer> visited=new HashSet<>();int id=number(values,"group_id");
             Map<Integer,Map<String,Object>> groups=groups(connection);
@@ -118,6 +123,26 @@ final class BranchPublishRows {
             if(statement.executeUpdate()!=1)throw new SQLException("Publication checkpoint disappeared");
         }
         work.put("apply_state",state);work.put("apply_phase",phase);work.put("applied_hash",hash);work.put("apply_error",error);
+    }
+
+    static void updateDocumentHistorySearchText(Connection connection, int docId, String hash, String text) throws SQLException {
+        if (Constants.getBoolean("editorDisableHistory")) return;
+
+        // A newer or unrelated history entry can exist even when the live content still matches.
+        int historyId;
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT * FROM documents_history WHERE doc_id=? AND actual=true AND publicable=false AND disapproved_by=-1 ORDER BY history_id DESC LIMIT 1 FOR UPDATE")) {
+            statement.setInt(1, docId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next() || !hash.equals(BranchDocumentMapper.snapshot(row(result)).hash())) return;
+                historyId = result.getInt("history_id");
+            }
+        }
+        try (PreparedStatement statement = connection.prepareStatement("UPDATE documents_history SET data_asc=? WHERE history_id=?")) {
+            statement.setString(1, text);
+            statement.setInt(2, historyId);
+            statement.executeUpdate();
+        }
     }
 
     /** Full snapshots are required by the existing trash recovery mapper, also with regular history disabled. */

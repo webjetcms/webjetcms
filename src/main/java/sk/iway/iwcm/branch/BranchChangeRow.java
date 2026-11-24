@@ -10,7 +10,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 /** Table projection of a change in a reviewed publishing package. */
 @Getter
 public final class BranchChangeRow {
-    private static final Set<String> WRITTEN_PHASES = Set.of("DATA", "REFERENCES", "TRASH_WAIT", "TRASH_ROOT", "EFFECTS");
+    private static final Set<String> WRITTEN_PHASES = Set.of("DATA", "REFERENCES", "TRASH_WAIT", "TRASH_ROOT", "EFFECTS", "SQL_SEARCH");
 
     @DataTableColumn(inputType = DataTableColumnType.ID, title = "&nbsp;", hidden = false, orderable = false, filter = false)
     private final String id;

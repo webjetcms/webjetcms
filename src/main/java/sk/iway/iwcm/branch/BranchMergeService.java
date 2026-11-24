@@ -365,8 +365,8 @@ public final class BranchMergeService {
             paths.add(e.change.objectKey());
         }
         checkFilePlans(c,domain,paths);
-        if (Constants.getBoolean("fulltextExecuteApps") || Tools.isNotEmpty(Constants.getString("fulltextDataAscMethod")))
-            throw new IllegalStateException("Tento POC nepodporuje vykonávanie aplikácií ani vlastný fulltext hook počas publikovania.");
+        if (Tools.isNotEmpty(Constants.getString("fulltextDataAscMethod")))
+            throw new IllegalStateException("Publikovanie balíka nepodporuje vlastný fulltext hook.");
         if (paths.size() == entries.size()) return;
 
         Map<Integer,Map<String,Object>> liveGroups = validationGroups(c, entries, frozen, domain);

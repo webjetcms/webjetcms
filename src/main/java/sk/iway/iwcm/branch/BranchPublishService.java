@@ -9,7 +9,10 @@ import java.util.function.Consumer;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsService;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
@@ -346,6 +349,7 @@ public final class BranchPublishService {
         if (hash == null) throw new SQLException("Item data step is incomplete: " + item.key());
         String phase = "EFFECTS";
         if (item.type == BranchType.DOCUMENT) {
+            if (item.upsert() && !"SQL_SEARCH".equals(item.row.get("apply_phase"))) updateDocumentSearchText(item, hash);
             Documents.updateSingleDocumentChecked(item.id());
             phase = "INDEXED";
         } else if (item.type == BranchType.FILE) {
@@ -362,6 +366,37 @@ public final class BranchPublishService {
             finally {connection.setAutoCommit(true);}
         }
         current=null;
+    }
+
+    private void updateDocumentSearchText(Item item, String hash) throws SQLException {
+        DocDetails document;
+        try (Connection connection = DBPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "SELECT d.*, u.title AS u_title, u.first_name, u.last_name, u.email, u.photo FROM documents d LEFT JOIN users u ON d.author_id=u.user_id WHERE d.doc_id=?")) {
+            statement.setInt(1, item.id());
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next() || !hash.equals(BranchDocumentMapper.snapshot(BranchPublishRows.row(result)).hash()))
+                    throw new IllegalStateException("Production changed before indexing document: " + item.id());
+                document = DocDB.getDocDetails(result, false, Constants.getBoolean("docAuthorLazyLoad"));
+            }
+        }
+        String text = EditorDB.getDataAscForPublication(document);
+        try (Connection connection = DBPool.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                BranchPublishRows.lockLive(connection, item.type, item.row);
+                requireHash(connection, item, hash);
+                execute(connection, "UPDATE documents SET data_asc=? WHERE doc_id=?", text, item.id());
+                BranchPublishRows.updateDocumentHistorySearchText(connection, item.id(), hash, text);
+                BranchPublishRows.checkpoint(connection, item.type, item.row, "APPLYING", "SQL_SEARCH", hash, null);
+                connection.commit();
+            } catch (Exception ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        }
     }
 
     private void requireHash(Connection connection,Item item,String expected) throws SQLException {
