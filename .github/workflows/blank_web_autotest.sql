@@ -1733,7 +1733,7 @@ CREATE TABLE `documents_history` (
   `logged_show_in_sitemap` tinyint(1) DEFAULT NULL,
   `url_inherit_group` tinyint(1) DEFAULT 0,
   `generate_url_from_title` tinyint(1) DEFAULT 0,
-  `editor_virtual_path` varchar(64) DEFAULT NULL,
+  `editor_virtual_path` varchar(255) DEFAULT NULL,
   `publish_after_start` tinyint(1) DEFAULT 0,
   PRIMARY KEY (`history_id`),
   KEY `IX_dh_docid` (`doc_id`),

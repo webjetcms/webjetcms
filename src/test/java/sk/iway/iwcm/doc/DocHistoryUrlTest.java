@@ -20,10 +20,59 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.editor.DocNoteDB;
+import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-/** Verifies pending-version selection and URL-only updates against the configured database. */
+/** Verifies page URL persistence and updates to pending versions against the configured database. */
 class DocHistoryUrlTest extends BaseWebjetTest {
+    /** Restoring a revision preserves its full inherited URL suffix and HTML content. */
+    @Test
+    void restoresLongInheritedUrlFromHistory() {
+        String suffix = "orange-vypina-3g-siet-aby-mohol-dalej-vylepsovat-parametre-modernejsich-sieti-vratane-5g";
+        String path = "/orange-slovensko/novinky-tlacove-spravy/" + suffix;
+        String html = "<p>Orange vypína 3G sieť</p>";
+        DBPool.getInstance();
+        DBPool.jpaInitialize();
+        EntityManager manager = DBPool.getEntityManagerFactory("iwcm").createEntityManager();
+        Long historyId = null;
+        try {
+            manager.getTransaction().begin();
+            DocHistoryRepository history = new JpaRepositoryFactory(manager).getRepository(DocHistoryRepository.class);
+            DocDetails page = new DocDetails();
+            page.setDocId(910083);
+            page.setTitle("autotest-long-inherited-url");
+            page.setNavbar(page.getTitle());
+            page.setGroupId(910081);
+            page.setDateCreated(System.currentTimeMillis());
+            page.setData(html);
+            page.setDataAsc(html);
+            page.setGenerateUrlFromTitle(false);
+            page.setUrlInheritGroup(true);
+            page.setEditorVirtualPath(suffix);
+            page.setVirtualPath(path);
+            DocHistory revision = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(page);
+            revision.setId(null);
+            revision.setPublicable(false);
+            revision.setSaveDate(new Date());
+            revision = history.saveAndFlush(revision);
+            historyId = revision.getId();
+            manager.refresh(revision);
+
+            DocDetails restored = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(revision);
+            assertTrue(restored.getUrlInheritGroup());
+            assertEquals(suffix, restored.getEditorVirtualPath());
+            assertEquals(path, restored.getVirtualPath());
+            assertEquals(html, restored.getData());
+        } finally {
+            if (manager.getTransaction().isActive()) manager.getTransaction().rollback();
+            manager.clear();
+            manager.getTransaction().begin();
+            if (historyId != null) manager.createNativeQuery("DELETE FROM documents_history WHERE history_id = ?1").setParameter(1, historyId).executeUpdate();
+            manager.getTransaction().commit();
+            manager.close();
+        }
+    }
+
     /** Scheduled and approval versions remain pending, while published and superseded snapshots remain unchanged. */
     @Test
     void updatesOnlyPendingUrlsWithoutChangingPublicationState() {
