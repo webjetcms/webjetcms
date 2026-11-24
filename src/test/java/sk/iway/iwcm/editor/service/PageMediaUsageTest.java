@@ -25,7 +25,7 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 /** Tests how page file cleanup finds references in component data and template files. */
 class PageMediaUsageTest extends BaseWebjetTest {
     /**
-     * Verifies that a mobile banner image and a Document Embed URL split across reads are the only candidates matched.
+     * Verifies references in a mobile banner, a split Document Embed URL and both HTML Embed formats.
      *
      * @param webroot temporary web root containing the template with the embedded document
      * @throws Exception if the template or database fixtures cannot be prepared or scanned
@@ -35,10 +35,14 @@ class PageMediaUsageTest extends BaseWebjetTest {
         String folder = "/files/autotest-" + UUID.randomUUID() + "/";
         String banner = folder + "mobile.jpg";
         String document = folder + "catalogue.pdf";
+        String image = folder + "map.jpg";
+        String legacyImage = folder + "legacy.jpg";
         Path template = Files.createDirectories(webroot.resolve("templates")).resolve("embed.html");
         // The embed starts in one read and its encoded URL ends in the next.
         Files.writeString(template, " ".repeat(22000) + "!INCLUDE(/components/app-docsembed/embed.jsp,"
-            + " ".repeat(12000) + "url=" + Tools.base64Encode(document) + ")!");
+            + " ".repeat(12000) + "url=" + Tools.base64Encode(document) + ")!"
+            + "!INCLUDE(/components/app-htmlembed/embed.jsp, html=" + Tools.base64Encode("<img src='" + image + "'>") + ")!"
+            + "!INCLUDE(/components/app-htmlembed/embed.jsp, html=" + Tools.base64Encode("utf8:" + Tools.URLEncode("<img src='" + legacyImage + "'>")) + ")!");
 
         try (Connection connection = DBPool.getConnection()) {
             connection.setAutoCommit(false);
@@ -51,8 +55,8 @@ class PageMediaUsageTest extends BaseWebjetTest {
                     pool.when(DBPool::getConnection).thenReturn(dataSource.getConnection());
                     paths.when(() -> Tools.getRealPath(anyString())).thenAnswer(call ->
                         webroot.resolve(call.<String>getArgument(0).substring(1)).toString());
-                    var usage = new PageMediaUsage(Set.of(banner, document, folder + "unused.pdf"), Map.of());
-                    assertEquals(Set.of(banner, document), usage.referencedElsewhere(Set.of()));
+                    var usage = new PageMediaUsage(Set.of(banner, document, image, legacyImage, folder + "unused.pdf"), Map.of());
+                    assertEquals(Set.of(banner, document, image, legacyImage), usage.referencedElsewhere(Set.of()));
                 }
             } finally {
                 connection.rollback();

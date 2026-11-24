@@ -47,7 +47,7 @@ final class PageMediaUsage {
     private static final Set<String> TEXT_FILES = Set.of("html", "htm", "jsp", "jspf", "tag", "tld", "css", "scss",
         "less", "js", "mjs", "json", "xml", "svg", "properties", "ftl", "vm", "txt", "md", "yaml", "yml");
     private static final Pattern ESCAPED_BYTE = Pattern.compile("%[a-fA-F0-9]{2}");
-    private static final Pattern DOCS_EMBED_START = Pattern.compile("!INCLUDE\\((?:\\s|%20)*+/components/app-docsembed/embed\\.jsp(?:\\s|%20)*+,");
+    private static final Pattern EMBED_START = Pattern.compile("!INCLUDE\\((?:\\s|%20)*+/components/app-(docs|html)embed/embed\\.jsp(?:\\s|%20)*+,");
     private static final int MAX_URL_LENGTH = 8192;
     private static final int MAX_INCOMPLETE_EMBED_LENGTH = 8 * MAX_URL_LENGTH;
     private static final Pattern TOKEN = Pattern.compile("[^\\s<>\"'(),;={}]+");
@@ -232,20 +232,20 @@ final class PageMediaUsage {
         }
     }
 
-    /** Keeps URLs and unfinished Document Embed parameters that may continue in the next read. */
+    /** Keeps URLs and unfinished embed parameters that may continue in the next read. */
     private static String sourceTail(String chunk) throws IOException {
         int start = Math.max(0, chunk.length() - MAX_URL_LENGTH);
-        // An encoded URL and its surrounding parameters can span more than the usual URL overlap.
-        Matcher openEmbed = DOCS_EMBED_START.matcher(chunk);
+        // An encoded parameter can span more than the usual URL overlap.
+        Matcher openEmbed = EMBED_START.matcher(chunk);
         if (openEmbed.find(Math.max(0, chunk.lastIndexOf(")!"))) && openEmbed.start() < start) {
             start = openEmbed.start();
-            if (chunk.length() - start > MAX_INCOMPLETE_EMBED_LENGTH) throw new IOException("Document Embed parameters exceed scan limit");
+            if (chunk.length() - start > MAX_INCOMPLETE_EMBED_LENGTH) throw new IOException("Embed parameters exceed scan limit");
         }
         return chunk.substring(start);
     }
 
     /**
-     * Extracts candidate references from text, including quoted paths and encoded Document Embed URLs.
+     * Extracts candidate references from text, including quoted paths and encoded Document and HTML Embed parameters.
      *
      * @param value page field or source text to inspect
      * @param base virtual path used to resolve relative URLs, or {@code null} if unknown
@@ -254,15 +254,21 @@ final class PageMediaUsage {
      */
     private void inspect(String value, String base, String domain, boolean protectFolders) {
         if (value == null || value.isBlank()) return;
-        Matcher embeds = DOCS_EMBED_START.matcher(value);
+        Matcher embeds = EMBED_START.matcher(value);
         while (found.size() < count && embeds.find()) {
             int end = value.indexOf(")!", embeds.end());
             if (end < 0) break;
             String params = value.substring(embeds.end(), end).replace("%20", " ").replace("\r", "").replace("\n", "");
-            String encoded = new PageParams(params).getValue("url", "");
-            String url = new String(Base64.decodeBase64(encoded), StandardCharsets.UTF_8);
-            // Document Embed prepends the site origin to local URLs, independent of the page path.
-            inspectToken(url, null, domain, protectFolders);
+            boolean htmlEmbed = "html".equals(embeds.group(1));
+            String encoded = new PageParams(params).getValue(htmlEmbed ? "html" : "url", "");
+            String decoded = new String(Base64.decodeBase64(encoded), StandardCharsets.UTF_8);
+            if (htmlEmbed) {
+                if (decoded.startsWith("utf8:")) decoded = Tools.URLDecode(decoded.substring(5));
+                inspect(decoded, base, domain, protectFolders);
+            } else {
+                // Document Embed prepends the site origin to local URLs, independent of the page path.
+                inspectToken(decoded, null, domain, protectFolders);
+            }
         }
         String text = value.indexOf('&') < 0 ? value : Parser.unescapeEntities(value, false);
         String lower = text.toLowerCase(Locale.ROOT);
