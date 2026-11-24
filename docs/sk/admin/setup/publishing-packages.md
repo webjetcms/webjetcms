@@ -6,7 +6,7 @@ Na zapnutie pracovných verzií slúži `branchesEnabled=true`. Súkromné súbo
 
 > Pri vlastnom `branchStorageRoot` vyberte adresár, ktorý žiadna doména nesprístupňuje cez web. Ak používate `cloudStaticFilesDir`, overte skutočné umiestnenie verejných priečinkov `/files`, `/images` a `/shared` vrátane cieľov symbolických odkazov. Ak úložisko umiestnite pod niektorý z nich, návštevník môže stiahnuť pracovné súbory ešte pred publikovaním balíka.
 
-Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Overený profil je **MariaDB 12.2.2, InnoDB, MariaDB Connector/J 3.5.10, Java 17.0.18, jedna inštancia, jedna zapisovateľná DB a lokálny filesystem**. Testovacia DB je `127.0.0.1:33316/webjet_p01`. Toto overenie nepovoľuje produkčné zapnutie; to vyžaduje samostatný pokyn pre konkrétne nasadenie.
+Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Podporované rady sú **MariaDB 10.11 LTS, 11.4 LTS a 12.2**, s InnoDB, jednou inštanciou WebJETu, jednou zapisovateľnou DB a lokálnym súborovým úložiskom. Pre rady LTS používajte aktuálnu opravnú verziu. Pred produkčným zapnutím funkciu overte na konkrétnom nasadení.
 
 ## Inventár a hranice
 
@@ -18,7 +18,7 @@ Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Overený 
 | `NewsApp`, `NewsActionBean`, `news-velocity.jsp` | SQL pred count/paging, existujúce perex kategórie, štandardné filtre/radenia, Velocity, čas náhľadu a výsledok po merge. |
 | Editor, médiá, upload | Stránky/priečinky, mediálne väzby a kategórie; moderný upload, CKEditor, jednotlivé súborové operácie elFinder. |
 
-Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasadenie, CDN/externé storage, IwcmFsDB storage, plný PageBuilder layout a ľubovoľné zákaznícke hooky nie sú týmto deklarované ako podporované. `BranchReadiness` povoľuje overenú vetvu MariaDB 12.2 a overuje engine, stĺpce, oprávnenia a úložisko. Podrobný stav povinných prípadov je v [P08 výsledkoch](../../../research/publish-packages/P08-vysledky.md).
+Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasadenie, CDN/externé storage, IwcmFsDB storage, plný PageBuilder layout a ľubovoľné zákaznícke hooky nie sú týmto deklarované ako podporované. `BranchReadiness` overuje rad MariaDB, engine, stĺpce, oprávnenia a úložisko. Podrobný stav pôvodného pilotu je v [P08 výsledkoch](../../../research/publish-packages/P08-vysledky.md).
 
 ## Zapnutie na schválenom nasadení
 

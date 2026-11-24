@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,9 +15,10 @@ import java.util.Set;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 
-/** Fail-closed prerequisites for the single-writer MariaDB POC. No engine conversion. */
+/** Prerequisites for publishing packages on a single-writer MariaDB instance. */
 public final class BranchReadiness {
     public static final String DEFAULT_STORAGE_ROOT = "/WEB-INF/branches";
+    private static final Set<String> SUPPORTED_MARIADB_SERIES = Set.of("10.11", "11.4", "12.2");
 
     private BranchReadiness() { }
 
@@ -33,10 +35,11 @@ public final class BranchReadiness {
     /** Verifies prerequisites using the caller's transaction connection. */
     public static void verify(Connection connection) throws SQLException {
         requireEnabled();
-        if (!"MariaDB".equals(connection.getMetaData().getDatabaseProductName())
-                || connection.getMetaData().getDatabaseMajorVersion() != 12
-                || connection.getMetaData().getDatabaseMinorVersion() != 2)
-            throw new SQLException("Only the verified MariaDB 12.2 single-writer POC profile is supported");
+        DatabaseMetaData database = connection.getMetaData();
+        String versionSeries = database.getDatabaseMajorVersion() + "." + database.getDatabaseMinorVersion();
+        if (!"MariaDB".equals(database.getDatabaseProductName())
+                || !SUPPORTED_MARIADB_SERIES.contains(versionSeries))
+            throw new SQLException("Publishing packages require MariaDB 10.11, 11.4 or 12.2 on a single-writer instance");
         if (connection.isReadOnly() || connection.getTransactionIsolation() < Connection.TRANSACTION_READ_COMMITTED)
             throw new SQLException("Branches require a writable connection at READ_COMMITTED or stronger");
         // ID ranges are allocated independently; the legacy counter does not participate in content rollback.

@@ -1,23 +1,29 @@
 package sk.iway.iwcm.branch;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 
-/** Real filesystem checks for automatic protected storage and explicit private overrides, without a database. */
+/** Database eligibility and filesystem checks for activating publishing packages. */
 class BranchReadinessTest {
     @TempDir Path temporary;
     private Path webRoot;
@@ -114,5 +120,24 @@ class BranchReadinessTest {
         constants.when(()->Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
         constants.when(()->Constants.getBoolean("branchesEnabled")).thenReturn(false);
         assertThrows(IllegalStateException.class,BranchReadiness::requireEnabled);
+    }
+
+    /** Eligible MariaDB series still have to satisfy the writable-connection prerequisite. */
+    @ParameterizedTest
+    @CsvSource({"MariaDB,10,11,true", "MariaDB,11,4,true", "MariaDB,12,2,true",
+                "MariaDB,10,10,false", "MariaDB,11,8,false", "MariaDB,12,3,false", "MySQL,11,4,false"})
+    void acceptsOnlySupportedMariaDbSeries(String product, int major, int minor, boolean supported) throws SQLException {
+        constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(true);
+        constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
+        Connection connection = mock(Connection.class);
+        DatabaseMetaData database = mock(DatabaseMetaData.class);
+        when(connection.getMetaData()).thenReturn(database);
+        when(connection.isReadOnly()).thenReturn(true);
+        when(database.getDatabaseProductName()).thenReturn(product);
+        when(database.getDatabaseMajorVersion()).thenReturn(major);
+        when(database.getDatabaseMinorVersion()).thenReturn(minor);
+
+        SQLException failure = assertThrows(SQLException.class, () -> BranchReadiness.verify(connection));
+        assertEquals(supported, failure.getMessage().contains("writable connection"), failure.getMessage());
     }
 }

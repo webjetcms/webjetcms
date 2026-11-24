@@ -64,16 +64,18 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     }
 
     function closeComparison(I) {
-        I.click('Zatvoriť', comparisonDialog+' header');
+        I.clickCss(`${comparisonDialog} header button.close`);
         I.waitForInvisible(comparisonDialog, 10);
     }
 
     async function choose(I, choice, ready = true) {
-        I.checkOption(`${detail} input[name="branch-merge-choice"][value="${choice}"]`);
+        const radio = `${comparisonDialog} input[name="branch-merge-choice"][value="${choice}"]`;
+        I.checkOption(radio);
+        I.seeCheckboxIsChecked(radio);
         I.click('#branch-merge-save-choice');
+        I.waitForInvisible(comparisonDialog, 30);
         I.waitForInvisible(busy, 30);
         if (ready) I.waitForEnabled('#branch-merge-publish', 30);
-        I.seeCheckboxIsChecked(`${detail} input[name="branch-merge-choice"][value="${choice}"]`);
     }
 
     async function render(I, fixture, preview) {
@@ -244,12 +246,15 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         const liveNews = livePreview.news.items.find(item => item.id === Number(fixture.pageId));
         I.assertEqual(liveNews.title, pageItem(before, fixture).live.fields.title);
         I.assertTrue(livePreview.menu.links.some(link => link.href === pageItem(before, fixture).live.fields.virtual_path), 'MenuULLI must use the selected LIVE URL of the folder default page.');
+        I.click(itemButton(fixture.pageId));
+        I.waitForVisible(detail, 10);
         await choose(I, 'WORK', false);
-        closeComparison(I);
         I.click(itemButton(fixture.livePageId));
         I.waitForVisible(detail, 10);
         I.see(keepLive.live.fields.title, `${detail} [data-branch-version="LIVE"]`);
         await choose(I, 'LIVE');
+        I.click(itemButton(fixture.livePageId));
+        I.waitForVisible(detail, 10);
         I.see('Produkčný obsah zostáva zachovaný.', detail);
         const selected = await report(I, fixture);
         I.assertEqual(pageItem(selected, fixture).choice, 'WORK');
@@ -275,7 +280,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         closeComparison(I);
         I.click('#branch-merge-publish');
         I.waitForVisible('#branch-merge-confirmation', 10);
-        I.see('Zmeny z tejto pracovnej verzie sa prenesú do hlavnej verzie', '#branch-merge-confirmation');
+        I.see('Do hlavnej verzie sa prenesie 25 položiek.', '#branch-merge-confirmation-note');
         I.click('#branch-merge-confirm');
         I.waitForText('Publikovaná', 90, '#branch-merge-title');
         I.waitForText('Publikovanie je dokončené.', 30, '#branch-merge-progress');
@@ -384,7 +389,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
         I.see(`Dokončené: ${completed.length} z ${before.items.length} · chyby: ${errors.length} · zostáva: ${pending}`, '#branch-merge-progress');
         I.see('Už dokončené zmeny sú verejné.', '#branch-merge-progress');
         I.dontSeeElement(`${detail} [data-branch-edit]`);
-        const writtenError = errors.find(item => ['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS'].includes(item.applyPhase));
+        const writtenError = errors.find(item => ['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS', 'SQL_SEARCH'].includes(item.applyPhase));
         I.assertTrue(Boolean(writtenError), 'The prepared failure must identify its already-written content phase.');
         const errorRow = `${dialog} tr[data-branch-type="${writtenError.type}"][data-branch-key="${writtenError.objectKey}"]`;
         closeComparison(I);

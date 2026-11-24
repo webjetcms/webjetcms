@@ -9,7 +9,7 @@ const changeActionIcons = {viewItem: 'ti-eye', resolve: 'ti-tools', compareItem:
 const tabIcons = {fields: 'ti-table', html: 'ti-code', content: 'ti-browser'};
 const versionIcons = {base: 'ti-history', live: 'ti-world', work: 'ti-git-branch'};
 const htmlFields = new Set(['data', 'html_head', 'html_data']);
-const writtenPhases = new Set(['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS']);
+const writtenPhases = new Set(['DATA', 'REFERENCES', 'TRASH_WAIT', 'TRASH_ROOT', 'EFFECTS', 'SQL_SEARCH']);
 export const previewStates = ['DRAFT', 'SCHEDULED', 'NEEDS_ATTENTION'];
 export const publishStates = ['DRAFT', 'MERGE_FAILED'];
 
