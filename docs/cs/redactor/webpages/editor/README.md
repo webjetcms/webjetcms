@@ -78,6 +78,8 @@ Hodnota URL adresy se bude měnit při:
 
 přičemž jak je napsáno výše koncová část se přebere podle zadané hodnoty.
 
+Pokud je adresa obsazena, editor uloží přidělenou koncovku, například `sprava-2.html`. Stránka ji použije i po přesunu do jiné složky.
+
 Při změně URL adresy stránky se automaticky vytvoří přesměrování v aplikaci Přesměrování cest ze staré URL adresy na novou.
 
 ![](../virtual-path-inherit.png)

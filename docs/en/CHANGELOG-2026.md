@@ -340,7 +340,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
-- Websites - the editor cleans up manually entered URLs that contain spaces or accents when saving (#417).
+- Websites - the editor will edit a manually entered URL address when saving if it contains spaces or diacritics. In case of an inherited URL collision, it will save and display the assigned suffix (#417).
 - AI Chat - after deleting an open chat, the assistant selection will only appear once in a new chat (#58878).
 - HTML code embedding - content is decoded in UTF-8 without depending on the default JVM encoding, so that diacritics and other Unicode characters are not corrupted on the server.
 - Structure mirroring - when a translation fails, for example after running out of DeepL quota, the user will receive a notification with the specific reason for the translator exception, including the HTTP code and available DeepL error message. Hard spaces and their HTML entities are normalized in folder names and generated URLs to avoid `nbsp` addresses and unnecessary redirects (#402).

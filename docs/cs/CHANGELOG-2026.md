@@ -340,7 +340,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
-- Webové stránky - editor při uložení upraví ručně zadanou URL adresu, pokud obsahuje mezery nebo diakritiku (#417).
+- Webové stránky - editor při uložení upraví ručně zadanou URL adresu, pokud obsahuje mezery nebo diakritiku. Při kolizi zděděné URL uloží a zobrazí přidělenou koncovku (#417).
 - AI Čet - po smazání otevřeného četu se v novém četě zobrazí výběr asistenta pouze jednou (#58878).
 - Vložení HTML kódu - obsah se dekóduje v UTF-8 bez závislosti na výchozím kódování JVM, aby se na serveru nepoškodila diakritika a další znaky Unicode.
 - Zrcadlení struktury - při selhání překladu, například po vyčerpání kvóty DeepL, uživatel obdrží upozornění s konkrétním důvodem z výjimky překladače včetně HTTP kódu a dostupné chybové zprávy DeepL. Pevné mezery a jejich HTML entity se normalizují v názvech složek a generovaných URL, aby nevznikaly adresy s textem `nbsp` ani zbytečná přesměrování (#402).
