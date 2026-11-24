@@ -2,6 +2,7 @@ package sk.iway.iwcm.doc;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -80,6 +81,18 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
     @Query(value = "SELECT group_id FROM documents_history WHERE history_id=?", nativeQuery=true)
     public Optional<Integer> findGroupIdById(Long id);
+
+    interface PageGroup {
+        Integer getDocId();
+        Integer getGroupId();
+    }
+
+    /** Latest recoverable versions of pages in Trash, with the published version last for each page. */
+    @Query("SELECT h.docId AS docId, h.groupId AS groupId FROM DocHistory h WHERE h.id IN "
+        + "(SELECT MAX(v.id) FROM DocHistory v WHERE v.docId IN (SELECT d.id FROM DocDetails d WHERE d.groupId IN :trashIds) "
+        + "AND v.groupId NOT IN :trashIds AND (v.isDelete IS NULL OR v.isDelete = false) GROUP BY v.docId, v.actual) "
+        + "ORDER BY CASE WHEN h.actual = true THEN 1 ELSE 0 END, h.id")
+    List<PageGroup> findGroupsBeforeTrash(@Param("trashIds") Set<Integer> trashIds);
 
     @Query(value = "SELECT dh FROM DocHistory dh WHERE dh.docId IN :docIds AND dh.actual = 1")
     public List<DocHistory> findByDocIdInActual(@Param("docIds")List<Integer> docIds);

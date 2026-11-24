@@ -54,6 +54,7 @@ module.exports = {
             "Delete":"Odstranit",
             "No matching records found":"Nenašly se žádné vyhovující záznamy",
             "Delete::2": "Smazat",
+            "Errors checking or deleting files: 0": "Chyby při kontrole nebo mazání: 0",
             "Two-Step Verification": "Dvoustupňové ověřování",
             "Create new image": "Vytvořit nový obrázek",
             "Remove background": "Odstranit pozadí",

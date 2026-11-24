@@ -1,5 +1,7 @@
 package sk.iway.iwcm.editor.rest;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -39,6 +41,7 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.editor.service.EditorService;
+import sk.iway.iwcm.editor.service.PageMediaCleanup.PageFiles;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableResponse;
@@ -74,6 +77,12 @@ public class WebpagesRestController extends WebpagesDatatable {
     @PostMapping("/deletion-preview")
     public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
         return deleteMirrorsService.getPageMirrors(ids, getUser());
+    }
+
+    /** Loads the file lists independently so checking file usage does not delay ordinary page deletion. */
+    @PostMapping("/deletion-preview/files")
+    public List<PageFiles> getDeletionFilePreview(@RequestParam("ids") List<Integer> ids) throws IOException, SQLException {
+        return deleteMirrorsService.getPageFiles(ids, getUser());
     }
 
     /**

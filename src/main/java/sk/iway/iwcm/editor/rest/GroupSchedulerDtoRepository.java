@@ -1,6 +1,7 @@
 package sk.iway.iwcm.editor.rest;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,16 @@ public interface GroupSchedulerDtoRepository extends JpaRepository<GroupSchedule
 
     //get latest scheduler/history for group
     GroupSchedulerDto findFirstByGroupIdAndWhenToPublishNullOrderBySaveDateDesc(Long groupId);
+
+    interface GroupParent {
+        Integer getGroupId();
+        Integer getParentGroupId();
+    }
+
+    /** Original parents in recovery order, most recent first, without loading the full folder versions. */
+    @Query("SELECT h.groupId AS groupId, h.parentGroupId AS parentGroupId FROM GroupSchedulerDto h "
+        + "WHERE h.groupId IN :ids AND h.whenToPublish IS NULL ORDER BY h.saveDate DESC, h.id DESC")
+    List<GroupParent> findParentsForRecovery(@Param("ids") List<Integer> ids);
 
     //find all pending approval records for a group (awaiting_approve IS NOT NULL)
     java.util.List<GroupSchedulerDto> findByGroupIdAndAwaitingApproveIsNotNull(Integer groupId);

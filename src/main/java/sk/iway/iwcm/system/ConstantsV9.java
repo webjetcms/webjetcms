@@ -353,6 +353,8 @@ public class ConstantsV9 {
 		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_GDPR, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
 
 		Constants.setBoolean("fileArchivCheckHistoryValid", true, Constants.MOD_FILE_ARCHIV, "Ak je true, historické verzie dokumentov možno stiahnuť iba v rozsahu Platnosť od a Platnosť do. Pri false sa oba dátumy historických verzií ignorujú; viditeľnosť a prístupové oprávnenia sa naďalej kontrolujú.");
+
+		Constants.setBoolean("editorDeleteUnusedPageFilesDefault", true, Constants.MOD_WEBPAGES, "Predvolené zaškrtnutie voľby Zmazať aj nepoužívané súbory stránky pri trvalom zmazaní webovej stránky z Koša.");
 	}
 
 	/**

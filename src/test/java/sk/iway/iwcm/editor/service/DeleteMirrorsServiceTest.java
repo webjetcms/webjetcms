@@ -8,12 +8,14 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
@@ -34,7 +36,8 @@ class DeleteMirrorsServiceTest {
     private final EditorService editor = mock(EditorService.class);
     private final DocDB documents = mock(DocDB.class);
     private final GroupsDB groups = mock(GroupsDB.class);
-    private final DeleteMirrorsService service = new DeleteMirrorsService(editor);
+    private final PageMediaCleanup cleanup = mock(PageMediaCleanup.class);
+    private final DeleteMirrorsService service = new DeleteMirrorsService(editor, cleanup);
 
     private MockedStatic<DocDB> documentAccess;
     private MockedStatic<GroupsDB> groupAccess;
@@ -107,6 +110,31 @@ class DeleteMirrorsServiceTest {
         addItem(10, false);
         ResponseStatusException error = assertThrows(ResponseStatusException.class, () -> preview(folders, List.of(10)));
         assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
+    }
+
+    @Test
+    void previewsFilesOnlyForEligibleSelectedPages() throws Exception {
+        addItem(10, true);
+        addItem(11, true);
+        addItem(12, false);
+        DocDetails eligible = documents.getBasicDocDetails(pageId(10), false);
+        when(editor.canChooseFileCleanup(eligible)).thenReturn(true);
+
+        assertThrows(ResponseStatusException.class, () -> service.getPageFiles(List.of(pageId(10), pageId(12)), user));
+        verifyNoInteractions(cleanup);
+        service.getPageFiles(List.of(pageId(10), pageId(11), pageId(10)), user);
+        verify(cleanup).preview(List.of(eligible), user);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void usesConfiguredCleanupDefaultForEligiblePages(boolean checked) {
+        addItem(10, true);
+        when(editor.canChooseFileCleanup(documents.getBasicDocDetails(pageId(10), false))).thenReturn(true);
+        try (var config = mockStatic(Constants.class)) {
+            config.when(() -> Constants.getBoolean("editorDeleteUnusedPageFilesDefault")).thenReturn(checked);
+            assertEquals(checked, preview(false, List.of(10)).isPageFileCleanupDefaultChecked());
+        }
     }
 
     private DeleteMirrorsResult preview(boolean folders, List<Integer> ids) {

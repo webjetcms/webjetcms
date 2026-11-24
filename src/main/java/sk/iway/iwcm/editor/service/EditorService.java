@@ -1574,7 +1574,7 @@ public class EditorService {
 	}
 
     /**
-     * Checks whether to offer file cleanup for a page the current administrator can delete immediately.
+     * Checks whether the current administrator can permanently delete the page from Trash with its unused files.
      *
      * @param doc page shown in the deletion preview
      * @return true if storage and permission checks pass and the deletion needs no further approval
@@ -1637,7 +1637,10 @@ public class EditorService {
 		if(approveService.needApprove()==false || approveService.isSelfApproved()) {
 			//Doc, do not need approve OR
 			//current user IS self approver, can do delete action
-            fileCleanup.capture(docDetails, currentUser);
+			GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
+			GroupDetails trashGroupDetails = Constants.getBoolean("editorDisableHistory") ? null : groupsDB.getTrashGroup();
+			boolean permanent = trashGroupDetails == null || groupsDB.getParentGroups(docDetails.getGroupId(), true).stream()
+					.anyMatch(parent -> parent.getGroupId() == trashGroupDetails.getGroupId());
 
 			if (publishEvents) {
 				// Check every mirror before ON_DELETE listeners can delete any member of the mirrored set.
@@ -1651,23 +1654,13 @@ public class EditorService {
 						}
 					}
 				}
-				(new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
 			}
 
-			// zisti ci sme v adresari /System/Trash (kos), ak nie presun, inak vymaz
-			String navbarNoHref = DB.internationalToEnglish(groupsDB.getURLPath(docDetails.getGroupId())).toLowerCase();
-			Logger.println(EditorService.class,"MAZEM: " + navbarNoHref);
+			// Delete listeners can change mirror and media records needed to identify the page's files.
+			if (permanent) fileCleanup.capture(docDetails, currentUser);
+			if (publishEvents) (new WebjetEvent<DocDetails>(docDetails, WebjetEventType.ON_DELETE)).publishEvent();
 
-			//tu sa vytvara adresar podla default jazyka, nie podla prihlaseneho pouzivatela!
-			Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
-			String trashDirName = propSystem.getText("config.trash_dir");
-			GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
-
-			//vypne zapisovanie zaznamov do documents_history tabulky. true - nezapise zaznam do documents_history
-			boolean disableHistory = Constants.getBoolean("editorDisableHistory");
-			GroupDetails trashGroupDetails = disableHistory == false ? groupsDB.getCreateGroup(trashDirName) : null;
-
-			if (trashGroupDetails==null || navbarNoHref.startsWith(DB.internationalToEnglish(groupsDB.getURLPath(trashGroupDetails.getGroupId())).toLowerCase()))  {
+			if (permanent) {
 				//Permanent DOC delete
 				docRepo.deleteById(Long.valueOf(delDocId));
 

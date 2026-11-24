@@ -81,17 +81,23 @@ Zoznam obsahuje priamo prepojené stránky alebo priečinky bez podpriečinkov.
 
 ### Zmazanie súborov stránky
 
-Ak pri mazaní web stránky zaškrtnete **Zmazať aj nepoužívané súbory stránky**, WebJET preverí súbory priamo v priečinkoch **Obrázky**, **Súbory** a **Fotogaléria** v časti **Médiá tejto stránky**. V spoločnom priečinku preverí iba súbory, na ktoré mazaná stránka odkazuje. Podpriečinky a médiá plánovaného publikovania ponechá.
+Pri presune stránky do Koša zostanú všetky jej súbory na pôvodnom mieste. Keď na karte **Zmazané** označíte stránku a kliknete na **Zmazať**, pod voľbou **Zmazať aj nepoužívané súbory stránky** uvidíte súbory, ktoré môžete trvalo zmazať spolu so stránkou. Pri výbere viacerých stránok sú súbory zoskupené podľa pôvodnej cesty stránky. Pred zmazaním WebJET znova overí, či sa súbory medzičasom nezačali používať.
+
+![Potvrdenie zmazania dvoch stránok so zoznamom súborov podľa cesty stránky](delete-page-files.png)
+
+WebJET preverí súbory priamo v priečinkoch **Obrázky**, **Súbory** a **Fotogaléria** v časti **Médiá tejto stránky**. Ak nevie potvrdiť, že priečinok patrí iba mazanej stránke, preverí v ňom iba súbory, na ktoré stránka odkazuje. Ak pôvodný priečinok stránky nedokáže určiť, jej súbory ponechá. Ponechá aj podpriečinky a médiá plánovaného publikovania.
 
 Ak je priečinok úložiska prístupný pod viacerými cestami, napríklad keď `/images` aj `/files` smerujú do toho istého priečinka, WebJET jeho súbory ponechá.
 
 Súbor zostane zachovaný, ak ho používa iná stránka vrátane stránky v Koši, konceptu či verzie čakajúcej na schválenie alebo publikovanie. WebJET kontroluje aj dokumenty zobrazené aplikáciou **Vloženie dokumentu**, priradené médiá a súbory použité v galériách, banneroch, dotazníkoch a anketách. V šablónach, komponentoch a v poli priečinka **HTML kód do hlavičiek podstránok** vyhľadáva odkazy na súbory. Odkazy z externých systémov a cesty zostavené vlastným kódom nemusia byť rozpoznateľné.
 
-Voľba je predvolene vypnutá. Pri schvaľovaní ju môže vybrať konečný schvaľovateľ. Súbory môžete zmazať s právom na správu súborov a na zápis do príslušného priečinka. Po dokončení sa zobrazí počet zmazaných a ponechaných súborov a prípadných chýb. V zozname web stránok sa oznámenie o úspešnom dokončení po 15 sekundách skryje.
+Voľba je predvolene zaškrtnutá. Ak chcete súbory ponechať, pred potvrdením ju odškrtnite. Pri schvaľovaní zmazania môže túto voľbu zmeniť konečný schvaľovateľ. Ak má byť v oboch prípadoch predvolene vypnutá, správca môže nastaviť konfiguračnú premennú `editorDeleteUnusedPageFilesDefault` na `false`.
+
+Súbory môžete zmazať s právom na správu súborov a na zápis do príslušného priečinka. Po dokončení sa zobrazí počet zmazaných a ponechaných súborov a prípadných chýb. V zozname web stránok sa oznámenie o úspešnom dokončení po 15 sekundách skryje.
 
 Ak sa mazanie viacerých stránok preruší, WebJET dokončí kontrolu súborov pre už zmazané stránky. Spolu s chybou zobrazí ich ID a výsledok kontroly súborov.
 
-!> Obnovením stránky z Koša sa zmazané súbory neobnovia.
+!> Súbory zmazané spolu so stránkou sa nedajú obnoviť.
 
 ### Obnovenie web stránok a adresárov z koša
 

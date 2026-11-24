@@ -104,7 +104,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 							</td>
 						</tr>
                         <iwcm:present name="showPageFileCleanup">
-                            <tr><td colspan="8"><label><input type="checkbox" name="deleteUnusedPageFiles" value="true">
+                            <tr><td colspan="8"><label><input type="checkbox" name="deleteUnusedPageFiles" value="true"<%= Constants.getBoolean("editorDeleteUnusedPageFilesDefault") ? " checked" : "" %>>
                                 <iwcm:text key="editor.delete_files.choice.js"/></label>
                                 <iwcm:text key="editor.delete_files.restore.js"/></td></tr>
                         </iwcm:present>
