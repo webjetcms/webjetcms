@@ -84,6 +84,8 @@ public class EditorService {
 	private DocAtrRepository docAtrRepository;
 
 	//service
+    @Autowired
+    private PageMediaCleanup fileCleanup;
 	private MediaService mediaService;
 	private ApproveService approveService;
 
@@ -1571,6 +1573,38 @@ public class EditorService {
 		return approveService.approveDocDelAction(historyRepo, docRepo, this);
 	}
 
+    /**
+     * Checks whether to offer file cleanup for a page the current administrator can delete immediately.
+     *
+     * @param doc page shown in the deletion preview
+     * @return true if storage and permission checks pass and the deletion needs no further approval
+     */
+    public boolean canChooseFileCleanup(DocDetails doc) {
+        if (!fileCleanup.canClean(doc, currentUser) || !isPageEditable(currentUser, doc, true)) return false;
+        approveService.loadApproveTables(doc.getGroupId());
+        return !approveService.needApprove() || approveService.isSelfApproved();
+    }
+
+    /**
+     * Registers the page for file cleanup in the current deletion batch.
+     *
+     * @param docId page selected for cleanup
+     * @return true on first selection, false if cleanup is already scheduled for this page in the batch
+     */
+    public boolean selectForFileCleanup(int docId) {
+        return fileCleanup.select(docId);
+    }
+
+    /**
+     * Processes unused files for selected pages whose deletion completed.
+     *
+     * @param interrupted whether the deletion batch stopped on an error
+     * @return localized cleanup notification, or {@code null} when there is nothing to report
+     */
+    public NotifyBean finishFileCleanup(boolean interrupted) {
+        return fileCleanup.finish(currentUser, prop, interrupted);
+    }
+
 	/**
 	 * Delete webpage logic + checkPermissions and check approve posibility.
 	 *
@@ -1603,6 +1637,7 @@ public class EditorService {
 		if(approveService.needApprove()==false || approveService.isSelfApproved()) {
 			//Doc, do not need approve OR
 			//current user IS self approver, can do delete action
+            fileCleanup.capture(docDetails, currentUser);
 
 			if (publishEvents) {
 				// Check every mirror before ON_DELETE listeners can delete any member of the mirrored set.

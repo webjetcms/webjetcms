@@ -52,6 +52,9 @@ public class DeleteMirrorsService {
             if (doc == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
             if (canAccessPage(doc, user) == false) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
+            if (!result.isPageFileCleanupAvailable() && editorService.canChooseFileCleanup(doc)) {
+                result.setPageFileCleanupAvailable(true);
+            }
             int syncId = DocMirroringServiceV9.getSyncId(id);
             // Match ON_DELETE even in Trash: only configured mirroring trees participate.
             if (syncId <= 1 || MirroringService.isEnabled(doc.getGroupId()) == false) continue;

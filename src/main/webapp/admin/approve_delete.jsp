@@ -25,7 +25,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
         out.print("docid="+Tools.getRequestParameter(request, "docid"));
      }
   %>&NO_WJTOOLBAR=true">
-  <frame name="approveDelFormId"  id="approveDelFormId" src="approve_form_delete.jsp?historyid=<%=Tools.getRequestParameter(request, "historyid")%>&docid=<%=Tools.getRequestParameter(request, "docid")%>" scrolling="no" noresize>
+  <frame name="approveDelFormId"  id="approveDelFormId" src="approve_form_delete.jsp?historyid=<%=Tools.getRequestParameter(request, "historyid")%>&docid=<%=Tools.getRequestParameter(request, "docid")%>" scrolling="auto" noresize>
 </frameset>
 <noframes><body bgcolor="#FFFFFF" text="#000000">
 

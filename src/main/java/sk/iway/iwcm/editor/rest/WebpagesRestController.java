@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
@@ -36,7 +41,10 @@ import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
+import sk.iway.iwcm.system.datatable.DatatableResponse;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.OptionDto;
+import sk.iway.iwcm.system.spring.DatatableExceptionHandlerV2;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 
@@ -66,6 +74,70 @@ public class WebpagesRestController extends WebpagesDatatable {
     @PostMapping("/deletion-preview")
     public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
         return deleteMirrorsService.getPageMirrors(ids, getUser());
+    }
+
+    /**
+     * Registers rows that request file cleanup before deleting any page, so the batch shares one cleanup pass.
+     *
+     * @param request current Editor request
+     * @param batch Editor action and submitted page rows
+     * @return Editor response with a cleanup summary when available
+     */
+    @Override
+    public ResponseEntity<DatatableResponse<DocDetails>> handleEditor(HttpServletRequest request,
+            @RequestBody DatatableRequest<Long, DocDetails> batch) {
+        if (!batch.isDelete()) return super.handleEditor(request, batch);
+        batch.getData().forEach(this::selectForFileCleanup);
+        return deleteWithFileCleanup(() -> super.handleEditor(request, batch), DatatableResponse::addNotify);
+    }
+
+    private boolean selectForFileCleanup(Long id, DocDetails entity) {
+        return entity != null && entity.getEditorFields() != null && entity.getEditorFields().isDeleteUnusedPageFiles()
+            && editorService.selectForFileCleanup(Math.toIntExact(id));
+    }
+
+    /**
+     * Handles optional file cleanup for a single deletion. An enclosing Editor batch finishes
+     * cleanup for its selected rows after processing the batch.
+     *
+     * @param id page ID to delete
+     * @param entity submitted page containing the cleanup choice
+     * @return deletion result with a cleanup notification when a standalone deletion produces one
+     */
+    @Override
+    public ResponseEntity<Map<String, Object>> delete(@PathVariable("id") long id, @RequestBody DocDetails entity) {
+        // The enclosing Editor request already selected its rows and will finish the whole batch.
+        if (!selectForFileCleanup(id, entity)) return super.delete(id, entity);
+        return deleteWithFileCleanup(() -> super.delete(id, entity),
+            (body, summary) -> body.put("notify", List.of(summary)));
+    }
+
+    /**
+     * Finishes cleanup for completed deletions even if a later row fails. On failure, makes any
+     * summary available to the error handler and rethrows the original deletion exception.
+     *
+     * @param <T> type of the deletion response body
+     * @param delete operation that deletes a page or batch
+     * @param addSummary attaches the cleanup notification to the successful response body
+     * @return the operation's response with any cleanup notification attached
+     */
+    private <T> ResponseEntity<T> deleteWithFileCleanup(Supplier<ResponseEntity<T>> delete, BiConsumer<T, NotifyBean> addSummary) {
+        ResponseEntity<T> response;
+        try {
+            response = delete.get();
+        } catch (RuntimeException ex) {
+            try {
+                NotifyBean summary = editorService.finishFileCleanup(true);
+                if (summary != null) RequestBean.setAttribute(DatatableExceptionHandlerV2.ERROR_NOTIFY, summary);
+            } catch (RuntimeException cleanupError) {
+                ex.addSuppressed(cleanupError);
+                Logger.error(WebpagesRestController.class, cleanupError);
+            }
+            throw ex;
+        }
+        NotifyBean summary = editorService.finishFileCleanup(false);
+        if (summary != null && response.getBody() != null) addSummary.accept(response.getBody(), summary);
+        return response;
     }
 
     /** Returns groups available on every selected page, or assigned to at least one page for removal. */

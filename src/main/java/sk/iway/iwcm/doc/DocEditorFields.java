@@ -30,6 +30,8 @@ import sk.iway.spirit.model.Media;
 @Setter
 public class DocEditorFields extends BaseEditorFields {
 
+    private boolean deleteUnusedPageFiles;
+
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "webpages.icons.title",
         hiddenEditor = true, hidden = false, visible = true, sortAfter = "id", className = "allow-html", orderable = false
     )

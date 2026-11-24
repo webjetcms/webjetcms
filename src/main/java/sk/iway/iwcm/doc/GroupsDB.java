@@ -1462,7 +1462,7 @@ public class GroupsDB extends DB
 	 */
 	public String getURLPath(int groupId)
 	{
-		return(getURLPathGroup(groups, groupId));
+		return getURLPathDomainGroup(idToGroups, groupId)[0];
 	}
 
 	/**
@@ -1490,7 +1490,7 @@ public class GroupsDB extends DB
 			if (group != null && Tools.isNotEmpty(group.getDomainName())) return group.getDomainName();
 		}
 
-		return(getDomain(groups, groupId));
+		return getURLPathDomainGroup(idToGroups, groupId)[1];
 	}
 
 	/**
@@ -2470,6 +2470,28 @@ public class GroupsDB extends DB
 	public List<GroupDetails> getGroupsAll()
 	{
 		return groups;
+	}
+
+	/**
+	 * Maps each storage domain to whether cloud document filtering includes every group on that domain.
+	 * An empty key represents a cloud group whose storage domain cannot be determined.
+	 *
+	 * @return case-insensitive map with a false value for domains where the ownership scan may miss pages
+	 */
+	public Map<String, Boolean> getStorageDomainVisibility()
+	{
+		Map<String, Boolean> visibility = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		boolean cloud = InitServlet.isTypeCloud();
+		for (GroupDetails group : groups)
+		{
+			String domain = group.getDomainName();
+			if (Tools.isNotEmpty(domain)) visibility.putIfAbsent(domain, true);
+			else if (cloud) {
+				// CloudFilter tests the immediate group even when storage inherits the parent domain.
+				visibility.put(Tools.getStringValue(getDomain(group.getGroupId()), ""), false);
+			}
+		}
+		return visibility;
 	}
 
 	/**

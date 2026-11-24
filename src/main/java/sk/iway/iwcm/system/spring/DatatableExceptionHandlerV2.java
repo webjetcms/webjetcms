@@ -1,7 +1,6 @@
 package sk.iway.iwcm.system.spring;
 
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.FieldError;
@@ -14,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -21,6 +21,7 @@ import sk.iway.iwcm.system.datatable.DatatableFieldError;
 import sk.iway.iwcm.system.datatable.DatatableResponse;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.EditorException;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -47,6 +48,8 @@ import java.util.stream.Collectors;
 @ControllerAdvice(annotations = {Datatable.class})
 public class DatatableExceptionHandlerV2
 {
+	/** Optional request notification about work that completed before the failing operation stopped. */
+	public static final String ERROR_NOTIFY = DatatableExceptionHandlerV2.class.getName() + ".notify";
 	private static final Pattern DATA_TOO_LONG_PATTERN = Pattern.compile("Data too long for column ['\"`]([^'\"`]+)['\"`]", Pattern.CASE_INSENSITIVE);
 	private static final Pattern COLUMN_CANNOT_BE_NULL_PATTERN = Pattern.compile("Column ['\"`]([^'\"`]+)['\"`] cannot be null", Pattern.CASE_INSENSITIVE);
 
@@ -71,7 +74,7 @@ public class DatatableExceptionHandlerV2
 			response.setError(Prop.getInstance().getText("datatable.error.fieldErrorMessage"));
 		}
 
-		return ResponseEntity.ok(response);
+		return errorResponse(response);
 	}
 
 	private String getField(String str) {
@@ -124,7 +127,7 @@ public class DatatableExceptionHandlerV2
 			response.setError(Prop.getInstance().getText("datatable.error.fieldErrorMessage"));
 		}
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return errorResponse(response);
 	}
 
 	@ExceptionHandler(TransactionSystemException.class)
@@ -156,7 +159,7 @@ public class DatatableExceptionHandlerV2
 			response.setError(Prop.getInstance().getText("datatable.error.fieldErrorMessage"));
 		}
 
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return errorResponse(response);
 	}
 
 	private String getDatabaseErrorMessage(Exception ex) {
@@ -199,7 +202,7 @@ public class DatatableExceptionHandlerV2
 
 		response.setError(message);
 		Logger.error(DatatableExceptionHandlerV2.class, "EditorException: " + ex.getMessage());
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return errorResponse(response);
 	}
 
 	@ExceptionHandler(Exception.class)
@@ -218,7 +221,12 @@ public class DatatableExceptionHandlerV2
 		response.setError(message);
 		//log stack trace because this is unexpected exception
 		Logger.error(DatatableExceptionHandlerV2.class, "handleException: " + ex.getMessage(), ex);
-		return new ResponseEntity<>(response, HttpStatus.OK);
+		return errorResponse(response);
+	}
+
+	private ResponseEntity<DatatableResponse<Object>> errorResponse(DatatableResponse<Object> response) {
+		if (RequestBean.getAttribute(ERROR_NOTIFY) instanceof NotifyBean notification) response.addNotify(notification);
+		return ResponseEntity.ok(response);
 	}
 
 	private String prepareMessage(String message, Exception ex) {

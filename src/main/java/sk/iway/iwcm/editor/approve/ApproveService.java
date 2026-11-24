@@ -162,6 +162,8 @@ public class ApproveService {
      * @param currentGroupId
     */
 	public void loadApproveTables(int currentGroupId) {
+        selfApproved = false;
+        canApproveFirstLevel = false;
         approveByTable = new HashMap<>();
         notifyTable = new HashMap<>();
 		approveByTableLevel2 = new HashMap<>();
@@ -618,9 +620,17 @@ public class ApproveService {
 			}
 
 			//Perrmisions and approves are tested inside customDeleteWebpage
+            boolean cleanFiles = "true".equals(request.getParameter("deleteUnusedPageFiles"))
+                && Boolean.TRUE.equals(docHistory.getIsDelete()) && Tools.isNotEmpty(docHistory.getAwaitingApprove())
+                && (!needApprove() || selfApproved);
+            if (cleanFiles) editorService.selectForFileCleanup(docHistory.getDocId());
 			String result = editorService.deleteWebpageLogic(docHistory.getDocId(), this, true);
 
 			if("success".equals(result)) {
+                if (cleanFiles) {
+                    var summary = editorService.finishFileCleanup(false);
+                    if (summary != null) request.setAttribute("pageFileCleanupSummary", summary.getText());
+                }
 				//SET this as Approve SUCCESS indicator
 				request.setAttribute("approved", "approved");
 

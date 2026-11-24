@@ -79,6 +79,20 @@ Ak označíte naraz viac navzájom zrkadlených stránok alebo priečinkov, kaž
 
 Zoznam obsahuje priamo prepojené stránky alebo priečinky bez podpriečinkov.
 
+### Zmazanie súborov stránky
+
+Ak pri mazaní web stránky zaškrtnete **Zmazať aj nepoužívané súbory stránky**, WebJET preverí súbory priamo v priečinkoch **Obrázky**, **Súbory** a **Fotogaléria** v časti **Médiá tejto stránky**. V spoločnom priečinku preverí iba súbory, na ktoré mazaná stránka odkazuje. Podpriečinky a médiá plánovaného publikovania ponechá.
+
+Ak je priečinok úložiska prístupný pod viacerými cestami, napríklad keď `/images` aj `/files` smerujú do toho istého priečinka, WebJET jeho súbory ponechá.
+
+Súbor zostane zachovaný, ak ho používa iná stránka vrátane stránky v Koši, konceptu či verzie čakajúcej na schválenie alebo publikovanie. WebJET kontroluje aj dokumenty zobrazené aplikáciou **Vloženie dokumentu**, priradené médiá a súbory použité v galériách, banneroch, dotazníkoch a anketách. V šablónach, komponentoch a v poli priečinka **HTML kód do hlavičiek podstránok** vyhľadáva odkazy na súbory. Odkazy z externých systémov a cesty zostavené vlastným kódom nemusia byť rozpoznateľné.
+
+Voľba je predvolene vypnutá. Pri schvaľovaní ju môže vybrať konečný schvaľovateľ. Súbory môžete zmazať s právom na správu súborov a na zápis do príslušného priečinka. Po dokončení sa zobrazí počet zmazaných a ponechaných súborov a prípadných chýb. V zozname web stránok sa oznámenie o úspešnom dokončení po 15 sekundách skryje.
+
+Ak sa mazanie viacerých stránok preruší, WebJET dokončí kontrolu súborov pre už zmazané stránky. Spolu s chybou zobrazí ich ID a výsledok kontroly súborov.
+
+!> Obnovením stránky z Koša sa zmazané súbory neobnovia.
+
 ### Obnovenie web stránok a adresárov z koša
 
 Zoznam web stránok ponúka taktiež špeciálnu ikonu ![](recover-button.png ":no-zoom") na obnovenie web stránky alebo celého priečinka z koša. Tieto ikony sa zobrazujú iba za špecifických okolností. Bližšie objasnená logika sa nachádza v sekcii [Obnovenie web stránok a priečinkov z koša](./recover.md)

@@ -21,7 +21,13 @@ export function bindDeleteMirrors(datatable, url, itemType) {
 
     editor.on("initRemove.deleteMirrors close.deleteMirrors", reset);
     editor.on("preSubmit.deleteMirrors", (event, data, action) => {
-        if (action === "remove" && ready === false) return false;
+        if (action !== "remove") return;
+        if (!ready) return false;
+        if (itemType === "pages" && $("#" + datatable.DATA.id + "_modal .delete-page-files input").is(":checked")) {
+            for (const [id, row] of Object.entries(data.data)) {
+                data.data[id] = { ...row, editorFields: { ...row.editorFields, deleteUnusedPageFiles: true } };
+            }
+        }
     });
 
     editor.on("open.deleteMirrors", (event, mode, action) => {
@@ -32,7 +38,7 @@ export function bindDeleteMirrors(datatable, url, itemType) {
         const submitButtons = modal.find(".DTE_Form_Buttons button:not(.btn-close-editor)");
         submitButtons.prop("disabled", true);
 
-        modal.find(".delete-mirrors-info").remove();
+        modal.find(".delete-mirrors-info, .delete-page-files").remove();
         const output = $("<div>", {
             class: "delete-mirrors-info mt-3",
             role: "status",
@@ -59,6 +65,14 @@ export function bindDeleteMirrors(datatable, url, itemType) {
                 return;
             }
 
+            if (itemType === "pages" && result.pageFileCleanupAvailable === true) {
+                const id = datatable.DATA.id + "_deletePageFiles";
+                const choice = $("<div>", { class: "delete-page-files form-check mt-3" });
+                choice.append($("<input>", { type: "checkbox", id, class: "form-check-input", "aria-describedby": id + "_help" }),
+                    $("<label>", { for: id, class: "form-check-label" }).text(WJ.translate("editor.delete_files.choice.js")),
+                    $("<div>", { id: id + "_help", class: "form-text" }).text(WJ.translate("editor.delete_files.restore.js")));
+                output.after(choice);
+            }
             output.empty();
             if (result.items.length > 0 || result.hiddenMirrors) {
                 output.addClass("alert alert-warning mb-0");

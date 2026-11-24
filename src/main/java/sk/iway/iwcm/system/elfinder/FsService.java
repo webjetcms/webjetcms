@@ -276,8 +276,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 		{
 			StringBuilder rootDirs = new StringBuilder();
 
-			String[] prefixes = {"/images", "/files", "/images/gallery"};
-			for (String prefix : prefixes)
+			for (String prefix : UploadFileTools.PAGE_MEDIA_PREFIXES)
 			{
 				String dir = UploadFileTools.getPageUploadSubDir(docId, groupId, title, prefix);
 				//Logger.debug(FsService.class, "uploadSubdir: docId="+docId+", groupId="+groupId+", dir="+dir);

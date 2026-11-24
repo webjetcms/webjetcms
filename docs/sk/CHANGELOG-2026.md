@@ -1,5 +1,11 @@
 # Zoznam zmien verzia 2026
 
+## 2026-SNAPSHOT
+
+### Webové stránky
+
+- Pri zmazaní stránky môžete zvoliť aj [zmazanie nepoužívaných súborov](redactor/webpages/README.md#zmazanie-súborov-stránky) z jej priečinkov médií. WebJET ponechá súbory používané na iných stránkach alebo v aplikáciách.
+
 ## 2026.40
 
 > WebJET CMS 2026.40 prináša [**novú verziu PageBuildera**](#webové-stránky) s panelom Štruktúra, prehľadnejšou knižnicou blokov a kopírovaním blokov medzi stránkami. [**Plánované publikovanie stránok aj so súbormi**](#webové-stránky) umožňuje pripraviť budúci obsah s obrázkami a dokumentmi, ktoré zostanú chránené až do termínu zverejnenia. Funkciu zapína správca.
