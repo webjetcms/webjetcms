@@ -1,9 +1,12 @@
 package sk.iway.iwcm.editor.rest;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -23,12 +26,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import sk.iway.Html2Text;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
@@ -56,6 +61,8 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     protected final DocAtrDefRepository docAtrDefRepository;
 
     private static final String GROUP_ID_PARAM_NAME = "groupId";
+    // Matches Unicode space separators (including non-breaking spaces) and combining diacritical marks.
+    private static final Pattern URL_TEXT_CHARACTERS = Pattern.compile("[\\p{Zs}\\p{InCombiningDiacriticalMarks}]");
 
     @Autowired
     public WebpagesDatatable(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
@@ -73,6 +80,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
     @PostMapping("/http-headers")
     public Map<String, String> httpHeaders(@RequestBody DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
+        cleanSubmittedVirtualPaths(doc);
         EditorForm form = new EditorForm(doc);
         if (Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) form.setVirtualPath("");
         else if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) form.setVirtualPath(doc.getEditorVirtualPath() == null ? "" : doc.getEditorVirtualPath());
@@ -110,6 +118,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         List<String> nonEditableProperties = getNonEditableProperties(entity);
         DocDetails one = editorFacade.getExistingDocForEditor((int) id, entity.getHistoryId());
         if (one == null) throwError("datatables.error.recordIsNotEditable");
+        cleanSubmittedVirtualPaths(entity);
         // DocBasic setters ignore empty strings, so restore protected fields directly, including empty values.
         // Keep the other submitted fields intact: merging them into the stored bean would prevent clearing them.
         DirectFieldAccessor submittedFields = new DirectFieldAccessor(entity);
@@ -143,6 +152,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
             return null;
         }
 
+        cleanSubmittedVirtualPaths(entity);
         DocDetails saved = editorFacade.save(entity);
         addNotify(editorFacade.getNotify());
 
@@ -156,6 +166,40 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         if (RequestBean.getAttribute("forceReloadTree")!=null) setForceReload(true);
 
         return saved;
+    }
+
+    /**
+     * Cleans the submitted full path and inherited suffix independently before the editor resolves the page URL.
+     *
+     * @param doc submitted page whose URL fields may be updated
+     */
+    private static void cleanSubmittedVirtualPaths(DocDetails doc) {
+        String virtualPath = doc.getVirtualPath();
+        if (needsUrlCleanup(virtualPath)) doc.setVirtualPath(cleanUrl(virtualPath));
+
+        String editorVirtualPath = doc.getEditorVirtualPath();
+        if (needsUrlCleanup(editorVirtualPath)) doc.setEditorVirtualPath(cleanUrl(editorVirtualPath));
+    }
+
+    /**
+     * Checks the URL field for spaces or diacritics.
+     * Unicode decomposition exposes accents on precomposed letters such as {@code č}.
+     *
+     * @param path submitted URL field value, which may be null
+     * @return whether the value contains a character matched by {@link #URL_TEXT_CHARACTERS}
+     */
+    private static boolean needsUrlCleanup(String path) {
+        return path != null && URL_TEXT_CHARACTERS.matcher(Normalizer.normalize(path, Normalizer.Form.NFD)).find();
+    }
+
+    /**
+     * Removes HTML and uses the existing directory-name cleanup to form a lowercase URL path.
+     *
+     * @param path submitted URL field value that needs cleanup
+     * @return cleaned URL path with stop words retained
+     */
+    private static String cleanUrl(String path) {
+        return DocTools.removeCharsDir(Html2Text.html2text(path), false).toLowerCase(Locale.ROOT);
     }
 
     @Override

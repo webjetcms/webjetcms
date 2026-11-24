@@ -48,6 +48,7 @@ Scenario('Export dat json a XML', ({I, Browser}) => {
 
 Scenario('Overenie filtrovania primitivneho boolean', ({I, DT}) => {
     I.amOnPage("/apps/export-dat/admin/");
+    I.waitForVisible('#exportDatDataTable_wrapper .dt-filter-expandGroupIds button.btn-outline-secondary', 20);
     DT.filterSelect("expandGroupIds", "Áno");
     I.see("/export-dat/xml/")
     I.dontSee("/export-dat/json/")

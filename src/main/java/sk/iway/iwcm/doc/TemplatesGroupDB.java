@@ -168,7 +168,7 @@ public class TemplatesGroupDB extends JpaDB<TemplatesGroupBean> {
      */
     public void clearCache() {
         templatesGroupByDomainAndIdCache.clear();
-        ClusterDB.addRefresh("sk.iway.iwcm.TemplatesGroupDB");
+        ClusterDB.addRefresh(TemplatesGroupDB.class);
     }
 
     /**

@@ -37,6 +37,16 @@ The important thing is the constructor, which passes the Spring DATA repository 
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
+!>**Warning:** The `@PreAuthorize` annotation on a controller class only protects methods declared in that class. For a method inherited from a base class, Spring Security looks for the annotation from the class that declares the method, towards its ancestors, not in the subclass. If you are adding a REST method (`@GetMapping`, `@PostMapping` …) to a base class that is inherited by controllers with different rights, annotate it directly on the method. The methods in `DatatableRestControllerV2` do the same:
+
+```java
+@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+@PostMapping("/preview/")
+public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
+```
+
+The `checkAccessAllowedOnController` method verifies the permission from the `@PreAuthorize` annotation on the class of a particular controller and its method `checkAccessAllowed`. If the controller has neither, it grants access to every administrator. Every controller derived from `DatatableRestControllerV2` therefore needs `@PreAuthorize` on the class, even if it is used only by a nested table on a page protected by another controller. The second option is a custom method `checkAccessAllowed`. The `InheritedHandlerPreAuthorizeTest` test finds controllers without permission and methods of controllers with the annotation on the class that have not been checked for permissions.
+
 !>**Warning:** Spring DATA entity must have PK ```Long id``` (not e.g. ```adminlogId``` and similar), if the column in the database is called differently, it is necessary to set the column name:
 
 ```java

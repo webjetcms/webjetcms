@@ -117,6 +117,28 @@ for (const globalRemove of [true, false]) {
     });
 }
 
+Scenario('preview matches exact header rules after cleaning an unsaved manual URL', ({ I, DTE }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+    I.jstreeNavigate(['name-autotest-' + suffix]);
+    I.clickCss('#datatableInit_wrapper button.buttons-create');
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+    I.clickCss('#pills-dt-datatableInit-basic-tab');
+    I.uncheckOption('#DTE_Field_generateUrlFromTitle_0');
+    I.uncheckOption('#DTE_Field_urlInheritGroup_0');
+
+    const path = '/name-autotest-' + suffix + '/autotest-http-headers-' + suffix;
+    DTE.fillField('virtualPath', path + ' NÉWS a events.html');
+    I.clickCss('#DTE_Field_navbar');
+    I.waitForText('Referrer-Policy: no-referrer', 10, output);
+    DTE.fillField('virtualPath', path + ' NÉWS events.html');
+    I.clickCss('#DTE_Field_navbar');
+    I.waitForText('Referrer-Policy: same-origin', 10, output);
+
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('restore configuration and remove header preview fixtures', ({ I, DT, Document }) => {
     if (originalRemove !== undefined) Document.setConfigValue('urlRemoveSpojky', String(originalRemove), true);
     if (folderCreated) I.deleteFolderStructure(suffix);

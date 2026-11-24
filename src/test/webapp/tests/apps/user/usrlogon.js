@@ -72,18 +72,17 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
 
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
 
-    //over zablokovanie na 60 sekund po neuspesnom prihlaseni
-    // Generate all six failures here without depending on the counter from the previous phase.
+    // Let the first phase's failure counter expire before counting six rejected passwords.
+    I.wait(60);
     for (var i=1; i<=6; i++) {
-        I.say("Loggin attempt "+i);
+        I.say("Failed login attempt "+i);
         loginIN(I, defaultPassword, false);
-
-        //lebo pocitadlo funguje len ked nie je blokovane
-        I.wait(10);
+        I.see("Zadané meno alebo heslo je nesprávne.");
+        // A request made during the short block does not count as another wrong password.
+        I.wait(11);
     }
 
-    I.say("Cakam 60 sekund na exspirovanie zablokovanej IP adresy");
-    I.wait(10);
+    // The short block has expired. The longer block must still reject the correct password.
     loginIN(I, defaultPassword, true, false);
     I.see("Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované");
 

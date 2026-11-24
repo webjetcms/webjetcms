@@ -47,6 +47,8 @@ The change usually takes effect immediately after the add/edit action. However, 
   - if the changed name is the name of an **existing** configuration variable, then the **edit** is performed
   - if the changed name is for the name of a **non-existent** configuration variable, then a new variable will be **added**
 
+In the editor, you can view the history of a variable and cancel its scheduled change until it's time to execute.
+
 ## Temporary value setting
 
 If you need to change the value of a configuration variable only to verify its behavior, enable the **Set temporarily** option in the editor. The value is set only in memory on the current node, and is not stored in the database or propagated to other nodes in the cluster. After the application server is restarted, the value stored in the database is used again.
