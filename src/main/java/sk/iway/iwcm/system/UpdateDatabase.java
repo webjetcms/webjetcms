@@ -2918,12 +2918,12 @@ public class UpdateDatabase
 		if (isAllreadyUpdated(note)) return;
 
 		try {
-			DB.execute("UPDATE documents_history SET is_delete = 1 WHERE title LIKE '[DELETE]%' AND data_asc LIKE '[DELETE]'");
+			DB.execute("UPDATE documents_history SET is_delete = ? WHERE title LIKE '[DELETE]%' AND data_asc LIKE '[DELETE]'",
+					Constants.DB_TYPE == Constants.DB_PGSQL ? Boolean.TRUE : 1);
+			saveSuccessUpdate(note);
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}
-
-		saveSuccessUpdate(note);
 	}
 
 	public static void ragUpdateDatabase() {

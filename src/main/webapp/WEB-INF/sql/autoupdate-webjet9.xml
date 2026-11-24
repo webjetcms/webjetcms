@@ -4134,10 +4134,17 @@
                     VALUES ('AI - Reset token usage', '0', '0', '0', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset', NULL, 'false', 'all-admin', 'true', 0, 1);
                 </string></void>
                 <void property="mssql"><string>
-                    ALTER TABLE ai_assistants ADD used_tokens BIGINT DEFAULT 0 WITH VALUES, token_limit BIGINT DEFAULT 0 WITH VALUES;
-                    ALTER TABLE ai_assistants ADD notif_email NVARCHAR(255), notif_level INT DEFAULT 0 NOT NULL WITH VALUES;
+                    IF COL_LENGTH('ai_assistants', 'used_tokens') IS NULL
+                        ALTER TABLE ai_assistants ADD used_tokens BIGINT NULL DEFAULT 0 WITH VALUES;
+                    IF COL_LENGTH('ai_assistants', 'token_limit') IS NULL
+                        ALTER TABLE ai_assistants ADD token_limit BIGINT NULL DEFAULT 0 WITH VALUES;
+                    IF COL_LENGTH('ai_assistants', 'notif_email') IS NULL
+                        ALTER TABLE ai_assistants ADD notif_email NVARCHAR(255) NULL;
+                    IF COL_LENGTH('ai_assistants', 'notif_level') IS NULL
+                        ALTER TABLE ai_assistants ADD notif_level INT NOT NULL DEFAULT 0;
                     INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node, audit_task, run_at_startup, enable_task)
-                    VALUES ('AI - Reset token usage', '0', '0', '0', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset', NULL, 'false', 'all-admin', 'true', 0, 1);
+                    SELECT 'AI - Reset token usage', '0', '0', '0', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset', NULL, 'false', 'all-admin', '1', 0, 1
+                    WHERE NOT EXISTS (SELECT 1 FROM crontab WITH (UPDLOCK, HOLDLOCK) WHERE task = 'sk.iway.iwcm.components.ai.rest.AiTokenUsageReset');
                 </string></void>
                 <void property="oracle"><string>
                     ALTER TABLE ai_assistants ADD (used_tokens NUMBER(19) DEFAULT 0, token_limit NUMBER(19) DEFAULT 0);
