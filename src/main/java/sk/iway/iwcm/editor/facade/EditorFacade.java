@@ -100,6 +100,7 @@ public class EditorFacade {
 						entity.setSortPriority(master.getSortPriority());
 					}
 					if (masterId != docIdOriginal) {
+						originalVirtualPath = multigroupService.getEditedCopyVirtualPath(entity, master, docIdOriginal);
 						//set original master virtualPath because we are saving MASTER doc (see entity.setDocId(masterId)) and want to keep URL on master
 						entity.setVirtualPath(master.getVirtualPath());
 					}

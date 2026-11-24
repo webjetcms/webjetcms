@@ -296,22 +296,7 @@ public class DocEditorFields extends BaseEditorFields {
         // - passwordProtected
 
         //nastav editor URL
-        if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) {
-            if (Tools.isEmpty(doc.getEditorVirtualPath())) {
-                int i = doc.getVirtualPath().lastIndexOf("/");
-                if (i!=-1) {
-                    String editorPath = doc.getVirtualPath().substring(i);
-                    if ("/".equals(editorPath)==false && editorPath.length()>1) {
-                        editorPath = editorPath.substring(1);
-                    }
-                    doc.setEditorVirtualPath(editorPath);
-                }
-            }
-        } else if(Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) {
-            doc.setEditorVirtualPath("");
-        } else {
-            doc.setEditorVirtualPath("");
-        }
+        doc.setEditorVirtualPath(Boolean.TRUE.equals(doc.getUrlInheritGroup()) ? WebpagesService.getEditorUrlSuffix(doc) : "");
     }
 
     /**

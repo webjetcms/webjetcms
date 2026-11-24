@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -19,6 +20,8 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
 
 /**
  * Web stranky je mozne ukladat do viacerych adresarov, deje sa to pomocou tabulky multigroup_mapping,
@@ -43,6 +46,17 @@ public class MultigroupService {
         this.request = httpServletRequest;
 		this.editorService = editorService;
     }
+
+	/** Resolves the submitted URL before the editor switches to saving the master page. */
+	public String getEditedCopyVirtualPath(DocDetails editedDoc, DocDetails master, int copyId) {
+		if (!Boolean.TRUE.equals(editedDoc.getUrlInheritGroup()) || Boolean.TRUE.equals(editedDoc.getGenerateUrlFromTitle())) return editedDoc.getVirtualPath();
+
+		DocDetails copy = docDB.getBasicDocDetails(copyId, true);
+		String suffix = editedDoc.getEditorVirtualPath();
+		// The editor shows the master's suffix alongside the copy's own full URL.
+		if (Boolean.TRUE.equals(master.getUrlInheritGroup()) && Objects.equals(suffix, WebpagesService.getEditorUrlSuffix(master))) return copy.getVirtualPath();
+		return WebpagesService.getInheritedVirtualPath(suffix, copy.getGroupId());
+	}
 
     /**
 	 * Vyriesi zapis slave mapovani pri ukladani web stranky
@@ -105,15 +119,17 @@ public class MultigroupService {
 					syncId = DocMirroringServiceV9.getSyncId(docId);
 				}
 				masterDoc.setSyncId(syncId);
-
-				if (docIdOriginal == docId.intValue()) {
-					//keep virtual path for edited doc (slave)
-					masterDoc.setVirtualPath(editedDoc.getVirtualPath());
-				}
+				masterDoc.setDocId(docId);
+				masterDoc.setGroupId(groupId.intValue());
 
 				if(Boolean.TRUE.equals(editedDoc.getGenerateUrlFromTitle())) {
 					masterDoc.setVirtualPath("");
 					masterDoc.setEditorVirtualPath("");
+				} else if (docIdOriginal == docId.intValue() && !editedDoc.getVirtualPath().equals(masterDoc.getVirtualPath())) {
+					EditorForm form = new EditorForm(masterDoc);
+					form.setVirtualPath(editedDoc.getVirtualPath());
+					EditorDB.setVirtualPath(form);
+					masterDoc.setVirtualPath(form.getVirtualPath());
 				}
 
 				//ak chcem zachovat sort priority
@@ -126,8 +142,6 @@ public class MultigroupService {
 					}
 				}
 
-				masterDoc.setDocId(docId);
-				masterDoc.setGroupId(groupId.intValue());
 				DocDB.saveDoc(masterDoc);
 				setDefaultDocId(masterDoc.getGroupId(), masterDoc.getDocId());
 				//POZOR: teraz uz mame v masterDoc.getDocId hodnotu ulozeneho SLAVE

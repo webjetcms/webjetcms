@@ -604,6 +604,16 @@ public class WebpagesService {
 		}
 	}
 
+	/** Returns the suffix shown by the editor, including for older pages with only a full path. */
+	public static String getEditorUrlSuffix(DocBasic doc) {
+		String suffix = doc.getEditorVirtualPath();
+		if (Tools.isNotEmpty(suffix)) return suffix;
+		String path = doc.getVirtualPath();
+		int separator = path.lastIndexOf('/');
+		if (separator < 0) return suffix;
+		return separator == path.length() - 1 ? "/" : path.substring(separator + 1);
+	}
+
 	/**
 	 * Prepares the editor's URL suffix for page URL generation when {@link DocBasic#getUrlInheritGroup()} is true.
 	 * For a page in {@code /news/}, the suffix {@code /} means the folder URL itself ({@code /news/}),
@@ -616,12 +626,17 @@ public class WebpagesService {
 	 */
 	public static String getInheritedVirtualPath(DocBasic doc)
 	{
-		String urlSuffix = doc.getEditorVirtualPath();
+		return getInheritedVirtualPath(doc.getEditorVirtualPath(), doc.getGroupId());
+	}
+
+	/** Resolves a submitted suffix in the folder of the page or copy being edited. */
+	static String getInheritedVirtualPath(String urlSuffix, int groupId)
+	{
 		if (urlSuffix == null) return "";
 
-		if ("/".equals(urlSuffix)) return DocDB.getGroupDiskPath(GroupsDB.getInstance().getGroupsAll(), doc.getGroupId());
+		if ("/".equals(urlSuffix)) return DocDB.getGroupDiskPath(GroupsDB.getInstance().getGroupsAll(), groupId);
 		if (urlSuffix.indexOf('/') <= 0 || urlSuffix.startsWith("javascript:")) return urlSuffix;
-		return DocDB.getGroupDiskPath(GroupsDB.getInstance().getGroupsAll(), doc.getGroupId()) + urlSuffix;
+		return DocDB.getGroupDiskPath(GroupsDB.getInstance().getGroupsAll(), groupId) + urlSuffix;
 	}
 
 	/** Applies the generated URL rules to manually entered path text containing spaces, accents or uppercase letters. */

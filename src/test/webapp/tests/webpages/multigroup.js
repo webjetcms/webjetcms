@@ -93,17 +93,44 @@ Scenario('multigroup - preserve URL', ({ I, DT, DTE }) => {
 
     //
     I.say("Changing slave URL");
-    var slaveUrl = "/test-stavov/multigroup/slave/multi-page-change.html";
-    DTE.fillField("virtualPath", slaveUrl);
+    const slavePrefix = "/test-stavov/multigroup/slave/";
+    DTE.fillField("virtualPath", slavePrefix + "Nová správa.html");
     DTE.save();
 
     openPage(masterDocId, I, DTE);
     I.seeInField("#DTE_Field_virtualPath", masterUrl);
+    I.checkOption({css: "#DTE_Field_urlInheritGroup_0"});
+    DTE.fillField("editorVirtualPath", "master-only.html");
+    DTE.save();
+
+    openPage(masterDocId, I, DTE);
+    I.seeInField("#DTE_Field_virtualPath", "/test-stavov/multigroup/master/master-only.html");
     DTE.cancel();
 
     openPage(slaveDocId, I, DTE);
-    I.seeInField("#DTE_Field_virtualPath", slaveUrl);
+    I.seeInField("#DTE_Field_editorVirtualPath", "master-only.html");
+    I.seeInField("#DTE_Field_virtualPath", slavePrefix + "nova-sprava.html");
+    DTE.fillField("title", baseTitle + " copy");
+    DTE.save();
+
+    openPage(slaveDocId, I, DTE);
+    I.seeInField("#DTE_Field_title", baseTitle + " copy");
+    I.seeInField("#DTE_Field_virtualPath", slavePrefix + "nova-sprava.html");
+    DTE.fillField("title", baseTitle);
+    DTE.fillField("editorVirtualPath", "Multi Page Change.html");
+    DTE.save();
+
+    openPage(masterDocId, I, DTE);
+    I.seeInField("#DTE_Field_editorVirtualPath", "multi-page-change.html");
+    I.seeInField("#DTE_Field_virtualPath", masterUrl);
     DTE.cancel();
+
+    openPage(slaveDocId, I, DTE);
+    I.seeInField("#DTE_Field_editorVirtualPath", "multi-page-change.html");
+    I.seeInField("#DTE_Field_virtualPath", slavePrefix + "multi-page-change.html");
+    // Restore the fixture's manual URL mode for the sort order scenario.
+    I.uncheckOption({css: "#DTE_Field_urlInheritGroup_0"});
+    DTE.save();
 
 });
 

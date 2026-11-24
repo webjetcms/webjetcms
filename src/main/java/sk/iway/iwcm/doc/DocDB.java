@@ -4714,8 +4714,8 @@ public class DocDB extends DB
 			ps.setString(39, docDetails.getFieldL());
 
 			ps.setBoolean(40, docDetails.isDisableAfterEnd());
-			String virtualPath = docDetails.getVirtualPath();
-			if (Tools.isEmpty(virtualPath) || !virtualPath.equals(WebpagesService.fixManualURL(virtualPath)))
+			// The file index uses the supplied path as a case-sensitive lookup key.
+			if (Tools.isEmpty(docDetails.getVirtualPath()))
 			{
 				EditorForm ef = new EditorForm(docDetails);
 				EditorDB.setVirtualPath(ef);
