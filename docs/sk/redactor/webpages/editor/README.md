@@ -71,6 +71,8 @@ Pri zmene URL adresy stránky sa automaticky vytvorí presmerovanie v aplikácii
 
 Pri tejto voľbe môžete zadať koncovú URL web stránky, pričom jej začiatok sa prevezme z rodičovských adresárov. Je to vhodné, ak potrebujete aby stránka mala vždy rovnaké koncové URL, napríklad ```404.html``` alebo ```cta.html```.
 
+Pri zadaní alebo zmene koncovky editor odstráni úvodné lomítko. Ak v priečinku `/novinky/` zadáte `/Nová správa.html`, výsledná adresa bude `/novinky/nova-sprava.html`. Samotné `/` znamená adresu priečinka. Ak má staršia stránka koncovku uloženú ako absolútnu cestu, pri úprave samotného obsahu si ponechá pôvodnú URL.
+
 Hodnota URL adresy sa bude meniť pri:
 
 - pri zmene hodnoty poľa URL adresa priečinku, v ktorom sa web stránka nachádza ale aj rodičovských priečinkov

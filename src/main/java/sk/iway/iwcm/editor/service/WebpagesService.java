@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -614,12 +615,38 @@ public class WebpagesService {
 		return separator == path.length() - 1 ? "/" : path.substring(separator + 1);
 	}
 
+	/** Whether the editor takes a manual suffix and inherits its folder prefix. */
+	public static boolean usesInheritedUrl(DocBasic doc) {
+		return Boolean.TRUE.equals(doc.getUrlInheritGroup()) && !Boolean.TRUE.equals(doc.getGenerateUrlFromTitle());
+	}
+
+	/** Identifies previously supported absolute paths, excluding the folder URL marker. */
+	static boolean hasAbsoluteInheritedSuffix(DocBasic doc) {
+		String suffix = doc.getEditorVirtualPath();
+		return usesInheritedUrl(doc) && suffix != null && suffix.startsWith("/") && suffix.length() > 1;
+	}
+
+	/** A newly entered suffix is relative to the folder. Slashes alone select the folder itself. */
+	static String relativeUrlSuffix(String suffix) {
+		if (suffix == null || !suffix.startsWith("/")) return suffix;
+		String relative = StringUtils.stripStart(suffix, "/ \t\r\n\f");
+		// Keep a path segment from becoming a script URL after removing the slash.
+		if (Strings.CI.startsWith(relative, "javascript:")) return "javascript%3A" + StringUtils.substringAfter(relative, ':');
+		return relative.isEmpty() ? "/" : relative;
+	}
+
+	static boolean canKeepVirtualPath(DocBasic doc, String domain) {
+		if (Tools.isEmpty(doc.getVirtualPath())) return false;
+		int owner = DocDB.getDocIdFromURL(doc.getVirtualPath(), domain);
+		return owner <= 0 || owner == doc.getDocId();
+	}
+
 	/**
 	 * Prepares the editor's URL suffix for page URL generation when {@link DocBasic#getUrlInheritGroup()} is true.
 	 * For a page in {@code /news/}, the suffix {@code /} means the folder URL itself ({@code /news/}),
 	 * and {@code archive/} becomes {@code /news/archive/}. A bare filename is passed to the URL generator,
-	 * which adds the folder prefix. An explicit path such as {@code /contact/} or a {@code javascript:}
-	 * link is passed through as entered.
+	 * which adds the folder prefix. Legacy absolute paths and explicit {@code javascript:} links are passed through.
+	 * The editor removes leading slashes from newly submitted or changed suffixes before storing them.
 	 *
 	 * @param doc page or history version with folder URL inheritance enabled
 	 * @return the path to pass to the URL generator, or an empty string when the editor suffix is missing
@@ -670,6 +697,7 @@ public class WebpagesService {
 	{
 		if (doc.getVirtualPath().contains("*")) return null;
 		if (onlyChangeUrlInheritGroup && !Boolean.TRUE.equals(doc.getUrlInheritGroup()) && !Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) return null;
+		if (hasAbsoluteInheritedSuffix(doc) && canKeepVirtualPath(doc, GroupsDB.getInstance().getDomain(doc.getGroupId()))) return doc.getVirtualPath();
 
 		EditorForm form = new EditorForm();
 		form.setDocId(doc.getDocId());

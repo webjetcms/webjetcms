@@ -21,9 +21,11 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -233,6 +235,82 @@ public class EditorServiceTest extends BaseWebjetTest {
         assertEquals("nova-sprava" + ending, page.getEditorVirtualPath());
         String expectedEnding = ending.isEmpty() ? ".html" : ending;
         assertEquals(DocDB.normalizeVirtualPath("/test-stavov/nova-sprava" + expectedEnding), page.getVirtualPath());
+    }
+
+    /** Preview and save resolve a submitted suffix in the current folder, including after a move. */
+    @ParameterizedTest
+    @CsvSource({
+        "/Nová správa.html, nova-sprava.html",
+        "Nová správa.html, nova-sprava.html",
+        "///rubrika/Nová správa.html, rubrika/nova-sprava.html",
+        "/javascript:news/item.html, javascript%3Anews/item.html",
+        "/, /",
+        "///, /"
+    })
+    void resolvesInheritedSuffixInSelectedFolder(String input, String expectedSuffix) {
+        Constants.setString("editorPageExtension", ".html");
+        Constants.setBoolean("virtualPathLastSlash", true);
+        GroupsDB groups = GroupsDB.getInstance();
+        GroupDetails parent = groups.getGroup(67);
+        GroupDetails child = groups.getGroupByPath("/Test stavov/VirtualPath");
+        assertNotNull(child);
+        DocDetails page = new DocDetails();
+        page.setGenerateUrlFromTitle(false);
+        page.setUrlInheritGroup(true);
+        page.setEditorVirtualPath(input);
+        DocEditorFields fields = new DocEditorFields();
+        EditorFacade preview = new EditorFacade(editorService, null, null, null, null);
+        // The fixture folders already have landing pages; exercise URL inheritance without collisions.
+        try (var documents = mockStatic(DocDB.class, CALLS_REAL_METHODS)) {
+            documents.when(() -> DocDB.getDocIdFromURL(anyString(), any())).thenReturn(-1);
+            for (GroupDetails folder : new GroupDetails[] { parent, child }) {
+                fields.setGroupDetails(folder);
+                page.setGroupId(folder.getGroupId());
+                String folderPath = DocDB.getGroupDiskPath(groups.getGroupsAll(), folder.getGroupId());
+                String expectedUrl = "/".equals(expectedSuffix) ? folderPath : folderPath + expectedSuffix;
+                String submittedSuffix = page.getEditorVirtualPath();
+                preview.setInheritedVirtualPathForPreview(page);
+                assertEquals(expectedUrl, page.getVirtualPath());
+                page.setEditorVirtualPath(submittedSuffix);
+                fields.toDocDetails(page);
+                editorService.setEditorVirtualPath(page);
+                assertEquals(expectedSuffix, page.getEditorVirtualPath());
+                assertEquals(expectedUrl, page.getVirtualPath());
+            }
+        }
+    }
+
+    /** Only the same absolute suffix from the edited version keeps its exact stored URL. */
+    @ParameterizedTest
+    @CsvSource({
+        "0,   true,  /Pôvodná.html, /Pôvodná.html, /Pôvodná-2.html",
+        "123, true,  /Pôvodná.html, /Pôvodná.html, /Pôvodná-2.html",
+        "123, true,  /Zmena.html,   zmena.html,    /test-stavov/zmena.html",
+        "0,   false, /Pôvodná.html, povodna.html,  /test-stavov/povodna.html"
+    })
+    void editsLegacyInheritedUrl(int historyId, boolean previouslyInherited, String input, String expectedSuffix, String expectedUrl) {
+        DocDetails stored = new DocDetails();
+        stored.setDocId(910083);
+        stored.setGenerateUrlFromTitle(false);
+        stored.setUrlInheritGroup(previouslyInherited);
+        stored.setEditorVirtualPath("/Pôvodná.html");
+        stored.setVirtualPath("/Pôvodná-2.html");
+
+        DocDetails submitted = new DocDetails();
+        submitted.setDocId(stored.getDocId());
+        submitted.setHistoryId(historyId);
+        submitted.setGenerateUrlFromTitle(false);
+        submitted.setUrlInheritGroup(true);
+        submitted.setEditorVirtualPath(input);
+        DocEditorFields fields = new DocEditorFields();
+        fields.setGroupDetails(GroupsDB.getInstance().getGroup(67));
+        fields.toDocDetails(submitted);
+        EditorService service = spy(editorService);
+        doReturn(stored).when(service).getDoc(stored.getDocId(), historyId);
+        service.setEditorVirtualPath(submitted);
+
+        assertEquals(expectedSuffix, submitted.getEditorVirtualPath());
+        assertEquals(expectedUrl, submitted.getVirtualPath());
     }
 
     /** Collision detection uses the URL that will be stored. */

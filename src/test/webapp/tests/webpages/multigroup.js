@@ -117,7 +117,7 @@ Scenario('multigroup - preserve URL', ({ I, DT, DTE }) => {
     I.seeInField("#DTE_Field_title", baseTitle + " copy");
     I.seeInField("#DTE_Field_virtualPath", slavePrefix + "nova-sprava.html");
     DTE.fillField("title", baseTitle);
-    DTE.fillField("editorVirtualPath", "Multi Page Change.html");
+    DTE.fillField("editorVirtualPath", "/Multi Page Change.html");
     DTE.save();
 
     openPage(masterDocId, I, DTE);

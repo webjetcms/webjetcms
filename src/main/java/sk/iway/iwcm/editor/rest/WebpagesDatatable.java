@@ -73,11 +73,16 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
     @PostMapping("/http-headers")
     public Map<String, String> httpHeaders(@RequestBody DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
-        EditorForm form = new EditorForm(doc);
-        if (Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) form.setVirtualPath("");
-        else if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) form.setVirtualPath(WebpagesService.getInheritedVirtualPath(doc));
-        EditorDB.setVirtualPath(form);
-        String path = form.getVirtualPath();
+        String path;
+        if (WebpagesService.usesInheritedUrl(doc)) {
+            editorFacade.setInheritedVirtualPathForPreview(doc);
+            path = doc.getVirtualPath();
+        } else {
+            EditorForm form = new EditorForm(doc);
+            if (Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) form.setVirtualPath("");
+            EditorDB.setVirtualPath(form);
+            path = form.getVirtualPath();
+        }
         if (path == null || path.isEmpty()) path = "/showdoc.do?docid=" + doc.getDocId();
         return PathFilter.previewPageHeaders(path, doc, request, response);
     }
@@ -236,6 +241,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
 
         entity.getEditorFields().toDocDetails(entity);
+        if (WebpagesService.usesInheritedUrl(entity)) {
+            editorFacade.setInheritedVirtualPathForPreview(entity);
+        }
 
         setPreviewObject(entity, request);
         return "{\"ok\": true}";

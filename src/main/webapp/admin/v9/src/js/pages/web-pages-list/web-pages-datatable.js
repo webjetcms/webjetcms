@@ -585,6 +585,7 @@ export class WebPagesDatatable {
             .map(name => [name, readValue(name)]));
         values.groupId = readValue("editorFields.groupDetails")?.groupId ?? editor.currentJson?.groupId;
         values.docId = editor.currentJson?.docId ?? -1;
+        values.historyId = editor.currentJson?.historyId ?? -1;
         const json = JSON.stringify(values, (key, value) => {
             if (Array.isArray(value) && value.length === 1 && [true, false, "true", "false"].includes(value[0])) return value[0] === true || value[0] === "true";
             return value;

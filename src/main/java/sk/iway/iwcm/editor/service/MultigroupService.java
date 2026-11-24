@@ -49,13 +49,18 @@ public class MultigroupService {
 
 	/** Resolves the submitted URL before the editor switches to saving the master page. */
 	public String getEditedCopyVirtualPath(DocDetails editedDoc, DocDetails master, int copyId) {
-		if (!Boolean.TRUE.equals(editedDoc.getUrlInheritGroup()) || Boolean.TRUE.equals(editedDoc.getGenerateUrlFromTitle())) return editedDoc.getVirtualPath();
+		if (!WebpagesService.usesInheritedUrl(editedDoc)) return editedDoc.getVirtualPath();
 
 		DocDetails copy = docDB.getBasicDocDetails(copyId, true);
 		String suffix = editedDoc.getEditorVirtualPath();
 		// The editor shows the master's suffix alongside the copy's own full URL.
-		if (Boolean.TRUE.equals(master.getUrlInheritGroup()) && Objects.equals(suffix, WebpagesService.getEditorUrlSuffix(master))) return copy.getVirtualPath();
-		return WebpagesService.getInheritedVirtualPath(suffix, copy.getGroupId());
+		if (WebpagesService.usesInheritedUrl(master) && Objects.equals(suffix, WebpagesService.getEditorUrlSuffix(master))) return copy.getVirtualPath();
+		EditorForm form = new EditorForm(editedDoc);
+		form.setDocId(copyId);
+		form.setGroupId(copy.getGroupId());
+		form.setVirtualPath(WebpagesService.getInheritedVirtualPath(WebpagesService.relativeUrlSuffix(suffix), copy.getGroupId()));
+		EditorDB.setVirtualPath(form);
+		return form.getVirtualPath();
 	}
 
     /**

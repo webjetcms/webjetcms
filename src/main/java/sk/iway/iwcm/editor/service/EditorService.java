@@ -246,7 +246,7 @@ public class EditorService {
 		if (Tools.isEmpty(editedDoc.getData())) editedDoc.setData("<p>&nbsp;</p>");
 
 		//nastav virtual path
-		setVirtualPath(editedDoc);
+		setEditorVirtualPath(editedDoc);
 		dt.diff("after virtual path");
 
 		EditorUtils.nonBreakingSpaceReplacement(editedDoc);
@@ -886,6 +886,23 @@ public class EditorService {
 		Logger.println(EditorService.class, "nastaveny virtual path na:"+virtualPath+";");
 
 		return virtualPathConflictDocId;
+	}
+
+	/** Applies submitted URL settings for a save or a preview of the page being edited. */
+	public void setEditorVirtualPath(DocDetails editedDoc) {
+		if (WebpagesService.hasAbsoluteInheritedSuffix(editedDoc)) {
+			DocDetails stored = editedDoc.getDocId() > 0 ? getDoc(editedDoc.getDocId(), editedDoc.getHistoryId()) : null;
+			if (stored != null && stored.getDocId() == editedDoc.getDocId() && WebpagesService.hasAbsoluteInheritedSuffix(stored)
+					&& editedDoc.getEditorVirtualPath().equals(stored.getEditorVirtualPath())) {
+				// A content edit must keep the exact URL, including any previous collision suffix.
+				editedDoc.setVirtualPath(stored.getVirtualPath());
+				if (WebpagesService.canKeepVirtualPath(editedDoc, groupsDB.getDomain(editedDoc.getGroupId()))) return;
+			} else {
+				editedDoc.setEditorVirtualPath(WebpagesService.relativeUrlSuffix(editedDoc.getEditorVirtualPath()));
+			}
+			editedDoc.setVirtualPath(WebpagesService.getInheritedVirtualPath(editedDoc));
+		}
+		setVirtualPath(editedDoc);
 	}
 
 	/**

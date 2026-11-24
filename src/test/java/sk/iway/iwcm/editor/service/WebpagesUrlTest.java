@@ -54,7 +54,11 @@ class WebpagesUrlTest {
         DocHistory manualHistory = pending(103L, 22, "/manual-pending.html");
         manualHistory.setGenerateUrlFromTitle(false);
         DocHistory wildcardHistory = pending(104L, 23, "/old/*");
-        when(history.findPendingByGroupId(20)).thenReturn(List.of(scheduled, anotherSchedule, manualHistory, wildcardHistory));
+        DocHistory legacy = pending(105L, 24, "/Campaign-2.html");
+        legacy.setGenerateUrlFromTitle(false);
+        legacy.setUrlInheritGroup(true);
+        legacy.setEditorVirtualPath("/Campaign.html");
+        when(history.findPendingByGroupId(20)).thenReturn(List.of(scheduled, anotherSchedule, manualHistory, wildcardHistory, legacy));
         MockHttpServletRequest request = new MockHttpServletRequest();
 
         try (var docAccess = mockStatic(DocDB.class); var groupAccess = mockStatic(GroupsDB.class);
@@ -85,6 +89,7 @@ class WebpagesUrlTest {
             verify(history).updateVirtualPath(102L, "/new/later.html");
             verify(history, times(onlyInherited ? 0 : 1)).updateVirtualPath(103L, "/new/autotest-22.html");
             verify(history, never()).updateVirtualPath(eq(104L), anyString());
+            verify(history, never()).updateVirtualPath(eq(105L), anyString());
             verify(documents).updateInternalCaches(11);
             verify(documents).updateInternalCaches(12);
             verify(documents).updateInternalCaches(21);

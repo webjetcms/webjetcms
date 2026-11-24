@@ -28,6 +28,7 @@ import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.MediaService;
 import sk.iway.iwcm.editor.service.MultigroupService;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
@@ -157,6 +158,21 @@ public class EditorFacade {
 		if (docIdOriginal > 0) savedCopy.setDocId(docIdOriginal);
 
 		return savedCopy;
+	}
+
+	/** Resolves an unsaved inherited URL for the page or multigroup copy shown in the editor. */
+	public void setInheritedVirtualPathForPreview(DocDetails page) {
+		int docId = page.getDocId();
+		if (docId > 0 && !isIgnoreMultigroupMapping()) {
+			int masterId = multigroupService.getMasterDocId(docId);
+			if (masterId > 0 && masterId != docId) {
+				DocDetails master = DocDB.getInstance().getDoc(masterId, -1, true);
+				page.setVirtualPath(multigroupService.getEditedCopyVirtualPath(page, master, docId));
+				return;
+			}
+		}
+		page.setVirtualPath(WebpagesService.getInheritedVirtualPath(page));
+		editorService.setEditorVirtualPath(page);
 	}
 
 	/**
