@@ -13,6 +13,7 @@ import org.mockito.MockedStatic;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 class TemplatesGroupDBTest {
 
@@ -34,7 +35,10 @@ class TemplatesGroupDBTest {
         TestTemplatesGroupDB database = new TestTemplatesGroupDB(templateGroup);
 
         database.getByIdCached(12L);
-        database.clearCache();
+        try (MockedStatic<ClusterDB> cluster = mockStatic(ClusterDB.class)) {
+            database.clearCache();
+            cluster.verify(() -> ClusterDB.addRefresh(TemplatesGroupDB.class));
+        }
         database.getByIdCached(12L);
 
         assertEquals(2, database.getDatabaseReadCount());
