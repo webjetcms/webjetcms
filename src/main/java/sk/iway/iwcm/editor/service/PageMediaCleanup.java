@@ -25,6 +25,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FilePathTools;
@@ -45,7 +46,6 @@ import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.elfinder.UnusedFileDTO;
 import sk.iway.iwcm.system.elfinder.UnusedFilesService;
-import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
 /** Collects files before permanent page deletion from Trash, then checks their usage once for the completed batch. */
 @Service
@@ -101,18 +101,24 @@ public class PageMediaCleanup {
      * @return true if the page and user meet these conditions
      */
     public boolean canClean(DocDetails page, Identity user) {
-        if (user == null || page == null || user.isDisabledItem("menuFbrowser") || user.isDisabledItem("deletePage")) return false;
-        if (!sourceFolders.isInTrash(page.getGroupId())) return false;
-        return canCleanStorage(page, sourceFolders.forPage(page));
+        return cleanableFolder(page, user) != null;
     }
 
-    private boolean canCleanStorage(DocDetails page, Folder source) {
-        if (source == null) return false;
+    private Folder cleanableFolder(DocDetails page, Identity user) {
+        if (user == null || page == null || user.isDisabledItem("menuFbrowser") || user.isDisabledItem("deletePage")) return null;
+        if (!sourceFolders.isInTrash(page.getGroupId())) return null;
+        Folder source = sourceFolders.forPage(page);
+        if (!canCleanStorage(source)) return null;
         if (Constants.getBoolean("galleryUploadDirVirtualPath")) {
             // An empty stored URL can be generated from the Trash path in the page cache.
             DocDetails stored = DocDB.getInstance().getDoc(page.getDocId());
-            if (stored == null || Tools.isEmpty(stored.getVirtualPath())) return false;
+            if (stored == null || Tools.isEmpty(stored.getVirtualPath())) return null;
         }
+        return source;
+    }
+
+    private boolean canCleanStorage(Folder source) {
+        if (source == null) return false;
         String domain = source.domain();
         if (InitServlet.isTypeCloud() && !CloudToolsForCore.getDomainName().equalsIgnoreCase(domain)) return false;
         if (!FilePathTools.isExternalDirs()) return true;
@@ -129,15 +135,21 @@ public class PageMediaCleanup {
     public Map<Integer, Set<String>> captureFolderPages(List<GroupDetails> folders, Identity user, Connection connection) {
         Map<Integer, Set<String>> files = new HashMap<>();
         if (folders.isEmpty()) return files;
-        String sql = "SELECT doc_id, group_id FROM documents WHERE " + DB.getInCondition("group_id", folders.stream().map(GroupDetails::getGroupId).toList());
+        boolean needsVirtualPath = Constants.getBoolean("galleryUploadDirVirtualPath");
+        String sql = "SELECT doc_id, group_id, virtual_path FROM documents WHERE " + DB.getInCondition("group_id", folders.stream().map(GroupDetails::getGroupId).toList());
         try (var query = connection.prepareStatement(sql); var rows = query.executeQuery()) {
+            DocDB documents = DocDB.getInstance();
             while (rows.next()) {
                 int id = rows.getInt(1);
-                DocDetails page = DocDB.getInstance().getBasicDocDetails(id, false);
+                DocDetails page = documents.getBasicDocDetails(id, false);
                 if (page == null || page.getGroupId() != rows.getInt(2)) continue;
                 try {
+                    if (needsVirtualPath && Tools.isEmpty(DB.getDbString(rows, "virtual_path"))) {
+                        files.put(id, Set.of());
+                        continue;
+                    }
                     Folder source = sourceFolders.forPage(page);
-                    files.put(id, canCleanStorage(page, source) ? collectCandidates(page, source, user) : Set.of());
+                    files.put(id, canCleanStorage(source) ? collectCandidates(page, source, user) : Set.of());
                 } catch (IOException | SQLException | RuntimeException ex) {
                     Logger.error(PageMediaCleanup.class, ex);
                 }
@@ -177,8 +189,8 @@ public class PageMediaCleanup {
         int id = page.getDocId();
         if (!selectedIds.contains(id) || candidates.containsKey(id)) return;
         try {
-            if (!canClean(page, user)) return;
-            candidates.put(id, collectCandidates(page, sourceFolders.forPage(page), user));
+            Folder source = cleanableFolder(page, user);
+            if (source != null) candidates.put(id, collectCandidates(page, source, user));
         } catch (Exception ex) {
             errors++;
             Logger.error(PageMediaCleanup.class, ex);
@@ -187,13 +199,14 @@ public class PageMediaCleanup {
 
     private Set<String> collectCandidates(DocDetails page, Folder source, Identity user) throws IOException, SQLException {
         String domain = source.domain();
-        String alias = aliasFor(domain);
+        String alias = AdminTools.getDomainNameFileAliasAppend(domain);
         Map<String, Boolean> directories = new LinkedHashMap<>();
+        // Moving a folder's default page to Trash can assign a new default. Its original group folder is shared.
+        boolean includeGroupFolder = page.getGroupId() != source.groupId() && Constants.getBoolean("elfinderCreateFolderForPages")
+            && !Constants.getBoolean("galleryUploadDirVirtualPath");
         for (String prefix : UploadFileTools.PAGE_MEDIA_PREFIXES) {
             directories.put(folder(page, source, prefix, alias), false);
-            // Moving a folder's default page to Trash can assign a new default. Its original group folder is shared.
-            if (page.getGroupId() != source.groupId() && Constants.getBoolean("elfinderCreateFolderForPages")
-                    && !Constants.getBoolean("galleryUploadDirVirtualPath")) {
+            if (includeGroupFolder) {
                 String base = UploadFileTools.getPageUploadSubDir(-1, source.groupId(), null, prefix, alias, source.urlPath());
                 directories.put(base, true);
             }
@@ -202,10 +215,12 @@ public class PageMediaCleanup {
         Set<String> shared = new LinkedHashSet<>();
         for (var entry : directories.entrySet()) {
             String directory = entry.getKey();
-            if (!allowedPath(directory) || !user.isFolderWritable(directory + "/") || !IwcmFile.fromVirtualPath(directory).isDirectory()) continue;
+            if (!allowedPath(directory) || !user.isFolderWritable(directory + "/")) continue;
+            IwcmFile folder = IwcmFile.fromVirtualPath(directory);
+            if (!folder.isDirectory()) continue;
             FolderUse use = folderUse(page, source, directory, alias, entry.getValue());
             if (use == FolderUse.MULTIPLE_URLS) continue;
-            IwcmFile[] children = IwcmFile.fromVirtualPath(directory).listFiles();
+            IwcmFile[] children = folder.listFiles();
             if (children == null) throw new IOException("Cannot read " + directory);
             for (IwcmFile child : children) {
                 String path = directory + "/" + child.getName();
@@ -233,13 +248,15 @@ public class PageMediaCleanup {
         for (DocDetails page : pages) {
             Folder source = sourceFolders.forPage(page);
             List<String> paths = new ArrayList<>(collectCandidates(page, source, user));
-            paths.sort(null);
             result.add(new PageFiles(source.fullPath() + "/" + page.getTitle(), paths));
             ids.add(page.getDocId());
             files.addAll(paths);
         }
         Set<String> referenced = FileReferenceScanner.referencedElsewhere(files, publicPaths, ids);
-        for (PageFiles page : result) page.files().removeIf(referenced::contains);
+        for (PageFiles page : result) {
+            page.files().removeIf(referenced::contains);
+            page.files().sort(null);
+        }
         return result;
     }
 
@@ -264,7 +281,7 @@ public class PageMediaCleanup {
                 // Without a recoverable folder for every owner, require an explicit page reference.
                 if (source == null) return Map.of();
                 String domain = source.domain();
-                String alias = aliasFor(domain);
+                String alias = AdminTools.getDomainNameFileAliasAppend(domain);
                 for (String prefix : UploadFileTools.PAGE_MEDIA_PREFIXES) {
                     StorageFolder key = storageFolder(folder(page, source, prefix, alias), domain);
                     owners.merge(key, page.getDocId(), (owner, next) -> owner.equals(next) ? owner : -1);
@@ -276,12 +293,6 @@ public class PageMediaCleanup {
             // With incomplete ownership information only individually referenced files qualify.
             return Map.of();
         }
-    }
-
-    private static String aliasFor(String domain) {
-        if (!Constants.getBoolean("multiDomainEnabled") || FilePathTools.isExternalDirs()) return "";
-        String alias = MultiDomainFilter.getDomainAlias(domain);
-        return Tools.isEmpty(alias) ? "" : "/" + alias;
     }
 
     private StorageFolder storageFolder(String directory, String domain) throws IOException {

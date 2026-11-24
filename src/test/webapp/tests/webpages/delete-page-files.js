@@ -16,15 +16,6 @@ Before(({ I, login }) => {
     title = 'cleanup-autotest-' + I.getRandomText();
 });
 
-async function selectPage(I, DT, name) {
-    DT.filterEquals('title', name);
-    const row = locate('#datatableInit tbody tr').withText(name).find('.dt-select-td');
-    if (await I.grabNumberOfVisibleElements(row) !== 1) return false;
-    I.click(row);
-    I.assertDeepEqual(await I.executeScript(() => webpagesDatatable.rows({selected: true}).data().toArray().map(page => page.title)), [name]);
-    return true;
-}
-
 function openPages(I, DT, trash) {
     I.amOnPage(pagesUrl);
     DT.waitForLoader();
@@ -34,11 +25,12 @@ function openPages(I, DT, trash) {
     }
 }
 
-async function selectBothPages(I, DT) {
-    DT.filterStartsWith('title', title);
+async function selectFixturePages(I, DT, names) {
+    if (names.length === 1) DT.filterEquals('title', names[0]);
+    else DT.filterStartsWith('title', title);
     I.clickCss('#datatableInit_wrapper button.buttons-select-all');
     const selected = await I.executeScript(() => webpagesDatatable.rows({selected: true}).data().toArray().map(page => ({title: page.title, path: page.fullPath})));
-    I.assertDeepEqual(selected.map(page => page.title).sort(), [title, title + '-survivor']);
+    I.assertDeepEqual(selected.map(page => page.title).sort(), names);
     return selected.map(page => page.path).sort();
 }
 
@@ -49,6 +41,17 @@ async function fileCommand(I, command) {
 
 async function fileStatus(I, url) {
     return I.executeScript(async path => (await fetch(path, {cache: 'no-store'})).status, url);
+}
+
+function fileTarget(I, url) {
+    return I.executeScript(data => $.getJSON('/admin/elFinder/gethash.jsp', data), {url, groupId, docId: -1});
+}
+
+async function remainingFiles(I, url, names) {
+    const target = await fileTarget(I, url);
+    const result = await fileCommand(I, {cmd: 'ls', target: target.hashParent, docId: -1, 'intersect[]': names});
+    I.assertFalse(Boolean(result.error), JSON.stringify(result.error));
+    return result.list.sort();
 }
 
 async function saveFixture(I, id, pageTitle, links = [], parentId = groupId) {
@@ -74,25 +77,23 @@ async function createFiles(I, parentId, docId, pageTitle, names) {
     for (const name of names) {
         const result = await fileCommand(I, {...context, cmd: 'mkfile', target: folder.hashParent, name});
         I.assertFalse(Boolean(result.error), JSON.stringify(result.error));
-        files.push({...context, url: `${folder.uploadSubDir}/${result.added[0].name}`, hash: result.added[0].hash});
+        files.push({title: pageTitle, url: `${folder.uploadSubDir}/${result.added[0].name}`});
         I.assertEqual(await fileStatus(I, files.at(-1).url), 200);
     }
 }
 
 Scenario('Moving pages to Trash keeps their files and permanent deletion removes only unused files @screenshot', async ({ I, DT, DTE, Document, i18n }) => {
-    I.amOnPage(pagesUrl);
-    DT.waitForLoader();
+    openPages(I, DT, false);
     const ownerId = await saveFixture(I, -1, title);
     const survivorId = await saveFixture(I, -1, title + '-survivor');
-    for (const [docId, pageTitle, names] of [[ownerId, title, ['program.txt', 'kontakt.txt']], [survivorId, title + '-survivor', ['terminy.txt']]]) {
-        await createFiles(I, groupId, docId, pageTitle, names);
-    }
+    await createFiles(I, groupId, ownerId, title, ['program.txt', 'kontakt.txt']);
+    await createFiles(I, groupId, survivorId, title + '-survivor', ['terminy.txt']);
 
     await saveFixture(I, ownerId, title, files.slice(0, 2));
     await saveFixture(I, survivorId, title + '-survivor', files.slice(1));
 
     openPages(I, DT, false);
-    const originalPaths = await selectBothPages(I, DT);
+    const originalPaths = await selectFixturePages(I, DT, [title, title + '-survivor']);
     I.click(DT.btn.delete_button);
     I.waitForEnabled(confirmButton, 30);
     I.dontSeeElement(checkbox);
@@ -101,7 +102,7 @@ Scenario('Moving pages to Trash keeps their files and permanent deletion removes
     for (const file of files) I.assertEqual(await fileStatus(I, file.url), 200);
 
     openPages(I, DT, true);
-    await selectBothPages(I, DT);
+    await selectFixturePages(I, DT, [title, title + '-survivor']);
     I.click(DT.btn.delete_button);
     const preview = modal + ' .delete-page-files';
     I.waitForVisible(locate(preview + ' li').withTextEquals(files[1].url), 120);
@@ -117,7 +118,7 @@ Scenario('Moving pages to Trash keeps their files and permanent deletion removes
     DTE.cancel();
 
     openPages(I, DT, true);
-    I.assertTrue(await selectPage(I, DT, title), 'The fixture page exists before deletion');
+    await selectFixturePages(I, DT, [title]);
     I.click(DT.btn.delete_button);
     I.waitForVisible(checkbox);
     I.seeCheckboxIsChecked(checkbox);
@@ -127,6 +128,15 @@ Scenario('Moving pages to Trash keeps their files and permanent deletion removes
     i18n.waitForText('Errors checking or deleting files: 0', 120, '.toast-message');
     I.assertEqual(await fileStatus(I, files[0].url), 404);
     I.assertEqual(await fileStatus(I, files[1].url), 200);
+
+    // The remaining fixture page is deleted before the invalid second row interrupts the batch.
+    const interrupted = await I.executeScript(id => $.ajax({
+        url: '/admin/rest/web-pages/editor', type: 'POST', contentType: 'application/json',
+        data: JSON.stringify({action: 'remove', data: {[id]: {editorFields: {deleteUnusedPageFiles: true}}, '-1': {}}})
+    }), survivorId);
+    I.assertTrue(Boolean(interrupted.error));
+    I.assertTrue(interrupted.notify.some(notice => notice.type === 'warning' && notice.text.includes(String(survivorId))));
+    I.assertDeepEqual(await remainingFiles(I, files[2].url, ['terminy.txt']), []);
 });
 
 async function createFolder(I, parent, name) {
@@ -177,8 +187,8 @@ for (const enabled of [true, false]) {
         const children = await I.executeScript(id => $.getJSON('/admin/rest/web-pages/all', {groupId: id}), child.groupId);
         I.assertEmpty(children.content);
         folderFixture = null;
-        I.assertEqual(await fileStatus(I, files[0].url), enabled ? 404 : 200);
-        I.assertEqual(await fileStatus(I, files[1].url), 200);
+        const names = ['kontakt.txt', 'program.txt'];
+        I.assertDeepEqual(await remainingFiles(I, files[0].url, names), enabled ? ['kontakt.txt'] : names);
     });
 }
 
@@ -188,7 +198,7 @@ After(async ({ I, DT, Document }) => {
     openPages(I, DT, false);
     for (const file of files) {
         if (await fileStatus(I, file.url) === 200) {
-            const target = await I.executeScript(data => $.getJSON('/admin/elFinder/gethash.jsp', data), {url: file.url, groupId, docId: -1});
+            const target = await fileTarget(I, file.url);
             const result = await fileCommand(I, {docId: -1, cmd: 'rm', 'targets[]': target.hash});
             I.assertFalse(Boolean(result.error), JSON.stringify(result.error));
         }

@@ -34,6 +34,7 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.PlannedAssetPaths;
 import sk.iway.iwcm.doc.PlannedChangesService;
 import sk.iway.iwcm.io.IwcmFile;
@@ -82,18 +83,24 @@ public final class FileReferenceScanner {
     private FileReferenceScanner(Set<String> candidates, Map<String, String> publicPaths) {
         count = candidates.size();
         for (String candidate : candidates) {
-            for (String path : List.of(candidate, publicPaths.getOrDefault(candidate, candidate))) {
-                if (!path.equals(candidate)) domainAliases.put(candidate, StringUtils.substringBetween(candidate.substring(1), "/", "/"));
-                files.computeIfAbsent(path, key -> new HashSet<>()).add(candidate);
-                String parent = path.substring(0, path.lastIndexOf('/'));
-                for (String reference : List.of(path, parent)) {
-                    protectedPaths.computeIfAbsent(reference.toLowerCase(Locale.ROOT), key -> new HashSet<>()).add(candidate);
-                    String name = reference.substring(reference.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT);
-                    protectedNames.computeIfAbsent(name, key -> new HashSet<>()).add(candidate);
-                }
+            indexPath(candidate, candidate);
+            String publicPath = publicPaths.get(candidate);
+            if (publicPath != null && !publicPath.equals(candidate)) {
+                indexPath(publicPath, candidate);
+                domainAliases.put(candidate, StringUtils.substringBetween(candidate.substring(1), "/", "/"));
             }
         }
         hasNonAsciiPaths = files.keySet().stream().anyMatch(path -> path.chars().anyMatch(c -> c > 127));
+    }
+
+    private void indexPath(String path, String candidate) {
+        files.computeIfAbsent(path, key -> new HashSet<>()).add(candidate);
+        String parent = path.substring(0, path.lastIndexOf('/'));
+        for (String reference : List.of(path, parent)) {
+            protectedPaths.computeIfAbsent(reference.toLowerCase(Locale.ROOT), key -> new HashSet<>()).add(candidate);
+            String name = reference.substring(reference.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT);
+            protectedNames.computeIfAbsent(name, key -> new HashSet<>()).add(candidate);
+        }
     }
 
     /**
@@ -124,13 +131,8 @@ public final class FileReferenceScanner {
                     inspectColumns(rows, 3, base, domain, false);
                 }
             }
-            try (PreparedStatement query = connection.prepareStatement("SELECT " + MEDIA_COLUMNS + " FROM media WHERE media_fk_id=? AND media_fk_table_name=?")) {
-                query.setInt(1, id);
-                query.setString(2, "documents");
-                try (ResultSet rows = query.executeQuery()) {
-                    while (rows.next()) inspectColumns(rows, 3, base, domain, false);
-                }
-            }
+            scanRows(connection, MEDIA_COLUMNS + " FROM media WHERE media_fk_id=? AND media_fk_table_name=?",
+                row -> inspectColumns(row, 3, base, domain, false), id, "documents");
         }
     }
 
@@ -164,7 +166,7 @@ public final class FileReferenceScanner {
             String pending = "documents_history d WHERE (d.is_delete IS NULL OR d.is_delete=" + no + ") AND "
                 + "(d.publicable=" + yes + " OR (d.awaiting_approve LIKE '_%') OR "
                 + "(d.actual=" + no + " AND d.approved_by=-1 AND (d.disapproved_by IS NULL OR d.disapproved_by<=0) AND "
-                + "d.history_id=(SELECT MAX(h.history_id) FROM documents_history h WHERE h.doc_id=d.doc_id)))";
+                + "d.history_id IN (SELECT MAX(h.history_id) FROM documents_history h WHERE h.doc_id IS NOT NULL GROUP BY h.doc_id)))";
             scanPages(connection, pending, deleted);
             scanRows(connection, MEDIA_COLUMNS + " FROM media", row -> {
                 String table = row.getString(2);
@@ -196,7 +198,6 @@ public final class FileReferenceScanner {
                     "question FROM document_forum",
                     "tip_text FROM tips_of_the_day",
                     "seo_image FROM templates_group")) {
-                if (found.size() == count) break;
                 scanRows(connection, source, row -> inspectColumns(row, 1, null, null, true));
             }
             boolean checkLayouts = files.keySet().stream().anyMatch(path -> path.startsWith("/templates/"));
@@ -254,9 +255,10 @@ public final class FileReferenceScanner {
         }
     }
 
-    private void scanRows(Connection connection, String source, RowCallbackHandler inspectRow) throws SQLException {
+    private void scanRows(Connection connection, String source, RowCallbackHandler inspectRow, Object... parameters) throws SQLException {
         if (found.size() == count) return;
         try (PreparedStatement query = connection.prepareStatement("SELECT " + source)) {
+            SimpleQuery.bindParameters(query, parameters);
             query.setFetchSize(100);
             try (ResultSet rows = query.executeQuery()) {
                 while (found.size() < count && rows.next()) inspectRow.processRow(rows);
@@ -265,22 +267,16 @@ public final class FileReferenceScanner {
     }
 
     private void scanPages(Connection connection, String from, Set<Integer> deleted) throws SQLException {
-        if (found.size() == count) return;
-        try (PreparedStatement query = connection.prepareStatement("SELECT " + PAGE_COLUMNS + " FROM " + from)) {
-            query.setFetchSize(100);
-            try (ResultSet rows = query.executeQuery()) {
-                while (rows.next() && found.size() < count) {
-                    if (deleted.contains(rows.getInt(1))) continue;
-                    String base = rows.getString(2);
-                    String link = rows.getString(3);
-                    // The external link of a generated fulltext row points back to the indexed file.
-                    boolean indexed = link != null && link.startsWith("/files/") && (link + ".html").equals(base);
-                    sourceFile = indexed ? link : null;
-                    inspectColumns(rows, indexed ? 4 : 3, base, null, true);
-                    sourceFile = null;
-                }
-            }
-        }
+        scanRows(connection, PAGE_COLUMNS + " FROM " + from, row -> {
+            if (deleted.contains(row.getInt(1))) return;
+            String base = row.getString(2);
+            String link = row.getString(3);
+            // The external link of a generated fulltext row points back to the indexed file.
+            boolean indexed = link != null && link.startsWith("/files/") && (link + ".html").equals(base);
+            sourceFile = indexed ? link : null;
+            inspectColumns(row, indexed ? 4 : 3, base, null, true);
+            sourceFile = null;
+        });
     }
 
     private void inspectColumns(ResultSet rows, int first, String base, String domain, boolean protectFolders) throws SQLException {

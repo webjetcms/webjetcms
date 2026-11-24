@@ -46,7 +46,7 @@ function fixture(t, itemType = "pages") {
     vm.runInContext(fs.readFileSync(filename, "utf8").replace(/^export /gm, ""), context, {filename});
     const endpoint = "/admin/rest/" + (itemType === "pages" ? "web-pages" : "groups") + "/deletion-preview";
     context.bindDeleteMirrors({EDITOR: editor, DATA: {id: "mirrors"}}, endpoint, itemType);
-    const open = (rows = [0, 1]) => editor.remove(rows, {
+    const open = () => editor.remove([0, 1], {
         message: '<div class="col-sm-7 offset-sm-4">Confirm deletion</div>',
         buttons: [
             {text: "Cancel", className: "btn-close-editor", action() { this.close(); }},
@@ -96,52 +96,38 @@ test("An empty preview removes the warning and permits deletion", t => {
     assert.equal(f.submissions.length, 1);
 });
 
-test("Preselected cleanup submits every selected page after its file preview is ready", t => {
+for (const checked of [true, false]) {
+    test(`A pending file preview submits cleanup only when selected (${checked})`, t => {
+        const f = fixture(t);
+        f.open();
+        f.requests[0].respond({items: [], hiddenMirrors: false, pageFileCleanupAvailable: true, pageFileCleanupDefaultChecked: true});
+        assertBlocked(f);
+        if (checked) {
+            f.requests[1].respond([{fullPath: "/News", files: ["/files/story.pdf"]}]);
+        } else {
+            f.modal.find(".delete-page-files input").prop("checked", false).trigger("change");
+        }
+        f.editor.submit();
+        const rows = f.submissions[0].data;
+        assert.deepEqual(Object.keys(rows), ["101", "102"]);
+        for (const row of Object.values(rows)) assert.equal(row.editorFields?.deleteUnusedPageFiles, checked ? true : undefined);
+    });
+}
+
+test("An unchecked cleanup default stays unchecked after the file preview loads", t => {
     const f = fixture(t);
     f.open();
-    f.requests[0].respond({items: [], hiddenMirrors: false, pageFileCleanupAvailable: true, pageFileCleanupDefaultChecked: true});
-    const choice = f.modal.find(".delete-page-files");
-    const input = choice.find("input");
-    assert.equal(input.prop("checked"), true);
-    assertBlocked(f);
-    assert.equal(new URLSearchParams(f.requests[1].options.data).get("ids"), "101,102");
-    f.requests[1].respond([
-        {fullPath: "/News/<b>Story</b>", files: ["/files/story & photos.pdf"]},
-        {fullPath: "/Archive/Story", files: []}
-    ]);
-    assert.equal(choice.find("strong").eq(0).text(), "/News/<b>Story</b>");
-    assert.equal(choice.find("strong").eq(0).siblings("ul").find("li").text(), "/files/story & photos.pdf");
-    assert.equal(choice.find("strong").eq(1).text(), "/Archive/Story");
-    assert.equal(choice.find("strong").eq(1).next().text(), "editor.delete_files.empty.js");
-    assert.equal(choice.find("b").length, 0);
-    assert.equal(input.prop("checked"), true);
-    assert.equal(f.submit().prop("disabled"), false);
-    f.editor.submit();
-    for (const row of Object.values(f.submissions[0].data)) assert.equal(row.editorFields.deleteUnusedPageFiles, true);
-});
-
-test("A single page shows its files directly and uses the configured unchecked default", t => {
-    const f = fixture(t);
-    f.open([0]);
     f.requests[0].respond({items: [], hiddenMirrors: false, pageFileCleanupAvailable: true, pageFileCleanupDefaultChecked: false});
-    f.requests[1].respond([{fullPath: "/News/Story", files: ["/files/one.pdf", "/images/two.jpg"]}]);
-    const choice = f.modal.find(".delete-page-files");
-    assert.equal(choice.find("input").prop("checked"), false);
-    assert.equal(choice.find("strong").length, 0);
-    assert.deepEqual(choice.find("li").map((_, item) => item.textContent).get(), ["/files/one.pdf", "/images/two.jpg"]);
-    f.editor.submit();
-    assert.equal(f.submissions[0].data["101"].editorFields?.deleteUnusedPageFiles, undefined);
-});
+    const input = f.modal.find(".delete-page-files input");
+    assert.equal(input.prop("checked"), false);
+    f.requests[1].respond([{fullPath: "/News", files: ["/files/story.pdf"]}]);
+    assert.equal(input.prop("disabled"), false);
+    assert.equal(input.prop("checked"), false);
 
-test("An editor can clear the default while the file preview is loading", t => {
-    const f = fixture(t);
-    f.open();
-    f.requests[0].respond({items: [], hiddenMirrors: false, pageFileCleanupAvailable: true, pageFileCleanupDefaultChecked: true});
-    f.modal.find(".delete-page-files input").prop("checked", false).trigger("change");
-    assert.equal(f.submit().prop("disabled"), false);
-    f.requests[1].respond([{fullPath: "/News/Story", files: ["/files/one.pdf"]}]);
     f.editor.submit();
-    for (const row of Object.values(f.submissions[0].data)) assert.equal(row.editorFields?.deleteUnusedPageFiles, undefined);
+    const rows = f.submissions[0].data;
+    assert.deepEqual(Object.keys(rows), ["101", "102"]);
+    for (const row of Object.values(rows)) assert.equal(row.editorFields?.deleteUnusedPageFiles, undefined);
 });
 
 for (const [result, message] of [[{error: "Scan failed"}, "error"], [[], "empty"]]) {

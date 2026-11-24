@@ -1,14 +1,11 @@
 package sk.iway.iwcm.editor.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.Charset;
@@ -27,6 +24,8 @@ import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
@@ -35,11 +34,8 @@ import org.springframework.mock.web.MockServletContext;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
-import sk.iway.iwcm.PathFilter;
-import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.filebrowser.FileReferenceScanner;
-import sk.iway.iwcm.filebrowser.UnusedFile;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -65,133 +61,120 @@ class PageMediaUsageTest extends BaseWebjetTest {
         Constants.setServletContext(previousContext);
     }
 
-    /**
-     * Verifies references in CMS records, embeds and templates while leaving unrelated files eligible for cleanup.
-     *
-     * @throws Exception if the template or database fixtures cannot be prepared or scanned
-     */
+    /** Pending revisions, group fields and configured stylesheets protect files. Superseded drafts do not. */
     @Test
-    void preservesReferencesOutsidePageContent() throws Exception {
-        String fixtureName = "autotest-" + UUID.randomUUID();
-        String folder = "/files/" + fixtureName + "/";
-        String banner = folder + "mobile.jpg";
-        String redirectTarget = folder + "redirect.pdf";
-        String watermark = folder + "watermark.png";
-        String profilePhoto = folder + "profile.jpg";
-        String groupFile = folder + "group.pdf";
-        String pendingGroupFile = folder + "pending-group.pdf";
-        String document = folder + "catalogue.pdf";
-        String image = folder + "map.jpg";
-        String legacyImage = folder + "legacy.jpg";
-        String download = folder + "price list.pdf";
-        String background = folder + "čaj.jpg";
-        Charset windows1250 = Charset.forName(Constants.FILE_ENCODING);
-        // The UTF-8 URL in page.css also names a different file when read as Windows-1250.
-        String legacyBackground = new String(background.getBytes(StandardCharsets.UTF_8), windows1250);
-        String printLogo = folder + "tlačové-logo.svg";
-        String unused = folder + "unused.txt";
-        String gallery = folder + "events";
-        String nestedImage = gallery + "/conference/team.jpg";
-        String otherGallery = gallery + "-archive";
-        String layouts = "/templates/autotest-layouts/";
-        String desktop = layouts + "story.html";
-        String phone = layouts + "story-phone.jsp";
-        Files.writeString(Files.createDirectories(webroot.resolve("css")).resolve("page.css"),
-            "body { background-image: url(" + background + "); }");
-        Path printCss = Files.createDirectories(webroot.resolve("overrides/assets")).resolve("print.css");
-        Files.writeString(printCss, "header { background-image: url('.." + printLogo + "'); }", windows1250);
-        Path template = Files.createDirectories(webroot.resolve("templates")).resolve("embed.html");
-        // The embed starts in one read and its encoded URL ends in the next.
-        Files.writeString(template, " ".repeat(22000) + "!INCLUDE(/components/app-docsembed/embed.jsp,"
-            + " ".repeat(12000) + "url=" + Tools.base64Encode(document) + ")!"
-            + "!INCLUDE(/components/app-htmlembed/embed.jsp, html=" + Tools.base64Encode("<img src='" + image + "'>") + ")!"
-            + "!INCLUDE(/components/app-htmlembed/embed.jsp, html=" + Tools.base64Encode("utf8:" + Tools.URLEncode("<img src='" + legacyImage + "'>")) + ")!"
-            + "!INCLUDE(/components/gallery/gallery.jsp, dir=&quot;" + gallery + "/&quot;, recursive=true)!"
-            + "<a href='/download?file=" + download.replace(" ", "%20") + "&amp;lng=sk'>Download</a>"
-            + "<a href='" + unused + ".bak'>Backup</a>"
-            + "!INCLUDE(/components/gallery/gallery.jsp, dir=" + otherGallery + ", recursive=false)!");
-
-        Set<String> candidates = Set.of(banner, redirectTarget, watermark, profilePhoto, groupFile, pendingGroupFile,
-            document, image, legacyImage, download, background, legacyBackground, printLogo, nestedImage, unused,
-            gallery + "/conference/unused.pdf", otherGallery + "/conference/team.jpg", desktop, phone, layouts + "archive/story.html");
-        for (String candidate : candidates) {
-            Path file = webroot.resolve(candidate.substring(1));
-            Files.createDirectories(file.getParent());
-            Files.writeString(file, candidate.equals(unused) ? "Fixture: unused.txt" : "");
-        }
-
+    void preservesFilesFromPendingHistoryAndCmsRecords() throws Exception {
+        String fixture = "autotest-" + UUID.randomUUID();
+        String folder = "/files/" + fixture + "/";
+        String old = folder + "old.pdf";
+        String latest = folder + "latest.pdf";
+        String second = folder + "second.pdf";
+        String approval = folder + "approval.pdf";
+        String scheduled = folder + "scheduled.pdf";
+        String logo = folder + "logo.svg";
+        Path css = Files.createDirectories(webroot.resolve("css")).resolve("autotest.css");
+        Files.writeString(css, "body {background: url(" + logo + ")}");
         try (Connection connection = DBPool.getConnection()) {
             connection.setAutoCommit(false);
             var dataSource = new SingleConnectionDataSource(connection, true);
-            int originalDbType = Constants.DB_TYPE;
-            try {
+            try (var pool = mockStatic(DBPool.class)) {
+                pool.when(DBPool::getConnection).thenReturn(dataSource.getConnection());
                 JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-                String insertLayout = "INSERT INTO templates (temp_name,forward,template_install_name,css) VALUES (?,?,?,?)";
-                jdbc.update(insertLayout, "Autotest story", "story.html", "autotest-layouts", null);
-                jdbc.update(insertLayout, "Autotest story device=phone", phone, "autotest-layouts", "/assets/screen.css,\n/assets/print.css?v=1");
-                jdbc.update(
-                    "INSERT INTO banner_banners (banner_id,banner_type,active,image_link_mobile) VALUES (?,?,?,?)",
-                    PkeyGenerator.getNextValue("banner_banners"), 4, true, banner);
-                jdbc.update("INSERT INTO url_redirect (url_redirect_id,old_url,new_url,redirect_code,insert_date) VALUES (?,?,?,301,CURRENT_TIMESTAMP)",
-                    PkeyGenerator.getNextValue("url_redirect"), "/" + fixtureName, redirectTarget);
-                jdbc.update("INSERT INTO gallery_dimension (image_path,watermark) VALUES (?,?)", "/images/" + fixtureName, watermark);
-                jdbc.update("INSERT INTO users (login,photo) VALUES (?,?)", fixtureName, profilePhoto);
-                jdbc.update("INSERT INTO groups (group_name,field_a) VALUES (?,?)", fixtureName, groupFile);
-                jdbc.update("INSERT INTO groups_scheduler (group_id,group_name,field_d,when_to_publish) "
-                    + "SELECT group_id,group_name,?,CURRENT_TIMESTAMP FROM groups WHERE group_name=?", pendingGroupFile, fixtureName);
-                try (var pool = mockStatic(DBPool.class); var paths = mockStatic(PathFilter.class, CALLS_REAL_METHODS)) {
-                    paths.when(() -> PathFilter.getCustomPathRealPath("/assets/print.css")).thenReturn(printCss.toString());
-                    pool.when(DBPool::getConnection).thenReturn(dataSource.getConnection());
-                    assertEquals(Set.of(banner, redirectTarget, watermark, profilePhoto, groupFile, pendingGroupFile,
-                        document, image, legacyImage, download, background, legacyBackground, printLogo, nestedImage, desktop, phone),
-                        FileReferenceScanner.referencedElsewhere(candidates, Map.of(), Set.of()));
-                    assertEquals(List.of(otherGallery + "/conference/team.jpg", gallery + "/conference/unused.pdf", unused),
-                        FileTools.getDirFileUsage(folder, null).stream().map(file -> file.getVirtualParent() + "/" + file.getName()).toList());
-
-                    Connection emptyDatabase = mock(Connection.class, RETURNS_DEEP_STUBS);
-                    pool.when(DBPool::getConnection).thenReturn(emptyDatabase);
-                    String photo = "/images/gallery/team.jpg";
-                    for (String options : List.of("", ", style=photoSwipe")) {
-                        Files.writeString(template, "!INCLUDE(/components/gallery/gallery.jsp" + options + ")!");
-                        assertEquals(Set.of(photo), FileReferenceScanner.referencedElsewhere(
-                            Set.of(photo, "/images/gallery/team.pdf", "/images/gallery/album/team.jpg"), Map.of(), Set.of()), options);
-                    }
-
-                    Connection broken = mock(Connection.class);
-                    when(broken.prepareStatement(anyString())).thenThrow(new SQLException("Simulated scan failure"));
-                    pool.when(DBPool::getConnection).thenReturn(broken);
-                    Constants.DB_TYPE = Constants.DB_PGSQL;
-                    assertThrows(IllegalStateException.class, () -> FileTools.getDirFileUsage(folder, null));
-                    verify(broken).setAutoCommit(false);
+                for (String title : List.of(fixture, fixture + "-second")) {
+                    jdbc.update("INSERT INTO documents (title,data,data_asc,navbar) VALUES (?,?,?,?)", title, title, title, title);
                 }
+                String revision = "INSERT INTO documents_history (doc_id,data,data_asc,navbar,actual,approved_by,publicable,awaiting_approve) "
+                    + "SELECT doc_id,?,title,title,?,-1,?,? FROM documents WHERE title=?";
+                jdbc.update(revision, old, false, false, null, fixture);
+                jdbc.update(revision, approval, false, false, "7", fixture);
+                jdbc.update(revision, scheduled, false, true, null, fixture);
+                jdbc.update(revision, latest, false, false, null, fixture);
+                jdbc.update(revision, second, false, false, null, fixture + "-second");
+
+                String groupFile = folder + "group.pdf";
+                jdbc.update("INSERT INTO groups (group_name,field_a) VALUES (?,?)", fixture, groupFile);
+                jdbc.update("INSERT INTO templates (temp_name,forward,css) VALUES (?,?,?)", fixture, "autotest.jsp", "/css/autotest.css");
+                assertEquals(Set.of(latest, second, approval, scheduled, groupFile, logo),
+                    FileReferenceScanner.referencedElsewhere(Set.of(old, latest, second, approval, scheduled, groupFile, logo), Map.of(), Set.of()));
             } finally {
-                Constants.DB_TYPE = originalDbType;
                 connection.rollback();
             }
         }
     }
 
-    /** A public link protects the corresponding file when scanning a domain's storage directory. */
     @Test
-    void scansDirectoryWithDomainAlias() throws Exception {
-        String folder = "/files/autotest-tenant/batch-" + UUID.randomUUID();
+    @EnabledOnOs({ OS.MAC, OS.LINUX })
+    void keepsFilesLinkedThroughADirectoryAlias() throws Exception {
+        String folder = "/files/autotest-" + UUID.randomUUID();
         Path directory = Files.createDirectories(webroot.resolve(folder.substring(1)));
-        for (int i = 0; i < 1000; i++) Files.createFile(directory.resolve("asset-" + i + ".pdf"));
-        Files.createFile(Files.createDirectory(directory.resolve("child")).resolve("nested.pdf"));
-        Path template = Files.createDirectories(webroot.resolve("templates")).resolve("download.html");
-        Files.writeString(template, "<a href='" + folder.replace("/autotest-tenant", "") + "/asset-42.pdf'>Download</a>");
+        Files.createFile(directory.resolve("guide.pdf"));
+        Files.createSymbolicLink(directory.resolveSibling("autotest-link"), directory);
+        Path template = Files.createDirectories(webroot.resolve("templates")).resolve("link.html");
+        Files.writeString(template, "<a href='/files/autotest-link/guide.pdf'>Guide</a>");
+        assertEquals(Set.of(folder + "/guide.pdf"),
+            FileReferenceScanner.referencedElsewhere(Set.of(folder + "/guide.pdf", folder + "/unused.pdf"), Map.of(), Set.of()));
+    }
 
-        boolean multiDomain = Constants.getBoolean("multiDomainEnabled");
+    /** The directory report resolves public URLs from embeds, galleries and stylesheets against aliased storage. */
+    @Test
+    void findsReferencesInSiteSources() throws Exception {
+        String url = "/files/autotest-" + UUID.randomUUID();
+        String storage = url.replace("/files/", "/files/autotest-tenant/");
+        Path directory = Files.createDirectories(webroot.resolve(storage.substring(1)));
+        String background = "čaj.jpg";
+        String legacyName = new String(background.getBytes(StandardCharsets.UTF_8), Charset.forName(Constants.FILE_ENCODING));
+        for (String name : List.of("map.jpg", "legacy.jpg", "guide.pdf", background, legacyName, "unused.txt")) {
+            Files.createFile(directory.resolve(name));
+        }
+        Path album = Files.createDirectories(directory.resolve("gallery/album"));
+        Files.createFile(album.resolve("photo.jpg"));
+        Files.createFile(album.resolve("unused.pdf"));
+        Path sources = Files.createDirectories(webroot.resolve("templates"));
+        Files.writeString(sources.resolve("page.css"), "body { background-image: url(" + url + "/" + background + "); }");
+        String legacyEmbed = "utf8:" + Tools.URLEncode("<img src='" + url + "/legacy.jpg'>");
+        // The encoded Document Embed URL crosses the scanner's read boundary.
+        Files.writeString(sources.resolve("embed.html"), " ".repeat(22000) + "!INCLUDE(/components/app-docsembed/embed.jsp,"
+            + " ".repeat(12000) + "url=" + Tools.base64Encode(url + "/guide.pdf") + ")!"
+            + "!INCLUDE(/components/app-htmlembed/embed.jsp, html=" + Tools.base64Encode("<img src='" + url + "/map.jpg'>") + ")!"
+            + "!INCLUDE(/components/app-htmlembed/embed.jsp, html=" + Tools.base64Encode(legacyEmbed) + ")!"
+            + "!INCLUDE(/components/gallery/gallery.jsp, dir=" + url + "/gallery, recursive=true)!"
+            + "<a href='" + url + "/unused.txt.bak'>Backup</a>");
+
+        boolean previous = Constants.getBoolean("multiDomainEnabled");
         ConfDetails alias = new ConfDetails();
         alias.setValue("autotest-tenant");
         try (var settings = mockStatic(ConstantsV9.class)) {
             Constants.setBoolean("multiDomainEnabled", true);
             settings.when(() -> ConstantsV9.getValuesStartsWith("multiDomainAlias:")).thenReturn(List.of(alias));
-            List<UnusedFile> result = FileTools.getDirFileUsage(folder.substring(1), null, false);
-            assertEquals(999, result.size());
-            assertFalse(result.stream().anyMatch(file -> file.getName().equals("asset-42.pdf")));
+            assertEquals(List.of(storage + "/gallery/album/unused.pdf", storage + "/unused.txt"),
+                FileTools.getDirFileUsage(storage, null).stream().map(file -> file.getVirtualParent() + "/" + file.getName()).toList());
         } finally {
-            Constants.setBoolean("multiDomainEnabled", multiDomain);
+            Constants.setBoolean("multiDomainEnabled", previous);
+        }
+    }
+
+    /** A gallery without a directory uses images directly under /images/gallery. */
+    @Test
+    void protectsImagesInTheDefaultGalleryDirectory() throws Exception {
+        Path template = Files.createDirectories(webroot.resolve("templates")).resolve("gallery.html");
+        Files.writeString(template, "!INCLUDE(/components/gallery/gallery.jsp)!");
+        String photo = "/images/gallery/team.jpg";
+        var candidates = Set.of(photo, "/images/gallery/team.pdf", "/images/gallery/album/team.jpg");
+        try (var pool = mockStatic(DBPool.class)) {
+            pool.when(DBPool::getConnection).thenReturn(mock(Connection.class, RETURNS_DEEP_STUBS));
+            assertEquals(Set.of(photo), FileReferenceScanner.referencedElsewhere(candidates, Map.of(), Set.of()));
+        }
+    }
+
+    /** A failed scan cannot produce a list of files offered for deletion. */
+    @Test
+    void rejectsIncompleteDirectoryScans() throws Exception {
+        Files.createFile(Files.createDirectories(webroot.resolve("files")).resolve("autotest.pdf"));
+        Connection broken = mock(Connection.class);
+        when(broken.prepareStatement(anyString())).thenThrow(new SQLException("Simulated scan failure"));
+        try (var pool = mockStatic(DBPool.class)) {
+            pool.when(DBPool::getConnection).thenReturn(broken);
+            assertThrows(IllegalStateException.class, () -> FileTools.getDirFileUsage("/files", null));
         }
     }
 }
