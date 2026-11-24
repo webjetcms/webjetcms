@@ -5,10 +5,13 @@ const pagesUrl = '/admin/v9/webpages/web-pages-list/?groupid=' + groupId;
 const modal = '#datatableInit_modal';
 const checkbox = modal + ' .delete-page-files input';
 const confirmButton = modal + ' .DTE_Form_Buttons button:not(.btn-close-editor)';
-let title, files;
+const cleanupSetting = 'editorDeleteUnusedPageFilesDefault';
+let title, files, savedSetting, folderFixture;
 
 Before(({ I, login }) => {
     files = [];
+    savedSetting = undefined;
+    folderFixture = null;
     login('admin');
     title = 'cleanup-autotest-' + I.getRandomText();
 });
@@ -48,7 +51,7 @@ async function fileStatus(I, url) {
     return I.executeScript(async path => (await fetch(path, {cache: 'no-store'})).status, url);
 }
 
-async function saveFixture(I, id, pageTitle, links = []) {
+async function saveFixture(I, id, pageTitle, links = [], parentId = groupId) {
     const result = await I.executeScript(async ({id, groupId, pageTitle, links}) => {
         const page = await $.getJSON(`/admin/rest/web-pages/${id}?groupId=${groupId}`);
         page.title = pageTitle;
@@ -59,10 +62,21 @@ async function saveFixture(I, id, pageTitle, links = []) {
         page.editorFields.requestPublish = true;
         return $.ajax({url: '/admin/rest/web-pages/editor?groupId=' + groupId, type: 'POST', contentType: 'application/json',
             data: JSON.stringify({action: id > 0 ? 'edit' : 'create', data: {[id]: page}})});
-    }, {id, groupId, pageTitle, links});
+    }, {id, groupId: parentId, pageTitle, links});
     I.assertFalse(Boolean(result.error), result.error || JSON.stringify(result.fieldErrors));
     I.assertAbove(result.data[0].id, 0);
     return result.data[0].id;
+}
+
+async function createFiles(I, parentId, docId, pageTitle, names) {
+    const context = {docId, groupId: parentId, title: pageTitle};
+    const folder = await I.executeScript(data => $.getJSON('/admin/elFinder/gethash.jsp', data), {url: '/files:default', ...context});
+    for (const name of names) {
+        const result = await fileCommand(I, {...context, cmd: 'mkfile', target: folder.hashParent, name});
+        I.assertFalse(Boolean(result.error), JSON.stringify(result.error));
+        files.push({...context, url: `${folder.uploadSubDir}/${result.added[0].name}`, hash: result.added[0].hash});
+        I.assertEqual(await fileStatus(I, files.at(-1).url), 200);
+    }
 }
 
 Scenario('Moving pages to Trash keeps their files and permanent deletion removes only unused files @screenshot', async ({ I, DT, DTE, Document, i18n }) => {
@@ -71,14 +85,7 @@ Scenario('Moving pages to Trash keeps their files and permanent deletion removes
     const ownerId = await saveFixture(I, -1, title);
     const survivorId = await saveFixture(I, -1, title + '-survivor');
     for (const [docId, pageTitle, names] of [[ownerId, title, ['program.txt', 'kontakt.txt']], [survivorId, title + '-survivor', ['terminy.txt']]]) {
-        const folder = await I.executeScript(data => $.getJSON('/admin/elFinder/gethash.jsp', data),
-            {url: '/files:default', docId, groupId, title: pageTitle});
-        for (const name of names) {
-            const result = await fileCommand(I, {docId, title: pageTitle, cmd: 'mkfile', target: folder.hashParent, name});
-            I.assertFalse(Boolean(result.error), JSON.stringify(result.error));
-            files.push({docId, title: pageTitle, url: `${folder.uploadSubDir}/${result.added[0].name}`, hash: result.added[0].hash});
-            I.assertEqual(await fileStatus(I, files.at(-1).url), 200);
-        }
+        await createFiles(I, groupId, docId, pageTitle, names);
     }
 
     await saveFixture(I, ownerId, title, files.slice(0, 2));
@@ -122,13 +129,75 @@ Scenario('Moving pages to Trash keeps their files and permanent deletion removes
     I.assertEqual(await fileStatus(I, files[1].url), 200);
 });
 
-After(async ({ I, DT }) => {
+async function createFolder(I, parent, name) {
+    const result = await I.executeScript(async ({parent, name}) => {
+        const folder = await $.getJSON('/admin/rest/groups/-1', {groupId: parent});
+        Object.assign(folder, {groupName: name, navbarName: name});
+        return $.ajax({url: '/admin/rest/groups/editor', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify({action: 'create', data: {0: folder}})});
+    }, {parent, name});
+    I.assertFalse(Boolean(result.error), result.error);
+    I.assertEqual(result.data[0].parentGroupId, parent);
+    return result.data[0];
+}
+
+async function removeFolder(I, folder) {
+    const result = await I.executeScript(async ({groupId, groupName}) => {
+        const current = await $.getJSON('/admin/rest/groups/' + groupId);
+        if (current.groupName !== groupName) throw new Error('Unexpected fixture folder');
+        return $.ajax({url: '/admin/rest/groups/editor', type: 'POST', contentType: 'application/json',
+            data: JSON.stringify({action: 'remove', data: {[groupId]: {groupId}}})});
+    }, folder);
+    I.assertFalse(Boolean(result.error), result.error);
+}
+
+for (const enabled of [true, false]) {
+    Scenario(`Hard folder deletion with automatic file cleanup set to ${enabled} @singlethread`, async ({ I, DT, Document }) => {
+        openPages(I, DT, false);
+        const config = await I.executeScript(name => $.getJSON('/admin/rest/settings/configuration/autocomplete/detail', {name}), cleanupSetting);
+        const current = String(config.displayValue ?? config.value);
+        I.assertTrue(['true', 'false'].includes(current));
+        if (current !== String(enabled)) {
+            savedSetting = current;
+            Document.setConfigValue(cleanupSetting, String(enabled), true);
+        }
+        folderFixture = await createFolder(I, groupId, title);
+        const child = await createFolder(I, folderFixture.groupId, title + '-child');
+        const pageId = await saveFixture(I, -1, title, [], child.groupId);
+        await createFiles(I, child.groupId, pageId, title, ['program.txt', 'kontakt.txt']);
+        await saveFixture(I, pageId, title, files, child.groupId);
+        await saveFixture(I, -1, title + '-survivor', files.slice(1));
+
+        await removeFolder(I, folderFixture);
+        const trashed = await I.executeScript(id => $.getJSON('/admin/rest/groups/' + id), folderFixture.groupId);
+        I.assertNotEqual(trashed.fullPath, folderFixture.fullPath);
+        for (const file of files) I.assertEqual(await fileStatus(I, file.url), 200);
+
+        await removeFolder(I, folderFixture);
+        const children = await I.executeScript(id => $.getJSON('/admin/rest/web-pages/all', {groupId: id}), child.groupId);
+        I.assertEmpty(children.content);
+        folderFixture = null;
+        I.assertEqual(await fileStatus(I, files[0].url), enabled ? 404 : 200);
+        I.assertEqual(await fileStatus(I, files[1].url), 200);
+    });
+}
+
+After(async ({ I, DT, Document }) => {
     if (!title) return;
+    if (savedSetting !== undefined) Document.setConfigValue(cleanupSetting, savedSetting, true);
     openPages(I, DT, false);
     for (const file of files) {
         if (await fileStatus(I, file.url) === 200) {
-            const result = await fileCommand(I, {docId: file.docId, title: file.title, cmd: 'rm', 'targets[]': file.hash});
+            const target = await I.executeScript(data => $.getJSON('/admin/elFinder/gethash.jsp', data), {url: file.url, groupId, docId: -1});
+            const result = await fileCommand(I, {docId: -1, cmd: 'rm', 'targets[]': target.hash});
             I.assertFalse(Boolean(result.error), JSON.stringify(result.error));
+        }
+    }
+    if (folderFixture) {
+        const current = await I.executeScript(id => $.getJSON('/admin/rest/groups/' + id), folderFixture.groupId);
+        if (current.groupName === folderFixture.groupName) {
+            if (current.parentGroupId === groupId) await removeFolder(I, folderFixture);
+            await removeFolder(I, folderFixture);
         }
     }
     for (const trash of [false, true]) {

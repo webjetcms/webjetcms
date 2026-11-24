@@ -97,6 +97,8 @@ Súbory môžete zmazať s právom na správu súborov a na zápis do príslušn
 
 Ak sa mazanie viacerých stránok preruší, WebJET dokončí kontrolu súborov pre už zmazané stránky. Spolu s chybou zobrazí ich ID a výsledok kontroly súborov.
 
+Pri presune priečinka do Koša zostanú súbory všetkých jeho stránok zachované. Keď priečinok trvalo zmažete a `editorDeleteUnusedPageFilesDefault` má hodnotu `true`, WebJET automaticky zmaže nepoužívané súbory stránok v priečinku aj v jeho podpriečinkoch. Súbory používané inde ponechá. Pri hodnote `false` ponechá všetky súbory.
+
 !> Súbory zmazané spolu so stránkou sa nedajú obnoviť.
 
 ### Obnovenie web stránok a adresárov z koša

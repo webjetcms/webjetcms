@@ -1,6 +1,8 @@
 package sk.iway.iwcm.doc;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -11,6 +13,7 @@ import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.editor.service.PageMediaCleanup;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;
@@ -20,6 +23,7 @@ import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -2852,6 +2856,14 @@ public class GroupsDB extends DB
 				//List subGroups = groupsDB.getGroups(my_form.getGroupId());
 				List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, includeParent, true);
 				deletedGroups = subGroups;
+				Identity user = RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes
+					? UsersDB.getCurrentUser(attributes.getRequest()) : null;
+				PageMediaCleanup cleanup = null;
+				if (Constants.getBoolean("editorDeleteUnusedPageFilesDefault") && user != null && user.isAdmin()
+						&& user.isEnabledItem("menuFbrowser") && user.isEnabledItem("deleteDir")) {
+					cleanup = Tools.getSpringBean("pageMediaCleanup", PageMediaCleanup.class);
+				}
+				Map<Integer, Set<String>> folderFiles = cleanup == null ? Map.of() : cleanup.captureFolderPages(subGroups, user, db_conn);
 
 				for (GroupDetails element : subGroups)
 				{
@@ -2916,6 +2928,8 @@ public class GroupsDB extends DB
 					ps.executeUpdate();
 					ps.close();
 					ps = null;
+
+					if (cleanup != null) cleanup.deleteFolderFiles(folderFiles, user);
 
 					//Vymaz approve
 					deleteGroupsApprove(groups.toString());

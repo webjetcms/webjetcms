@@ -4,6 +4,7 @@
 
 ### Webové stránky
 
+- Pri trvalom zmazaní priečinka WebJET automaticky [zmaže nepoužívané súbory jeho stránok](redactor/webpages/README.md#zmazanie-súborov-stránky) aj v podpriečinkoch, ak je zapnutá konfiguračná premenná `editorDeleteUnusedPageFilesDefault`.
 - Presun stránky do Koša zachová všetky jej súbory. Pri trvalom zmazaní z Koša je predvolene zaškrtnutá voľba [zmazania nepoužívaných súborov](redactor/webpages/README.md#zmazanie-súborov-stránky). Pred potvrdením vidíte zoznam súborov pre každú vybranú stránku a môžete voľbu odškrtnúť. WebJET ponechá súbory používané na iných stránkach alebo v aplikáciách.
 
 ### Prieskumník

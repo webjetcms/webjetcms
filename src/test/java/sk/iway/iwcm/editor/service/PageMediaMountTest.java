@@ -9,6 +9,7 @@ import static org.mockito.Mockito.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,7 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocHistoryRepository;
@@ -35,6 +37,37 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Tests page file cleanup when the filesystem location behind a media root changes. */
 class PageMediaMountTest extends BaseWebjetTest {
+    /** Retains a moved page's files and rechecks an earlier folder's file after its last reference is deleted. */
+    @Test
+    void rechecksSharedFilesAcrossFolderDeletes(@TempDir Path webroot) {
+        String shared = "/files/shared.pdf";
+        String moved = "/files/moved.pdf";
+        var deletion = mock(UnusedFilesService.class);
+        var cleanup = new PageMediaCleanup(deletion, mock(DocHistoryRepository.class), mock(GroupSchedulerDtoRepository.class));
+        Identity user = mock(Identity.class);
+        when(user.isEnabledItem("menuFbrowser")).thenReturn(true);
+        when(deletion.deleteFile(shared, user)).thenReturn(true);
+        try (var queries = mockConstruction(SimpleQuery.class, (query, context) ->
+                when(query.forListInteger(anyString())).thenReturn(context.getCount() == 1 ? List.of(18) : List.of()));
+             var scan = mockStatic(FileReferenceScanner.class);
+             var paths = mockStatic(Tools.class, CALLS_REAL_METHODS)) {
+            paths.when(() -> Tools.getRealPath(anyString())).thenAnswer(call -> webroot.resolve(call.<String>getArgument(0).substring(1)).toString());
+            scan.when(() -> FileReferenceScanner.referencedElsewhere(anySet(), anyMap(), anySet())).thenAnswer(call -> {
+                assertEquals(Set.of(shared), call.getArgument(0));
+                Set<Integer> deleted = call.getArgument(2);
+                if (deleted.equals(Set.of(17))) return Set.of(shared);
+                assertEquals(Set.of(17, 19), deleted);
+                return Set.of();
+            });
+            cleanup.deleteFolderFiles(new HashMap<>(Map.of(17, Set.of(shared), 18, Set.of(moved))), user);
+            verify(deletion, never()).deleteFile(anyString(), any());
+
+            cleanup.deleteFolderFiles(new HashMap<>(Map.of(19, Set.of())), user);
+            verify(deletion).deleteFile(shared, user);
+            verify(deletion, never()).deleteFile(moved, user);
+        }
+    }
+
     /** A cleanup flag submitted for a live page cannot capture files or run a deletion scan. */
     @Test
     void keepsFilesWhenMovingAPageToTrash() {

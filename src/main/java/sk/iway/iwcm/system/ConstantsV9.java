@@ -354,7 +354,7 @@ public class ConstantsV9 {
 
 		Constants.setBoolean("fileArchivCheckHistoryValid", true, Constants.MOD_FILE_ARCHIV, "Ak je true, historické verzie dokumentov možno stiahnuť iba v rozsahu Platnosť od a Platnosť do. Pri false sa oba dátumy historických verzií ignorujú; viditeľnosť a prístupové oprávnenia sa naďalej kontrolujú.");
 
-		Constants.setBoolean("editorDeleteUnusedPageFilesDefault", true, Constants.MOD_WEBPAGES, "Predvolené zaškrtnutie voľby Zmazať aj nepoužívané súbory stránky pri trvalom zmazaní webovej stránky z Koša.");
+		Constants.setBoolean("editorDeleteUnusedPageFilesDefault", true, Constants.MOD_WEBPAGES, "Predvolené zaškrtnutie voľby Zmazať aj nepoužívané súbory stránky pri trvalom zmazaní stránky z Koša. Pri trvalom zmazaní priečinka zapína automatické zmazanie nepoužívaných súborov jeho stránok vrátane stránok v podpriečinkoch.");
 	}
 
 	/**

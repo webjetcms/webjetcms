@@ -3,6 +3,7 @@ package sk.iway.iwcm.editor.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -28,9 +30,11 @@ import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocHistoryRepository;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.editor.service.TrashPageMediaFolders.Folder;
@@ -63,6 +67,8 @@ public class PageMediaCleanup {
     private final TrashPageMediaFolders sourceFolders;
     private final Set<Integer> selectedIds = new HashSet<>();
     private final Map<Integer, Set<String>> candidates = new LinkedHashMap<>();
+    private final Set<Integer> deletedFolderPages = new HashSet<>();
+    private final Set<String> remainingFolderFiles = new HashSet<>();
     private final Map<String, String> publicPaths = new HashMap<>();
     private final Map<String, Path> mediaRoots = new HashMap<>();
     private final Map<MediaMount, Path> resolvedRoots = new HashMap<>();
@@ -97,7 +103,10 @@ public class PageMediaCleanup {
     public boolean canClean(DocDetails page, Identity user) {
         if (user == null || page == null || user.isDisabledItem("menuFbrowser") || user.isDisabledItem("deletePage")) return false;
         if (!sourceFolders.isInTrash(page.getGroupId())) return false;
-        Folder source = sourceFolders.forPage(page);
+        return canCleanStorage(page, sourceFolders.forPage(page));
+    }
+
+    private boolean canCleanStorage(DocDetails page, Folder source) {
         if (source == null) return false;
         if (Constants.getBoolean("galleryUploadDirVirtualPath")) {
             // An empty stored URL can be generated from the Trash path in the page cache.
@@ -113,6 +122,47 @@ public class PageMediaCleanup {
         } catch (IOException ex) {
             Logger.error(PageMediaCleanup.class, ex);
             return false;
+        }
+    }
+
+    /** Reads page media before the bulk folder delete removes the original upload paths. */
+    public Map<Integer, Set<String>> captureFolderPages(List<GroupDetails> folders, Identity user, Connection connection) {
+        Map<Integer, Set<String>> files = new HashMap<>();
+        if (folders.isEmpty()) return files;
+        String sql = "SELECT doc_id, group_id FROM documents WHERE " + DB.getInCondition("group_id", folders.stream().map(GroupDetails::getGroupId).toList());
+        try (var query = connection.prepareStatement(sql); var rows = query.executeQuery()) {
+            while (rows.next()) {
+                int id = rows.getInt(1);
+                DocDetails page = DocDB.getInstance().getBasicDocDetails(id, false);
+                if (page == null || page.getGroupId() != rows.getInt(2)) continue;
+                try {
+                    Folder source = sourceFolders.forPage(page);
+                    files.put(id, canCleanStorage(page, source) ? collectCandidates(page, source, user) : Set.of());
+                } catch (IOException | SQLException | RuntimeException ex) {
+                    Logger.error(PageMediaCleanup.class, ex);
+                }
+            }
+        } catch (SQLException | RuntimeException ex) {
+            Logger.error(PageMediaCleanup.class, ex);
+        }
+        return files;
+    }
+
+    /** Removes unused files after SQL deletion. A later folder in the request can contain the last reference. */
+    public void deleteFolderFiles(Map<Integer, Set<String>> files, Identity user) {
+        try {
+            if (!files.isEmpty()) {
+                // A page moved out of the folder during deletion still owns its files.
+                String sql = "SELECT doc_id FROM documents WHERE " + DB.getInCondition("doc_id", files.keySet());
+                files.keySet().removeAll(new SimpleQuery().forListInteger(sql));
+            }
+            deletedFolderPages.addAll(files.keySet());
+            files.values().forEach(remainingFolderFiles::addAll);
+            DeletionResult result = deleteUnusedFiles(remainingFolderFiles, deletedFolderPages, user);
+            remainingFolderFiles.removeAll(result.removed());
+            if (result.errors() > 0) Logger.error(PageMediaCleanup.class, "Errors removing unused files after folder deletion: " + result.errors());
+        } catch (RuntimeException ex) {
+            Logger.error(PageMediaCleanup.class, ex);
         }
     }
 
@@ -364,27 +414,9 @@ public class PageMediaCleanup {
         errors = 0;
         if (deleted.isEmpty() && errorCount == 0) return null;
 
-        int removed = 0;
-        if (!files.isEmpty() && user != null && user.isEnabledItem("menuFbrowser")) {
-            List<UnusedFileDTO> locked = new ArrayList<>();
-            for (String path : files) {
-                UnusedFileDTO file = new UnusedFileDTO();
-                file.setFullPath(path.replace("+", "%2B"));
-                locked.add(file);
-            }
-            try (var operation = unusedFiles.acquireDeleteOperation(locked, user)) {
-                Set<String> referenced = FileReferenceScanner.referencedElsewhere(files, publicPaths, deleted);
-                for (String path : files) {
-                    if (referenced.contains(path)) continue;
-                    if (allowedPath(path) && unusedFiles.deleteFile(path.replace("+", "%2B"), user)) removed++;
-                    else errorCount++;
-                }
-            } catch (Exception ex) {
-                errorCount++;
-                Logger.error(PageMediaCleanup.class, ex);
-            }
-        }
-
+        DeletionResult result = deleteUnusedFiles(files, deleted, user);
+        errorCount += result.errors();
+        int removed = result.removed().size();
         String text = prop.getText("editor.delete_files.summary", String.valueOf(removed), String.valueOf(files.size() - removed),
             String.valueOf(errorCount));
         if (interrupted && !completed.isEmpty()) {
@@ -396,5 +428,33 @@ public class PageMediaCleanup {
             return new NotifyBean(title, text, NotifyBean.NotifyType.INFO, 15000);
         }
         return new NotifyBean(title, text, NotifyBean.NotifyType.WARNING);
+    }
+
+    private record DeletionResult(Set<String> removed, int errors) {}
+
+    private DeletionResult deleteUnusedFiles(Set<String> files, Set<Integer> deleted, Identity user) {
+        Set<String> removed = new HashSet<>();
+        int errorCount = 0;
+        if (!files.isEmpty() && user != null && user.isEnabledItem("menuFbrowser")) {
+            List<UnusedFileDTO> locked = new ArrayList<>();
+            for (String path : files) {
+                UnusedFileDTO file = new UnusedFileDTO();
+                file.setFullPath(path.replace("+", "%2B"));
+                locked.add(file);
+            }
+            try (var operation = unusedFiles.acquireDeleteOperation(locked, user)) {
+                Set<String> referenced = FileReferenceScanner.referencedElsewhere(files, publicPaths, deleted);
+                for (String path : files) {
+                    if (referenced.contains(path)) continue;
+                    if (allowedPath(path) && unusedFiles.deleteFile(path.replace("+", "%2B"), user)) removed.add(path);
+                    else errorCount++;
+                }
+            } catch (Exception ex) {
+                errorCount++;
+                Logger.error(PageMediaCleanup.class, ex);
+            }
+        }
+
+        return new DeletionResult(removed, errorCount);
     }
 }
