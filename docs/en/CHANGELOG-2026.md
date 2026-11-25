@@ -399,6 +399,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Updated libraries `org.json 20260719`, PostgreSQL JDBC updated to `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` to `2.6.1`, Apache Commons Codec `1.23.0`, PDFBox library to `3.0.8` and Swagger UI to `5.34.1` with DOMPurify `3.4.17` (#421).
+- Weather - forecast import will reject XML with `DOCTYPE` declaration. If you use your own source in `weatherSourceApi`, it must provide a forecast without a DTD (#421).
+- Local AI - for `ai.djl:api 0.36.0`, a Dependency Check exception for `CVE-2026-129266` has been added. WebJET AI unpacks and verifies models with its own code. DJL tokenizers receive already verified local files (#421).
 - AI assistants - search in statistics and usage graphs only show records and assistants of the current domain (#58850).
 - Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
 - Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).

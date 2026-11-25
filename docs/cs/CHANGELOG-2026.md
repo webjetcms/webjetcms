@@ -399,6 +399,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Bezpečnost
 
+- Aktualizované knihovny`org.json 20260719`, PostgreSQL JDBC aktualizován na `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` na `2.6.1`, Apache Commons Codec `1.23.0`, knihovna PDFBox na `3.0.8` a Swagger UI na @@ (#421).
+- Počasí - import předpovědi odmítne XML s deklarací `DOCTYPE`. Pokud používáte vlastní zdroj v `weatherSourceApi`, musí poskytovat předpověď bez DTD (#421).
+- Lokální AI - pro `ai.djl:api 0.36.0` přibyla výjimka Dependency Check pro `CVE-2026-129266`. WebJET AI rozbaluje a ověřuje modely vlastním kódem. Tokenizéry DJL dostávají již ověřené lokální soubory (#421).
 - AI asistenti - vyhledávání ve statistice a grafy používání zobrazují pouze záznamy a asistenty aktuální domény (#58850).
 - Webové stránky - mazání ověřuje práva ke všem zrcadleným stránkám au složek vyžaduje i `deleteDir`. [Zrušení zrcadlení](redactor/apps/clone-structure/README.md#zrušení-zrcadlení) kontroluje oprávnění pro celý podstrom včetně nakonfigurovaných omezení domény a uživatelských skupin (#370).
 - Dependency Check - aktualizované knihovny `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizace Jackson zpřísňuje kontrolu typů při polymorfní deserializaci; vlastní integrace používající názvy Java tříd v JSON je třeba ověřit (#385).
