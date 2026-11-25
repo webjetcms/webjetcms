@@ -311,6 +311,12 @@ Riešenie je zároveň pripravené na dlhodobý rast projektu. Administrátor vi
 
 ![Podmienené zobrazenie polí vo formulári](../../redactor/apps/multistep-form/tab-visibilityConditions.png)
 
+Súkromná osoba môže poslať dopyt bez telefónneho čísla. Od firmy si v tom istom formulári môžete vypýtať názov aj telefón. Vo videu uvidíte nastavenie oboch pravidiel aj výsledok na verejnej stránke.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Podrobná dokumentácia: [Podmienené zobrazenie/validovanie položky](../../redactor/apps/multistep-form/README.md#podmienené-zobrazenievalidovanie-položky)
 
 ## Automatizované testovanie prístupnosti webových stránok
