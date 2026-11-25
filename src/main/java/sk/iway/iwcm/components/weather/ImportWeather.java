@@ -10,11 +10,17 @@ import sk.iway.iwcm.components.weather.met.no.generated.Weatherdata;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.util.*;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.sax.SAXSource;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * ImportWeather.java
@@ -48,15 +54,22 @@ public class ImportWeather {
             if (null == source) {
                 throw new FileNotFoundException("Nepodarilo sa nacitat xml na adrese ");
             }
-            JAXBContext jaxbContext = JAXBContext.newInstance(Weatherdata.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            Weatherdata weatherdata = (Weatherdata) jaxbUnmarshaller.unmarshal(new ByteArrayInputStream(source.getBytes("UTF-8")));
+            Weatherdata weatherdata = parseWeather(source);
             sorted = this.mapForecast(weatherdata.getProduct().get(0).getTime());
         } catch (Exception e) {
             Logger.println(ImportWeather.class, "CHYBA pri stahovani");
             sk.iway.iwcm.Logger.error(e);
         }
         return sorted;
+    }
+
+    /** Parses the forecast with DTDs disabled before JAXB receives any XML events. */
+    static Weatherdata parseWeather(String source) throws ParserConfigurationException, SAXException, JAXBException {
+        SAXParserFactory factory = SAXParserFactory.newDefaultNSInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        SAXSource forecast = new SAXSource(factory.newSAXParser().getXMLReader(), new InputSource(new StringReader(source)));
+        Unmarshaller unmarshaller = JAXBContext.newInstance(Weatherdata.class).createUnmarshaller();
+        return (Weatherdata) unmarshaller.unmarshal(forecast);
     }
 
     @SuppressWarnings("rawtypes")

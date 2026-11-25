@@ -94,17 +94,17 @@
     <notes><![CDATA[
     CVE-2022-37830 affects stored XSS in the media editor of WebJET CMS before
     8.6.896. WebJET AI and WebJET AI Local are separate Java AI libraries, not
-    WebJET CMS releases. Their resolved 2.0.4 JARs do not contain the CMS media
+    WebJET CMS releases. Their resolved 2.1.2 JARs do not contain the CMS media
     editor or MediaDataController. The webjet:webjet_cms CPE is a product mismatch.
     This rule suppresses only this CVE on these two AI artifacts; it does not
     suppress findings on WebJET CMS or assert that the CMS media editor is safe.
     Reassess when the artifact version/content changes or the advisory scope changes.
-    Verified on 2026-10-11 against both resolved JARs and their Maven metadata.
+    Verified on 2026-11-25 against both resolved JARs and their Maven metadata.
     References:
     https://citadelo.com/download/CVE-2022-37830.pdf
     https://github.com/webjetcms/webjet-ai
     ]]></notes>
-    <packageUrl regex="true">^pkg:maven/com\.webjetcms/webjet-ai(-local)?@2\.0\.4$</packageUrl>
+    <packageUrl regex="true">^pkg:maven/com\.webjetcms/webjet-ai(-local)?@2\.1\.2$</packageUrl>
     <cve>CVE-2022-37830</cve>
   </suppress>
 
@@ -116,10 +116,10 @@
     This is a version/applicability mismatch, not a claim that upgrading migrates
     ciphertext written with a legacy encryptor. Reassess if legacy encryption
     APIs, custom integrations, or previously encrypted data are introduced.
-    Reverified on 2026-10-29 for Spring Security Crypto 7.1.2. Reference:
+    Reverified on 2026-11-25 for Spring Security Crypto 7.1.3. Reference:
     https://spring.io/security/cve-2026-47842
     ]]></notes>
-    <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@7.1.2</packageUrl>
+    <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@7.1.3</packageUrl>
     <cve>CVE-2026-47842</cve>
   </suppress>
 
@@ -155,6 +155,22 @@
     ]]></notes>
     <packageUrl>pkg:maven/ai.djl/api@0.36.0</packageUrl>
     <cve>CVE-2026-85228</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-129266 requires DJL to resolve resource locations from model archive metadata.
+    In webjet-ai-local 2.1.2 the embedding, translation and text generation providers
+    unpack configured model bundles with VerifiedBundleExtractor and check the model files
+    against approved SHA-256 hashes. DJL tokenizers open extracted local files and ONNX
+    Runtime loads the models. These providers do not use the affected DJL archive loader.
+    The standard client WAR also excludes webjet-ai-local and its DJL dependency.
+    Reassess if the provider or model loading code changes, or a customer integration
+    loads model archives through DJL. Verified on 2026-11-25.
+    https://github.com/deepjavalibrary/djl/security/advisories/GHSA-xf3w-qp3m-fp62
+    ]]></notes>
+    <packageUrl>pkg:maven/ai.djl/api@0.36.0</packageUrl>
+    <vulnerabilityName>CVE-2026-129266</vulnerabilityName>
   </suppress>
 
   <suppress>
