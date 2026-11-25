@@ -6,6 +6,8 @@ Formuláre môžu byť odoslané na email adresu, pričom v email správe formul
 
 Naviac, všetky formuláre sa ukladajú do databázy, v administračnej časti Web JET je možné sa k nim kedykoľvek vrátiť. Položky vo formulároch je možné usporadúvať podľa ľubovoľného stĺpca a exportovať do programu MS Excel.
 
+Ak máte právo upravovať iba vybrané stránky alebo priečinky, prístup k viackrokovému formuláru určuje stránka posledného odoslania. Pred prvým odoslaním alebo ak pri poslednej odpovedi chýba ID stránky, formulár uvidíte, ak môžete upravovať aspoň jednu stránku, na ktorej je vložený.
+
 ![](detail.png)
 
 V zozname formulárov sa pre [viackrokové formuláre](../multistep-form/README.md) zobrazuje aj stĺpec Trvanie vyplnenia, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie).

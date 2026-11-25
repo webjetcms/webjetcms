@@ -9,11 +9,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -26,6 +29,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
@@ -36,7 +41,9 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UserDetails;
 
@@ -329,6 +336,73 @@ class FormsServiceTest {
         assertTrue(email.contains(settings.getFieldA()));
         assertEquals("<b>${id}|${settings.subject}|${cs-error}|${counter}</b>|form", FormsService.replaceFields(
             "${settings.fieldA}|${formname}", "form", settings, "", null, "", false, false, null, prop, null));
+    }
+
+    /** The list and detail use embedding pages only when the latest submission has no valid page ID. */
+    @ParameterizedTest
+    @CsvSource(value = {
+        "none,9,0,true", "none,0,123,true", "none,0,122,false",
+        "0,9,0,true", "-1,0,123,true",
+        "456,9,0,false", "123,9,0,true", "123,0,123,true"
+    }, nullValues = "none")
+    void checksFormAccessWithAndWithoutSubmissionPage(Integer submittedDocId, int editableGroup, int editablePage, boolean expected) {
+        String name = "Multistepform_screens~100%";
+        String pattern = "%!INCLUDE(sk.iway.iwcm.components.multistep~_form.mvc.MultistepFormApp, formName=&quot;Multistepform~_screens~~100~%&quot;%";
+        FormsEntity form = new FormsEntity();
+        form.setFormName(name);
+        form.setFormType("multistep");
+        form.setDocId(-1);
+        form.setDomainId(42);
+
+        FormsRepository forms = mock(FormsRepository.class);
+        FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
+        when(forms.findAllByCreateDateIsNullAndDomainId(42)).thenReturn(List.of(form));
+        when(forms.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(name, 42)).thenReturn(form);
+        when(forms.findDocIdsByFormIncludePattern(pattern)).thenReturn(List.of(122L, 123L));
+        if (submittedDocId != null) {
+            FormsEntity response = new FormsEntity();
+            response.setFormName(name);
+            response.setDomainId(42);
+            response.setDocId(submittedDocId);
+            response.setCreateDate(new Date());
+            when(forms.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(name, 42)).thenReturn(response);
+        }
+
+        Identity user = mock(Identity.class);
+        when(user.isEnabledItem("menuWebpages")).thenReturn(true);
+        when(user.getEditablePages()).thenReturn(editablePage == 0 ? "" : Integer.toString(editablePage));
+        when(user.getEditableGroups()).thenReturn(editableGroup == 0 ? "-1" : Integer.toString(editableGroup));
+        GroupsDB groupsDB = mock(GroupsDB.class);
+        when(groupsDB.expandGroupIdsToChilds(any(int[].class), eq(true)))
+                .thenReturn(editableGroup == 0 ? new int[0] : new int[]{editableGroup});
+        DocDB docDB = mock(DocDB.class);
+        DocDetails local = new DocDetails();
+        local.setDocId(123);
+        local.setGroupId(9);
+        DocDetails foreign = new DocDetails();
+        foreign.setDocId(122);
+        foreign.setGroupId(8);
+        when(docDB.getBasicDocDetails(122, false)).thenReturn(foreign);
+        when(docDB.getBasicDocDetails(123, false)).thenReturn(local);
+        when(groupsDB.getDomain(8)).thenReturn("other.example");
+        when(groupsDB.getDomain(9)).thenReturn("local.example");
+
+        try (var cloud = mockStatic(CloudToolsForCore.class); var groups = mockStatic(GroupsDB.class);
+                var docs = mockStatic(DocDB.class); var constants = mockStatic(Constants.class);
+                var mappings = mockStatic(MultigroupMappingDB.class)) {
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(42);
+            docs.when(DocDB::getInstance).thenReturn(docDB);
+            groups.when(GroupsDB::getInstance).thenReturn(groupsDB);
+            groups.when(() -> GroupsDB.isGroupEditable(user, 9)).thenReturn(editableGroup == 9);
+            groups.when(() -> GroupsDB.getDomainId("other.example")).thenReturn(17);
+            groups.when(() -> GroupsDB.getDomainId("local.example")).thenReturn(42);
+            constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
+
+            assertEquals(expected, service.getFormsList(user).contains(form));
+            assertEquals(expected, service.isFormAccessible(name, user));
+            int expectedLookups = submittedDocId == null || submittedDocId < 1 ? 2 : 0;
+            verify(forms, times(expectedLookups)).findDocIdsByFormIncludePattern(pattern);
+        }
     }
 
     @Test
