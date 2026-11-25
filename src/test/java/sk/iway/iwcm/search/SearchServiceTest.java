@@ -23,19 +23,25 @@ import jakarta.persistence.criteria.Predicate;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
+import sk.iway.iwcm.users.UsersDB;
 
-/** Executes quick-search permission predicates against the configured database through Spring Data. */
+/** Executes quick-search predicates against the configured database through Spring Data. */
 class SearchServiceTest extends BaseWebjetTest {
     private static final int DOMAIN = 910000;
     private static final int FIRST = 910001;
@@ -43,6 +49,28 @@ class SearchServiceTest extends BaseWebjetTest {
     private static final int CHILD = 910003;
     private static final int DENIED = 910004;
     private static final int FOREIGN = 920001;
+
+    /** A user search with no matches returns an empty page even when name columns use NVARCHAR2. */
+    @Test
+    void searchesUsersWithoutCharacterSetMismatch() {
+        DBPool.getInstance();
+        DBPool.jpaInitialize();
+        try (EntityManager manager = DBPool.getEntityManagerFactory("iwcm").createEntityManager();
+             MockedStatic<UsersDB> users = mockStatic(UsersDB.class)) {
+            UserDetailsRepository repository = new JpaRepositoryFactory(manager).getRepository(UserDetailsRepository.class);
+            UserDetailsController controller = new UserDetailsController(repository, null, null);
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            controller.setRequest(request);
+            Identity user = mock(Identity.class);
+            when(user.isEnabledItem("users.edit_admins")).thenReturn(true);
+            when(user.isEnabledItem("users.edit_public_users")).thenReturn(true);
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+
+            Map<String, String> params = Map.of("searchText", "bannerový " + UUID.randomUUID());
+            PageRequest pageable = PageRequest.of(0, 10, Sort.by("id"));
+            assertEquals(0, controller.searchItem(params, pageable, new UserDetailsEntity()).getTotalElements());
+        }
+    }
 
     /** All-root searches include body matches and explicit pages while preserving legacy scope and domain isolation. */
     @Test
