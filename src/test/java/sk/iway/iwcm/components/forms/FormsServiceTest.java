@@ -429,17 +429,20 @@ class FormsServiceTest {
     /** With no editable embedding page, only the creator of a form with zero submissions has access. */
     @ParameterizedTest
     @CsvSource(value = {
-        "21,none,true", "22,none,false", "none,none,false", "-1,none,false",
-        "21,-1,false", "22,-1,false", "21,456,false"
+        // Author, latest submission page, Web Pages permission, expected access
+        "21,none,true,true", "22,none,true,false", "none,none,true,false", "-1,none,true,false",
+        "21,-1,true,false", "22,-1,true,false", "21,456,true,false",
+        "21,none,false,true", "22,none,false,false", "21,-1,false,false"
     }, nullValues = "none")
-    void checksAuthorOfUnembeddedForm(Long authorId, Integer submittedDocId, boolean expected) {
+    void checksAuthorOfUnembeddedForm(Long authorId, Integer submittedDocId, boolean hasWebPagesPermission, boolean expected) {
         FormsEntity definition = new FormsEntity();
         definition.setFormName("draft");
         definition.setUserId(authorId);
         definition.setDocId(-1);
         definition.setDomainId(42);
 
-        Identity editor = new Identity();
+        Identity editor = spy(new Identity());
+        doReturn(hasWebPagesPermission).when(editor).isEnabledItem("menuWebpages");
         editor.setUserId(21);
         editor.setEditablePages("123");
         FormsRepository forms = mock(FormsRepository.class);
@@ -464,7 +467,7 @@ class FormsServiceTest {
             FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
             assertEquals(expected, service.getFormsList(editor).contains(definition));
             assertEquals(expected, service.isFormAccessible("draft", editor));
-            if (expected) verify(forms, times(0)).findDocIdsByFormInclude(any(), any());
+            if (expected || !hasWebPagesPermission) verify(forms, times(0)).findDocIdsByFormInclude(any(), any());
         }
     }
 

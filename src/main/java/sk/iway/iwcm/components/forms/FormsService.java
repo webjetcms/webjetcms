@@ -340,10 +340,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         // The list and detail both carry the latest submission date, so null means there are no responses.
         if (form.getCreateDate() == null && user.getUserId() > 0 && Long.valueOf(user.getUserId()).equals(form.getUserId())) return true;
 
+        Identity identity = user instanceof Identity loggedUser ? loggedUser : new Identity(user);
+        if (!identity.isEnabledItem("menuWebpages")) return false;
+
         String quotedPattern = formIncludePattern("&quot;" + form.getFormName() + "&quot;");
         String unquotedPattern = formIncludePattern(form.getFormName() + ",");
         boolean separateDomains = InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir");
-        Identity identity = user instanceof Identity loggedUser ? loggedUser : new Identity(user);
         for (Long pageId : formsRepository.findDocIdsByFormInclude(quotedPattern, unquotedPattern)) {
             DocDetails page = docDB.getBasicDocDetails(pageId.intValue(), false);
             if (page == null) continue;
