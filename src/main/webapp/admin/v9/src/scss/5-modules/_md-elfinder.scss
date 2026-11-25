@@ -1,5 +1,15 @@
 /* ELFINDER */
 
+// jQuery UI appends the selection rectangle to the document body, outside elFinder.
+:where(body:has(.elfinder)) .ui-selectable-helper {
+    position: absolute;
+    z-index: 100;
+    box-sizing: border-box;
+    border: 1px solid $primary;
+    background: rgba($primary, 0.1);
+    pointer-events: none;
+}
+
 /*
  * Renders a file-type glyph (Tabler filled icon font) for an elFinder
  * current-working-directory icon. Only the glyph and colour vary between
@@ -115,10 +125,15 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 .elfinder-buttonset {
     white-space: nowrap;
     position: relative;
-    margin: 0px 8px 0px 0px !important;
+    margin: 0px 10px 0px 0px !important;
     border: 0px transparent !important;
     border-radius: 0px !important;
 }
+
+#finder .elfinder-toolbar .elfinder-buttonset-view {
+    float: right !important;
+}
+
 .elfinder-button {
     margin: 0px 4px 8px 0px !important;
     float: left;
@@ -128,7 +143,8 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
     border: 1px solid $nice-gray-200 !important;
 }
 
-.elfinder-button:hover {
+.elfinder-button:hover,
+.elfinder-toolbar .elfinder-button.ui-state-active:not(.elfinder-button-search) {
     color: $nice-gray !important;
     background-color: $secondary !important;
 }
@@ -190,9 +206,86 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
     border: 0 !important;
 }
 
-.elfinder .elfinder-button-search.ui-state-active { width: 235px !important; }
+#finder .elfinder-toolbar .elfinder-button-search {
+    width: min(208px, 100%);
+
+    input {
+        font: 14px $admin-font-family;
+        padding-inline: 26px;
+        &::placeholder { color: $gray-text; }
+    }
+    .ui-icon {
+        background: none;
+        color: $gray-text;
+        font: 16px/1 $ti-font-family;
+        text-indent: 0;
+        opacity: 1;
+    }
+    .ui-icon-search::before { content: $ti-icon-search; }
+    .ui-icon-close::before { content: $ti-icon-x; }
+    .ui-icon-close:focus-visible { outline: 2px solid $primary; }
+    input:placeholder-shown ~ .ui-icon-close { display: none; }
+    &:not(.ui-state-active):has(input:placeholder-shown) {
+        width: var(--wj-folder-search-width, 208px);
+        input { padding-inline-end: 6px; }
+        input::placeholder { color: var(--wj-folder-search-placeholder, #{$gray-text}); }
+    }
+    &:focus-within { outline: 2px solid $primary; }
+}
+
+@media (max-width: $bp-mobile) {
+    .elfinder {
+        --wj-folder-search-width: 40px;
+        --wj-folder-search-placeholder: transparent;
+    }
+}
+
+.elfinder-search-empty { display: none; }
+.elfinder-empty-folder { display: none; }
+.elfinder-cwd-wrapper-empty:not(.elfinder-search-result):has(.elfinder-empty-folder) {
+    .elfinder-cwd::after { display: none; }
+    .elfinder-empty-folder {
+        position: absolute;
+        inset-inline: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        padding: 24px 12px;
+        text-align: center;
+        font: 14px/20px $admin-font-family;
+        color: $secondary;
+        pointer-events: none;
+
+        > .ti { font-size: 38px; line-height: 1; color: $gray-text; opacity: 0.65; }
+        strong { font-size: 16px; }
+        .elfinder-empty-folder-hint { color: $gray-text; }
+        button { display: inline-flex; align-items: center; gap: 6px; pointer-events: auto; }
+        [hidden] { display: none !important; }
+    }
+}
+.elfinder-cwd-wrapper-empty.elfinder-search-result:not(.elfinder-incsearch-result, .elfinder-letsearch-result):has(.elfinder-search-empty) {
+    .elfinder-cwd::after { display: none; }
+    .elfinder-search-empty {
+        position: absolute;
+        inset-inline: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 12px;
+        text-align: center;
+        font: 14px $admin-font-family;
+        color: $secondary;
+        .ti { color: $gray-text; font-size: 20px; }
+    }
+}
 .elfinder .elfinder-button-search-menu {
     min-width: auto;
+    margin-top: 0;
+    transform: translateY(32px);
     padding: 4px !important;
     box-shadow: 0 4px 12px rgba(72, 73, 77, 0.15);
 }
@@ -229,7 +322,7 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 .elfinder-button-icon-paste::before { content: $ti-icon-clipboard; }
 .elfinder-button-icon-cut::before { content: $ti-icon-cut; }
 .elfinder-button-icon-copy::before { content: $ti-icon-copy; }
-.elfinder-button-icon-upload::before { content: $ti-icon-plus; }
+.elfinder-button-icon-upload::before { font-family: $ti-font-family; content: $ti-icon-upload; }
 .elfinder-button-icon-mkdir::before { content: $ti-icon-folder-plus; }
 .elfinder-button-icon-view::before { content: $ti-icon-layout-grid; }
 .elfinder-button-icon-view-list::before { content: $ti-icon-list !important; }
@@ -260,6 +353,27 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 
 /* NAVBAR */
 .elfinder .elfinder-navbar { background: white !important; }
+
+div.elfinder .elfinder-tree-search {
+    padding: 0 5px;
+    font-family: $admin-font-family;
+    position: sticky;
+    top: 0;
+    background: $white;
+    z-index: 2;
+
+    &, *, *::before, *::after { box-sizing: border-box; }
+    table.dataTable { width: 100%; margin: 0 !important; }
+    table.dataTable thead th { padding: 0 0 4px !important; }
+    table.dataTable thead th.elfinder-tree-search-label { padding-top: 8px !important; }
+    label { margin: 0; }
+    input.form-control { border: 1px solid $nice-gray-300; border-radius: 0; }
+    .btn-clear { padding-top: 4px !important; }
+}
+.elfinder-tree-search-status { padding: 4px 15px; font-size: 14px; }
+.elfinder-tree-search-hidden { display: none !important; }
+.elfinder-tree-search-match { font-weight: bold; }
+.elfinder-tree[inert] { opacity: .5; pointer-events: none; }
 
 .elfinder-navbar-wrapper {
     font-size: 14px;
@@ -447,12 +561,6 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 }
 
 .elfinder-cwd-icon::before { font-size: 42px !important; }
-.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon { display: contents ; }
-
-.elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon::before {
-    font-size: 20px !important;
-    left: -5px;
-}
 
 .elfinder-cwd-file-wrapper:has(.elfinder-cwd-icon-image) {
     top: 6px !important;
@@ -462,6 +570,66 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 .elfinder-cwd table tr td {
     border-top: 1px solid $nice-gray-100 !important;
     color: $secondary !important;
+}
+
+.elfinder-cwd-wrapper-list {
+    scrollbar-gutter: stable;
+}
+
+.elfinder .elfinder-cwd.elfinder-cwd-view-list table td {
+    text-align: start;
+    padding-inline: 12px;
+}
+
+// Share Gallery's compact preview area across icons and thumbnails, preserving the row height.
+.elfinder-cwd-view-list .elfinder-col-name .elfinder-cwd-file-wrapper {
+    top: 0 !important;
+    min-height: 38px;
+
+    > .elfinder-cwd-icon {
+        display: block !important;
+        width: 54px;
+        height: 36px;
+        margin-top: -18px;
+
+        &::before {
+            font-size: 32px !important;
+            line-height: 36px;
+            width: 54px;
+            height: 36px;
+            top: 0;
+            left: 0;
+            padding: 0;
+            transform: none;
+        }
+    }
+
+    > .elfinder-cwd-bgurl {
+        background-size: contain;
+        background-color: $nice-gray;
+        border-radius: $border-radius;
+    }
+
+    > .elfinder-cwd-icon-image:not(.elfinder-cwd-bgurl) {
+        @include elfinder-file-icon($ti-icon-photo);
+        &::before { display: block !important; }
+    }
+
+    > .elfinder-cwd-filename {
+        padding-inline-start: 66px;
+    }
+}
+
+.elfinder-cwd-view-list .ui-selected .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon::before {
+    color: white !important;
+}
+
+// elFinder writes a user's resized widths inline on the first file row.
+@media (min-width: $bp-mobile) {
+    .elfinder-cwd-view-list {
+        thead .elfinder-cwd-view-th-name,
+        tbody tr:first-child > .elfinder-col-name { width: 44%; }
+    }
 }
 
 .elfinder-cwd-view-icons .elfinder-cwd-file .elfinder-cwd-file-wrapper.ui-state-active{ background: transparent !important; }
@@ -475,7 +643,6 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
     font-weight: bold;
     font-family: $admin-font-family;
     border-top-width: 0px !important;
-    text-align: left !important;
 
     &:hover {
         cursor: pointer;
@@ -500,15 +667,19 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
         }
         &.ui-icon-grip-dotted-vertical:before {
             content: $ti-icon-grip-vertical !important;
-            color: $secondary !important;
+            color: $gray-text !important;
+            opacity: 0;
         }
 
         &.ui-resizable-e {
-            right: -5px !important;
+            right: 0 !important;
             cursor: ew-resize;
         }
     }
 
+    &:hover, &:focus-within, &.ui-resizable-resizing {
+        .ui-icon-grip-dotted-vertical::before { opacity: 1; }
+    }
 }
 .elfinder .elfinder-cwd table tr.ui-state-hover { background-color: $nice-gray !important}
 
@@ -618,7 +789,10 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 }
 
 /* DIALOGS */
-.ui-dialog.elfinder-dialog  {
+$elfinder-dialog-footer-height: 58px;
+
+.ui-dialog.elfinder-dialog,
+.elfinder-quicklook {
     background-color: #fff !important;
     background-clip: padding-box !important;
     border: 1px solid rgba(0, 0, 0, 0.175) !important;
@@ -628,20 +802,26 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 
 .ui-dialog.elfinder-dialog .ui-dialog-titlebar.ui-widget-header {
     position: relative !important;
+}
+
+.ui-dialog.elfinder-dialog .ui-dialog-titlebar.ui-widget-header,
+.elfinder-quicklook .elfinder-quicklook-titlebar {
     box-sizing: border-box;
     min-height: 46px;
     padding: 8px 88px 8px 16px;
     font-family: $admin-font-family;
     font-size: 18px;
     font-weight: 500;
+    text-align: left;
     color: $secondary;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid $nice-gray-100;
     background-color: $nice-gray;
 
     .elfinder-dialog-title {
         display: block;
         padding: 2px 0;
         overflow: hidden;
+        font: inherit;
         line-height: 24px;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -661,7 +841,8 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
         }
     }
 }
-.ui-dialog.elfinder-dialog .ui-dialog-titlebar .elfinder-titlebar-button {
+.ui-dialog.elfinder-dialog .ui-dialog-titlebar .elfinder-titlebar-button,
+.elfinder-quicklook .elfinder-quicklook-titlebar .elfinder-titlebar-button {
     position: absolute !important;
     top: 50% !important;
     left: auto !important;
@@ -713,6 +894,12 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
         border-color: $secondary !important;
     }
 
+    &:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 2px white;
+    }
+
     &.elfinder-titlebar-full {
         right: 52px !important;
     }
@@ -734,6 +921,24 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
 .ui-dialog.elfinder-dialog.elfinder-dialog-info {
     display: flex;
     flex-direction: column;
+
+    .elfinder-folder-size {
+        overflow-wrap: anywhere;
+
+        span {
+            float: none;
+        }
+    }
+
+    .elfinder-folder-size-retry {
+        padding: 0;
+        margin-inline-start: 0.5em;
+        border: 0;
+        background: transparent;
+        color: $primary;
+        font: inherit;
+        text-decoration: underline;
+    }
 
     .elfinder-info-title .elfinder-cwd-icon {
         position: relative;
@@ -1359,9 +1564,47 @@ html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
     background-color: $secondary;
 }
 
-div.ui-dialog-content:has(div.CodeMirror) {
-    border-bottom: 1px solid $nice-gray-100 !important;
-    overflow: hidden;
+.ui-dialog.elfinder-dialog:has(.CodeMirror) {
+    > .ui-dialog-content {
+        border: 0 !important;
+        overflow: hidden;
+    }
+
+    .CodeMirror {
+        border: 0;
+    }
+
+    > .ui-dialog-buttonpane {
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-height: $elfinder-dialog-footer-height;
+        padding: 9px 24px 9px 12px;
+        border: 0;
+        border-top: 1px solid $nice-gray-100;
+        border-radius: 0 0 ($border-radius - 1px) ($border-radius - 1px);
+
+        button.ui-button {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+    }
+}
+
+.ui-dialog.elfinder-dialog:has(.CodeMirror) > .ui-resizable-handle.ui-resizable-se,
+.elfinder-quicklook > .ui-resizable-handle.ui-resizable-se {
+    box-sizing: border-box;
+    right: 7px;
+    bottom: 7px;
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    margin: 0;
+    background: none !important;
+    border: 0;
+    border-right: 2px solid $nice-gray-200;
+    border-bottom: 2px solid $nice-gray-200;
 }
 
 /* CodeMirror dialog */
@@ -1512,6 +1755,19 @@ div.ui-dialog-content:has(div.CodeMirror) {
 }
 
 /* Mobile version */
+.elfinder.elfinder-mobile {
+    display: flex;
+    flex-direction: column;
+    --wj-folder-search-width: 40px;
+    --wj-folder-search-placeholder: transparent;
+
+    // Reserve the toolbar's displayed height after mobile zoom.
+    > .elfinder-workzone {
+        flex: 1;
+        min-height: 0;
+    }
+}
+
 .elfinder-mobile {
     .elfinder-navbar-arrow {
         zoom: 1 !important;
@@ -1524,11 +1780,7 @@ div.ui-dialog-content:has(div.CodeMirror) {
         padding-right: 4px !important;
         height: auto !important;
         .elfinder-button-search {
-            width: 40px;
             margin-right: 4px !important;
-            .ui-icon-close {
-                display: none !important;
-            }
         }
     }
     .elfinder-toolbar-swipe-handle {
@@ -1544,81 +1796,32 @@ div.ui-dialog-content:has(div.CodeMirror) {
     }
 }
 
+// The transformed scroll container must sit above the responsive header tabs.
+.ly-content:has(.elfinder-quicklook-fullscreen) {
+    z-index: $zindex-modal;
+}
+
 .elfinder-quicklook {
-    padding: 46px 0 48px !important;
+    padding: 46px 0 $elfinder-dialog-footer-height !important;
     color: $secondary;
     font-family: $admin-font-family;
-    background: white !important;
-    border: 1px solid rgba(31, 32, 34, 0.28);
-    border-radius: 10px !important;
-    box-shadow: 0 10px 30px rgba(31, 32, 34, 0.24);
+    background-image: none !important;
+
+    &:not(.elfinder-quicklook-fullscreen)::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: $elfinder-dialog-footer-height - 1px;
+        left: 0;
+        border-top: 1px solid $nice-gray-100;
+        pointer-events: none;
+    }
 
     .elfinder-quicklook-titlebar {
         top: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 46px;
-        color: $secondary;
-        background: $nice-gray !important;
-        border-bottom: 1px solid $nice-gray-100;
-        border-radius: 10px 10px 0 0;
-    }
-
-    .elfinder-quicklook-title {
         display: block;
-        max-width: calc(100% - 96px);
-        color: $secondary;
-        font-family: $admin-font-family;
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 20px;
-        text-overflow: ellipsis;
-    }
-
-    .elfinder-quicklook-titlebar-icon {
-        top: 8px;
-        right: 16px;
-        left: auto;
-        display: flex;
-        height: 30px;
-        margin: 0;
-        direction: ltr;
-    }
-
-    .elfinder-quicklook-titlebar-icon .ui-icon {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        width: 32px;
-        height: 30px;
-        padding: 0;
-        margin: 0 !important;
-        color: $secondary;
-        background: none !important;
-        border: 1px solid $nice-gray-300 !important;
-        border-radius: $border-radius;
-        opacity: 1;
-        cursor: pointer;
-        transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
-
-        &:hover {
-            color: white;
-            background: $secondary !important;
-            border-color: $secondary !important;
-        }
-
-        &::before {
-            font-family: "tabler-icons-filled" !important;
-            font-size: 18px;
-            font-weight: normal;
-            line-height: 1;
-        }
-    }
-
-    .elfinder-icon-close::before {
-        content: $ti-icon-x !important;
+        height: 46px;
+        border-radius: $border-radius $border-radius 0 0;
     }
 
     span.elfinder-icon-minimize.ui-icon-minusthick {
@@ -1632,7 +1835,7 @@ div.ui-dialog-content:has(div.CodeMirror) {
 
     .elfinder-quicklook-info-wrapper {
         top: 46px;
-        height: calc(100% - 94px);
+        height: calc(100% - 46px - #{$elfinder-dialog-footer-height});
     }
 
     .elfinder-quicklook-info-data,
@@ -1644,11 +1847,12 @@ div.ui-dialog-content:has(div.CodeMirror) {
     }
 
     .elfinder-quicklook-navbar {
-        bottom: 6px;
+        box-sizing: border-box;
+        bottom: ($elfinder-dialog-footer-height - 38px) * 0.5;
         display: flex;
         align-items: center;
         width: auto;
-        height: 36px;
+        height: 38px;
         padding: 2px;
         margin-left: 0;
         background: rgba(255, 255, 255, 0.94);
@@ -1657,6 +1861,42 @@ div.ui-dialog-content:has(div.CodeMirror) {
         box-shadow: 0 3px 10px rgba(31, 32, 34, 0.14);
         opacity: 1;
         transform: translateX(-50%);
+
+    }
+
+    .elfinder-quicklook-encoding {
+        position: absolute;
+        bottom: ($elfinder-dialog-footer-height - 32px) * 0.5;
+        left: 12px;
+        width: calc(50% - 72px);
+        max-width: 140px;
+        height: 32px;
+
+        > select {
+            position: static;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: none;
+            height: 100%;
+            padding: 4px 28px 4px 8px;
+            color: $secondary;
+            font: #{$font-size-sm}/#{$line-height-sm} $admin-font-family;
+            appearance: none;
+            background: white escape-svg($form-select-indicator) no-repeat right 8px center;
+            background-size: $form-select-bg-size;
+            border: 1px solid $input-border-color;
+            border-radius: $border-radius;
+
+            &:hover {
+                border-color: $secondary;
+            }
+
+            &:focus-visible {
+                outline: 2px solid $secondary;
+                outline-offset: 2px;
+                box-shadow: 0 0 0 2px white;
+            }
+        }
     }
 
     .elfinder-quicklook-navbar-icon {
@@ -1671,9 +1911,14 @@ div.ui-dialog-content:has(div.CodeMirror) {
         border-radius: 6px;
         cursor: pointer;
 
-        &:hover {
+        &:hover:not(.ui-state-disabled) {
             color: $secondary;
             background: $nice-gray !important;
+        }
+
+        &.ui-state-disabled {
+            opacity: 0.3;
+            cursor: default;
         }
 
         &::before {
@@ -1692,44 +1937,21 @@ div.ui-dialog-content:has(div.CodeMirror) {
         content: $ti-icon-arrow-right;
     }
 
-    .elfinder-quicklook-navbar-icon-fullscreen::before {
-        content: $ti-icon-arrows-maximize;
-    }
-
-    .elfinder-quicklook-navbar-icon-fullscreen-off::before {
-        content: $ti-icon-arrows-minimize;
-    }
-
-    .elfinder-quicklook-navbar-icon-close {
-        display: none;
-
-        &::before {
-            content: $ti-icon-x;
-        }
-    }
-
-    .elfinder-quicklook-navbar-separator {
-        display: none !important;
-    }
-
-    .ui-resizable-se {
-        right: 7px;
-        bottom: 7px;
-        width: 10px;
-        height: 10px;
-        background: none !important;
-        border-right: 2px solid $nice-gray-200;
-        border-bottom: 2px solid $nice-gray-200;
-    }
-
     &.elfinder-quicklook-fullscreen {
-        padding: 0 !important;
+        z-index: $zindex-modal;
+        padding: 46px 0 0 !important;
         background: black !important;
-        border: 0;
+        border: 0 !important;
         border-radius: 0 !important;
 
         .elfinder-quicklook-titlebar {
-            display: none;
+            display: block;
+            border-radius: 0;
+        }
+
+        .elfinder-quicklook-cover {
+            top: 46px;
+            height: calc(100% - 46px);
         }
 
         .elfinder-quicklook-preview {
@@ -1742,6 +1964,7 @@ div.ui-dialog-content:has(div.CodeMirror) {
         }
 
         .elfinder-quicklook-navbar {
+            bottom: 6px;
             width: auto;
             padding: 2px;
             margin-left: 0;
@@ -1749,12 +1972,204 @@ div.ui-dialog-content:has(div.CodeMirror) {
             border-color: $nice-gray-100;
             opacity: 1;
         }
-
-        .elfinder-quicklook-navbar-icon-close {
-            display: flex;
-        }
     }
 }
 
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-avif { display: block !important; }
 .elfinder-col-name .elfinder-cwd-file-wrapper > .elfinder-cwd-icon-avif::before { display: none !important; }
+
+// Explorer navigation and interaction states use the shared administration palette.
+.elfinder .elfinder-workzone-path {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 15px;
+    border: 0;
+    border-bottom: 1px solid $nice-gray-100;
+    background: white;
+    font: 14px/20px $admin-font-family;
+    color: $secondary;
+
+    .elfinder-path {
+        flex: 1 1 auto;
+        align-items: center;
+        order: 0;
+        font: inherit;
+        min-width: 0;
+        max-width: none;
+        margin: 0 !important;
+        padding: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+
+        span { float: none; }
+        .elfinder-path-dir {
+            display: inline-block;
+            padding: 3px 4px;
+            color: $primary;
+            border-radius: 4px;
+            cursor: pointer;
+            &:hover { background: $nice-gray; }
+            &:focus-visible { outline: 2px solid $primary; outline-offset: -2px; }
+        }
+        .elfinder-path-cwd { color: $secondary; font-weight: 700; }
+        .elfinder-path-other { padding: 3px; color: $dark-60; }
+    }
+
+    .elfinder-path-roots {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: static;
+        flex: 0 0 auto;
+        order: -1;
+        width: 24px;
+        height: 30px;
+        padding: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        &:hover { background: $nice-gray; }
+        &:focus-visible { outline: 2px solid $primary; }
+        .ti { display: block; font-size: 18px; line-height: 18px; }
+    }
+    > .elfinder-copy-button { flex: 0 0 auto; order: 1; }
+}
+
+.elfinder .elfinder-copy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-inline-start: 6px;
+    padding: 4px 6px;
+    vertical-align: middle;
+    line-height: 20px;
+    i { font-size: 16px; }
+}
+
+@media (max-width: 767px) {
+    .elfinder-toolbar .elfinder-buttonset.dt-buttons {
+        float: left !important;
+        width: auto !important;
+    }
+}
+
+.elfinder .elfinder-cwd-view-icons .elfinder-cwd-file {
+    border-radius: 6px;
+    background: transparent !important;
+    color: $secondary;
+
+    .elfinder-cwd-filename {
+        width: fit-content;
+        max-width: calc(100% - 8px);
+        margin: 3px auto 0;
+        padding: 2px 7px;
+        max-height: calc(2.4em + 4px);
+        border-radius: 4px;
+        color: $secondary;
+        background: transparent;
+
+        &:has(> .elfinder-cwd-filename-extension) {
+            display: flex;
+            align-items: center;
+            .elfinder-cwd-filename-base {
+                display: block;
+                min-width: 0;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .elfinder-cwd-filename-extension {
+                flex: 0 0 auto;
+                white-space: nowrap;
+            }
+        }
+    }
+    &.ui-selected .elfinder-cwd-filename {
+        color: white !important;
+        background: $primary !important;
+    }
+}
+
+@media (hover: hover) {
+    .elfinder .elfinder-cwd-view-icons .elfinder-cwd-file:hover {
+        background: $nice-gray !important;
+    }
+}
+
+.ui-dialog.elfinder-dialog.elfinder-dialog-info {
+    width: 440px !important;
+    max-width: calc(100% - 24px) !important;
+
+    .ui-dialog-content.ui-widget-content {
+        display: block !important;
+        padding: 16px !important;
+    }
+    .elfinder-info-title {
+        min-height: 48px;
+        margin-bottom: 16px;
+        padding-inline-start: 64px;
+        position: relative;
+        overflow-wrap: anywhere;
+        strong { font-size: 16px; }
+        .elfinder-cwd-icon { position: absolute; inset-inline-start: 0; top: 0; }
+        .elfinder-info-kind { display: block; margin-top: 4px; color: $dark-60; }
+    }
+    .elfinder-info-tb {
+        width: 100%;
+        margin: 0;
+        table-layout: fixed;
+        font: 14px/20px $admin-font-family;
+        td {
+            padding: 5px 0;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+            text-align: start;
+        }
+        td.elfinder-info-label { width: 100px; padding-inline-end: 12px; color: $dark-60; text-align: start; white-space: normal; }
+        td.elfinder-info-hash { font-size: 12px; white-space: normal; }
+        span { float: none; }
+        a { color: $primary; }
+    }
+    .elfinder-info-technical {
+        margin-top: 12px;
+        border-top: 1px solid $nice-gray-100;
+        padding-top: 12px;
+        summary { cursor: pointer; color: $secondary; font-size: 14px; }
+        summary:focus-visible { outline: 2px solid $primary; outline-offset: 2px; }
+        &[open] summary { margin-bottom: 8px; }
+    }
+}
+
+.elfinder .elfinder-contextmenu,
+.elfinder .elfinder-contextmenu-sub {
+    padding: 6px;
+    min-width: 220px;
+    max-width: calc(100% - 12px);
+    border: 1px solid $nice-gray-100;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba($secondary, 0.15);
+    color: $secondary;
+    font: 14px/20px $admin-font-family;
+
+    .elfinder-contextmenu-header {
+        margin: 0 0 5px;
+        padding: 5px 8px 10px;
+        border-bottom: 1px solid $nice-gray-100;
+        background: transparent;
+        text-align: start;
+        max-width: 260px;
+        overflow-wrap: anywhere;
+        span { font-size: 14px; font-weight: 700; }
+    }
+    .elfinder-contextmenu-item {
+        padding: 7px 28px 7px 32px;
+        border-radius: 4px;
+        line-height: 20px;
+        > span:not(.elfinder-button-icon) { font-size: inherit; }
+        &.ui-state-hover, &.ui-state-active { color: $secondary; background: $nice-gray; }
+        &:has(> .elfinder-button-icon-rm) { color: $danger; }
+        > .elfinder-button-icon { left: 8px; font-size: 18px; }
+    }
+    .elfinder-contextmenu-separator { margin: 5px 0; border-color: $nice-gray-100; }
+}

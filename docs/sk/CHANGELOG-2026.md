@@ -340,6 +340,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- [Prieskumník](redactor/files/fbrowser/README.md) - upravený dizajn a ovládanie elFinder podľa administrácie WebJET CMS vrátane nástrojovej lišty a jednotnej bublinovej nápovedy. Pridané vyhľadávanie priečinkov podľa názvu aj v nerozbalených vetvách so zachovaním hierarchie a zvýraznením zhôd. Úprava HTML položky z vetvy **Webové stránky** otvára editor stránky v novej karte prehliadača.
 - AI Čet - po zmazaní otvoreného četu sa v novom čete zobrazí výber asistenta iba raz (#58878).
 - Vloženie HTML kódu - obsah sa dekóduje v UTF-8 bez závislosti od predvoleného kódovania JVM, aby sa na serveri nepoškodila diakritika a ďalšie znaky Unicode.
 - Zrkadlenie štruktúry - pri zlyhaní prekladu, napríklad po vyčerpaní kvóty DeepL, používateľ dostane upozornenie s konkrétnym dôvodom z výnimky prekladača vrátane HTTP kódu a dostupnej chybovej správy DeepL. Pevné medzery a ich HTML entity sa normalizujú v názvoch priečinkov a generovaných URL, aby nevznikali adresy s textom `nbsp` ani zbytočné presmerovania (#402).

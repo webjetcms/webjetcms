@@ -1,17 +1,19 @@
 # Úprava súborov
 
-Nakoľko úprava súborov v aplikácií [Prieskumník](../../fbrowser/README.md) má viacero stavov, venujeme sa jej v tejto samostatnej sekcií.
+Spôsob úpravy súboru v aplikácii [Prieskumník](../../fbrowser/README.md) závisí od jeho typu a umiestnenia. Vyberte súbor a použite **Upraviť** na karte **Nástroje** alebo v kontextovej ponuke.
 
-Pri úprave textových súborov ako `.text .json .properties` sa vyvolá dialógové okno, podobne ako v prípade **Náhľad**. Rozdiel je v tom, že toto dialógové okno môže byť otvorené pre viacero súborov súčasne a umožňuje úpravu samotného súboru.
+Textové súbory, napríklad `.txt`, `.json` alebo `.properties`, sa otvoria v dialógovom okne s editorom. Naraz môžete mať otvorených viac súborov. Okno môžete zväčšiť potiahnutím okraja alebo maximalizovať tlačidlom v jeho záhlaví; editor využije dostupný priestor. Na rozdiel od **Náhľadu** tu môžete obsah upraviť a uložiť.
 
 ![](edit_file.png)
 
-Úprava obrázkov sa líši podľa lokality súboru.
+Pri úprave HTML položky z vetvy **Webové stránky** sa editor danej stránky otvorí v novej karte prehliadača.
 
-Ak cesta obrázka **obsahuje** časť `/gallery`, tak to znamená že je to obrázok z galérie. V takomto prípade, sa otvorí v novom okne prehliadača aplikácia [galéria](../../../../redactor/apps/gallery/README.md), kde sa pre daný obrázok automatický otvorí editor.
+Pri obrázkoch rozhoduje ich umiestnenie.
+
+Ak je obrázok v priečinku `gallery` alebo v jeho podpriečinkoch, v novej karte prehliadača sa otvorí aplikácia [Galéria](../../../../redactor/apps/gallery/README.md) s editorom vybraného obrázka.
 
 ![](edit_image_gallery.png)
 
-Ak cesta obrázka **neobsahuje** časť `/gallery`, otvorí sa dialógové okno s editorom obrázkov, ktorý je rovnaký ako v prípade editora aplikácie [galéria](../../../../redactor/apps/gallery/README.md). 
+Pri obrázku mimo priečinka `gallery` sa otvorí samostatné okno s editorom obrázkov. Používa rovnaký editor ako aplikácia [galéria](../../../../redactor/apps/gallery/README.md).
 
 ![](edit_image_tui.png)

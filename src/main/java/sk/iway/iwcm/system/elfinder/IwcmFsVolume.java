@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsItem;
@@ -378,43 +379,23 @@ public class IwcmFsVolume implements FsVolume
 			return new FsItem[0];
 		}
 
-		boolean fbrowserShowOnlyWritableFolders = Constants.getBoolean("fbrowserShowOnlyWritableFolders");
-		if (CloudToolsForCore.isControllerDomain()) fbrowserShowOnlyWritableFolders = false;
-
-		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
-		Logger.debug(IwcmFsVolume.class, "listChildren, user="+user+" cs.length="+cs.length+" fbrowserShowOnlyWritableFolders="+fbrowserShowOnlyWritableFolders);
-		if (user!=null)
-		{
-			String path = fsiFile.getVirtualPath();
-			if (path.endsWith("/")==false) path = path+"/"; //NOSONAR
-
-			List<IwcmFile> writableFolders = user.getWritableFoldersList();
-			String fbrowserAlwaysShowFolders = Constants.getStringExecuteMacro("fbrowserAlwaysShowFolders");
-			if (Tools.isNotEmpty(fbrowserAlwaysShowFolders))
-			{
-				String[] fbrowserAlwaysShowFoldersList = fbrowserAlwaysShowFolders.split("\n");
-				if (fbrowserAlwaysShowFoldersList.length > 0) {
-					for (String fbrowserAlwaysShowFolder : fbrowserAlwaysShowFoldersList) {
-						writableFolders.add(new IwcmFile(Tools.getRealPath(fbrowserAlwaysShowFolder)));
-					}
-				}
-			}
-
-			for (IwcmFile c : cs)
-			{
-				if (FileBrowserTools.hasForbiddenSymbol(c.getVirtualPath())) {
-					continue;
-				}
-
-				if (fbrowserShowOnlyWritableFolders && !isFolderWritable(writableFolders, c.getVirtualPath())) {
-						continue;
-				}
-
-				list.add(fromFile(c));
-			}
+		Predicate<IwcmFile> visible = visibleEntries(FsService.getCurrentUser());
+		for (IwcmFile child : cs) {
+			if (visible.test(child)) list.add(fromFile(child));
 		}
-
 		return list.toArray(new FsItem[0]);
+	}
+
+	/** Captures the explorer visibility settings for the current domain and user. */
+	Predicate<IwcmFile> visibleEntries(Identity user) {
+		if (user == null) return file -> false;
+		Predicate<IwcmFile> visible = file -> !FileBrowserTools.hasForbiddenSymbol(file.getVirtualPath());
+		if (!Constants.getBoolean("fbrowserShowOnlyWritableFolders") || CloudToolsForCore.isControllerDomain()) return visible;
+		List<IwcmFile> folders = user.getWritableFoldersList();
+		for (String path : Tools.getTokens(Constants.getStringExecuteMacro("fbrowserAlwaysShowFolders"), "\n")) {
+			folders.add(IwcmFile.fromVirtualPath(path));
+		}
+		return visible.and(file -> isFolderWritable(folders, file.getVirtualPath()));
 	}
 
 	private boolean isFolderWritable(List<IwcmFile> writableFolders, String path) {

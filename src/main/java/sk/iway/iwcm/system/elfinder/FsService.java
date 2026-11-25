@@ -79,6 +79,8 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	FsSecurityChecker _securityChecker = new FsSecurityCheckerChain(); //NOSONAR
 	FsServiceConfig _serviceConfig = new IwcmFsServiceConfig(); //NOSONAR
 
+	static final String BACKGROUND_USER = FsService.class.getName() + ".backgroundUser";
+
 	public static Identity getCurrentUser()
 	{
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -86,7 +88,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 		{
 			return UsersDB.getCurrentUser(rb.getRequest());
 		}
-		return null;
+		return RequestBean.getAttribute(BACKGROUND_USER) instanceof Identity user ? user : null;
 	}
 
 	@Override

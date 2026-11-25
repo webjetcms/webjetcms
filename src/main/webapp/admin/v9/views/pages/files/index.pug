@@ -36,37 +36,30 @@ block content
         ];
 
         let files = [
-            'wjeditswitch', 'wjfileopen', 'wjfileupdate',
+            'quicklook', 'wjfileopen', 'download',
             '|',
-            'quicklook',
-            '|',
-            'download',
+            'wjeditswitch', 'wjfileupdate', 'rename',
             '|',
             'copy', 'cut', 'paste', 'duplicate',
-            '|',
-            'rm',
-            '|',
-            'rename',
-            '|',
             'archive', 'extract',
             '|',
-            'info', 'wjfileprops', 'wjdirprops'
+            'info', 'wjfileprops', 'wjdirprops',
+            '|', 'rm'
         ];
 
         let toolbar = [
-            ['back', 'up', 'forward'],
-            ['paste', 'cut', 'copy'],
-            ['upload', 'mkdir', 'reload'],
-            ['view', 'sort'], ['wjsearch'],
-            ['download'],
-            ['quicklook', 'info'],
-            ['wjeditswitch', 'duplicate', 'rm', 'rename'],
-            ['extract', 'archive']
+            ['upload', 'mkdir'],
+            ['cut', 'copy', 'paste'],
+            ['quicklook', 'info', 'download'],
+            ['rename', 'wjeditswitch', 'duplicate'],
+            ['archive', 'extract'],
+            ['rm'],
+            ['reload', 'view', 'sort'], ['wjsearch']
         ];
 
         if(elfinderMetadataEnabled === true) {
             commands.push('wjmetadata');
-            files.push('wjmetadata');
+            files.splice(files.indexOf('wjdirprops') + 1, 0, 'wjmetadata');
         }
 
         function initializeElfinder()
@@ -120,6 +113,9 @@ block content
                     }
                 },
                 handlers: {
+                    i18load: function(event, finder) {
+                        finder.i18[finder.lang].messages.sortsort_priority = "[[${#strings.unCapitalize(#messages.msg('components.gallery.sort.priority'))}]]";
+                    },
                     dblclick: function(event, elfinderInstance)
                     {
                         event.preventDefault();
@@ -171,7 +167,7 @@ block content
                                         mode: "application/x-ejs",
                                         theme: "eclipse"
                                     });
-                                    resizeElfinderDialog(textarea);
+                                    resizeElfinderDialog(textarea, editor);
                                 },
                                 close: function(textarea, instance) {
                                 },

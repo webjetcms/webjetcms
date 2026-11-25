@@ -7,67 +7,73 @@ Before(({ I, login }) => {
 Scenario('filebrowser - toolbar + navbar screens', ({ I, DTE, Document, i18n }) => {
     I.amAcceptingPopups();
 
-    I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_");
-
-    I.waitForElement("#iwcm_1_L2ltYWdlcy9nYWxsZXJ5");
-    I.doubleClick( locate("#iwcm_1_L2ltYWdlcy9nYWxsZXJ5" ) );
+    I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy9nYWxsZXJ5");
+    I.executeScript(() => { if (elFinderInstance.viewType !== "icons") elFinderInstance.exec("view"); });
     I.waitForElement("#iwcm_1_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E");
 
+    I.moveCursorTo(".header-title");
     Document.screenshot("/redactor/files/fbrowser/page.png");
 
     Document.screenshotElement("div.elfinder-navbar", "/redactor/files/fbrowser/navbar.png");
 
-    I.clickCss("div.elfinder-menubutton.elfiner-button-sort");
+    I.clickCss(".elfinder-toolbar .elfinder-button-icon-sort");
     I.waitForElement("div.elfinder-button-menu.elfinder-button-sort-menu");
     Document.screenshotElement("div.elfinder-button-menu.elfinder-button-sort-menu", "/redactor/files/fbrowser/sort_menu.png");
-    I.clickCss("div.elfinder-menubutton.elfiner-button-sort");
+    I.clickCss(".elfinder-toolbar .elfinder-button-icon-sort");
 
-    I.resizeWindow(1000, 350);
-    I.say('Wait 5 to let elFinder resize');
-    I.wait(5);
+    I.resizeWindow(1280, 660);
+    I.moveCursorTo(".header-title");
     Document.screenshotElement("div.elfinder-cwd-wrapper", "/redactor/files/fbrowser/page_sorted_A.png");
     I.clickCss("span.elfinder-button-icon-view-list");
-    I.wait(1);
+    I.waitForVisible(".elfinder-cwd-view-list");
     Document.screenshotElement("div.elfinder-cwd-wrapper.elfinder-cwd-wrapper-list", "/redactor/files/fbrowser/page_sorted_B.png");
-    I.clickCss('div[title="'+i18n.get('Icons view')+'"].elfinder-button');
+    I.clickCss('.elfinder-toolbar .elfinder-button-icon-view');
 
     I.resizeWindow(1280, 760);
     I.click( locate("a.nav-link").withText(i18n.get("Tools")) );
+    I.moveCursorTo(".header-title");
+    Document.screenshotElement(".elfinder-toolbar", "/redactor/files/fbrowser/toolbar_tools.png");
 
     I.clickCss("div#iwcm_1_L2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3Rv");
-    I.clickCss('div[title="'+i18n.get('Preview')+'"].elfinder-button');
+    I.clickCss('.elfinder-toolbar .elfinder-button-icon-quicklook');
 
     I.waitForElement("div.ui-widget.elfinder-quicklook");
-    I.wait(1);
+    I.waitForVisible(".elfinder-quicklook-info");
     Document.screenshotElement("div.ui-widget.elfinder-quicklook", "/redactor/files/fbrowser/quicklook_folder.png");
     I.click( locate("div.elfinder-quicklook").find("span.elfinder-icon-close") );
     I.clickCss("div#iwcm_1_L2ltYWdlcy9nYWxsZXJ5L2NocnlzYW50aGVtdW0uanBn");
     I.waitForInvisible("div.ui-widget.elfinder-quicklook");
 
-    I.clickCss('div[title="'+i18n.get('Preview')+'"].elfinder-button');
+    I.clickCss('.elfinder-toolbar .elfinder-button-icon-quicklook');
 
     I.waitForElement( locate('div.elfinder-quicklook-preview > img') )
     Document.screenshotElement("div.ui-widget.elfinder-quicklook", "/redactor/files/fbrowser/quicklook_image.png");
     I.click( locate("div.elfinder-quicklook").find("span.elfinder-icon-close") );
 
-    I.clickCss('div[title="'+i18n.get('Get info')+'"].elfinder-button');
+    I.clickCss('.elfinder-toolbar .elfinder-button-icon-info');
 
     I.waitForElement("div.ui-dialog.elfinder-dialog-info");
     Document.screenshotElement("div.ui-dialog.elfinder-dialog-info", "/redactor/files/fbrowser/info_file.png");
-    I.click( locate("div.ui-dialog.elfinder-dialog-info").find("span.ui-dialog-titlebar-close"));
+    I.click( locate("div.ui-dialog.elfinder-dialog-info").find(".ui-dialog-titlebar-close"));
 
     I.clickCss("div#iwcm_1_L2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3Rv");
 
-    I.clickCss('div[title="'+i18n.get('Get info')+'"].elfinder-button');
+    I.clickCss('.elfinder-toolbar .elfinder-button-icon-info');
 
     I.waitForElement("div.ui-dialog.elfinder-dialog-info");
+    I.waitForElement(".elfinder-folder-size [role=status][title]", 30);
+    I.moveCursorTo(".header-title");
     Document.screenshotElement("div.ui-dialog.elfinder-dialog-info", "/redactor/files/fbrowser/info_folder.png");
-    I.click( locate("div.ui-dialog.elfinder-dialog-info").find("span.ui-dialog-titlebar-close"));
+    I.click( locate("div.ui-dialog.elfinder-dialog-info").find(".ui-dialog-titlebar-close"));
 
-    I.click( locate("span#nav-iwcm_1_L2ZpbGVz"), null, { position: { x: 20, y: 5 } });
-    I.clickCss("div#iwcm_1_L2ZpbGVzL3ByZWtsYWR5LnByb3BlcnRpZXM_E");
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2FwcHMvYWRtaW4_E');
+    I.refreshPage();
+    const textFile = locate('.elfinder-cwd-file').withDescendant(locate('.elfinder-cwd-filename').withTextEquals('editor-component.html'));
+    I.waitForVisible(textFile, 15);
+    I.click(textFile);
+    I.click(locate('a.nav-link').withText(i18n.get('Tools')));
 
-    I.clickCss('div[title="'+i18n.get('Preview')+'"].elfinder-button');
+    I.clickCss('.elfinder-toolbar .elfinder-button-icon-quicklook');
 
     I.waitForElement("div.ui-widget.elfinder-quicklook");
     Document.screenshotElement("div.ui-widget.elfinder-quicklook", "/redactor/files/fbrowser/quicklook_file.png");
@@ -78,10 +84,10 @@ Scenario('filebrowser - toolbar + navbar screens', ({ I, DTE, Document, i18n }) 
     Document.screenshotElement("div.ui-dialog.elfinder-dialog-active", "/redactor/files/fbrowser/file-edit/edit_file.png");
 
     I.amOnPage("/components/sync/export_setup.jsp#");
-    I.acceptPopup();
     I.resizeWindow(800, 600);
     Document.screenshot("/redactor/files/fbrowser/import-export.png");
 
+    I.resizeWindow(1280, 760);
     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/&id=164#dt-open-editor=true&dt-filter-imageName=chrysanthemum.jpg&dt-filter-imagePath=^/images/gallery$");
     DTE.waitForEditor("galleryTable");
     I.clickCss("#pills-dt-galleryTable-metadata-tab");
@@ -94,7 +100,7 @@ Scenario('filebrowser - toolbar + navbar screens', ({ I, DTE, Document, i18n }) 
     I.waitForVisible('.elfinder-contextmenu', 10);
     I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjeditswitch');
 
-    I.wait(5);
+    I.waitForNumberOfTabs(2, 15);
     I.switchToNextTab();
     I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
     I.waitForVisible("#galleryTable_modal");
@@ -102,22 +108,30 @@ Scenario('filebrowser - toolbar + navbar screens', ({ I, DTE, Document, i18n }) 
     Document.screenshotElement("#galleryTable_modal", "/redactor/files/fbrowser/file-edit/edit_image_tui.png");
 });
 
-Scenario('filebrowser - search screens', ({ I, Document, i18n }) => {
-    I.resizeWindow(900, 450);
-    I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_");
-    Document.screenshotElement("div.elfinder-button.elfinder-button-search", "/redactor/files/fbrowser/search.png");
-    I.clickCss("div.elfinder-button.elfinder-button-search > input");
-    I.fillField("div.elfinder-button.elfinder-button-search > input", "chry");
+Scenario('filebrowser - search screens', ({ I, Document }) => {
+    I.resizeWindow(1280, 760);
+    I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy9hcHBzL2F0cmlidXR5LXN0cmFua3k_E");
+    const search = '.elfinder-button-search input[name="wjsearch"]';
+    I.waitForVisible(search, 15);
+    I.fillField('.elfinder-tree-search input', 'bannery');
     I.pressKey('Enter');
-    Document.screenshot("/redactor/files/fbrowser/search_normal.png");
+    I.waitForVisible('.elfinder-tree-search[aria-busy="false"]', 45);
+    I.moveCursorTo(".header-title");
+    Document.screenshotElement('.elfinder-navbar', '/redactor/files/fbrowser/folder_search.png');
+    I.clickCss('.elfinder-tree-search .btn-clear');
 
-    I.clickCss("div.elfinder-button.elfinder-button-search > input");
-    I.fillField("div.elfinder-button.elfinder-button-search > input", "chry");
-
-    i18n.click("In Subfolders");
-
-    I.waitForVisible(".elfinder-button-search-menu.ui-corner-all.elfinder-frontmost > div", 10);
-    Document.screenshot("/redactor/files/fbrowser/search_recursive.png");
+    I.clickCss(search);
+    I.waitForVisible('.elfinder-button-search-menu', 10);
+    Document.screenshotElement('.elfinder-button-search-menu', '/redactor/files/fbrowser/search.png');
+    I.fillField(search, 'monitor.jpg');
+    I.pressKey('Enter');
+    I.waitForVisible('.elfinder-search-empty', 15);
+    I.moveCursorTo(".header-title");
+    Document.screenshot('/redactor/files/fbrowser/search_normal.png');
+    I.clickCss('.elfinder-search-empty [data-action="subfolders"]');
+    I.waitForText('monitor.jpg', 15, '.elfinder-cwd');
+    I.moveCursorTo(".header-title");
+    Document.screenshot('/redactor/files/fbrowser/search_recursive.png');
 });
 
 Scenario('filebrowser - workspace screens', ({ I, Document }) => {
@@ -129,12 +143,15 @@ Scenario('filebrowser - workspace screens', ({ I, Document }) => {
 
     I.rightClick( locate("div.elfinder-cwd-wrapper > div.elfinder-cwd") );
     I.waitForVisible("div.elfinder-contextmenu.elfinder-contextmenu-ltr");
+    I.moveCursorTo(".header-title");
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_workspace.png");
 
     I.rightClick( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );  //files/protected
+    I.moveCursorTo(".header-title");
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_folder.png");
 
     I.rightClick( locate("#iwcm_1_L2ZpbGVzL2p1cmtvLmpwZw_E_E") );
+    I.moveCursorTo(".header-title");
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_file.png");
 });
 

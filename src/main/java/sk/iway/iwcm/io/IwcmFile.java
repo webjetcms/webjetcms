@@ -502,6 +502,11 @@ public class IwcmFile
 		}
 	}
 
+	/** Returns the local storage path when directory entries and lengths come from the filesystem. */
+	public Path localStoragePath() {
+		return isDBStorage || isJarPackaging ? null : file.toPath();
+	}
+
 	public long getLength() {
 		return length();
 	}

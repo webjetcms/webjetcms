@@ -88,14 +88,13 @@ block content
             ];
 
             let toolbar = [
-                ['back', 'up', 'forward'],
-                ['paste', 'cut', 'copy'],
-                ['upload', 'mkdir', 'reload'],
-                ['view', 'sort'], ['wjsearch'],
-                ['download'],
-                ['quicklook', 'info'],
-                ['wjeditswitch', 'duplicate', 'rm', 'rename'],
-                ['extract', 'archive']
+                ['upload', 'mkdir'],
+                ['cut', 'copy', 'paste'],
+                ['quicklook', 'info', 'download'],
+                ['rename', 'wjeditswitch', 'duplicate'],
+                ['archive', 'extract'],
+                ['rm'],
+                ['reload', 'view', 'sort'], ['wjsearch']
             ];
 
             if(elfinderMetadataEnabled === true) {
@@ -316,7 +315,7 @@ block content
                                             mode: "application/x-ejs",
                                             theme: "eclipse"
                                         });
-                                        resizeElfinderDialog(textarea);
+                                        resizeElfinderDialog(textarea, editor);
                                     },
                                     close: function(textarea, instance) {
                                     },

@@ -24,12 +24,97 @@ link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/elfinder.full.
 
 script(type='text/javascript', src='/admin/elFinder/js/elfinder.full.js')
 
+template#elfinder-empty-search
+    .elfinder-search-empty
+        i.ti.ti-zoom-cancel(aria-hidden='true')
+        strong(role='status')
+        .d-flex.flex-wrap.justify-content-center.gap-2
+            button.btn.btn-sm.btn-outline-primary(type='button' data-action='clear')
+            button.btn.btn-sm.btn-outline-secondary(type='button' data-action='subfolders')
+
+template#elfinder-empty-folder
+    .elfinder-empty-folder
+        i.ti.ti-folder-filled(aria-hidden='true')
+        strong(role='status')
+        span.elfinder-empty-folder-hint
+        button.btn.btn-sm.btn-success(type='button' data-action='upload')
+            i.ti.ti-upload(aria-hidden='true')
+            span
+
 script.
+    elFinder.prototype._options.uiOptions.path.toWorkzone = true;
+    elFinder.prototype._options.uiOptions.cwd.iconsView.preserveExtension = true;
     elFinder.prototype._options.handlers.dialogopen = function(event, finder) {
         const allowedTypes = finder.option('uploadMime').allow;
         const accept = Array.isArray(allowedTypes) ? allowedTypes.map(type => type.endsWith('/') ? type + '*' : type).join(',') : '';
         event.data.dialog.find('input[type=file]:not([directory])').attr('accept', accept);
+        initElfinderInfo(event.data.dialog, finder);
     };
+
+    /** Copies text on HTTPS and HTTP intranets, preserving the focused control. */
+    async function copyElfinderText(value, button, finder) {
+        const label = button.attr('aria-label');
+        try {
+            let copied = false;
+            if (navigator.clipboard?.writeText) {
+                try {
+                    await navigator.clipboard.writeText(value);
+                    copied = true;
+                } catch (error) { /* Fall back to a temporary selection when clipboard access is denied. */ }
+            }
+            if (!copied) {
+                const focused = document.activeElement;
+                const input = $('<textarea readonly>').val(value).css({ position: 'fixed', top: 0, left: 0, opacity: 0 }).appendTo(button.closest('.elfinder'));
+                try {
+                    input[0].select();
+                    if (!document.execCommand('copy')) throw new Error('Clipboard is unavailable');
+                } finally {
+                    input.remove();
+                    focused?.focus({ preventScroll: true });
+                }
+            }
+            button.attr({ title: finder.i18n('wjCopied'), 'aria-label': finder.i18n('wjCopied') }).find('i').attr('class', 'ti ti-check');
+            setTimeout(function() {
+                button.attr({ title: label, 'aria-label': label }).find('i').attr('class', 'ti ti-copy');
+            }, 2000);
+        } catch (error) {
+            finder.error(finder.i18n('wjCopyFailed'));
+        }
+    }
+
+    function elfinderCopyButton(key, finder, value) {
+        return $('<button type="button" class="btn btn-sm btn-outline-secondary elfinder-copy-button"><i class="ti ti-copy" aria-hidden="true"></i></button>')
+            .attr({ title: finder.i18n(key), 'aria-label': finder.i18n(key) })
+            .on('click', function(event) {
+                event.stopPropagation();
+                copyElfinderText(value(), $(this), finder);
+            });
+    }
+
+    function initElfinderInfo(dialog, finder) {
+        if (!dialog.hasClass('elfinder-dialog-info') || dialog.data('wjInfoReady')) return;
+        dialog.data('wjInfoReady', true);
+        const table = dialog.find('.elfinder-info-tb');
+        const hashes = table.find('.elfinder-info-hash').closest('tr');
+        if (hashes.length) {
+            const details = $('<details class="elfinder-info-technical">').insertAfter(table);
+            $('<summary>').text(finder.i18n('wjTechnicalDetails')).appendTo(details);
+            $('<table class="elfinder-info-tb">').append(hashes).appendTo(details);
+        }
+        // Observe links that are resolved asynchronously by the connector.
+        const addCopyLinks = function() {
+            table.find('a[href]').each(function() {
+                const link = $(this);
+                if (!link.siblings('.elfinder-copy-button').length) {
+                    elfinderCopyButton('wjCopyLink', finder, () => this.href).insertAfter(link);
+                }
+            });
+        };
+        addCopyLinks();
+        const observer = new MutationObserver(addCopyLinks);
+        observer.observe(table[0], { childList: true, subtree: true });
+        dialog.one('close', () => observer.disconnect());
+    }
 
     //kompatibilita s novym jQuery, po aktualizacii elfindera sa moze zrusit
     var rxhtmlTag = '/<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:-]+)[^>]*)\/>/gi';
@@ -61,34 +146,75 @@ script.
         return iconButtonset
     }
 
+    /** Uses WebJET tooltips throughout elFinder, initializing only hovered or focused elements. */
+    function initElfinderTooltips(finder) {
+        const root = finder.getUI();
+        const elements = new Set();
+        root.on('mouseenter.wjTooltips focusin.wjTooltips', '[title], [data-bs-original-title]', function(event) {
+            // File names can have their own title inside a row with file metadata.
+            if ($(event.target).closest('[title], [data-bs-original-title]')[0] !== this) return;
+            $(this).parentsUntil(root, '[data-bs-original-title]').each(function() {
+                bootstrap.Tooltip.getInstance(this)?.hide();
+            });
+            if (bootstrap.Tooltip.getInstance(this) || !this.getAttribute('title')) return;
+            const element = $(this);
+            if (element.hasClass('elfinder-button')) element.attr('aria-label', element.attr('title'));
+            WJ.initTooltip(element);
+            elements.add(this);
+            // Replay the first interaction for Bootstrap's native event listeners.
+            this.dispatchEvent(new Event(event.type === 'mouseenter' ? 'mouseover' : 'focusin', { bubbles: true }));
+        });
+        const observer = new MutationObserver(function(records) {
+            records.forEach(record => {
+                if (record.type !== 'attributes') return;
+                const element = $(record.target);
+                const title = element.attr('title');
+                const tooltip = bootstrap.Tooltip.getInstance(record.target);
+                if (title == null || !tooltip) return;
+                element.attr('data-bs-original-title', title).removeAttr('title');
+                if (element.hasClass('elfinder-button')) element.attr('aria-label', title);
+                tooltip.setContent({ '.tooltip-inner': WJ.parseMarkdown(title, { removeLastBr: true }) });
+            });
+            elements.forEach(element => {
+                if (!root[0].contains(element)) {
+                    bootstrap.Tooltip.getInstance(element)?.dispose();
+                    elements.delete(element);
+                }
+            });
+        });
+        observer.observe(root[0], { subtree: true, childList: true, attributes: true, attributeFilter: ['title'] });
+        finder.bind('destroy', function() {
+            observer.disconnect();
+            root.off('.wjTooltips');
+            elements.forEach(element => bootstrap.Tooltip.getInstance(element)?.dispose());
+        });
+    }
+
+    /** Groups toolbar actions by purpose, including when elFinder rebuilds them for another volume. */
+    function showElfinderToolbarTab(finder, name) {
+        if (!finder) return;
+        const toolbar = finder.getUI('toolbar').attr('data-elfinder-tab', name);
+        const groups = toolbar.children('.elfinder-buttonset').addClass('dt-buttons');
+        const fileGroups = groups.has('.elfinder-button-icon-upload, .elfinder-button-icon-mkdir, .elfinder-button-icon-cut, .elfinder-button-icon-copy, .elfinder-button-icon-paste');
+        const viewGroup = groups.has('.elfinder-button-icon-reload, .elfinder-button-icon-view, .elfinder-button-icon-view-list, .elfinder-button-icon-sort').addClass('elfinder-buttonset-view');
+        groups.hide();
+        if (name === 'file') fileGroups.add(viewGroup).show();
+        else if (name === 'tools') groups.not(fileGroups).show();
+    }
+
     function elfinderTabClick(name)
     {
         $('#fileArchive').hide();
-        var elfToolbar = $(".elfinder-toolbar div.elfinder-buttonset");
-        var i = 0;
-        for (i=0; i<elfToolbar.length; i++)
-        {
-            $(elfToolbar[i]).hide();
-        }
+        showElfinderToolbarTab(elFinderInstance, name);
         if ("file"==name)
         {
             $("#finder").show();
             $("#pixabay").hide();
-            $(elfToolbar[0]).show();
-            $(elfToolbar[1]).show();
-            $(elfToolbar[2]).show();
-            $(elfToolbar[3]).show();
         }
         else if ("tools"==name)
         {
             $("#finder").show();
             $("#pixabay").hide();
-            $(elfToolbar[4]).show();
-            $(elfToolbar[5]).show();
-            $(elfToolbar[6]).show();
-            $(elfToolbar[7]).show();
-            $(elfToolbar[8]).show();
-            $(elfToolbar[9]).show();
         }
         else if ("pixabay"==name)
         {
@@ -100,6 +226,12 @@ script.
             $("#finder, #pixabay").hide();
             $("#fileArchive").show();
             openFileArchive();
+        }
+        if (name === 'file' || name === 'tools') {
+            // Restore file actions after the tab click reaches elFinder's outside-click handler.
+            setTimeout(function() {
+                if (elFinderInstance) elFinderInstance.enable();
+            }, 0);
         }
     }
 
@@ -312,13 +444,214 @@ script.
         return "";
     }
 
-    function setInitialElfinderHeight() {
-        let elfinder = $('#finder');
-        //Check if elfinder is already initialized
-        if(elfinder === undefined || elfinder === null || elfinder.length < 0) { return; }
+    /** Filters the native folder tree using the same controls as the gallery. */
+    function initElfinderTreeSearch(finder) {
+        const navbar = finder.getUI('navbar');
+        if (!navbar.length || navbar.find('.elfinder-tree-search').length) return;
+        const tree = finder.getUI('tree');
+        const panel = $('<form class="elfinder-tree-search" aria-busy="false"></form>').prependTo(navbar);
+        const id = finder.namespace + '-folder-search';
+        const table = $('<table class="table datatableInit dataTable no-footer"><thead><tr><th class="elfinder-tree-search-label"></th></tr><tr><th class="dt-format-text"></th></tr></thead></table>').appendTo(panel);
+        $('<label></label>').attr('for', id).text(WJ.translate('editor.directory_name')).appendTo(table.find('th').first());
+        const group = $('<div class="input-group"></div>').appendTo(table.find('th').last());
+        const type = $('<select class="filter-input-prepend"></select>').attr('aria-label', WJ.translate('datatables.select.type.js')).appendTo(group);
+        const icons = ['arrows-horizontal', 'arrow-left-bar', 'arrow-right-bar', 'equal'];
+        ['contains', 'startwith', 'endwith', 'equals'].forEach(function(value, index) {
+            const label = WJ.translate('datatables.select.' + value + '.js');
+            $('<option></option>').val(value).text(label)
+                .attr('data-content', '<i class="ti ti-' + icons[index] + '" aria-hidden="true"></i><small>' + WJ.escapeHtml(label) + '</small>').appendTo(type);
+        });
+        const input = $('<input class="form-control form-control-sm filter-input" type="text">').attr('id', id).appendTo(group);
+        const search = $('<button type="submit" class="btn btn-sm btn-outline-secondary btn-search"><i class="ti ti-search" aria-hidden="true"></i></button>')
+            .attr('aria-label', WJ.translate('datatables.defaults.search.js')).appendTo(group);
+        const clear = $('<button type="button" class="btn btn-sm btn-outline-secondary btn-clear"><i class="ti ti-circle-x" aria-hidden="true"></i></button>')
+            .attr('aria-label', WJ.translate('button.reset')).appendTo(group);
+        const status = $('<div role="status" class="elfinder-tree-search-status" hidden></div>').insertAfter(panel);
+        let generation = 0;
+        let visibleHashes = null;
+        let matchingHashes = new Set();
+        let expandedBeforeSearch = null;
+        let enabledDropTargets = $();
+        type.selectpicker({ container: 'body', style: 'btn btn-sm btn-outline-secondary', width: '100%' });
 
-        //
-        $(".elfinder-buttonset").addClass("dt-buttons");
+        function setSearching(searching) {
+            if (searching && !tree.prop('inert')) {
+                enabledDropTargets = tree.find('.ui-droppable:not(.ui-droppable-disabled)');
+                enabledDropTargets.droppable('disable');
+            } else if (!searching) {
+                enabledDropTargets.filter('.ui-droppable').droppable('enable');
+                enabledDropTargets = $();
+            }
+            search.prop('disabled', searching);
+            panel.attr('aria-busy', String(searching));
+            tree.prop('inert', searching).attr({ 'aria-busy': String(searching), 'aria-disabled': String(searching) });
+        }
+
+        function filterTree() {
+            tree.find('.elfinder-navbar-dir').each(function() {
+                const node = $(this);
+                const hash = finder.navId2Hash(this.id);
+                node.parent().toggleClass('elfinder-tree-search-hidden', visibleHashes !== null && !visibleHashes.has(hash));
+                node.toggleClass('elfinder-tree-search-match', matchingHashes.has(hash));
+            });
+        }
+
+        function reset() {
+            generation++;
+            input.val('');
+            setSearching(false);
+            status.prop('hidden', true);
+            visibleHashes = null;
+            matchingHashes.clear();
+            filterTree();
+            if (expandedBeforeSearch !== null) {
+                // Keep the current directory visible when it changed while searching.
+                finder.navHash2Elm(finder.cwd().hash).parents('.elfinder-navbar-subtree').prev('.elfinder-navbar-dir').each(function() {
+                    expandedBeforeSearch.add(this.id);
+                });
+                tree.find('.elfinder-navbar-dir').each(function() {
+                    const expanded = expandedBeforeSearch.has(this.id);
+                    $(this).toggleClass('elfinder-navbar-expanded', expanded).next('.elfinder-navbar-subtree').toggle(expanded);
+                });
+                expandedBeforeSearch = null;
+            }
+            input.trigger('focus');
+        }
+        clear.on('click', reset);
+        panel.on('keydown', function(event) {
+            event.stopPropagation();
+            if (event.key === 'Escape') { event.preventDefault(); reset(); }
+        });
+        panel.on('focusin', function() { finder.disable(); });
+        input.on('input', function() { if (!input.val()) reset(); });
+        panel.on('submit', async function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const query = input.val().trim();
+            if (!query) { reset(); return; }
+            const current = ++generation;
+            const matchType = type.val();
+            if (expandedBeforeSearch === null) {
+                expandedBeforeSearch = new Set(tree.find('.elfinder-navbar-expanded').map(function() { return this.id; }).get());
+            }
+            status.text(WJ.translate('datatables.defaults.processing.js')).prop('hidden', false);
+            setSearching(true);
+            try {
+                const folders = new Map();
+                const matches = new Set();
+                for (const target of Object.values(finder.roots)) {
+                    const response = await finder.request({
+                        data: { cmd: 'tree', target, treeSearchValue: query, treeSearchType: matchType },
+                        preventDefault: true,
+                        preventFail: true
+                    });
+                    if (current !== generation) return;
+                    if (!Array.isArray(response.treeSearchMatches)) throw new Error('Folder search is unavailable');
+                    (response.tree || []).forEach(folder => folders.set(folder.hash, folder));
+                    response.treeSearchMatches.forEach(hash => matches.add(hash));
+                }
+                const dirs = Array.from(folders.values());
+                finder.cache(dirs);
+                finder.trigger('add', { added: dirs });
+                visibleHashes = new Set(folders.keys());
+                matchingHashes = matches;
+                filterTree();
+                matchingHashes.forEach(function(hash) {
+                    finder.navHash2Elm(hash).parents('.elfinder-navbar-subtree').show()
+                        .prev('.elfinder-navbar-dir').addClass('elfinder-navbar-expanded');
+                });
+                status.text(matches.size ? '' : finder.i18n('emptySearch')).prop('hidden', matches.size > 0);
+            } catch (error) {
+                if (current === generation) status.text(finder.i18n('errUnknown')).prop('hidden', false);
+            } finally {
+                if (current === generation) {
+                    setSearching(false);
+                }
+            }
+        });
+        // Native navigation can load more nodes; keep unrelated siblings filtered out.
+        const observer = new MutationObserver(filterTree);
+        observer.observe(tree[0], { childList: true, subtree: true });
+        finder.bind('destroy', function() { generation++; observer.disconnect(); });
+    }
+
+    function initElfinderFolderSearch(finder) {
+        const template = document.getElementById('elfinder-empty-search');
+        const input = finder.getUI('toolbar').find('input[name="wjsearch"]');
+        if (!input.length) return;
+
+        const placeholder = finder.i18n('wjSearchFolder');
+        input.attr({ placeholder, 'aria-label': placeholder });
+        const pane = finder.getUI('cwd').parent();
+        const actions = $(template.content.firstElementChild.cloneNode(true)).appendTo(pane);
+        const recursive = document.getElementById(finder.namespace + 'SearchFromCwdRecursive');
+        const retry = actions.find('[data-action="subfolders"]').text(finder.i18n('wjSearchSubfolders'));
+        const clear = actions.find('[data-action="clear"]').text(finder.i18n('wjSearchClear'));
+        actions.find('[role="status"]').text(finder.i18n('wjSearchNoFiles'));
+
+        clear.on('click', function() {
+            finder.trigger('searchend');
+            pane.trigger('focus');
+        });
+        retry.on('click', function() {
+            input.val(finder.searchStatus.query);
+            recursive.click();
+        });
+        finder.bind('searchstart', function() {
+            retry.prop('hidden', !recursive || recursive.checked);
+        });
+
+        input.siblings('.ui-icon-close').attr({ role: 'button', tabindex: 0, 'aria-label': clear.text() })
+            .on('keydown', function(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    $(this).trigger('mousedown');
+                    pane.trigger('focus');
+                }
+            });
+    }
+
+    /** Adds an upload prompt for empty folders while respecting volume and folder permissions. */
+    function initElfinderEmptyFolder(finder) {
+        const template = document.getElementById('elfinder-empty-folder');
+        const prompt = $(template.content.firstElementChild.cloneNode(true)).appendTo(finder.getUI('cwd').parent());
+        const hint = prompt.find('.elfinder-empty-folder-hint').text(finder.i18n('wjEmptyFolderUploadHint'));
+        const button = prompt.find('[data-action="upload"]');
+        prompt.find('[role="status"]').text(finder.i18n('emptyFolder'));
+        button.find('span').text(finder.i18n('cmdupload'));
+
+        const refresh = function() {
+            const cwd = finder.cwd();
+            const canUpload = Boolean(cwd && cwd.write && finder.isCommandEnabled('upload', cwd.hash));
+            hint.prop('hidden', !canUpload);
+            button.prop('hidden', !canUpload);
+            return canUpload;
+        };
+        button.on('keydown keypress', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.stopPropagation();
+            }
+        }).on('click', function(event) {
+            event.stopPropagation();
+            if (!refresh()) return;
+            finder.enable();
+            finder.exec('upload', [finder.cwd().hash]);
+        });
+        finder.bind('open reload sync change', refresh);
+        refresh();
+    }
+
+    function setInitialElfinderHeight() {
+        if (!elFinderInstance) return;
+
+        const finder = elFinderInstance;
+        const refreshToolbar = function() {
+            showElfinderToolbarTab(finder, finder.getUI('toolbar').attr('data-elfinder-tab') || 'file');
+        };
+        finder.bind('toolbarload', refreshToolbar);
+        refreshToolbar();
+        initElfinderTooltips(finder);
         $(".elfinder-button").addClass("btn btn-sm");
 
         $(".elfinder-button").has(".elfinder-button-icon-cut").addClass("div-danger");
@@ -334,44 +667,48 @@ script.
         //Make the drop zone focusable for accessibility
         $(".elfinder-cwd-wrapper").attr("tabindex", "0").attr("role", "region").attr("aria-label", "[[\#{datatables.upload.uploadFile.js}]]");
 
-        //Set height of elfinder
-        setElfinderHeight();
-        $(window).on('resize', setElfinderHeight);
+        // Let focused CMS tabs handle keys instead of elFinder's file shortcuts.
+        $('#pills-tabsFilter, .tabbable-elfinder > .md-tabs').on('focusin', function() {
+            elFinderInstance.disable();
+        });
 
-        const search =  window.location.href;
-        const urlParams = new URLSearchParams(window.location.search);
-        setTimeout(()=>{ setElfinderHeight(); }, 100);
-        //override height set by elfinder as soon as posiible
-        setTimeout(()=>{ setElfinderHeight(); }, 1000);
-        setTimeout(()=>{ setElfinderHeight(); }, 1500);
-        setTimeout(()=>{ setElfinderHeight(); }, 2000);
-        const resizingInterval = setInterval(setElfinderHeight, 3000);
+        initElfinderFolderSearch(elFinderInstance);
+        initElfinderTreeSearch(elFinderInstance);
+        initElfinderEmptyFolder(elFinderInstance);
+        const pathBar = elFinderInstance.getUI().find('.elfinder-workzone-path');
+        pathBar.find('.elfinder-path-roots .elfinder-button-icon').attr('class', 'ti ti-home').attr('aria-hidden', 'true');
+        pathBar.find('.elfinder-path-roots').attr({ role: 'button', tabindex: 0, 'aria-label': elFinderInstance.i18n('volumeRoots') }).on('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                const offset = $(this).offset();
+                $(this).trigger($.Event('click', { pageX: offset.left, pageY: offset.top + $(this).outerHeight() }));
+            }
+        });
+        if (pathBar.length && !pathBar.find('.elfinder-copy-button').length) {
+            pathBar.append(elfinderCopyButton('wjCopyPath', elFinderInstance, () => elFinderInstance.path(elFinderInstance.cwd().hash, true)));
+        }
+        elFinderInstance.bind('contextmenucreatedone', function(event) {
+            if (event.data.type !== 'files' || event.data.targets.length !== 1) return;
+            const file = elFinderInstance.file(event.data.targets[0]);
+            if (file) $('<div class="elfinder-contextmenu-header">').append($('<span>').text(file.i18 || file.name))
+                .prependTo(elFinderInstance.getUI('contextmenu'));
+        });
+        setElfinderHeight();
+        const observer = new ResizeObserver(setElfinderHeight);
+        document.querySelectorAll('.ly-content, .tabbable-elfinder .md-tabs, #linkInput, div.innerPadding, #finder .elfinder-toolbar, #finder .elfinder-statusbar')
+            .forEach(element => observer.observe(element));
     }
 
     function setElfinderHeight() {
         if ($('#fileArchive').is(':visible')) {
             $('#fileArchiveIframe').height(computeAvailableSpaceHeight() - 1);
         }
-        let elfinder = $('#finder');
-        if (elfinder.is(":visible") == false) {
-            //console.log("Elfinder is not visible, skipping height setting");
-            return;
+        if (elFinderInstance && $('#finder').is(':visible')) {
+            elFinderInstance.resize('100%', computeAvailableSpaceHeight() - 1);
+            // The toolbar can wrap without changing the outer height.
+            elFinderInstance.trigger('uiresize');
         }
-
-        let elfinderWorkzone = $('#finder > div.elfinder-workzone');
-        let elfinderCwdWrapper = $('#finder > div.elfinder-workzone > div.elfinder-cwd-wrapper');
-        let elfinderNavbar = $('#finder > div.elfinder-workzone > div.elfinder-navbar');
-
-        let availableSpace = computeAvailableSpaceHeight();
-        let redundantSpace = computeElfinderRedundantHeight();
-
-        //console.log("availableSpace=", availableSpace, "redundantSpace=", redundantSpace, "workzone=", (availableSpace - redundantSpace - 1), "visible=", elfinder.is(":visible"));
-
-        elfinder.css("width", "100%");
-        elfinder.css("height", (availableSpace - 1) + "px");
-        elfinderWorkzone.css("height", (availableSpace - redundantSpace - 1)  + "px");
-        elfinderCwdWrapper.css("height", (availableSpace - redundantSpace - 15)  + "px"); //-15 px
-        elfinderNavbar.css("height", (availableSpace - redundantSpace - 10)  + "px"); //-10 px because of possible scrollbar
     }
 
     function computeAvailableSpaceHeight() {
@@ -408,49 +745,39 @@ script.
         return availableSpace;
     }
 
-    function computeElfinderRedundantHeight() {
-        var toolbarHeight = $(".elfinder-toolbar").outerHeight();
-        if ($('#finder').hasClass("elfinder-mobile")) {
-            toolbarHeight = toolbarHeight * 0.8; //zoom level 0.8 on mobile devices
-        }
-        return parseInt( toolbarHeight ) + parseInt( $(".elfinder-statusbar").outerHeight() );
-    }
-
-    var lastDialogOptions = {};
-    function resizeElfinderDialog(textarea)
+    /** Fits CodeMirror to the dialog when it is opened, resized, maximized or restored. */
+    function resizeElfinderDialog(textarea, editor)
     {
-        var ta = $(textarea),
-            taBase = ta.parent(),
-            dialog = taBase.parent();
+        var dialogContent = $(textarea).parent(),
+            dialog = dialogContent.closest(".ui-dialog");
         var realWidth = $("#finder").width();
         var realHeight = $("#finder").height();
-        var width = realWidth / 100 * 90;
-        var height = realHeight / 100 * 80;
-        var left = realWidth / 100 * 5;
+        dialog.css({
+            height: realHeight * 0.8,
+            width: realWidth * 0.9,
+            left: realWidth * 0.05,
+            top: 0
+        });
 
-        lastDialogOptions.height = height;
-        lastDialogOptions.width = width;
-        lastDialogOptions.left = left;
-        dialog.css("height", height);
-        dialog.css("width", width);
-        dialog.css("left", left);
-        dialog.css("top", 0);
-        var dialogContent = dialog.find(".ui-dialog-content");
-        var dialogContentCodeMirror = dialog.find(".CodeMirror");
-
-        let dialogContentHeight = height;
-        dialogContentHeight -= taBase.outerHeight() - taBase.height(); //padding / margin / border
-        let header = dialog.find(".ui-dialog-titlebar.ui-widget-header");
-        if(header != undefined && header != null && header.length > 0) {
-            dialogContentHeight -= header.outerHeight();
-        }
-        let footer = dialog.find(".ui-helper-clearfix.ui-dialog-buttonpane");
-        if(footer != undefined && footer != null && footer.length > 0) {
-            dialogContentHeight -= footer.outerHeight();
-        }
-
-        setTimeout(function(){
-            dialogContent.css("height", dialogContentHeight);
-            dialogContentCodeMirror.css("height", "100%");
-        }, 50);
+        const resizeEditor = function() {
+            let height = dialog.height();
+            dialog.children(".ui-dialog-titlebar, .ui-dialog-buttonpane").each(function() {
+                height -= $(this).outerHeight(true);
+            });
+            height -= dialogContent.outerHeight(true) - dialogContent.height();
+            dialogContent.css("max-height", "none").height(Math.max(0, height));
+            if (editor.getOption("fullScreen") == false) {
+                editor.setSize("100%", "100%");
+            }
+        };
+        dialog.off("resize.wjCodeMirror").on("resize.wjCodeMirror", resizeEditor);
+        // Responsive admin layout changes can finish after elFinder's resize event.
+        const observer = new ResizeObserver(resizeEditor);
+        observer.observe(dialog[0]);
+        dialog.on("remove.wjCodeMirror", function() {
+            observer.disconnect();
+        });
+        resizeEditor();
     }
+
+yield

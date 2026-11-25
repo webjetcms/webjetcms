@@ -1,23 +1,29 @@
 # Prieskumník
 
-Prieskumník je aplikácia na správu a prácu so súbormi.
+Prieskumník slúži na nahrávanie, vyhľadávanie a správu súborov a priečinkov.
 
 Pozostáva z niekoľkých častí:
 
 - panel nástrojov
-- navigačná lišta
+- cesta k otvorenému priečinku a strom priečinkov
 - hlavná plocha
 - pätička
 
 ![](page.png)
 
+## Vyhľadávanie priečinkov
+
+Nad stromom priečinkov je pole **Názov priečinku**, ktoré funguje podobne ako v galérii. Vyberte spôsob porovnania **Obsahuje**, **Začína na**, **Končí na** alebo **Rovná sa**, zadajte názov a stlačte Enter alebo tlačidlo s lupou. Vyhľadávanie prehľadá aj nerozbalené priečinky v dostupných vetvách a nerozlišuje veľké písmená ani diakritiku.
+
+Počas načítavania výsledkov je strom priečinkov neaktívny. Výsledky zostávajú v stromovej štruktúre. Zodpovedajúce priečinky sú zvýraznené tučným písmom a ich nadradené priečinky sú rozbalené, podobne ako v galérii. Kliknutím otvoríte priečinok; tlačidlom na zrušenie filtra alebo klávesom Escape obnovíte strom. Vyhľadávanie súborov v paneli nástrojov zostáva samostatné.
+
+![Vyhľadávanie priečinkov so zachovanou hierarchiou](folder_search.png)
+
 ## Panel nástrojov
 
-Panel nástrojov ponúka široký výber nástrojov/funkcií na prácu so súbormi a priečinkami daných súborov. Každé tlačidlo, ponúka iný jedinečný nastroj.
+Dostupnosť tlačidiel závisí od vybraných položiek a oprávnení na prácu s nimi. Názov akcie sa zobrazí v bublinovej nápovede po podržaní kurzora nad tlačidlom. Rovnakú nápovedu používajú aj súbory, strom priečinkov a dialógy.
 
-!>**Upozornenie:** jednotlivé tlačidlá sa aktivujú iba za špecifický podmienok, takže nie sú vždy dostupné. Panel nástrojov obsahuje taktiež vyhľadávanie.
-
-Dané nástroje sú poľa logiky rozdelené do 3 kariet:
+Nástroje sú rozdelené do troch kariet:
 
 - Súbor
 - Nástroje
@@ -27,18 +33,13 @@ Dané nástroje sú poľa logiky rozdelené do 3 kariet:
 
 Karta Súbor ponúka základné možnosti na prácu ako:
 
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-arrow-left"></i></span></button>, **Späť**, navigácia o krok späť v stromovej štruktúre. Možnosť dostupná, iba ak pred aktuálne zvoleným priečinkom bol zvolený iný priečinok.
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-arrow-up"></i></span></button>, **Prejsť do nadradeného priečinka**, navigácia v stromovej štruktúre o úroveň vyššie. Možnosť dostupná, iba ak aktuálne zvoleným priečinkom má rodičovský priečinok, na ktorý vieme prejsť.
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-arrow-right"></i></span></button>, **Ďalej**, navigácia o krok dopredu v stromovej štruktúre. Možnosť dostupná, iba ak použili **Späť**.
+- <button class="btn btn-sm btn-success"><span><i class="ti ti-upload"></i></span></button>, **Nahrať súbory**, nahrá súbory do otvoreného priečinka.
+- <button class="btn btn-sm btn-success"><span><i class="ti ti-folder-plus"></i></span></button>, **Nový priečinok**, vytvorí priečinok v aktuálnom umiestnení.
+- <button class="btn btn-sm btn-danger"><span><i class="ti ti-cut"></i></span></button>, **Vystrihnúť**, pripraví označené položky na presun. Po vložení do cieľového priečinka sa odstránia z pôvodného umiestnenia.
+- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-copy"></i></span></button>, **Kopírovať**, pripraví označené položky na kopírovanie.
+- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-clipboard"></i></span></button>, **Vložiť**, vloží skopírované alebo vystrihnuté položky do otvoreného priečinka.
 
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-clipboard"></i></span></button>, **Vložiť**, vloží do aktuálne zvolenej lokácie skopírovaný/vystihnutý súbor alebo priečinok.
-- <button class="btn btn-sm btn-danger"><span><i class="ti ti-cut"></i></span></button>, **Vystrihnúť**, skopíruje označený súbor/priečinok zo zdrojovej lokácie. Po vložení do cieľovej lokácie sa originál zo zdrojovej lokácie vymaže.
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-copy"></i></span></button>, **Kopírovať**, skopíruje označený súbor/priečinok
-<br/><br/>
-- <button class="btn btn-sm btn-success"><span><i class="ti ti-plus"></i></span></button>, **Nahrať súbory**, umožní do aktuálne zvolenej lokácie nahrať súbory.
-- <button class="btn btn-sm btn-success"><span><i class="ti ti-folder-plus"></i></span></button>, **Nový priečinok**, umožní v aktuálne zvolenej lokácií vytvoriť nový priečinok.
-<br/><br/>
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-list"></i></span></button>, **Zoznam**, zmení zobrazenie súborov/priečinkov v pracovnej zóne na listové zobrazenie.
+- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-list"></i></span></button>, **Zoznam**, zmení zobrazenie súborov/priečinkov v pracovnej zóne na tabuľkové zobrazenie.
 - <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-layout-grid"></i></span></button>, **Ikony**, zmení zobrazenie súborov/priečinkov v pracovnej zóne na zobrazenie pomocou ikon.
 
 Zoznam                     |  Ikony
@@ -51,7 +52,9 @@ Zoznam                     |  Ikony
 
 ### Karta Nástroje
 
-Ponúka rozšírené nástroje na prácu s priečinkami/súbormi.
+Karta **Nástroje** obsahuje náhľad, informácie o položke, sťahovanie, premenovanie, úpravu, duplikovanie, prácu s archívmi a vymazanie. Prepínač zobrazenia, zoradenie a vyhľadávanie sú dostupné aj na tejto karte.
+
+![Panel na karte Nástroje](toolbar_tools.png)
 
 - <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-file-download"></i></span></button>, **Stiahnuť**, umožňuje stiahnutie vybraného súboru (IBA súboru).
 
@@ -70,7 +73,9 @@ Priečinok                  |  Súbor
 :-------------------------:|:-------------------------:
 ![](info_folder.png)       |  ![](info_file.png)
 
-!>**Upozornenie:** veľkosť priečinku ráta veľkosť súborov v danom priečinky, neráta súbory v pod-priečinkoch.
+Veľkosť priečinka sa po otvorení okna **Získať info** vypočíta na pozadí vrátane súborov v podpriečinkoch, ku ktorým máte prístup. Počas výpočtu sa zobrazuje priebežná veľkosť a počet skontrolovaných priečinkov. Zatvorením okna sa prebiehajúci výpočet zastaví. Pri chybe ho môžete zopakovať tlačidlom **Skúsiť znova**. Výpočet je dostupný pre priečinky súborového systému, nie pre virtuálne korene alebo položky webových stránok.
+
+Odkaz na súbor môžete skopírovať tlačidlom vedľa odkazu. Identifikátor položky je v rozbaľovacej časti **Technické údaje**.
 
 <br/><br/>
 - <button class="btn btn-sm btn-warning"><span><i class="ti ti-edit"></i></span></button>, **Upraviť**, umožňuje úpravy súborov a IBA súborov. Bližšie informácie v časti [Úprava súborov](../fbrowser/file-edit/README.md).
@@ -78,8 +83,8 @@ Priečinok                  |  Súbor
 - <button class="btn btn-sm btn-danger"><span><i class="ti ti-trash"></i></span></button>, **Vymazať**, umožňuje permanentne vymazať zvolené priečinky/súbory.
 - <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-abc"></i></span></button>, **Premenovať**, umožňuje premenovať priečinok/súbor. Zvolený môže byť v rovnakej chvíli iba JEDEN priečinok/súbor.
 <br/><br/>
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-archive-off"></i></span></button>, **Vytvoriť archív**, umožňuje archivovať všetky označené priečinky/súbory do jedného ZIP archívu (ZIP je jediný podporovaný). Archív sa uloží do rovnakej lokácie ako zvolené priečinky/súbory.
-- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-archive"></i></span></button>, **Extrahovať súbory z archívu**, umožňuje extrahovanie dát z označených ZIP archívov. Extrahovanie sa vykoná v rovnakej lokalite, v ktorej sa archív nachádza.
+- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-archive"></i></span></button>, **Vytvoriť archív**, umožňuje archivovať všetky označené priečinky/súbory do jedného ZIP archívu (ZIP je jediný podporovaný). Archív sa uloží do rovnakej lokácie ako zvolené priečinky/súbory.
+- <button class="btn btn-sm btn-outline-secondary"><span><i class="ti ti-archive-off"></i></span></button>, **Extrahovať súbory z archívu**, umožňuje extrahovanie dát z označených ZIP archívov. Extrahovanie sa vykoná v rovnakej lokalite, v ktorej sa archív nachádza.
 
 ### Karta Export - Import
 
@@ -89,15 +94,23 @@ Klikom na kartu Export - Import sa otvorí dialógové okno k exportu/importu/ro
 
 ### Vyhľadávanie
 
-V pravej časti panela nástrojov je dostupné vyhľadávanie súborov ![](search.png ":no-zoom"). Súbory sú vyhľadávane pod názvu ako aj prípony. Prednastavený je mód "Tu" kedy sa vyhľadávajú iba súbory v aktuálne zvolenom priečinku. V móde "V podpriečinkoch", sa vyhľadávajú súbory aj aktuálno priečinku ako aj vo všetkých pod-priečinkoch (a to vo všetkých úrovniach vnorenia).
+V poli **Hľadať v priečinku…** zadáte názov súboru alebo jeho časť vrátane prípony a stlačíte Enter. Predvolene sa prehľadáva aktuálny priečinok. V ponuke pod poľom môžete zvoliť aj vyhľadávanie **V podpriečinkoch**.
 
-Mód "Tu"                   |  Mód "V pod-priečinkoch"
-:-------------------------:|:-------------------------:
-![](search_normal.png)     |  ![](search_recursive.png)
+![Voľba rozsahu vyhľadávania](search.png)
+
+Ak sa nenájdu žiadne súbory, hlavná plocha zobrazí hlásenie a tlačidlá **Zrušiť vyhľadávanie** a **Hľadať aj v podpriečinkoch**. Druhé tlačidlo rozšíri hľadanie rovnakého výrazu na vnorené priečinky; pri už zapnutom rekurzívnom hľadaní sa nezobrazuje.
+
+Hľadanie v aktuálnom priečinku | Hľadanie aj v podpriečinkoch
+:----------------------------:|:---------------------------:
+![](search_normal.png)        | ![](search_recursive.png)
+
+Vyhľadávanie zrušíte tlačidlom s krížikom v poli alebo tlačidlom **Zrušiť vyhľadávanie** na hlavnej ploche. Vyhľadávanie súborov je nezávislé od filtra názvu priečinka nad stromom.
 
 ## Navigačná lišta
 
-Obsahuje zoradené priečinky so súbormi vo forme stromovej štruktúry. Ak majú priečinky pod-priečinky (deti) je možné ich rozbaliť/zbaliť poď potreby. Pre potrebu navigácie v tejto stromovej štruktúre existujú aj nástroje **Späť**, **Prejsť do nadradeného priečinka** a **Ďalej** zo sekcie [panel nástrojov](#karta-súbor).
+Pod panelom nástrojov je cesta k otvorenému priečinku. Kliknutím na jej časť prejdete do nadradeného priečinka. Ikona domčeka otvorí ponuku koreňov, napríklad **Médiá všetkých stránok**, **Všetky súbory** a **Webové stránky**, podľa vašich oprávnení. Tlačidlom **Kopírovať cestu** na pravom okraji skopírujete zobrazenú cestu.
+
+Vľavo je strom priečinkov. Šípkou pri názve rozbalíte alebo zbalíte podpriečinky; kliknutím na názov otvoríte priečinok na hlavnej ploche.
 
 Šírka navigačnej lišty nie je fixná, a dá sa meniť podľa potreby. Stromová štruktúra podporuje taktiež `Drag and Drop`, čiže umožňuje presúvanie priečinkov. Každý riadok s priečinkom môže obsahovať ikony:
 
@@ -110,8 +123,9 @@ Obsahuje zoradené priečinky so súbormi vo forme stromovej štruktúry. Ak maj
 
 ## Hlavná plocha
 
-Na hlavnej ploche máme všetky priečinky a súbory aktuálne zvoleného priečinka.
-!>**Upozornenie:** nezobrazujú sa vnorené priečinky a súbory.
+Hlavná plocha zobrazuje priamy obsah otvoreného priečinka. Vnorené súbory uvidíte až po otvorení podpriečinka alebo pri vyhľadávaní v podpriečinkoch.
+
+V prázdnom priečinku sa zobrazí oznam. Ak máte oprávnenie nahrávať súbory, zobrazí sa aj výzva na ich presunutie a tlačidlo na nahratie.
 
 Ako aj "Navigačná lišta", "Hlavná plocha" taktiež podporuje `Drag and Drop` akciu.
 !>**Upozornenie:** akcia `Drag and Drop` funguje aj medzi "Hlavná plocha" a "Navigačná lišta", čiže môžete priečinok/súbor presunúť z plochy priamo do priečinka navigačnej lišty.
@@ -124,7 +138,7 @@ Ako aj "Navigačná lišta", "Hlavná plocha" taktiež podporuje `Drag and Drop`
 - na textový súbor typov `text/plain`, `text/html`, `text/jsp`, `text/javascript`, `text/css`, `text/xml`, `text/x-js`, `text/markdown`, spusti akciu úpravy
 - na iné nepodporované súbory ako `.tld`, neurobí nič
 
-**Pravý klik** slúži hlavne na zobrazenie najpoužívanejších nástrojov z [Panela nástrojov](#panel-nástrojov). Zobrazí sa malé okno s dostupnými nástrojmi, ktoré sa môžu líšiť podľa toho, na ako elemente sa vykonali pravý klik.
+**Pravý klik** slúži hlavne na zobrazenie najpoužívanejších nástrojov z [Panela nástrojov](#panel-nástrojov). Zobrazí sa malé okno s dostupnými nástrojmi, ktoré sa môžu líšiť podľa toho, na ktorej položke ste klikli. Pri súbore alebo priečinku je v záhlaví ponuky jeho názov.
 
 Pravý klik na plochu       |  Pravý klik na priečinok  | Pravý klik na súbor
 :-------------------------:|:-------------------------:|:-------------------------:
@@ -134,11 +148,15 @@ Ako môžete vidieť z predchádzajúcej série obrázkov, zobrazené nástroje 
 Taktiež ste si mohli všimnúť nástroje, ktoré sme si v sekcií [Panela nástrojov](#panel-nástrojov) nespomenuli, nakoľko nemajú vlastné tlačidlo v paneli. Ide o nástroje:
 
 - <span><i class="ti ti-reload"></i></span>, **Obnoviť**, je to akcia nad hlavnou plochou, ktorá vykoná opätovné načítanie dát aktuálneho priečinka.
-- <span><i class="ti ti-file-plus"></i></span>, **Nový textový súbor**, je to akcia nad hlavnou plochou, umožňuje okamžite v aktuálnom priečinku vytvoriť textový súbor týchto typov `TEXT, CSS, HTML`.
-- <span><i class="ti ti-folder-cog"></i></span>, **Nastavenie adresáru**, je to akcia nad priečinkom, bližšie informácie v časti [Nastavenie adresáru](../fbrowser/folder-settings/README.md).
+- <span><i class="ti ti-file-plus"></i></span>, **Nový súbor**, je to akcia nad hlavnou plochou, umožňuje okamžite v aktuálnom priečinku vytvoriť textový súbor týchto typov `TEXT, CSS, HTML`.
+- <span><i class="ti ti-folder-cog"></i></span>, **Nastavenie priečinka**, je to akcia nad priečinkom, bližšie informácie v časti [Nastavenie adresáru](../fbrowser/folder-settings/README.md).
 - <span><i class="ti ti-maximize"></i></span>, **Zobraziť súbor**, otvorí súbor v novej karte.
 - <span><i class="ti ti-file-upload"></i></span>, **Aktualizovať súbor**, je to akcia nad súborom, umožňuje nahrať nový súbor, ktorý nahradí zvolený súbor (nad ktorom sme volali túto akciu).
 - <span><i class="ti ti-file-settings"></i></span>, **Nastavenie súboru**, je to akcia nad súborom, bližšie informácie v časti [Nastavenie súboru](../fbrowser/file-settings/README.md).
+
+## Pätička
+
+V spodnej časti prieskumníka je počet položiek a súčet veľkostí súborov v aktuálnom zobrazení. Po označení položiek sa zobrazí aj informácia o výbere. Na zistenie celkovej veľkosti priečinka vrátane podpriečinkov použite **Získať info**.
 
 ## Konfigurácia
 

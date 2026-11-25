@@ -24,6 +24,7 @@ import cn.bluejoe.elfinder.util.FsServiceUtils;
 import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
+import sk.iway.iwcm.system.elfinder.FolderSizeService;
 
 public abstract class AbstractCommandExecutor implements CommandExecutor
 {
@@ -191,6 +192,9 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 		if (fsi.isFolder())
 		{
 			info.put("dirs", fsi.hasChildFolder() ? 1 : 0);
+			if (FolderSizeService.supports(fsi.getVolume(), fsi.isRoot())) {
+				info.put("wjFolderSize", true);
+			}
 		}
 		
 		//jeeff - webjet - pridane URL pre integraciu s editorom
