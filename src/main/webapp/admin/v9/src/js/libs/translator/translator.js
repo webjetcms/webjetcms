@@ -250,6 +250,14 @@ export class Translator {
             success: responseData => {
                 Tools.exec(callback, responseData);
                 this.onLoadFire('onAfterLoad');
+            },
+            error: xhr => {
+                if (xhr.status === 401 || xhr.status === 403) return;
+                if (this.storage.getStorageItem(this.languageKeyName) === this.language) {
+                    // Keep the cached timestamp so the next page requests the update again.
+                    console.warn('Translation update failed. Using cached translations for', this.language, xhr.status);
+                    this.onLoadFire('onAfterLoad');
+                }
             }
         });
     }
