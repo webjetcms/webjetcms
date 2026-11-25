@@ -395,8 +395,11 @@ than doing every click immediately and holding only the final screen.
 When a finished edit or retiming is requested, use the installed Tesseract video
 skill and read [references/tesseract-editing.md](references/tesseract-editing.md).
 Keep the approved narration as the timing anchor, preserve continuous topic
-flows, and use purposeful zooms on the controls being explained. Omit numbered
-chapter-title overlays unless explicitly requested.
+flows, and show the full recorded interface by default. Briefly zoom in only
+while text is being entered or the narrator is identifying a specific icon or
+region. Return to the full interface as soon as that cue ends. Show every
+window change at full frame so the viewer can see which window opened. Omit
+numbered chapter-title overlays unless explicitly requested.
 
 Include the opening AI disclosure in every finished video, following the
 wording, placement, timing and readability checks in the reference's
