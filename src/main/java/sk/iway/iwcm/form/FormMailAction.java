@@ -1069,7 +1069,7 @@ public class FormMailAction extends HttpServlet
 
 					if (userId > 0 && ("true".equals(request.getParameter("overwriteOldForms")) || "true".equals(request.getParameter("formmail_overwriteOldForms")) ))
 					{
-						ps = db_conn.prepareStatement("DELETE FROM forms WHERE form_name=? AND user_id=? "+CloudToolsForCore.getDomainIdSqlWhere(true));
+						ps = db_conn.prepareStatement("DELETE FROM forms WHERE form_name=? AND user_id=? AND create_date IS NOT NULL "+CloudToolsForCore.getDomainIdSqlWhere(true));
 						ps.setString(1, formName);
 						ps.setInt(2, userId);
 						ps.execute();
@@ -1080,7 +1080,7 @@ public class FormMailAction extends HttpServlet
 
 					if (userId > 0 && ("true".equals(request.getParameter("allowOnlyOneSubmit")) || "true".equals(request.getParameter("formmail_allowOnlyOneSubmit"))))
 					{
-						ps = db_conn.prepareStatement("SELECT * FROM forms WHERE form_name=? AND user_id=? "+CloudToolsForCore.getDomainIdSqlWhere(true));
+						ps = db_conn.prepareStatement("SELECT * FROM forms WHERE form_name=? AND user_id=? AND create_date IS NOT NULL "+CloudToolsForCore.getDomainIdSqlWhere(true));
 						ps.setString(1, formName);
 						ps.setInt(2, userId);
 						rs = ps.executeQuery();
