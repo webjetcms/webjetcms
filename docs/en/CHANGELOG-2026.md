@@ -340,6 +340,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Rights groups - if an editor has only individual pages assigned to them through a group, after logging in, their editing rights will be limited to these pages (#419).
 - [Forms](redactor/apps/form/README.md) - the editor can open a multi-step form even before the first submission, if he has the right to edit at least one page on which the form is embedded. The author can edit an empty form immediately after creation or duplication (#419).
 - Multi-step forms - when opening the **Form Items** or **Form Statistics** tab without access to the given form, an error message (#419) appears.
 - Websites - the editor will edit a manually entered URL address when saving if it contains spaces or diacritics. In case of an inherited URL collision, it will save and display the assigned suffix (#417).

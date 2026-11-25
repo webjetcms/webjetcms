@@ -340,6 +340,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Skupiny práv - pokud má redaktor přes skupinu přiděleny pouze jednotlivé stránky, po přihlášení se jeho práva na úpravu omezí na tyto stránky (#419).
 - [Formuláře](redactor/apps/form/README.md) - redaktor může otevřít vícekrokový formulář i před prvním odesláním, pokud má právo upravovat alespoň jednu stránku, na které je formulář vložen. Autor může prázdný formulář upravovat hned po vytvoření nebo duplikování (#419).
 - Vícekrokové formuláře - při otevření karty **Položky formuláře** nebo **Statistiky formuláře** bez přístupu k danému formuláři se zobrazí chybová zpráva (#419).
 - Webové stránky - editor při uložení upraví ručně zadanou URL adresu, pokud obsahuje mezery nebo diakritiku. Při kolizi zděděné URL uloží a zobrazí přidělenou koncovku (#417).

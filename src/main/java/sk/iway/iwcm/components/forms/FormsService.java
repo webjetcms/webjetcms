@@ -340,19 +340,25 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         // The list and detail both carry the latest submission date, so null means there are no responses.
         if (form.getCreateDate() == null && user.getUserId() > 0 && Long.valueOf(user.getUserId()).equals(form.getUserId())) return true;
 
-        String include = "!INCLUDE(sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp, formName=&quot;" + form.getFormName() + "&quot;";
-        String pattern = "%" + include.replace("~", "~~").replace("%", "~%").replace("_", "~_") + "%";
-        // SQL Server also treats an opening bracket as a LIKE wildcard.
-        if (Constants.DB_TYPE == Constants.DB_MSSQL) pattern = pattern.replace("[", "~[");
+        String quotedPattern = formIncludePattern("&quot;" + form.getFormName() + "&quot;");
+        String unquotedPattern = formIncludePattern(form.getFormName() + ",");
         boolean separateDomains = InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir");
         Identity identity = user instanceof Identity loggedUser ? loggedUser : new Identity(user);
-        for (Long pageId : formsRepository.findDocIdsByFormIncludePattern(pattern)) {
+        for (Long pageId : formsRepository.findDocIdsByFormInclude(quotedPattern, unquotedPattern)) {
             DocDetails page = docDB.getBasicDocDetails(pageId.intValue(), false);
             if (page == null) continue;
             if (separateDomains && GroupsDB.getDomainId(GroupsDB.getInstance().getDomain(page.getGroupId())) != form.getDomainId()) continue;
             if (EditorDB.isPageEditable(identity, new EditorForm(page))) return true;
         }
         return false;
+    }
+
+    private static String formIncludePattern(String parameterValue) {
+        String include = "!INCLUDE(sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp, formName=" + parameterValue;
+        String escaped = include.replace("~", "~~").replace("%", "~%").replace("_", "~_");
+        // SQL Server also treats an opening bracket as a LIKE wildcard.
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) escaped = escaped.replace("[", "~[");
+        return "%" + escaped + "%";
     }
 
     /**

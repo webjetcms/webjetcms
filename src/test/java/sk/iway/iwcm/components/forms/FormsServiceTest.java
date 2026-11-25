@@ -355,7 +355,9 @@ class FormsServiceTest {
     void checksFormAccessWithAndWithoutSubmissionPage(Integer submittedDocId, int editableGroup, int editablePage,
             boolean allFolders, boolean expected) {
         String name = "Multistepform_screens~100%";
-        String pattern = "%!INCLUDE(sk.iway.iwcm.components.multistep~_form.mvc.MultistepFormApp, formName=&quot;Multistepform~_screens~~100~%&quot;%";
+        String prefix = "%!INCLUDE(sk.iway.iwcm.components.multistep~_form.mvc.MultistepFormApp, formName=";
+        String quotedPattern = prefix + "&quot;Multistepform~_screens~~100~%&quot;%";
+        String unquotedPattern = prefix + "Multistepform~_screens~~100~%,%";
         FormsEntity form = new FormsEntity();
         form.setFormName(name);
         form.setFormType("multistep");
@@ -366,7 +368,7 @@ class FormsServiceTest {
         FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
         when(forms.findAllByCreateDateIsNullAndDomainId(42)).thenReturn(List.of(form));
         when(forms.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(name, 42)).thenReturn(form);
-        when(forms.findDocIdsByFormIncludePattern(pattern)).thenReturn(List.of(122L, 123L));
+        when(forms.findDocIdsByFormInclude(quotedPattern, unquotedPattern)).thenReturn(List.of(122L, 123L));
         if (submittedDocId != null) {
             FormsEntity response = new FormsEntity();
             response.setFormName(name);
@@ -420,7 +422,7 @@ class FormsServiceTest {
             assertEquals(expected, service.getFormsList(user).contains(form));
             assertEquals(expected, service.isFormAccessible(name, user));
             int expectedLookups = !allFolders && (submittedDocId == null || submittedDocId < 1) ? 2 : 0;
-            verify(forms, times(expectedLookups)).findDocIdsByFormIncludePattern(pattern);
+            verify(forms, times(expectedLookups)).findDocIdsByFormInclude(quotedPattern, unquotedPattern);
         }
     }
 
@@ -462,7 +464,7 @@ class FormsServiceTest {
             FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
             assertEquals(expected, service.getFormsList(editor).contains(definition));
             assertEquals(expected, service.isFormAccessible("draft", editor));
-            if (expected) verify(forms, times(0)).findDocIdsByFormIncludePattern(any());
+            if (expected) verify(forms, times(0)).findDocIdsByFormInclude(any(), any());
         }
     }
 

@@ -16,9 +16,9 @@ import java.util.List;
 @NoRepositoryBean
 public interface FormsRepositoryInterface<E> extends DomainIdRepository<E, Long> {
 
-    /** Returns the IDs of pages matching the form include pattern. A tilde escapes LIKE wildcards. */
-    @Query("SELECT d.id FROM DocDetails d WHERE d.data LIKE :pattern ESCAPE '~'")
-    List<Long> findDocIdsByFormIncludePattern(@Param("pattern") String pattern);
+    /** Finds pages containing the form include with a quoted or unquoted name. */
+    @Query("SELECT d.id FROM DocDetails d WHERE d.data LIKE :quotedPattern ESCAPE '~' OR d.data LIKE :unquotedPattern ESCAPE '~'")
+    List<Long> findDocIdsByFormInclude(@Param("quotedPattern") String quotedPattern, @Param("unquotedPattern") String unquotedPattern);
 
     List<E> findAllByCreateDateIsNull();
 
