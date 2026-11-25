@@ -162,8 +162,8 @@
     CVE-2026-129266 requires DJL to resolve resource locations from model archive metadata.
     In webjet-ai-local 2.1.2 the embedding, translation and text generation providers
     unpack configured model bundles with VerifiedBundleExtractor and check the model files
-    against approved SHA-256 hashes. DJL tokenizers open extracted local files and ONNX
-    Runtime loads the models. These providers do not use the affected DJL archive loader.
+    against approved SHA-256 hashes. The providers pass extracted local files to their
+    tokenizers and inference runtimes without using the affected DJL archive loader.
     The standard client WAR also excludes webjet-ai-local and its DJL dependency.
     Reassess if the provider or model loading code changes, or a customer integration
     loads model archives through DJL. Verified on 2026-11-25.

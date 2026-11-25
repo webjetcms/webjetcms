@@ -211,7 +211,7 @@ dependencies {
     implementation("org.apache.lucene:lucene-highlighter:3.6.2")
     implementation("org.apache.lucene:lucene-memory:3.6.2")
     implementation("org.apache.lucene:lucene-analyzers:3.6.2")
-    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.10")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.11")
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
     implementation("com.oracle.database.jdbc:ojdbc8:19.8.0.0")
     //implementation("org.mcavallo:opencloud:0.3")
@@ -329,15 +329,14 @@ dependencies {
 
     //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
 
-    // used in velocity-tools-generic
-    // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
+    // Velocity Tools 3.1 still requests velocity-engine-core 2.3. Keep the security fixes in 2.4.1.
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 
-    // The Jackson BOM above aligns this module with the security-patched databind release.
-    implementation("tools.jackson.core:jackson-core")
+    // Nimbus OAuth2 SDK still requests json-smart 2.6.0, which accepts trailing data during strict validation (CVE-2026-113602).
+    implementation 'net.minidev:json-smart:2.6.1'
 
-    // Declare directly so the fixed accessors-smart transitive dependency is included in the distributed Maven POM.
-    implementation('org.ow2.asm:asm:9.11.1')
+    // Apache POI still requests Commons Codec 1.18.0. Version 1.23.0 corrects the Blake3 key derivation guidance (CVE-2026-119078).
+    implementation 'commons-codec:commons-codec:1.23.0'
 }
 
 war {

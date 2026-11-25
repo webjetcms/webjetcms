@@ -399,7 +399,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
-- Aktualizované knižnice`org.json 20260719`, PostgreSQL JDBC aktualizovaný na `42.7.15`, knižnica PDFBox na `3.0.8` a Swagger UI na `5.34.1` s DOMPurify `3.4.17` (#420).
+- Aktualizované knižnice`org.json 20260719`, PostgreSQL JDBC aktualizovaný na `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` na `2.6.1`, Apache Commons Codec `1.23.0`, knižnica PDFBox na `3.0.8` a Swagger UI na `5.34.1` s DOMPurify `3.4.17` (#420).
 - Počasie - import predpovede odmietne XML s deklaráciou `DOCTYPE`. Ak používate vlastný zdroj v `weatherSourceApi`, musí poskytovať predpoveď bez DTD (#420).
 - Lokálna AI - pre `ai.djl:api 0.36.0` pribudla výnimka Dependency Check pre `CVE-2026-129266`. WebJET AI rozbaľuje a overuje modely vlastným kódom. Tokenizéry DJL dostávajú už overené lokálne súbory (#420).
 - AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény (#58850).
