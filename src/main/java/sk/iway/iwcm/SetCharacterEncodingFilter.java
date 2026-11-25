@@ -438,6 +438,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 	   	//System.out.println("SetCharacterEncodingFilter.doFilter");
 
 		if (pathNoContext.startsWith("/wjerrorpages/")
+						|| ( InitServlet.isWebjetInitialized()==false
+							&& (pathNoContext.equals("/login") || pathNoContext.equals("/logout")) )
 						|| ( InitServlet.isWebjetInitialized()==false && (pathNoContext.startsWith("/templates/")) )
 						|| ( InitServlet.isWebjetInitialized()==false && (pathNoContext.startsWith("/components/_common/combine.jsp")) )
 		) {
@@ -654,6 +656,8 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			long timeTaken = System.currentTimeMillis() - startTime;
 			if(Constants.getBoolean("serverMonitoringEnablePerformance"))
 				savePerformanceMeasure(request, timeTaken, memoryConsumed.diff());
+
+			//Logger.error(SetCharacterEncodingFilter.class, "path="+request.getRequestURI()+" responseCode="+response.getStatus());
    	}
    	finally
    	{
@@ -1152,4 +1156,3 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		return entityManager;
 	}
 }
-

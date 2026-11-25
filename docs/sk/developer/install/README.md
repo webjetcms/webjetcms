@@ -153,7 +153,7 @@ Porty môžete nastaviť aj cez Gradle parametre `-PhttpsPort`, `-PhttpPort` a `
 webjetDbname=/poolman-local.xml ./gradlew appStartDebug -PhttpsPort=8443 -PhttpPort=8080 -PdebugPort=5006
 ```
 
-Na macOS úloha VS Code `appStop` používa skript `./app-stop.sh`. Najprv zavolá `./gradlew appStop`, ktorý použije riadiaci port uložený v adresári `build` danej worktree. Po úspešnom odoslaní požiadavky čaká najviac 15 sekúnd na ukončenie servera. Ak Gradle zlyhá alebo server zostane bežať, skript pošle signál `TERM` iba Java procesu označenému identifikátorom tejto worktree. Ak sa neukončí do ďalších 10 sekúnd, použije `KILL`.
+Na macOS úloha VS Code `appStop` používa skript `./app-stop.sh`. Odošle signál `TERM` Java procesu tejto worktree a počká najviac 60 sekúnd, kým Spring Boot ukončí server. Po uplynutí limitu úloha nahlási, že server ešte beží.
 
 Úloha `appKill` (`./app-stop.sh --force`) rovno použije `KILL` pre server danej worktree. Na identifikáciu procesu slúži JVM parameter pridaný pri štarte cez aktuálny `build.gradle`; ostatné worktree sa nezastavujú. Pri zastavovaní netreba znovu zadávať porty.
 

@@ -39,6 +39,8 @@ import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 )
 public class VectorJpaConfig {
 
+    private static final String RAG_PERSISTENCE_UNIT_NAME = "webjet-rag";
+
     /**
      * Create the JPA transaction manager for RAG entities.
      */
@@ -71,7 +73,7 @@ public class VectorJpaConfig {
         emf.setPersistenceProvider(new WebJETPersistenceProvider());
         emf.setDataSource(DBPool.getInstance().getDataSource(dsName));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
-        emf.setPersistenceUnitName(dsName);
+        emf.setPersistenceUnitName(RAG_PERSISTENCE_UNIT_NAME);
         emf.setPackagesToScan("sk.iway.iwcm.rag.vectorjpa");
 
         Properties properties = new Properties();

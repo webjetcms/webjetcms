@@ -4,11 +4,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.support.ConversionServiceFactoryBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
+@Profile("upload-test")
 @ComponentScan(basePackages = { "sk.iway.basecms" }, excludeFilters = {
         @ComponentScan.Filter(type = FilterType.CUSTOM, classes = CustomComponentScanExclude.class)
 })

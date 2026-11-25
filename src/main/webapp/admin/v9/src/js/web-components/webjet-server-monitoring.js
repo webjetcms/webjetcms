@@ -8,7 +8,7 @@
 
 const TABLE_KEYS = [
     ["wjVersion", "licenseExpirationDate", "serverActualTime", "serverStartTime", "serverRuntime", "remoteIP", "serverIP", "serverContry", "serverLanguage", "serverCpus", "clusterNodeName"],
-    ["swRuntime", "swVmVersion", "swVmName", "swJavaVersion", "swJavaVendor", "swSpringVersion", "swSpringDataVersion", "swSpringSecurityVersion", "swServerName", "swServerOs", "swServerOsVersion"],
+    ["swRuntime", "swVmVersion", "swVmName", "swJavaVersion", "swJavaVendor", "swSpringVersion", "swSpringBootVersion", "swSpringDataVersion", "swSpringSecurityVersion", "swServerName", "swServerOs", "swServerOsVersion"],
     ["dbTotal", "dbActive", "dbIdle", "dbWaiting", "dbServerName"],
     ["memTotal", "memFree", "memUsed", "memMax", "cacheItems", "sessionsTotal"],
     ["HTTP Response Encoding", "file.encoding", "native.encoding", "sun.jnu.encoding", "LANG", "LC_ALL", "LC_CTYPE"]
