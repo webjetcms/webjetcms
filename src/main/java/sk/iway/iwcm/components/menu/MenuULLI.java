@@ -578,7 +578,10 @@ public class MenuULLI
 								if (Tools.isNotEmpty(menuInfoDirName) && menuInfoDirName.equals(navbarName) && group.getDefaultDocId() > 0) {
 									DocDetails dd = docDB.getDoc(group.getDefaultDocId());
 									if (dd != null) {
-										out.append(spacerLi).append("<li class=\"").append(styleClassDir).append(" menu-info-li").append("\">");
+										String menuInfoClass = Tools.isEmpty(styleClassDir) ? " class=\"menu-info-li\""
+												: styleClassDir.substring(0, styleClassDir.length() - 1) + " menu-info-li\"";
+
+										out.append(spacerLi).append("<li").append(menuInfoClass).append(">");
 										out.append("<div class=\"menu-info\"><span class=\"menu-info-headline\">").append(dd.getTitle()).append("</span>");
 
 										out.append("<div class=\"menu-info-content\">").append(dd.getData()).append("</div>");
