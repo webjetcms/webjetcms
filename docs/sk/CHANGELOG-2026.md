@@ -340,7 +340,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
-- [Formuláre](redactor/apps/form/README.md) - redaktor môže otvoriť viackrokový formulár aj pred prvým odoslaním, ak má právo upravovať aspoň jednu stránku, na ktorej je formulár vložený.
+- [Formuláre](redactor/apps/form/README.md) - redaktor môže otvoriť viackrokový formulár aj pred prvým odoslaním, ak má právo upravovať aspoň jednu stránku, na ktorej je formulár vložený. Autor môže prázdny formulár upravovať hneď po vytvorení alebo duplikovaní (#419).
 - Webové stránky - editor pri uložení upraví ručne zadanú URL adresu, ak obsahuje medzery alebo diakritiku. Pri kolízii zdedenej URL uloží a zobrazí pridelenú koncovku (#417).
 - AI Čet - po zmazaní otvoreného četu sa v novom čete zobrazí výber asistenta iba raz (#58878).
 - Vloženie HTML kódu - obsah sa dekóduje v UTF-8 bez závislosti od predvoleného kódovania JVM, aby sa na serveri nepoškodila diakritika a ďalšie znaky Unicode.

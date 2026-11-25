@@ -1297,7 +1297,7 @@ public class FormDB
 			if (userId > 0 && Tools.isNotEmpty(formName))
 			{
 				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("SELECT * FROM forms WHERE user_id=? AND form_name=? "+CloudToolsForCore.getDomainIdSqlWhere(true));
+				ps = db_conn.prepareStatement("SELECT * FROM forms WHERE user_id=? AND form_name=? AND create_date IS NOT NULL "+CloudToolsForCore.getDomainIdSqlWhere(true));
 				ps.setInt(1, userId);
 				ps.setString(2, formName.trim());
 				rs = ps.executeQuery();

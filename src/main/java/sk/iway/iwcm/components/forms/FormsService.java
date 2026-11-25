@@ -304,7 +304,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * @return {@code true} when the form is in an editable page or directory
      */
     private boolean isFormAccessible(E form, UserDetails user, int[] userEditableGroups, int[] userEditablePages, DocDB docDB) {
-        if (form.getDocId() < 1) return canEditPageContainingForm(form, user, docDB);
+        if (form.getDocId() < 1) return canAccessFormWithoutDocId(form, user, docDB);
 
         if (userEditableGroups!=null && userEditableGroups.length>0)
         {
@@ -333,9 +333,12 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         return false;
     }
 
-    /** Finds pages containing this multistep form and checks whether the user can edit any of them in its domain. */
-    private boolean canEditPageContainingForm(E form, UserDetails user, DocDB docDB) {
+    /** Grants the author access to an empty form, otherwise checks the pages containing its multistep include. */
+    private boolean canAccessFormWithoutDocId(E form, UserDetails user, DocDB docDB) {
         if (!(form instanceof FormsEntity)) return false;
+        // The list and detail both carry the latest submission date, so null means there are no responses.
+        if (form.getCreateDate() == null && user.getUserId() > 0 && Long.valueOf(user.getUserId()).equals(form.getUserId())) return true;
+
         String include = "!INCLUDE(sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp, formName=&quot;" + form.getFormName() + "&quot;";
         String pattern = "%" + include.replace("~", "~~").replace("%", "~%").replace("_", "~_") + "%";
         // SQL Server also treats an opening bracket as a LIKE wildcard.

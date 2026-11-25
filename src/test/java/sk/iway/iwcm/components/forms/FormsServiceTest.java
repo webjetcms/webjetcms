@@ -405,6 +405,48 @@ class FormsServiceTest {
         }
     }
 
+    /** With no editable embedding page, only the creator of a form with zero submissions has access. */
+    @ParameterizedTest
+    @CsvSource(value = {
+        "21,none,true", "22,none,false", "none,none,false", "-1,none,false",
+        "21,-1,false", "22,-1,false", "21,456,false"
+    }, nullValues = "none")
+    void checksAuthorOfUnembeddedForm(Long authorId, Integer submittedDocId, boolean expected) {
+        FormsEntity definition = new FormsEntity();
+        definition.setFormName("draft");
+        definition.setUserId(authorId);
+        definition.setDocId(-1);
+        definition.setDomainId(42);
+
+        Identity editor = new Identity();
+        editor.setUserId(21);
+        editor.setEditablePages("123");
+        FormsRepository forms = mock(FormsRepository.class);
+        when(forms.findAllByCreateDateIsNullAndDomainId(42)).thenReturn(List.of(definition));
+        when(forms.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc("draft", 42)).thenReturn(definition);
+        if (submittedDocId != null) {
+            FormsEntity response = new FormsEntity();
+            response.setFormName("draft");
+            response.setDomainId(42);
+            response.setCreateDate(new Date());
+            response.setDocId(submittedDocId);
+            response.setUserId((long) editor.getUserId());
+            when(forms.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc("draft", 42)).thenReturn(response);
+        }
+        when(forms.countAllByFormNameAndDomainId("draft", 42)).thenReturn(submittedDocId == null ? 1 : 2);
+
+        try (var cloud = mockStatic(CloudToolsForCore.class); var groups = mockStatic(GroupsDB.class);
+                var docs = mockStatic(DocDB.class)) {
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(42);
+            groups.when(GroupsDB::getInstance).thenReturn(mock(GroupsDB.class));
+            docs.when(DocDB::getInstance).thenReturn(mock(DocDB.class));
+            FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
+            assertEquals(expected, service.getFormsList(editor).contains(definition));
+            assertEquals(expected, service.isFormAccessible("draft", editor));
+            if (expected) verify(forms, times(0)).findDocIdsByFormIncludePattern(any());
+        }
+    }
+
     @Test
     void isFormAccessibleReturnsFalseForRestrictedUserWhenSubmittedFormDoesNotExist() {
         int domainId = 42;

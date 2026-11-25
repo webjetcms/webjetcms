@@ -8,6 +8,8 @@ Naviac, všetky formuláre sa ukladajú do databázy, v administračnej časti W
 
 Ak máte právo upravovať iba vybrané stránky alebo priečinky, prístup k viackrokovému formuláru určuje stránka posledného odoslania. Pred prvým odoslaním alebo ak pri poslednej odpovedi chýba ID stránky, formulár uvidíte, ak môžete upravovať aspoň jednu stránku, na ktorej je vložený.
 
+Ako autor môžete nový formulár alebo jeho kópiu upravovať hneď po vytvorení, ešte pred vložením na stránku. Toto právo platí, kým formulár nemá žiadne odpovede.
+
 ![](detail.png)
 
 V zozname formulárov sa pre [viackrokové formuláre](../multistep-form/README.md) zobrazuje aj stĺpec Trvanie vyplnenia, ktorý zobrazuje ako dlho trvalo vyplnenie formuláru používateľom (čas od jeho zobrazenia po odoslanie).
