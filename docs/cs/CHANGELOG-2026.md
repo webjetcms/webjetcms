@@ -340,6 +340,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- [Formuláře](redactor/apps/form/README.md) - redaktor může otevřít vícekrokový formulář i před prvním odesláním, pokud má právo upravovat alespoň jednu stránku, na které je formulář vložen. Autor může prázdný formulář upravovat hned po vytvoření nebo duplikování (#419).
+- Vícekrokové formuláře - při otevření karty **Položky formuláře** nebo **Statistiky formuláře** bez přístupu k danému formuláři se zobrazí chybová zpráva (#419).
 - Webové stránky - editor při uložení upraví ručně zadanou URL adresu, pokud obsahuje mezery nebo diakritiku. Při kolizi zděděné URL uloží a zobrazí přidělenou koncovku (#417).
 - AI Čet - po smazání otevřeného četu se v novém četě zobrazí výběr asistenta pouze jednou (#58878).
 - Vložení HTML kódu - obsah se dekóduje v UTF-8 bez závislosti na výchozím kódování JVM, aby se na serveru nepoškodila diakritika a další znaky Unicode.
@@ -800,6 +802,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Archiv souborů - administrace nyní nabízí správný název nastavení `fileArchivCacheTime`, které určuje, jak dlouho archiv uchovává v cache například historii verzí souboru. Hlavní seznam souborů aplikace načítá přímo z databáze. Výchozí doba je nadále 120 minut. Vlastní hodnota pod správným názvem fungovala i před opravou a nastavení pro konkrétní metodu má přednost. Pokud jste zadali hodnotu pod původním názvem `fileArchivatorCacheTime`, zadejte ji pod názvem `fileArchivCacheTime` (#411).
 - Soubory - opravený název konfigurační proměnné `elfinderMetadataAutopopup`, která po nahrání souboru automaticky zobrazí dialog metadat. Proměnná byla deklarována s překlepem jako `elfinerMetadataAutopopup`, který se nikde nečetl, proto její změna v administraci neměla efekt. Výchozí hodnota `false` zůstává. Pokud jste si nastavili proměnnou s překlepem, nastavte místo ní `elfinderMetadataAutopopup` (#410).
 - Opraveno zacyklení při HTTP přesměrování během stahování souborů, načtení nastavení uživatele, inicializaci generátoru primárních klíčů a obnově cache souborů uložených v databázi. Doplněny ukončovací podmínky opakovaných pokusů. Pokud generátor primárních klíčů zůstane nedostupný i po jednom pokusu o vytvoření záznamu a obnovení paměti cache, metody `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodí `IllegalStateException`. Volající musí přerušit operaci vyžadující identifikátor a předat chybu svému zpracování výjimek (#412).
+- Menu - opraveno generování atributu `class` na položce `<li>` při použití nastavení Menu Info (`menuInfoDirName`). Třída `menu-info-li` se přidává k ostatním CSS třídám položky.
 
 ## 2026.0.40
 

@@ -7,8 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -32,6 +34,7 @@ import org.mockito.MockedStatic;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
@@ -45,7 +48,9 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.PermissionGroupBean;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
 
 class FormsServiceTest {
 
@@ -338,14 +343,17 @@ class FormsServiceTest {
             "${settings.fieldA}|${formname}", "form", settings, "", null, "", false, false, null, prop, null));
     }
 
-    /** The list and detail use embedding pages only when the latest submission has no valid page ID. */
+    /** The list and detail respect inherited page and folder permissions, including the all-folders override. */
     @ParameterizedTest
     @CsvSource(value = {
-        "none,9,0,true", "none,0,123,true", "none,0,122,false",
-        "0,9,0,true", "-1,0,123,true",
-        "456,9,0,false", "123,9,0,true", "123,0,123,true"
+        // Latest submission page, inherited folder, inherited page, all folders, expected access
+        "none,9,0,false,true", "none,0,123,false,true", "none,0,122,false,false",
+        "0,9,0,false,true", "-1,0,123,false,true", "-1,0,456,false,false",
+        "456,9,0,false,false", "123,9,0,false,true", "123,0,123,false,true",
+        "none,0,456,true,true"
     }, nullValues = "none")
-    void checksFormAccessWithAndWithoutSubmissionPage(Integer submittedDocId, int editableGroup, int editablePage, boolean expected) {
+    void checksFormAccessWithAndWithoutSubmissionPage(Integer submittedDocId, int editableGroup, int editablePage,
+            boolean allFolders, boolean expected) {
         String name = "Multistepform_screens~100%";
         String pattern = "%!INCLUDE(sk.iway.iwcm.components.multistep~_form.mvc.MultistepFormApp, formName=&quot;Multistepform~_screens~~100~%&quot;%";
         FormsEntity form = new FormsEntity();
@@ -368,13 +376,21 @@ class FormsServiceTest {
             when(forms.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(name, 42)).thenReturn(response);
         }
 
-        Identity user = mock(Identity.class);
-        when(user.isEnabledItem("menuWebpages")).thenReturn(true);
-        when(user.getEditablePages()).thenReturn(editablePage == 0 ? "" : Integer.toString(editablePage));
-        when(user.getEditableGroups()).thenReturn(editableGroup == 0 ? "-1" : Integer.toString(editableGroup));
+        Identity user = spy(new Identity());
+        user.setUserId(21);
+        user.setEditableGroups("");
+        user.setEditablePages("");
+        doReturn(true).when(user).isEnabledItem("menuWebpages");
+        doReturn(false).when(user).isDisabledItem("menuFbrowser");
+        user.setWritableFolders("");
+        PermissionGroupBean scope = new PermissionGroupBean();
+        if (editableGroup > 0) scope.setEditableGroups(Integer.toString(editableGroup));
+        if (editablePage > 0) scope.setEditablePages(Integer.toString(editablePage));
+        PermissionGroupBean additionalGroup = new PermissionGroupBean();
+        additionalGroup.setAllEditableGroups(allFolders);
         GroupsDB groupsDB = mock(GroupsDB.class);
         when(groupsDB.expandGroupIdsToChilds(any(int[].class), eq(true)))
-                .thenReturn(editableGroup == 0 ? new int[0] : new int[]{editableGroup});
+                .thenAnswer(call -> call.getArgument(0));
         DocDB docDB = mock(DocDB.class);
         DocDetails local = new DocDetails();
         local.setDocId(123);
@@ -389,18 +405,21 @@ class FormsServiceTest {
 
         try (var cloud = mockStatic(CloudToolsForCore.class); var groups = mockStatic(GroupsDB.class);
                 var docs = mockStatic(DocDB.class); var constants = mockStatic(Constants.class);
-                var mappings = mockStatic(MultigroupMappingDB.class)) {
+                var mappings = mockStatic(MultigroupMappingDB.class); var permissions = mockStatic(UserGroupsDB.class)) {
             cloud.when(CloudToolsForCore::getDomainId).thenReturn(42);
             docs.when(DocDB::getInstance).thenReturn(docDB);
             groups.when(GroupsDB::getInstance).thenReturn(groupsDB);
-            groups.when(() -> GroupsDB.isGroupEditable(user, 9)).thenReturn(editableGroup == 9);
+            groups.when(() -> GroupsDB.isGroupEditable(user, 9)).thenCallRealMethod();
             groups.when(() -> GroupsDB.getDomainId("other.example")).thenReturn(17);
             groups.when(() -> GroupsDB.getDomainId("local.example")).thenReturn(42);
             constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
+            constants.when(() -> Constants.getInt("systemPagesMyPages")).thenReturn(99);
+            permissions.when(() -> UserGroupsDB.getPermissionGroupsFor(21)).thenReturn(List.of(scope, additionalGroup));
+            LogonTools.setUserPerms(user);
 
             assertEquals(expected, service.getFormsList(user).contains(form));
             assertEquals(expected, service.isFormAccessible(name, user));
-            int expectedLookups = submittedDocId == null || submittedDocId < 1 ? 2 : 0;
+            int expectedLookups = !allFolders && (submittedDocId == null || submittedDocId < 1) ? 2 : 0;
             verify(forms, times(expectedLookups)).findDocIdsByFormIncludePattern(pattern);
         }
     }

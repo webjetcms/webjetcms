@@ -6,6 +6,10 @@ Forms can be sent to an email address, and the form looks the same in the email 
 
 In addition, all forms are saved in the database and can be accessed at any time in the Web JET administration area. Form items can be sorted by any column and exported to MS Excel.
 
+If you have permission to edit only selected pages or folders, access to a multi-step form is determined by the page of the last submission. Before the first submission or if the page ID is missing from the last response, you will see the form if you can edit at least one page on which it is embedded.
+
+As an author, you can edit a new form or a copy of it immediately after it is created, before it is inserted on the page. This right applies as long as the form has no responses.
+
 ![](detail.png)
 
 The form list also shows a Completion Duration column for [multistep forms](../multistep-form/README.md), which shows how long it took a user to complete the form (the time from when it was viewed to when it was submitted).
