@@ -15,6 +15,28 @@ Scenario('update from server', async ({ I }) => {
     I.seeElement("#submitButton");
 });
 
+Scenario('release notes render external images and YouTube videos', async ({ I }) => {
+    const versionsRoute = '**/admin/update/versions';
+    const videoUrl = 'https://www.youtube.com/watch?v=q8xs3qDq-G4';
+    const thumbnailUrl = 'https://img.youtube.com/vi/q8xs3qDq-G4/hqdefault.jpg';
+    const imageUrl = 'https://example.invalid/autotest.png';
+    const content = '#versions-tab-content .tab-pane.active';
+    I.mockRoute(versionsRoute, route => route.fulfill({ json: [{
+        version: '2026.40',
+        note: `![External image](${imageUrl})\n\n![Documentation image](autotest.png)\n\n[![YouTube video](${thumbnailUrl})](${videoUrl})`
+    }] }));
+    I.refreshPage();
+
+    const externalImage = `${content} img[alt="External image"]`;
+    I.waitForElement(externalImage);
+    I.assertEqual(await I.grabAttributeFrom(externalImage, 'src'), imageUrl);
+    I.assertEndsWith(await I.grabAttributeFrom(`${content} img[alt="Documentation image"]`, 'src'), '/v2026/autotest.png');
+    I.seeAttributesOnElements(`${content} iframe`, { src: 'https://www.youtube.com/embed/q8xs3qDq-G4' });
+    I.see('YouTube video', `${content} a[href="${videoUrl}"]`);
+
+    I.stopMockingRoute(versionsRoute);
+});
+
 Scenario('update from file', async ({ I }) => {
     I.waitForElement("#version-selector");
     I.wait(1);

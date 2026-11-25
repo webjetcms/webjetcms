@@ -158,10 +158,19 @@ block content
                         }
                     });
 
-                    //fix links
-                    var links = versionsTabContent.find("a");
-                    links.each(function() {
-                        var href = $(this).attr("href");
+                    // Embed YouTube thumbnails from the update server and fix documentation links.
+                    versionsTabContent.find("a").each(function() {
+                        const link = $(this);
+                        let href = link.attr("href");
+                        const videoId = href?.match(/^https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})$/)?.[1];
+                        const thumbnail = link.children("img:only-child");
+                        if (videoId && thumbnail.attr("src")?.startsWith(`https://img.youtube.com/vi/${videoId}/`)) {
+                            link.before(`<div class="ratio ratio-16x9 mb-2">
+                                <iframe src="https://www.youtube.com/embed/${videoId}" title="YouTube" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                            </div>`);
+                            link.text(thumbnail.attr("alt") || "YouTube").attr({ target: "_blank", rel: "noopener" });
+                        }
+
                         if(href != undefined && href != null && href.indexOf("docs.webjetcms") != -1) {
                             href = href.replace(/^https?:\/\/docs\.webjetcms\.(sk|com)(?=\/|$)/, window.adminHelpContext.documentationBaseUrl);
                             //remove .md extension
@@ -173,7 +182,7 @@ block content
                             href = href.replace("/v2023/", "/v2023/#/");
                             href = href.replace("/v2022/", "/v2022/#/");
 
-                            $(this).attr("href", href);
+                            link.attr("href", href);
                         }
                     });
 
