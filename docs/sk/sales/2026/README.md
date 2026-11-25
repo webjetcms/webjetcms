@@ -252,6 +252,12 @@ Dôležitou výhodou je **kontrola a bezpečnejšia prevádzka**. Odpoveď sa tv
 - **Kontrola nad kvalitou a nákladmi**: Nastaviteľné limity kontextu, podobnosti a voľba asistenta pomáhajú držať odpovede presné a efektívne.
 - **Rozšíriteľnosť pre enterprise projekty**: Funkciu možno prispôsobiť konfiguráciou aj prepojeniami na existujúce procesy zákazníka.
 
+Hosť sa na webe penziónu opýta na pobyt so psom aj na parkovanie. Vo videu uvidíte, ako pri jednej otázke dostane stručnú odpoveď a odkazy na obe stránky s podmienkami pobytu.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Podrobná dokumentácia: [Sémantické vyhľadávanie (RAG)](../../redactor/apps/semantic-search/README.md)
 
 ## Inteligentné vyhľadávanie podľa významu otázky
