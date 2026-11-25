@@ -275,6 +275,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * @return {@code true} when the form is accessible to the user
      */
     public boolean isFormAccessible(String formName, UserDetails user) {
+        if (user == null || Tools.isEmpty(formName)) return false;
         Integer domainId = CloudToolsForCore.getDomainId();
         GroupsDB groupsDB = GroupsDB.getInstance();
 

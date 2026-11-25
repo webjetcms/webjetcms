@@ -40,6 +40,7 @@ import sk.iway.iwcm.system.audit.jpa.AuditRepository;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Produces domain-scoped statistics and chart data for multi-step forms.
@@ -96,11 +97,13 @@ public class FormStatService {
          * @param request the HTTP request used for localization and date filters
          */
         StatContext(String formName, String itemFormId, HttpServletRequest request) {
+            UserDetails user = UsersDB.getCurrentUser(request);
+            formsService.requireFormAccess(formName, user);
             this.formName = formName;
             this.domainId = CloudToolsForCore.getDomainId();
             this.prop = Prop.getInstance(request);
             this.formId = multistepFormsService.getFormId(formName);
-            this.columnNames = getColumnNames(this.formName, new UserDetails(request), this.prop);
+            this.columnNames = getColumnNames(this.formName, user, this.prop);
             this.allowedItemsEntities = getAllowedItems(this.formName, itemFormId);
             this.dateRange = getDateRange(request);
         }
