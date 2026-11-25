@@ -19,7 +19,13 @@ Druhá značka ponúka školenia. Na jej doméne môže správca vytvoriť kartu
     <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="Vytvorenie vlastnej karty SEO a presun polí v editore stránky" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-[Vlastná karta s voliteľnými poľami](../../frontend/datatables/tabs-settings.md#vlastná-karta-s-voliteľnými-poľami) | [Nastavenia polí a ich poradia](../../frontend/datatables/fields-settings.md)
+Pre stránku o službe môžete nastaviť povinné pole **Typ služby**. Redaktor v ňom vyberie napríklad **Školenie**. Keď ponuku rozšírite o **Servisný zásah**, stačí ho pridať do číselníka. Pri ďalšom otvorení stránky redaktor uvidí novú možnosť a pôvodný výber zostane zachovaný.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+[Vlastná karta s voliteľnými poľami](../../frontend/datatables/tabs-settings.md#vlastná-karta-s-voliteľnými-poľami) | [Nastavenia polí a ich poradia](../../frontend/datatables/fields-settings.md) | [Voliteľné polia](../../frontend/datatables/custom-fields-settings.md)
 
 ## Dopyty, schvaľovanie a najbližšie publikovanie na jednej obrazovke
 
