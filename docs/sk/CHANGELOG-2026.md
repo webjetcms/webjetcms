@@ -134,6 +134,10 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 - AI Čet pri poli - pridaná ukladaná história filtrovaná podľa rovnakého poľa a záznamu. Starší rozhovor môžete vyhľadať, otvoriť a pokračovať v ňom aj po zatvorení editora; odpovede zostávajú dostupné na vloženie do poľa.
 - AI Čet pri poli a v editore stránky - pridané nahrávanie obrázkov a dokumentov pre asistentov s podporou histórie. Súbory môžete vybrať ikonou plus, pretiahnuť do správy alebo vložiť obrázok zo schránky - asistent ich spracuje spolu s obsahom stránky (#386).
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless režim

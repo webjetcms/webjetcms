@@ -93,6 +93,12 @@ Prílohu stiahnete aj kliknutím na jej názov alebo ikonu sťahovania priamo pr
 
 ## Čet pri poli a v editore stránky
 
+Vo videu uvidíte, ako z priloženého programu školenia v PDF pripravíte pozvánku, spresníte ju v tom istom rozhovore a vložíte do stránky. Po opätovnom otvorení editora nájdete rozhovor v histórii pri obsahu stránky.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Pri textovom poli alebo v paneli nástrojov editora kliknite na ikonu AI a vyberte asistenta s typom požiadavky **Čet**. Napíšte zadanie a odošlite ho. Označený text v podporovanom editore má prednosť pred obsahom nastaveného **Zdrojového poľa**. Ak text neoznačíte, použije sa zdrojové pole. Ak ani to nie je nastavené, obsah poľa ani stránky sa neposiela. Rovnaké pravidlo platí pre uložené aj nové záznamy a hromadnú úpravu.
 
 Pri označenom texte v editore dostane asistent aj pokyn vrátiť iba upravený HTML fragment so zachovaním jeho štruktúry. Napríklad pri požiadavke na tučné písmo má doplniť značky `<strong>` priamo do textu bez pridania nadpisu či obalov PageBuildera. Tento pokyn má pri úprave výberu prednosť pred pravidlami asistenta pre tvorbu celej stránky a nezávisí od nastavených CSS tried obalov. Platí pre dočasné aj ukladané čety spracované serverovým poskytovateľom.

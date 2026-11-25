@@ -51,6 +51,12 @@ Na prvý návrh redaktor odpovie slovami „Skráť úvod na dve vety a ponechaj
 
 ![Náhľad návrhu stránky z AI Četu v PageBuilderi](../../redactor/ai/datatables/pb-chat-preview.png)
 
+Vo videu si môžete pozrieť prípravu pozvánky v klasickom editore stránky.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Podrobná dokumentácia: [AI Čet](../../redactor/ai/chat/README.md)
 
 ## Zverejnenie kampane aj s prílohami v naplánovanom čase
