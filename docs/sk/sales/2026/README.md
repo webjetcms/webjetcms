@@ -35,6 +35,12 @@ Vedúci redakcie si na začiatok svojho prehľadu presunie karty **Na schváleni
 
 ![Úvodná obrazovka administrácie s kartami](../../redactor/admin/dashboard.png)
 
+Na úvodnej obrazovke redaktor uvidí aj upozornenie, keď sa do jeho účtu niekto prihlási z nového prehliadača. Vlastný prehliadač môže potvrdiť kódom z emailu. Ak prihlásenie nepozná, môže druhý prehliadač zablokovať a sám zostať prihlásený.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Podrobná dokumentácia: [Úvodná obrazovka](../../redactor/admin/welcome.md) | [Rýchle vyhľadávanie v hlavičke](../../redactor/admin/search/README.md)
 
 ## Z podkladov na hotový návrh stránky s AI asistentom

@@ -1,11 +1,12 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const lockfile = require("proper-lockfile");
 const { fixtureFor, editorUrl, options, tooltip, title, className, output } = require("./fixture.cjs");
 
 function recording(I, DTE) {
     const { DT } = inject();
-    let page, fixture, evidence;
+    let page, fixture, evidence, release;
     const box = () => "#datatableInit_modal .DTE_Field_Name_" + fixture.field;
     const demo = {
         get f() { return fixture; },
@@ -14,6 +15,8 @@ function recording(I, DTE) {
             await I.waitForVisible("button.js-profile-toggler", 20);
             await I.usePlaywrightTo("prepare the saved service page in the demo domain", async (browser) => {
                 page = browser.page;
+                fs.mkdirSync(output, { recursive: true });
+                release = await lockfile.lock(output);
                 fixture = await fixtureFor(page);
                 await fixture.restore();
                 if (page.video()) {
@@ -25,7 +28,11 @@ function recording(I, DTE) {
             });
         },
         async close() {
-            if (fixture) await fixture.restore();
+            try {
+                if (fixture) await fixture.restore();
+            } finally {
+                if (release) await release();
+            }
         },
         async cue(id) {
             if (!evidence) return;
@@ -34,7 +41,7 @@ function recording(I, DTE) {
             fs.appendFileSync(path.join(evidence, "cues.ndjson"), JSON.stringify({ id, time }) + "\n");
         },
         async frameThumbnail() {
-            // Crop the real, painted tab and radio choices while the original document is still open.
+            // Crop the real, painted field label and radio choices while the original document is still open.
             const crop = await page.locator(box()).evaluate(field => {
                 const range = document.createRange();
                 range.selectNodeContents(field.querySelector("label.col-form-label").firstChild);
