@@ -65,6 +65,9 @@ public class ImportWeather {
 
     /** Parses the forecast with DTDs disabled before JAXB receives any XML events. */
     static Weatherdata parseWeather(String source) throws ParserConfigurationException, SAXException, JAXBException {
+        if (source.startsWith("\uFEFF")) {
+            source = source.substring(1);
+        }
         SAXParserFactory factory = SAXParserFactory.newDefaultNSInstance();
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         SAXSource forecast = new SAXSource(factory.newSAXParser().getXMLReader(), new InputSource(new StringReader(source)));

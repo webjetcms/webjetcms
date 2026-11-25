@@ -23,6 +23,13 @@ class ImportWeatherTest {
         assertEquals("pointData", forecast.getProduct().get(0).getClazz());
     }
 
+    /** A UTF-8 byte-order mark can remain at the start of the decoded feed. */
+    @Test
+    void readsWeatherProductWithLeadingBom() throws Exception {
+        var forecast = ImportWeather.parseWeather("\uFEFF" + FORECAST);
+        assertEquals("pointData", forecast.getProduct().get(0).getClazz());
+    }
+
     /** Even an empty document type declaration must be rejected. */
     @Test
     void rejectsDoctype() {
