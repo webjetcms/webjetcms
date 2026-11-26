@@ -392,6 +392,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Editor - when auto-maximizing in a low or narrow window, the entire toolbar remains above the page content. Content no longer shines through under icons and group names (#372).
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
 - Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
+- Page Builder - after reopening the page, you can switch to HTML mode even on slow connections. Unsaved edits from Page Builder will also be displayed in the source code (#423).
+- Page Builder - fixed displaying confirmation of page exit if the form or the web page itself sets the `onbeforeunload` event (#423).
 - Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.
 - Page Builder - restoring focus after inserting content or a structural block, moving, duplicating, and closing properties or libraries does not move the page to the beginning of the editor. The fix also works in templates with smooth scrolling (`scroll-behavior: smooth`) (#389).
 - Page Builder - unsupported elements marked `pb-editable`, such as list items `li`, no longer block switching from the HTML editor. Their content remains intact and can be edited via the parent editable area (#382).
