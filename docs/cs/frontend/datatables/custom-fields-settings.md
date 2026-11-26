@@ -4,6 +4,12 @@ Tabulka Volitelná pole umožňuje centrálně nastavit vlastnosti volitelných 
 
 Typ, povinnost a možnosti volitelného pole nastavíte na této kartě. Pro přesun pole do jiné karty nebo změnu jeho zobrazení použijte [Nastavení polí](fields-settings.md). Vlastní kartu vytvoříte přes [Nastavení karet](tabs-settings.md). Nastavení se ukládají pro aktuálně zvolenou doménu; pro přístup potřebujete právo **Datové tabulky** (`dataTablesConfig`).
 
+Ve videu uvidíte, jak pro konkrétní webovou stránku nastavíte povinné pole **Typ služby** s nápovědou a jako redaktor vybere jednu z možností z číselníku.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](custom-fields-settings-datatable.png)
 
 ## Sloupce tabulky
