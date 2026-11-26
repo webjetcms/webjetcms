@@ -10,7 +10,7 @@ var username = null;
 Before(({ I, login, TempMail }) => {
     login('admin');
 
-    if (username == null) username = 'auditnotification.' + I.getRandomTextShort();
+    if (username == null) username = 'auditnotification.' + I.getRandomText().replace(/-/g, '.');
     if (email == null) email = username+TempMail.getTempMailDomain();
 });
 
@@ -37,11 +37,16 @@ Scenario('Test for Event Notification and Cache Handling in Audit Notifications'
     //verify audit log entry
     I.amOnPage('/admin/v9/apps/audit-search/');
     DT.waitForLoader();
-    I.fillField('.dt-filter-from-createDate', startDate);
-    I.pressKey('Escape');
-    DT.filterSelect('logType', "SENDMAIL");
-    DT.filterContains('description', email);
-    I.see("email from:" + email);
+    const mailEntry = locate('#datatableInit tbody tr')
+        .withChild(locate('td').withTextEquals('SENDMAIL'))
+        .withText('email from:' + email);
+    if (await I.grabNumberOfVisibleElements(mailEntry) === 0) {
+        I.fillField('div.dt-scroll-headInner input.dt-filter-from-createDate', startDate);
+        I.pressKey('Escape');
+        I.fillField('div.dt-scroll-headInner input.dt-filter-description', email);
+        DT.filterSelect('logType', 'SENDMAIL');
+    }
+    I.waitForVisible(mailEntry, 10);
 
     await verifyEmailNotification(I, TempMail, true);
 });

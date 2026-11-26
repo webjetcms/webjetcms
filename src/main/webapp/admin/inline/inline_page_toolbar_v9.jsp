@@ -88,7 +88,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     function initializePageBuilder() {
         // Shared helpers and frame events must work even when the page has no inline editors.
         window.userLng = window.parent.userLng;
-        window.WJ = window.parent.WJ;
+        // Inherit admin helpers without storing a callback to this frame on the parent window.
+        window.WJ = Object.create(window.parent.WJ);
         window.WJ.fireEvent = function(name, detail) {
             window.dispatchEvent(new CustomEvent(name, {detail: detail}));
         };

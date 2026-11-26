@@ -33,7 +33,12 @@ Scenario('Import', async () => {
 
 Scenario('File archive app - inserting an app', async ({ I, DTE, Apps, Document }) => {
     const docId = '120040';
-    Apps.clearPageContent(docId);
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=' + docId);
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+    Apps.switchEditor('standard');
+    I.waitForVisible('#trEditor .cke_wysiwyg_frame', 20);
+    await DTE.fillCkeditor('');
     Apps.save();
     Apps.insertApp('Manažér dokumentov', '#components-file_archiv-name', docId);
 

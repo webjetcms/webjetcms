@@ -299,7 +299,15 @@ Scenario('Check approve email and approve logic @screenshot', async ({I, Documen
 
     Document.screenshot("/redactor/webpages/approve/approve-group-page.png");
 
-    I.clickCss("#modalIframe .modal-footer-custom-buttons button.btn-success");
+    // The approval request also sends the notification email before returning the result page.
+    await I.retry(0).usePlaywrightTo('submit the folder approval and wait for its response', async ({page}) => {
+        const [response] = await Promise.all([
+            page.waitForResponse(response => response.request().method() === 'POST' &&
+                new URL(response.url()).pathname === '/admin/v9/webpages/approve-group/'),
+            page.locator('#modalIframe .modal-footer-custom-buttons button.btn-success').click()
+        ]);
+        if (!response.ok()) throw new Error('Folder approval returned HTTP ' + response.status());
+    });
 
     I.switchTo("#modalIframeIframeElement");
     I.waitForText("Schválenie/zamietnutie priečinka bolo úspešné", 10, ".alert-success");

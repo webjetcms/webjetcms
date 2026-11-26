@@ -91,6 +91,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         this.formsService = formsService;
     }
 
+    @Override
+    public Page<FormItemEntity> searchItem(Map<String, String> params, Pageable pageable, FormItemEntity search) {
+        formsService.requireFormAccess(MultistepFormsService.getFormName(params), getUser());
+        return super.searchItem(params, pageable, search);
+    }
+
     /**
      * Loads form items and enriches the page with row styling and editor options.
      *

@@ -7,13 +7,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -26,7 +31,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
@@ -36,9 +44,13 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.PermissionGroupBean;
 import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
 
 class FormsServiceTest {
 
@@ -329,6 +341,134 @@ class FormsServiceTest {
         assertTrue(email.contains(settings.getFieldA()));
         assertEquals("<b>${id}|${settings.subject}|${cs-error}|${counter}</b>|form", FormsService.replaceFields(
             "${settings.fieldA}|${formname}", "form", settings, "", null, "", false, false, null, prop, null));
+    }
+
+    /** The list and detail respect inherited page and folder permissions, including the all-folders override. */
+    @ParameterizedTest
+    @CsvSource(value = {
+        // Latest submission page, inherited folder, inherited page, all folders, expected access
+        "none,9,0,false,true", "none,0,123,false,true", "none,0,122,false,false",
+        "0,9,0,false,true", "-1,0,123,false,true", "-1,0,456,false,false",
+        "456,9,0,false,false", "123,9,0,false,true", "123,0,123,false,true",
+        "none,0,456,true,true"
+    }, nullValues = "none")
+    void checksFormAccessWithAndWithoutSubmissionPage(Integer submittedDocId, int editableGroup, int editablePage,
+            boolean allFolders, boolean expected) {
+        String name = "Multistepform_screens~100%";
+        String prefix = "%!INCLUDE(sk.iway.iwcm.components.multistep~_form.mvc.MultistepFormApp, formName=";
+        String quotedPattern = prefix + "&quot;Multistepform~_screens~~100~%&quot;%";
+        String unquotedPattern = prefix + "Multistepform~_screens~~100~%,%";
+        FormsEntity form = new FormsEntity();
+        form.setFormName(name);
+        form.setFormType("multistep");
+        form.setDocId(-1);
+        form.setDomainId(42);
+
+        FormsRepository forms = mock(FormsRepository.class);
+        FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
+        when(forms.findAllByCreateDateIsNullAndDomainId(42)).thenReturn(List.of(form));
+        when(forms.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(name, 42)).thenReturn(form);
+        when(forms.findDocIdsByFormInclude(quotedPattern, unquotedPattern)).thenReturn(List.of(122L, 123L));
+        if (submittedDocId != null) {
+            FormsEntity response = new FormsEntity();
+            response.setFormName(name);
+            response.setDomainId(42);
+            response.setDocId(submittedDocId);
+            response.setCreateDate(new Date());
+            when(forms.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(name, 42)).thenReturn(response);
+        }
+
+        Identity user = spy(new Identity());
+        user.setUserId(21);
+        user.setEditableGroups("");
+        user.setEditablePages("");
+        doReturn(true).when(user).isEnabledItem("menuWebpages");
+        doReturn(false).when(user).isDisabledItem("menuFbrowser");
+        user.setWritableFolders("");
+        PermissionGroupBean scope = new PermissionGroupBean();
+        if (editableGroup > 0) scope.setEditableGroups(Integer.toString(editableGroup));
+        if (editablePage > 0) scope.setEditablePages(Integer.toString(editablePage));
+        PermissionGroupBean additionalGroup = new PermissionGroupBean();
+        additionalGroup.setAllEditableGroups(allFolders);
+        GroupsDB groupsDB = mock(GroupsDB.class);
+        when(groupsDB.expandGroupIdsToChilds(any(int[].class), eq(true)))
+                .thenAnswer(call -> call.getArgument(0));
+        DocDB docDB = mock(DocDB.class);
+        DocDetails local = new DocDetails();
+        local.setDocId(123);
+        local.setGroupId(9);
+        DocDetails foreign = new DocDetails();
+        foreign.setDocId(122);
+        foreign.setGroupId(8);
+        when(docDB.getBasicDocDetails(122, false)).thenReturn(foreign);
+        when(docDB.getBasicDocDetails(123, false)).thenReturn(local);
+        when(groupsDB.getDomain(8)).thenReturn("other.example");
+        when(groupsDB.getDomain(9)).thenReturn("local.example");
+
+        try (var cloud = mockStatic(CloudToolsForCore.class); var groups = mockStatic(GroupsDB.class);
+                var docs = mockStatic(DocDB.class); var constants = mockStatic(Constants.class);
+                var mappings = mockStatic(MultigroupMappingDB.class); var permissions = mockStatic(UserGroupsDB.class)) {
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(42);
+            docs.when(DocDB::getInstance).thenReturn(docDB);
+            groups.when(GroupsDB::getInstance).thenReturn(groupsDB);
+            groups.when(() -> GroupsDB.isGroupEditable(user, 9)).thenCallRealMethod();
+            groups.when(() -> GroupsDB.getDomainId("other.example")).thenReturn(17);
+            groups.when(() -> GroupsDB.getDomainId("local.example")).thenReturn(42);
+            constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
+            constants.when(() -> Constants.getInt("systemPagesMyPages")).thenReturn(99);
+            permissions.when(() -> UserGroupsDB.getPermissionGroupsFor(21)).thenReturn(List.of(scope, additionalGroup));
+            LogonTools.setUserPerms(user);
+
+            assertEquals(expected, service.getFormsList(user).contains(form));
+            assertEquals(expected, service.isFormAccessible(name, user));
+            int expectedLookups = !allFolders && (submittedDocId == null || submittedDocId < 1) ? 2 : 0;
+            verify(forms, times(expectedLookups)).findDocIdsByFormInclude(quotedPattern, unquotedPattern);
+        }
+    }
+
+    /** With no editable embedding page, only the creator of a form with zero submissions has access. */
+    @ParameterizedTest
+    @CsvSource(value = {
+        // Author, latest submission page, Web Pages permission, expected access
+        "21,none,true,true", "22,none,true,false", "none,none,true,false", "-1,none,true,false",
+        "21,-1,true,false", "22,-1,true,false", "21,456,true,false",
+        "21,none,false,true", "22,none,false,false", "21,-1,false,false"
+    }, nullValues = "none")
+    void checksAuthorOfUnembeddedForm(Long authorId, Integer submittedDocId, boolean hasWebPagesPermission, boolean expected) {
+        FormsEntity definition = new FormsEntity();
+        definition.setFormName("draft");
+        definition.setUserId(authorId);
+        definition.setDocId(-1);
+        definition.setDomainId(42);
+
+        Identity editor = spy(new Identity());
+        doReturn(hasWebPagesPermission).when(editor).isEnabledItem("menuWebpages");
+        editor.setUserId(21);
+        editor.setEditablePages("123");
+        FormsRepository forms = mock(FormsRepository.class);
+        when(forms.findAllByCreateDateIsNullAndDomainId(42)).thenReturn(List.of(definition));
+        when(forms.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc("draft", 42)).thenReturn(definition);
+        if (submittedDocId != null) {
+            FormsEntity response = new FormsEntity();
+            response.setFormName("draft");
+            response.setDomainId(42);
+            response.setCreateDate(new Date());
+            response.setDocId(submittedDocId);
+            response.setUserId((long) editor.getUserId());
+            when(forms.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc("draft", 42)).thenReturn(response);
+        }
+        when(forms.countAllByFormNameAndDomainId("draft", 42)).thenReturn(submittedDocId == null ? 1 : 2);
+
+        try (var cloud = mockStatic(CloudToolsForCore.class); var groups = mockStatic(GroupsDB.class);
+                var docs = mockStatic(DocDB.class)) {
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(42);
+            groups.when(GroupsDB::getInstance).thenReturn(mock(GroupsDB.class));
+            docs.when(DocDB::getInstance).thenReturn(mock(DocDB.class));
+            FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
+            assertEquals(expected, service.getFormsList(editor).contains(definition));
+            assertEquals(expected, service.isFormAccessible("draft", editor));
+            if (expected || !hasWebPagesPermission) verify(forms, times(0)).findDocIdsByFormInclude(any(), any());
+        }
     }
 
     @Test

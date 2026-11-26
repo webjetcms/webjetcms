@@ -7,6 +7,8 @@ The configuration section is used to view and manage configuration variables. On
 - **All** - all registered variables, including their default values ​​and custom variables stored only in the database.
 - **Modules** - hierarchical groups, for example `apps.gallery` or `security.oauth2`. Selecting a parent node will also display variables from all its subnodes. One variable can be included in multiple branches.
 
+In all views, variables are sorted by name from A to Z by default. If you click on a column header to choose a different sort, the browser remembers it for the entire tree. You can return to alphabetical sorting via **Settings** above the table → **Column display** → **Reset**.
+
 The tree can be searched. Module names are technical names and are not translated. In the selected module, it is possible to edit an existing variable, but not to create a new one or to start an import, because the database variable itself does not have information about being included in the module.
 
 You can change the ratio of the tree and table widths by clicking the **Settings** button above the tree, or set a fixed width for the tree in pixels. The default width is 200px. The custom choice is saved for the logged in user separately for configuration.
@@ -44,6 +46,8 @@ The change usually takes effect immediately after the add/edit action. However, 
 - we change the **Configuration name**, so the original configuration variable **will not be modified**
   - if the changed name is the name of an **existing** configuration variable, then the **edit** is performed
   - if the changed name is for the name of a **non-existent** configuration variable, then a new variable will be **added**
+
+In the editor, you can view the history of a variable and cancel its scheduled change until it's time to execute.
 
 ## Temporary value setting
 

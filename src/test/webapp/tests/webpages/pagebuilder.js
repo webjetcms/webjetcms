@@ -291,6 +291,58 @@ Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
     Document.resetPageBuilderMode();
 });
 
+Scenario('reopened Page Builder keeps live HTML when editor styles load slowly', async ({I, DTE, Document, Apps}) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+    DTE.cancel();
+    I.fillField('#tree-doc-id', '57');
+    I.pressKey('Enter');
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    const stylesheet = '**/webjetcomponents/samples/contents.css*';
+    let delayedRequests = 0;
+    const slowStylesheet = async route => {
+        delayedRequests++;
+        // Simulate an iframe stylesheet arriving after the old 500 ms mode switch.
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        await route.continue();
+    };
+    await I.mockRoute(stylesheet, slowStylesheet);
+    try {
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.click(locate('[data-ckeditor-instance][contenteditable="true"]').first());
+        I.type('autotest slow switch');
+        const html = await I.executeScript(() => getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+        assert.ok(html.includes('autotest slow switch'));
+        I.selectOption('.exit-inline-editor select', 'html');
+        I.switchTo();
+        I.waitForVisible('.CodeMirror-code pre.CodeMirror-line', 10);
+        // Lines can overflow a zero-sized CodeMirror. Check the editor itself when the switch completes.
+        const source = await I.executeScript(async () => {
+            await webpagesDatatable.EDITOR.field('data').s.opts.wjeditorReadyPromise;
+            const editor = document.querySelector('.CodeMirror');
+            return {html: editor.CodeMirror.getValue(), visible: editor.clientWidth > 0 && editor.clientHeight > 0};
+        });
+        assert.ok(source.visible, 'The source editor must be visible as soon as the mode switch finishes');
+        assert.ok(source.html === html, 'The complete HTML must match the live Page Builder content');
+
+        Apps.switchEditor('standard');
+        DTE.waitForCkeditor();
+        Apps.switchEditor('html');
+        I.waitForVisible('.CodeMirror-code pre.CodeMirror-line', 10);
+        assert.ok(await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue().includes('autotest slow switch')));
+        assert.ok(delayedRequests > 0, 'The WYSIWYG stylesheet must have loaded through the slow route');
+        I.amAcceptingPopups();
+        DTE.cancel();
+    } finally {
+        await I.stopMockingRoute(stylesheet, slowStylesheet);
+        Document.resetPageBuilderMode();
+    }
+});
+
 Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
     //bug: nacitam do editora stranku, prepnem na Standardny editor, prepnem do HTML kodu, ulozim
     //otvorim inu stranku, prepnem editor na Standardny a vidim stary text
@@ -2803,6 +2855,48 @@ Scenario('bug - open window for file selection', ({ I, DTE ,Document}) => {
     I.switchToPreviousTab();
     I.closeOtherTabs();
     I.switchTo();
+});
+
+Scenario('clicking a switched preview image edits only that image', async ({ I, DTE, Document }) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const preview = workbenchFixture+' .autotest-preview';
+    const first = '/admin/images/logo.gif';
+    const second = '/templates/aceintegration/jet/assets/images/logo-jet.png';
+    const replacement = '/admin/skins/webjet8/ckeditor/dist/plugins/image/images/noimage.png';
+    await I.executeScript((root, [first, second]) => {
+        const section = document.querySelector('section.pb-workbench-autotest');
+        const preview = section.querySelector('.pb-column:last-child [data-ckeditor-instance]');
+        preview.innerHTML = '<div class="autotest-preview"><img class="autoimg" src="'+first+'" style="display:block"> '+
+            '<img class="autoimg" src="'+second+'" style="display:none"></div>';
+        // Switch from the other editable column without invoking the CKEditor button dialog.
+        section.querySelector('h2').addEventListener('click', () => {
+            const images = preview.querySelectorAll('img');
+            images[0].style.display = 'none';
+            images[1].style.display = 'block';
+        });
+    }, [first, second]);
+    I.click(preview+' img:first-child');
+    I.waitForVisible('.cke_dialog_container', 10);
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_cancel');
+    I.waitForInvisible('.cke_dialog_container', 10);
+    I.click(workbenchFixture+' h2');
+    I.click(preview+' img:nth-of-type(2)');
+    I.waitForVisible('.cke_dialog_container', 10);
+    I.switchTo('#wjImageIframeElement');
+    I.waitForVisible('#txtUrl', 10);
+    I.retry({retries: 8, minTimeout: 250, maxTimeout: 500}).seeInField('#txtUrl', second);
+    I.fillField('#txtUrl', replacement);
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog_container', 10);
+
+    I.seeNumberOfElements(preview+' img', 2);
+    assert.equal(await I.grabAttributeFrom(preview+' img:first-child', 'src'), first);
+    assert.equal(await I.grabAttributeFrom(preview+' img:last-child', 'src'), replacement);
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
 });
 
 Scenario('bug - /thumb prefix and parameters in image url', async ({ I, DTE, Document }) => {

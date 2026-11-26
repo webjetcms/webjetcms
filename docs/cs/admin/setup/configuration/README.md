@@ -7,6 +7,8 @@ Sekce konfigurace slouží k zobrazení a správě konfiguračních proměnných
 - **Všechny** - všechny evidované proměnné včetně jejich výchozích hodnot a vlastních proměnných uložených pouze v databázi.
 - **Moduly** - hierarchické skupiny, například `apps.gallery` nebo `security.oauth2`. Výběr rodičovského uzlu zobrazí také proměnné ze všech jeho poduzlů. Jedna proměnná může být zařazena ve více větvích.
 
+Ve všech pohledech jsou proměnné ve výchozím nastavení seřazeny podle názvu od A po Z. Pokud kliknutím na hlavičku sloupce zvolíte jiné řazení, prohlížeč si jej zapamatuje pro celý strom. K abecednímu řazení se můžete vrátit přes **Nastavení** nad tabulkou → **Zobrazení sloupců** → **Obnovit**.
+
 Strom lze prohledávat. Názvy modulů jsou technické názvy a nepřekládají se. Ve vybraném modulu lze stávající proměnnou upravit, ale ne vytvořit novou ani spustit import, protože vlastní databázová proměnná nemá informaci o zařazení do modulu.
 
 Tlačítkem **Nastavení** nad stromem můžete změnit poměr šířky stromu a tabulky nebo nastavit pevnou šířku stromu v pixelech. Výchozí šířka je 200px. Vlastní volba se uloží pro přihlášeného uživatele samostatně pro konfiguraci.
@@ -44,6 +46,8 @@ Mohou nastat 3 situace:
 - změníme **Název konfigurace**, tak se **neprovede úprava** původní konfigurační proměnné
   - pokud změněný název, za název **existující** konfigurační proměnné, tak se **provede úprava**
   - pokud změněný název, za název **neexistující** konfigurační proměnné, pak se **provede přidání** nové proměnné
+
+V editoru můžete zobrazit historii proměnné a zrušit její naplánovanou změnu, dokud nenastane čas provedení.
 
 ## Dočasné nastavení hodnoty
 

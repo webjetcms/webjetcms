@@ -792,7 +792,8 @@ public class EditorService {
 	 * group of an existing page. It replicates the same uniqueness loop used by
 	 * {@link #setVirtualPath(DocDetails)} and stores the resulting
 	 * value into {@link DocDetails#setVirtualPath(String)} on the supplied
-	 * {@code editedDoc} instance.</p>
+	 * {@code editedDoc} instance. When a collision changes an inherited URL,
+	 * it also stores the assigned suffix if it can regenerate that URL.</p>
 	 *
 	 * <p>The return value is the {@code docId} of an existing page whose virtual path
 	 * conflicts with the one being computed, or {@code -1} if the computed virtual path
@@ -834,7 +835,18 @@ public class EditorService {
 			int allreadyDocId = DocDB.getDocIdFromURL(virtualPath, domain);
 			Logger.debug(EditorService.class, "setVirtualPath: allreadyDocId for virtualPath: " + virtualPath + " ,docid: " + allreadyDocId);
 
-			if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) { break; }
+			if (allreadyDocId <= 0 || allreadyDocId == editedDoc.getDocId()) {
+				if (virtualPathConflictDocId > 0 && Boolean.TRUE.equals(editedDoc.getUrlInheritGroup())) {
+					String assignedPath = DocDB.normalizeVirtualPath(virtualPath);
+					int end = assignedPath.endsWith("/") ? assignedPath.length() - 1 : assignedPath.length();
+					String suffix = assignedPath.substring(assignedPath.lastIndexOf('/', end - 1) + 1, end);
+					doc.setVirtualPath(suffix);
+					if (Tools.isNotEmpty(suffix) && assignedPath.equals(DocDB.getURL(doc, groupDiskPath))) {
+						editedDoc.setEditorVirtualPath(suffix);
+					}
+				}
+				break;
+			}
 
 			//lebo moze kolidovat uz z hora
 			if (virtualPathConflictDocId < 1) virtualPathConflictDocId = allreadyDocId;

@@ -88,7 +88,7 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.waitForText("Tatra banka", 10, "p");
     I.click(locate("p").withText("Tatra banka"));
 
-    I.clickCss('button[data-cy="bankSubmit"]');
+    I.clickCss('button[data-testid="bankOnline.submit"]');
     I.waitForElement("#confirm");
     I.clickCss("#confirm");
     I.waitForText("Platba prebehla úspešne.", 30);
@@ -310,8 +310,15 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
     const testerName = "autotest-transfer-" + randomNumber;
     openPayments(I, DT, DTE, testerName);
 
-    I.clickCss("#datatableFieldDTE_Field_editorFields-payments_wrapper button.buttons-select-all");
-    I.click(DT.btn.editorpayment_edit_button);
+    const paymentsTable = "#datatableFieldDTE_Field_editorFields-payments";
+    const payment = locate(paymentsTable + " tbody tr")
+        .withChild(locate("td").withTextEquals(SL.PaymentMethods.moneyTransfer))
+        .find("td.dt-select-td");
+    const editPayment = paymentsTable + "_wrapper button.buttons-edit";
+    I.waitForVisible(payment, 15);
+    I.click(payment);
+    I.waitForEnabled(editPayment, 10);
+    I.clickCss(editPayment);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
     I.checkOption("#DTE_Field_confirmed_0");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
@@ -366,7 +373,7 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
 
 Scenario("Delete", async ({ I, DT, DTE }) => {
   I.amOnPage(SL.BASKET_ADMIN);
-  DT.filterContains("editorFields.firstName", "autotest-");
+  DT.filterContains("editorFields.firstName", randomNumber);
 
   for (let i = 0; i < 10 && (await I.grabNumberOfVisibleElements("td.dt-empty")) === 0; i++) {
     I.click(locate("td.dt-select-td.cell-not-editable.dt-type-numeric").first());

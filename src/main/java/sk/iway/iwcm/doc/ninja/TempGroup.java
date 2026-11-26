@@ -10,7 +10,6 @@ public class TempGroup {
     private Ninja ninja;
     private TemplatesGroupBean templatesGroupBean;
     private String iwayPropertiesPrefix = "temp-group-";
-    @SuppressWarnings("unused")
     private String textPrefix;
 
     public TempGroup(Ninja ninja) {
@@ -100,7 +99,7 @@ public class TempGroup {
     }
 
     public String getTextPrefix() {
-        return getTextPrefix();
+        return textPrefix;
     }
 
     public String getSiteName(){

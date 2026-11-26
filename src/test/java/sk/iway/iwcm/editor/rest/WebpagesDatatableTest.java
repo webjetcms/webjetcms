@@ -8,6 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -29,7 +30,7 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Verifies that page edits merge field settings before entering the editor save workflow. */
+/** Verifies preparation of submitted page edits before the editor save workflow. */
 class WebpagesDatatableTest {
     private WebpagesDatatable controller;
     private EditorFacade facade;
@@ -130,6 +131,31 @@ class WebpagesDatatableTest {
         DocDetails saved = controller.editItem(page(""), 123);
 
         assertEquals("", saved.getFieldA());
+    }
+
+    /** Both URL fields are cleaned only when the submitted value contains spaces or diacritics. */
+    @ParameterizedTest
+    @CsvSource({
+        "'Orange vypína 3G sieť, aby mohol ďalej vylepšovať parametre modernejších sietí, vrátane 5G', orange-vypina-3g-siet-aby-mohol-dalej-vylepsovat-parametre-modernejsich-sieti-vratane-5g",
+        "Nova sprava.html, nova-sprava.html",
+        "správa.html, sprava.html",
+        "Sprava.html, Sprava.html",
+        "Pobocky/*, Pobocky/*",
+        "pobocky/Detail*, pobocky/Detail*",
+        "<b>Nová správa</b>.html, nova-sprava.html",
+        "archiv--2026.html, archiv--2026.html"
+    })
+    void cleansSubmittedUrlFields(String input, String expected) {
+        constants.when(() -> Constants.getString("DocTools.removeCharsDir")).thenReturn("[^a-zA-Z/_0-9\\-\\.=]");
+        when(facade.getExistingDocForEditor(123, 0)).thenReturn(published);
+        DocDetails submitted = page("");
+        submitted.setVirtualPath("/novinky/" + input);
+        submitted.setEditorVirtualPath(input);
+
+        DocDetails saved = controller.editItem(submitted, 123);
+
+        assertEquals("/novinky/" + expected, saved.getVirtualPath());
+        assertEquals(expected, saved.getEditorVirtualPath());
     }
 
     /** Required fields remain subject to validation before any stored values are merged. */

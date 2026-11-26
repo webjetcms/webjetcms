@@ -49,6 +49,8 @@ In the URL address field, you set the address of the web page on the Internet (t
 
 The field is **automatically filled in when saving a new web page** based on the folder URL and the Menu Item Name field, you do not need to fill it in manually.
 
+If a manually entered URL or inherited suffix contains spaces or accents, the editor will replace the spaces with dashes, remove accents, and convert the address to lowercase when saving. For example, `/Novinky/Nová správa.html` becomes `/novinky/nova-sprava.html`.
+
 From a search engine optimization perspective, the URL of the page should contain keywords. However, they must also ideally be in the page title, headings, and page text.
 
 If you change the URL of a page, a redirect is automatically created in the Path Redirects application. If another page links to the original URL, it will be redirected to the new page address.
@@ -75,6 +77,8 @@ The URL value will change when:
 - when moving a website to another folder
 
 where as written above the end part is taken according to the specified value.
+
+If the address is taken, the editor will save the assigned suffix, for example `sprava-2.html`. The page will use it even after moving it to another folder.
 
 When you change the URL of a page, a redirect is automatically created in the Path Redirections application from the old URL to the new one.
 

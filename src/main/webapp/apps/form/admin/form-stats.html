@@ -89,6 +89,10 @@
             ]
         });
 
+        if (document.getElementById("chartContainer") === null) {
+            WJ.notifyError(/*[[#{admin.operationPermissionDenied}]]*/ "", /*[[#{components.forms.permsDeniedNote}]]*/ "", 15000);
+            return;
+        }
         insertFilterToStatsPills();
         bindDateFilter();
         loadStats();
@@ -307,6 +311,7 @@
     });
 </script>
 
+<th:block th:if="${param.formName != null and @formsServiceImpl.isFormAccessible(param.formName[0], layout.user)}">
 <div class="row header-container hide-while-loading g-3">
 
     <div class="col-12 col-sm-6 col-xl-3 header-wrapper-outher" data-stat-id="responsesCount">
@@ -454,6 +459,7 @@
 
     </div>
 </li>
+</th:block>
 
 <style>
     .header-container {

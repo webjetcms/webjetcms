@@ -7,6 +7,7 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -63,6 +64,12 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         this.formItemsRepository = formItemsRepository;
         this.multistepFormsService = multistepFormsService;
         this.formsService = formsService;
+    }
+
+    @Override
+    public Page<FormStepEntity> searchItem(Map<String, String> params, Pageable pageable, FormStepEntity search) {
+        formsService.requireFormAccess(MultistepFormsService.getFormName(params), getUser());
+        return super.searchItem(params, pageable, search);
     }
 
     @Override
@@ -246,6 +253,10 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
      */
     @GetMapping(value="/get-step", params={"form-name", "step-id", "language"}, produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("language") String language, HttpServletRequest request) {
+        if (!formsService.isFormAccessible(formName, getUser()) ||
+                formStepsRepository.getValidStep(formName, stepId, CloudToolsForCore.getDomainId()).isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         String encoding = SetCharacterEncodingFilter.getEncoding();
         if (Tools.isEmpty(encoding)) encoding = "UTF-8"; // Fallback
         String contentTypeWithCharset = MediaType.TEXT_HTML_VALUE + "; charset=" + encoding;

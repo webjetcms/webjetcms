@@ -1337,7 +1337,7 @@ const WJ = (() => {
      * @param {*} options
      *  - link {boolean} - ak je true, povolene su aj HTML linky
      *  - badge {boolean} - ak je true, povolene su aj badge
-     *  - imgSrcPrefix {string} - URL prefix (domenove meno) pre obrazky
+     *  - imgSrcPrefix {string} - URL prefix for relative image and link paths
      *  - removeLastBr {boolean} - ak je true, odstrani sa posledny <br />
      * @returns
      */
@@ -1452,8 +1452,10 @@ const WJ = (() => {
 
             //img and href prefix
             if(null !== options.imgSrcPrefix) {
-                htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='" + options.imgSrcPrefix + "$2' class='img-fluid' loading='lazy'/>")
-                                   .replace(/(\[([^\]]+)])\(([^:)]+)\)/g, "<a href='" + options.imgSrcPrefix + "$3' target='_blank'>$2</a>")
+                htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, (match, alt, src) => {
+                    const prefix = /^(?:https?:)?\/\//i.test(src) ? '' : (options.imgSrcPrefix || '');
+                    return `<img alt='${alt}' src='${prefix}${src}' class='img-fluid' loading='lazy'/>`;
+                }).replace(/(\[([^\]]+)])\(([^:)]+)\)/g, "<a href='" + options.imgSrcPrefix + "$3' target='_blank'>$2</a>");
             }
 
             if (true === options.removeLastBr) {

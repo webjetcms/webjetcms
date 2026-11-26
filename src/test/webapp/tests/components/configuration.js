@@ -43,6 +43,33 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.dontSeeElement("#configurationDatatable.dt-hide-id tbody td.dt-select-td > .datatable-column-width");
 });
 
+Scenario('configuration sort order across tree views', ({ I, DT }) => {
+    const header = "#configurationDatatable_wrapper .dt-scroll-head";
+    const nameAscending = header + " th.dt-th-name[aria-sort='ascending']";
+    const dateHeader = header + " th.dt-th-dateChanged";
+    const dateDescending = dateHeader + "[aria-sort='descending']";
+
+    I.executeScript(() => localStorage.removeItem("DT_state_configurationDatatable_" + location.pathname));
+    I.refreshPage();
+    I.waitForElement(nameAscending, 10);
+    I.clickCss(dateHeader + " .dt-column-order");
+    I.waitForElement(dateHeader + "[aria-sort='ascending']", 10);
+    I.clickCss(dateHeader + " .dt-column-order");
+    I.waitForElement(dateDescending, 10);
+
+    I.clickCss("#configuration-view-all_anchor");
+    DT.waitForLoader(datatableName);
+    I.seeElement(dateDescending);
+    I.clickCss("#configuration-view-changed_anchor");
+    DT.waitForLoader(datatableName);
+    I.seeElement(dateDescending);
+
+    I.refreshPage();
+    I.waitForElement(dateDescending, 10);
+    DT.resetTable(datatableName);
+    I.waitForElement(nameAscending, 10);
+});
+
 Data([
     { action: "edit", column: "name", direction: "asc", page: 2, expectedPage: 2 },
     { action: "edit", column: "dateChanged", direction: "desc", page: 2, expectedPage: 0 },

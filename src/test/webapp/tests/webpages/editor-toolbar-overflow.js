@@ -264,6 +264,36 @@ Scenario('PageBuilder integration: table and form submenus stay above the overfl
     DTE.cancel();
 });
 
+Scenario('PageBuilder releases toolbar tooltips and keeps frame events local', async ({ I, DTE, Document }) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    const frame = '#DTE_Field_data-pageBuilderIframe';
+    I.waitForVisible(frame, 20);
+    // Wait for all inline editors, including toolbars on inactive blocks.
+    I.waitForFunction(selector => document.querySelector(selector)?.contentWindow?.pageBuilderReady === true, [frame], 30);
+    const before = await I.executeScript(selector => {
+        const builder = document.querySelector(selector).contentWindow;
+        const buttons = Array.from(builder.document.querySelectorAll('.wj-cke-toolbar__more'));
+        window.autotestPageBuilderButtons = buttons;
+        let received = false;
+        builder.addEventListener('autotest-toolbar', () => { received = true; }, { once: true });
+        builder.WJ.fireEvent('autotest-toolbar');
+        return {
+            tooltips: buttons.length > 0 && buttons.every(button => bootstrap.Tooltip.getInstance(button) != null),
+            localEvent: received && builder.WJ.fireEvent !== window.WJ.fireEvent
+        };
+    }, frame);
+    try {
+        I.assertTrue(before.tooltips, 'The admin Bootstrap registry must contain the open toolbar tooltips');
+        DTE.cancel();
+        const released = await I.executeScript(() => window.autotestPageBuilderButtons.every(button => bootstrap.Tooltip.getInstance(button) === null));
+        I.assertTrue(released, 'Closing the editor must release every toolbar tooltip from the admin registry');
+        I.assertTrue(before.localEvent, 'Page Builder must dispatch local events without publishing its callback on the admin window');
+    } finally {
+        await I.executeScript(() => { delete window.autotestPageBuilderButtons; });
+    }
+});
+
 Scenario('PageBuilder integration: mobile overflow preserves the mode selector and closes on block change', async ({ I, Document }) => {
     Document.resetPageBuilderMode();
     I.resizeWindow(1216, 958);

@@ -316,6 +316,7 @@ Scenario('TODO - bugs', ({ I, DT, DTE }) => {
 Scenario('Zmaz strukturu', ({ I }) => {
      //ak zostalo nieco zaseknute na editacii reloadni aby sa dalo dobre zmazat
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+     I.waitForVisible(locate('#SomStromcek a.jstree-anchor').withText(folder_name), 20);
      I.jstreeNavigate([folder_name]);
 
      // vymazanie webstranky

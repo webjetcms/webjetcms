@@ -304,8 +304,13 @@ export function typeWysiwyg() {
                 conf.dirtyResetRequest = null;
                 conf.dirtyDataOriginal = undefined;
                 const iframe = $("#"+id+"-pageBuilderIframe");
-                iframe.data('pageBuilderPreviousDocument', iframe[0]?.contentDocument);
+                const container = iframe.parent();
+                iframe[0]?.contentDocument?.dispatchEvent(new Event('WJ.PageBuilder.close'));
+                // Detach the page before resetting its URL so website beforeunload handlers cannot prompt on close.
+                iframe.detach();
+                iframe.removeData('pageBuilderPreviousDocument');
                 iframe.attr("src", "about:blank");
+                container.append(iframe);
             });
 
             if (typeof window.switchEditorType == "undefined") {

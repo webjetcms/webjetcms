@@ -30,6 +30,10 @@
     let formItemsDataTable;
 
     window.domReady.add(function () {
+        if (document.getElementById("formItemsDataTable") === null) {
+            WJ.notifyError(/*[[#{admin.operationPermissionDenied}]]*/ "", /*[[#{components.forms.permsDeniedNote}]]*/ "", 15000);
+            return;
+        }
         formItemsDataTable = WJ.DataTable({
             url: WJ.urlAddParam(WJ.urlAddParam(itemUrl, "formName", urlFormName), "itemFormId", urlItemFormId),
             columns: itemsColumns,
@@ -68,4 +72,4 @@
     #pills-dt-formItemsDataTable-advanced-tab { display: none !important; }
 </style>
 
-<table id="formItemsDataTable" class="datatableInit table"></table>
+<table id="formItemsDataTable" class="datatableInit table" data-th-if="${param.formName != null and @formsServiceImpl.isFormAccessible(param.formName[0], layout.user)}"></table>

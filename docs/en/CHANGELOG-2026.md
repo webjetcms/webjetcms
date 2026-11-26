@@ -42,6 +42,10 @@
 
 ![Verify a blocked device before entering the administration](redactor/admin/logon-device-verification.png)
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Specific logins via `doFilterLogon` and `wjlogontoken` will be rejected by the blocked browser without an email prompt. To unblock, the regular login form in the same browser must be used (#340).
 
 Device tracking can be disabled by setting the configuration variable `adminNewDeviceDetectionEnabled` to false. When logging in, the [approximate location](admin/setup/configuration/dashboard.md#login-approximate-location) is also determined by the IP address, which can be disabled by setting `adminLoginLocationApiKey` to the value `DISABLED`.
@@ -134,6 +138,10 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 - AI Chat by field - added saved history filtered by the same field and record. You can search, open and continue an older conversation even after closing the editor; replies remain available for insertion into the field.
 - AI Chat in the field and in the page editor - added image and document upload for assistants with history support. You can select files with the plus icon, drag and drop into the message, or insert an image from the clipboard - the assistant will process them along with the page content (#386).
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless mode
@@ -194,6 +202,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](editor/apps/multistep-form/tab-relations.png)
 
 - Multi-step forms - when setting display conditions and obligations, the compared value for selection fields is selected from their options, including code lists and common radio groups. There is no need to enter values ​​manually (#391).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Multi-step forms - selecting **Form Step** in the item editor now shows the current step number even after changing the order of steps by dragging with the mouse (#392).
 - Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
 - Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
@@ -207,6 +220,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
 - Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
@@ -283,7 +300,13 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Added option to set optional field as required (#58413).
+- Empty required optional fields no longer block deleting records in data tables, including website folders (#414).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Added [JSON Editor](developer/datatables-editor/customfields.md#json-editor) type (`jsoneditor`) for direct input of JSON object with line numbers and formatting button (#311).
 
 ![](frontend/webpages/customfields/webpages-jsoneditor.png)
@@ -304,6 +327,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Server monitoring - in the current values, the [Character encoding] section has been added (sysadmin/monitoring/README.md#character-encoding), which displays the encoding of HTTP responses, JVM and locale environment of the running application server process (#305).
 - Configuration - added hierarchical tree of configuration variables with **Changed**, **Custom**, **All** views and module branches (#293).
+- Configuration - variables are sorted by name from A to Z by default in all branches of the tree, so after editing the value, the variable will remain in its place. If you have saved your own sorting, it takes precedence throughout the tree.
 - Configuration - added **Set Temporarily** option, which sets the value of the configuration variable only on the current node without saving it to the database. After a restart, the value saved in the database will be restored (#291).
 
 ![](admin/setup/configuration/page.png)
@@ -338,6 +362,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Rights groups - if an editor has only individual pages assigned to them through a group, after logging in, their editing rights will be limited to these pages (#419).
+- [Forms](redactor/apps/form/README.md) - the editor can open a multi-step form even before the first submission, if he has the right to edit at least one page on which the form is embedded. The author can edit an empty form immediately after creation or duplication (#419).
+- Multi-step forms - when opening the **Form Items** or **Form Statistics** tab without access to the given form, an error message (#419) appears.
+- Websites - the editor will edit a manually entered URL address when saving if it contains spaces or diacritics. In case of an inherited URL collision, it will save and display the assigned suffix (#417).
+- AI Chat - after deleting an open chat, the assistant selection will only appear once in a new chat (#58878).
+- HTML code embedding - content is decoded in UTF-8 without depending on the default JVM encoding, so that diacritics and other Unicode characters are not corrupted on the server.
 - Structure mirroring - when a translation fails, for example after running out of DeepL quota, the user will receive a notification with the specific reason for the translator exception, including the HTTP code and available DeepL error message. Hard spaces and their HTML entities are normalized in folder names and generated URLs to avoid `nbsp` addresses and unnecessary redirects (#402).
 - Data tables - after editing a single record, when forced to refresh the data, the page with the edited record is displayed according to the current sorting. In the configuration, the variable is searched by name even when its ID is changed. When deleting, the current page is preserved, or the last valid page is displayed. When creating a record, the pagination is still reset (#400).
 - Multi-step forms - the item identifier is generated from the field name text without HTML tags so that name formatting does not affect the identifier (#396).
@@ -362,6 +392,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Editor - when auto-maximizing in a low or narrow window, the entire toolbar remains above the page content. Content no longer shines through under icons and group names (#372).
 - Page Editor - on failure to retrieve content or value `undefined` an error is displayed and saving is stopped to avoid overwriting the original content. `contenteditable` attributes are removed on both loading and saving HTML, including code inserted in HTML mode (#369).
 - Page Builder - when content loading fails, you can switch to HTML mode by restoring the last available HTML. The restore requires confirmation as it may not contain the latest changes (#369).
+- Page Builder - after reopening the page, you can switch to HTML mode even on slow connections. Unsaved edits from Page Builder will also be displayed in the source code (#423).
+- Page Builder - fixed displaying confirmation of page exit if the form or the web page itself sets the `onbeforeunload` event (#423).
 - Page Builder - fixed editor freeze when opening HTML with remaining `contenteditable="true"` attribute. CKEditor no longer initializes twice on the same block.
 - Page Builder - restoring focus after inserting content or a structural block, moving, duplicating, and closing properties or libraries does not move the page to the beginning of the editor. The fix also works in templates with smooth scrolling (`scroll-behavior: smooth`) (#389).
 - Page Builder - unsupported elements marked `pb-editable`, such as list items `li`, no longer block switching from the HTML editor. Their content remains intact and can be edited via the parent editable area (#382).
@@ -391,6 +423,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Updated libraries `org.json 20260719`, PostgreSQL JDBC updated to `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` to `2.6.1`, Apache Commons Codec `1.23.0`, PDFBox library to `3.0.8` and Swagger UI to `5.34.1` with DOMPurify `3.4.17` (#421).
+- Weather - forecast import will reject XML with `DOCTYPE` declaration. If you use your own source in `weatherSourceApi`, it must provide a forecast without a DTD (#421).
+- Local AI - for `ai.djl:api 0.36.0`, a Dependency Check exception for `CVE-2026-129266` has been added. WebJET AI unpacks and verifies models with its own code. DJL tokenizers receive already verified local files (#421).
 - AI assistants - search in statistics and usage graphs only show records and assistants of the current domain (#58850).
 - Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
 - Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
@@ -408,6 +443,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
 - AI assistants - added protection against `prompt injection` attacks with separation of system instructions from user content and detection of coded inputs (#58549).
 - HTML sanitization - `AllowSafeHtmlAttributeConverter` preserves the `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) and `tabindex` (`-1`, `0`) attributes on all previously allowed HTML elements. This allows the use of accessibility attributes and custom data attributes (#317).
+- Fixed rights checking for page preview, HTTP header preview, gallery folder settings and history and scheduling configuration variables.
 
 ### Documentation
 
@@ -764,7 +800,10 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- `/thumb` - ​​fixed generation of previews at `ip=1/2` when only width or height is specified in the URL. The limit `imageMaxThumbsWidth` or `imageMaxThumbsHeight` for the second dimension is checked only after it is calculated from the aspect ratio, before generating the image. The format of cache keys and allowed dimensions records is unchanged (#408).
 - Search - the deleted web page is removed by ID from all existing local language Lucene indexes even without data in the database or cache. With continuous indexing enabled, retained notifications of changes to specific pages are processed even after a cluster node restart. In case of a deletion error, the cluster notification is not confirmed and processing is repeated (#403).
+- Search - preparing an application preview for the index as part of cluster synchronization will prepare a replacement `request` object for a better way to display applications for the search index (#404).
+- Search - when removing HTML tags, the content is no longer truncated after 100,000 characters. The maximum length of processed HTML is determined by the configuration variable `fulltextMaxHtmlLength` (2,000,000 characters by default). When the limit is exceeded, only the beginning of the content is processed and a warning is written to the log. Optimized processing of long HTML tag attributes (#404).
 - Database - fixed generation of SQL conditions `IN` and `NOT IN` with a large number of values ​​by dividing the lists into smaller parts. Fixed errors when exceeding the limit of 1000 values ​​in the Oracle database, for example when loading the page history or working with an extensive folder tree. The maximum number of values ​​in one part is determined by the configuration variable `dbInClauseMaxItems` (default 1000, in Oracle no more than 1000).
 - Database - unified date types in SQL scripts for new installations: PostgreSQL uses `TIMESTAMP WITHOUT TIME ZONE`, fixed incorrect use of `TIMESTAMP` in MariaDB and Microsoft SQL. Existing databases are not automatically converted (#399).
 - Web pages - fixed limiting search and replace in folder names to the selected folder tree and setting the parent when fixing erroneously deleted folders during moving a page to the trash (#390).
@@ -787,6 +826,11 @@ Redesigned application properties settings in the editor from the old code in `J
 - Security - added reasoned exceptions in `dependency-check-suppressions.xml` for vulnerabilities in unused Spring parts and for the vulnerability addressed by the SpringEL setting above. The exception for [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) takes into account the above protected file protection and file submission fix; it represents application precautions and accepted residual risk, not a library fix or confirmation of the safety of all response submission methods. The default deferred writing of Spring Security headers is retained. Versions `Spring Framework 5.3.39` and `Spring Security 5.8.16` are retained.
 - AI assistants - when updating, OpenAI models will be replaced with newer ones: `gpt-image-2` by the `gpt-image-2.6-sunburst` model for image generation and editing, `gpt-5`, `gpt-5-pro`, `o3` and `o3-pro` by the `gpt-5.6-sol` model, `gpt-5-mini` by the `gpt-5.6-terra` model and `gpt-5-nano` by the `gpt-5.6-luna` model. OpenAI will shut down the original text models on December 11, 2026 and the image model on February 10, 2027. Assistants with the original Pro models will switch to the standard Sol mode.
 - Data tables - fixed condition generation when filtering fields that reference another entity. Text search is skipped for these fields to avoid invalid SQL conditions (#397).
+- Templates - [Ninja object](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` returns the prefix of the template group text keys. Previously, the getter called itself and using it in a template ended with error `StackOverflowError` (#409).
+- File archive - administration now offers the correct setting name `fileArchivCacheTime`, which determines how long the archive keeps the file version history in the cache, for example. The application loads the main file list directly from the database. The default time is still 120 minutes. The custom value under the correct name worked before the fix, and the setting for a specific method takes precedence. If you entered a value under the original name `fileArchivatorCacheTime`, enter it under the name `fileArchivCacheTime` (#411).
+- Files - fixed the name of the configuration variable `elfinderMetadataAutopopup`, which automatically displays the metadata dialog after uploading a file. The variable was declared with a typo as `elfinerMetadataAutopopup`, which was not read anywhere, so changing it in the administration had no effect. The default value `false` remains. If you set a variable with a typo, set it to `elfinderMetadataAutopopup` instead (#410).
+- Fixed looping in HTTP redirects during file downloads, user settings loading, primary key generator initialization, and database file cache refresh. Added retry exit conditions. If the primary key generator remains unavailable after one attempt to create a record and refresh the cache, the `PkeyGenerator.getNextValue(String)` and `getNextValueAsLong(String)` methods throw `IllegalStateException`. The caller must abort the operation requiring the identifier and pass the error to its exception handler (#412).
+- Menu - fixed generation of `class` attribute on `<li>` item when using Menu Info setting (`menuInfoDirName`). Class `menu-info-li` is added to other CSS classes of the item.
 
 ## 2026.0.40
 

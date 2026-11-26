@@ -1547,7 +1547,7 @@ public class Constants {
 
 		setBoolean("elfinderMetadataEnabled", false, mods(MOD_SECURITY, MOD_ELFINDER),
 				"Ak je nastavene na true, tak sa povoli metadata plugin pre elfinder (nastavenie opravneni na subory)");
-		setBoolean("elfinerMetadataAutopopup", false, mods(MOD_SECURITY, MOD_ELFINDER),
+		setBoolean("elfinderMetadataAutopopup", false, mods(MOD_SECURITY, MOD_ELFINDER),
 				"Ak je nastavene na true, tak sa automaticky po uploade suboru zobrazi dialog metadát");
 
 		setString("uploadFileActionReflectionLoader", "", MOD_UPLOAD,
@@ -1566,7 +1566,7 @@ public class Constants {
 				"Ak je false nie je mozne vkladat subory (napr. ked je update)");
 		setString("fileArchivAllowExt", ".pdf,.xlsx,.xls,.doc,.docx,.asc,.xml,.csv", MOD_FILE_ARCHIV,
 				"Pripony súborov, ktoré file archiv nahrať");
-		setInt("fileArchivatorCacheTime", 400, mods(MOD_FILE_ARCHIV, MOD_PERFORMANCE), "Cache v minutach pre vypis suborov na frontende");
+		setInt("fileArchivCacheTime", 120, mods(MOD_FILE_ARCHIV, MOD_PERFORMANCE), "Cache v minutach pre vypis suborov na frontende");
 		setBoolean("fileArchiv-delete-cache-public-node", true, MOD_FILE_ARCHIV, "Ak je true maze aj public nody");
 		setString("fileArchivFromMail", "", MOD_FILE_ARCHIV,
 				"Emailova adresa z ktorej chodia notifikacie, napr o nahrati suboru v urcity cas");
