@@ -205,6 +205,12 @@ K dispozici jsou dvě samostatné karty:
 
 Obě karty používají stejný typ pravidel a stejný způsob vyhodnocování. Liší se pouze výsledným efektem. Nastavení z jedné karty neovlivňují nastavení druhé karty.
 
+Ve videu nastavíte formulář **Poptávka na službu** tak, aby se název firmy zobrazil pouze při výběru možnosti **Firma**. Telefon zůstane viditelný pro každého, ale povinen bude pouze pro firmu. Na kartě [Vazby](#vazby) uvidíte, která pole používají odpověď na otázku **Typ zákazníka**.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](tab-visibilityConditions.png)
 
 !>**Upozornění:** Systém nekontroluje, zda jsou zadané podmínky reálně splnitelné, proto je nastavujte tak, aby mohly nastat. Vyhněte se i situacím, kdy má položka podmíněné zobrazení a zároveň se její hodnota používá v další podmínce, protože může vzniknout mrtvá situace. Rovněž nedoporučujeme měnit pořadí kroků, pokud již máte nastavené podmínky, protože může nastat situace, kdy pole z kroku 1 čeká na hodnotu pole z kroku 3, což nebude fungovat správně.

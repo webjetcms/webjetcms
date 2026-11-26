@@ -4,6 +4,12 @@ The Optional Fields table allows you to centrally set the properties of optional
 
 You set the type, requirement, and options of an optional field on this tab. To move a field to another tab or change its display, use [Field Settings](fields-settings.md). You create a custom tab via [Tab Settings](tabs-settings.md). The settings are saved for the currently selected domain; you need the **Data Tables** (`dataTablesConfig`) right to access them.
 
+In the video, you will see how to set up a required **Service Type** field for a specific website with a helper and how the editor selects one of the options from the code list.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](custom-fields-settings-datatable.png)
 
 ## Table columns

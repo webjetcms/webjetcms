@@ -19,7 +19,13 @@ The second brand offers training. On its domain, the administrator can create a 
     <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="Vytvorenie vlastnej karty SEO a presun polí v editore stránky" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-[Custom tab with optional fields](../../frontend/datatables/tabs-settings.md#custom-tab-with-optional-fields) | [Field settings and their order](../../frontend/datatables/fields-settings.md)
+For a service page, you can set the required field **Service type**. For example, the editor can select **Training**. When you expand the menu to include **Service intervention**, just add it to the code list. The next time the page is opened, the editor will see the new option and the original selection will be retained.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+[Custom tab with optional fields](../../frontend/datatables/tabs-settings.md#custom-tab-with-optional-fields) | [Field settings and their order](../../frontend/datatables/fields-settings.md) | [Optional fields](../../frontend/datatables/custom-fields-settings.md)
 
 ## Inquiries, approvals, and upcoming publishing on one screen
 
@@ -34,6 +40,12 @@ The editor moves the **For Approval** and **Upcoming Publishing** tabs to the to
 - **Easier work prioritization** – the manager can see both approval requests and publication deadlines and can decide which page to work on first.
 
 ![Home screen of administration with tabs](../../redactor/admin/dashboard.png)
+
+On the home screen, the editor will also see a notification when someone logs into their account from a new browser. Their own browser can confirm with a code from an email. If they don't recognize the login, they can block the other browser and stay logged in themselves.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Detailed documentation: [Welcome screen](../../redactor/admin/welcome.md) | [Quick search in header](../../redactor/admin/search/README.md)
 
@@ -50,6 +62,12 @@ The editor responds to the first suggestion with the words "Shorten the introduc
 - **The choice of design remains with the editor** – he can refine the invitation with additional messages and decide which version to use.
 
 ![Page design preview from AI Chat in PageBuilder](../../redactor/ai/datatables/pb-chat-preview.png)
+
+In the video you can watch the preparation of an invitation in the classic page editor.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Detailed documentation: [AI Chat](../../redactor/ai/chat/README.md)
 
@@ -246,6 +264,12 @@ An important advantage is **control and safer operation**. The answer is created
 - **Control over quality and costs**: Adjustable context, similarity, and assistant selection limits help keep responses accurate and efficient.
 - **Extensibility for enterprise projects**: The function can be customized through configuration and connections to existing customer processes.
 
+A guest asks about staying with a dog and about parking on the guesthouse's website. In the video, you can see how he gets a brief answer to one question and links to both pages with the terms of stay.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Detailed documentation: [Semantic Search (RAG)](../../redactor/apps/semantic-search/README.md)
 
 ## Smart search by question meaning
@@ -286,6 +310,12 @@ The solution is also prepared for long-term project growth. The administrator ca
 - **Lower operational risk**: Field dependency checks help prevent invalid settings and regressions.
 
 ![Conditional display of fields in a form](../../redactor/apps/multistep-form/tab-visibilityConditions.png)
+
+A private person can send a request without a phone number. You can ask a company for both their name and phone number in the same form. In the video, you can see the setup of both rules and the result on the public page.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Detailed documentation: [Conditional display/item validation](../../redactor/apps/multistep-form/README.md#conditional-displayitem-validation)
 

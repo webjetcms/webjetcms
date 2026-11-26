@@ -127,6 +127,10 @@ Errors remain visible until the cause is resolved. You can postpone the regular 
 
 If you log in from a browser that WebJET CMS does not recognize as being used for your account within the last 90 days, you will see a notification and receive an email. Check your browser, operating system, IP address, and login time. For your current browser, you will see **You have logged in from a new browser** and the label **This browser**.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![Notification after logging in from a new browser](device-new-browser.png)
 
 The **New WebJET CMS Login** email contains login details and buttons to confirm your login or secure your account.
