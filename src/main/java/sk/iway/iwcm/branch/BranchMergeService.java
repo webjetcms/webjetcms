@@ -59,7 +59,7 @@ public final class BranchMergeService {
                 for (BranchType type : List.of(BranchType.GROUP,BranchType.DOCUMENT,BranchType.MEDIA,BranchType.FILE)) {
                     String columns = BranchPermissionRows.columns(type)+",operation,applied_hash,apply_state,apply_phase,apply_error";
                     List<Map<String,Object>> rows = new ArrayList<>();
-                    try (var s = c.prepareStatement("SELECT "+columns+" FROM `"+type.workTable()+"` WHERE branch_id=? ORDER BY row_id")) {
+                    try (var s = c.prepareStatement("SELECT "+columns+" FROM "+type.workTable()+" WHERE branch_id=? ORDER BY row_id")) {
                         s.setLong(1,id);
                         try (var r = s.executeQuery()) {
                             while (r.next()) rows.add(BranchPublishRows.row(r));
@@ -113,7 +113,7 @@ public final class BranchMergeService {
                 if(type!=BranchType.FILE && change.base().state()==BranchSnapshot.State.ABSENT && live.state()!=BranchSnapshot.State.ABSENT && row.get("applied_hash")==null)throw conflict("Rezervované ID už obsadil cudzí produkčný riadok.");
                 if(!live.hash().equals(liveHash)||!change.work().hash().equals(workHash)) throw conflict("Podklad sa zmenil. Obnovte porovnanie.");
                 BranchSnapshot target=source==BranchDecision.Source.LIVE?live:change.work();
-                try(PreparedStatement s=c.prepareStatement("UPDATE `"+type.workTable()+"` SET resolved_choice=?,resolved_live_hash=?,resolved_work_hash=?,resolved_snapshot=?,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                try(PreparedStatement s=c.prepareStatement("UPDATE "+type.workTable()+" SET resolved_choice=?,resolved_live_hash=?,resolved_work_hash=?,resolved_snapshot=?,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
                     s.setString(1,source.name());s.setString(2,liveHash);s.setString(3,workHash);s.setString(4,target.json());s.setObject(5,row.get("row_id"));s.setLong(6,id);s.executeUpdate();
                 }
                 bump(c,id,user.getUserId());c.commit();
@@ -168,7 +168,7 @@ public final class BranchMergeService {
                 } else {
                     for(Entry e:plan.entries) {
                         if(resume) continue;
-                        try(PreparedStatement s=c.prepareStatement("UPDATE `"+e.type.workTable()+"` SET resolved_snapshot=?,resolved_live_hash=?,resolved_work_hash=?,apply_state='PENDING',apply_phase=?,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                        try(PreparedStatement s=c.prepareStatement("UPDATE "+e.type.workTable()+" SET resolved_snapshot=?,resolved_live_hash=?,resolved_work_hash=?,apply_state='PENDING',apply_phase=?,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
                             s.setString(1,e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
                         }
                     }
@@ -228,7 +228,7 @@ public final class BranchMergeService {
                 for(BranchType type:BranchType.values())for(Map<String,Object> row:BranchPublishRows.rows(c,id,type)) {
                     authorize(c,type,row,user,domain,false,permissions);
                     if(row.get("applied_hash")!=null && !"NOOP".equals(row.get("apply_phase")))throw conflict("Balík už obsahuje produkčný zápis.");
-                    try(PreparedStatement s=c.prepareStatement("UPDATE `"+type.workTable()+"` SET apply_state='PENDING',apply_phase=NULL,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                    try(PreparedStatement s=c.prepareStatement("UPDATE "+type.workTable()+" SET apply_state='PENDING',apply_phase=NULL,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
                         s.setObject(1,row.get("row_id"));s.setLong(2,id);s.executeUpdate();
                     }
                 }
@@ -461,7 +461,7 @@ public final class BranchMergeService {
         }
     }
 
-    private static final String GROUP_TOPOLOGY = "SELECT group_id,parent_group_id,group_name,navbar,url_dir_name,domain_name,default_doc_id,logon_page_doc_id,new_page_docid_template,link_group_id FROM `groups` WHERE ";
+    private static final String GROUP_TOPOLOGY = "SELECT group_id,parent_group_id,group_name,navbar,url_dir_name,domain_name,default_doc_id,logon_page_doc_id,new_page_docid_template,link_group_id FROM groups WHERE ";
 
     /** Include referenced folders, structural descendants and ancestors needed for inherited domain and access. */
     private static Map<Integer,Map<String,Object>> validationGroups(Connection c,List<Entry> entries,boolean frozen,String domain) throws SQLException {

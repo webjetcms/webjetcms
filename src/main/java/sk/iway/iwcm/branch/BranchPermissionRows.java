@@ -39,7 +39,7 @@ final class BranchPermissionRows {
             rows.put(new Key(type,id,false),null);
             ids.add(id);
         }
-        String sql = "SELECT "+columns(type)+" FROM `"+type.liveTable()+"` WHERE "+DB.getInCondition(type.idColumn(),ids);
+        String sql = "SELECT "+columns(type)+" FROM "+type.liveTable()+" WHERE "+DB.getInCondition(type.idColumn(),ids);
         try (var s = connection.prepareStatement(sql); var r = s.executeQuery()) {
             while (r.next()) rows.put(new Key(type,r.getInt(type.idColumn()),false),BranchPublishRows.row(r));
         }
@@ -48,7 +48,7 @@ final class BranchPermissionRows {
     Map<String,Object> get(BranchType type,int id,boolean work) throws SQLException {
         Key key = new Key(type,id,work);
         if (!rows.containsKey(key)) {
-            String sql = "SELECT "+columns(type)+" FROM `"+(work ? type.workTable() : type.liveTable())+"` WHERE "+type.idColumn()+"=?"+(work ? " AND branch_id=?" : "");
+            String sql = "SELECT "+columns(type)+" FROM "+(work ? type.workTable() : type.liveTable())+" WHERE "+type.idColumn()+"=?"+(work ? " AND branch_id=?" : "");
             try (var s = connection.prepareStatement(sql)) {
                 s.setInt(1,id);
                 if (work) s.setLong(2,branchId);

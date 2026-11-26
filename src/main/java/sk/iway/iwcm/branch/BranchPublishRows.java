@@ -11,7 +11,7 @@ final class BranchPublishRows {
 
     static List<Map<String,Object>> rows(Connection connection,long branchId,BranchType type) throws SQLException {
         List<Map<String,Object>> rows=new ArrayList<>();
-        try(PreparedStatement statement=connection.prepareStatement("SELECT * FROM `"+type.workTable()+"` WHERE branch_id=? ORDER BY row_id")) {
+        try(PreparedStatement statement=connection.prepareStatement("SELECT * FROM "+type.workTable()+" WHERE branch_id=? ORDER BY row_id")) {
             statement.setLong(1,branchId);
             try(ResultSet result=statement.executeQuery()) {
                 while(result.next()) rows.add(row(result));
@@ -32,7 +32,7 @@ final class BranchPublishRows {
 
     static Map<Integer,Map<String,Object>> groups(Connection connection) throws SQLException {
         Map<Integer,Map<String,Object>> groups=new LinkedHashMap<>();
-        try(PreparedStatement statement=connection.prepareStatement("SELECT group_id,parent_group_id,group_name FROM `groups`");ResultSet result=statement.executeQuery()) {
+        try(PreparedStatement statement=connection.prepareStatement("SELECT group_id,parent_group_id,group_name FROM groups");ResultSet result=statement.executeQuery()) {
             while(result.next()) {Map<String,Object> row=row(result);groups.put(number(row,"group_id"),row);}
         }
         return groups;
@@ -71,7 +71,7 @@ final class BranchPublishRows {
     }
 
     static void lockLive(Connection connection,BranchType type,Map<String,Object> work) throws SQLException {
-        try(PreparedStatement statement=connection.prepareStatement("SELECT "+type.idColumn()+" FROM `"+type.liveTable()+"` WHERE "+type.idColumn()+"=? FOR UPDATE")) {
+        try(PreparedStatement statement=connection.prepareStatement("SELECT "+type.idColumn()+" FROM "+type.liveTable()+" WHERE "+type.idColumn()+"=? FOR UPDATE")) {
             statement.setInt(1,number(work,type.idColumn()));try(ResultSet ignored=statement.executeQuery()) {while(ignored.next()) { /* Lock the current physical identity. */ }}
         }
         if(type==BranchType.MEDIA)try(PreparedStatement statement=connection.prepareStatement("SELECT media_id FROM media_group_to_media WHERE media_id=? FOR UPDATE")) {
@@ -109,15 +109,15 @@ final class BranchPublishRows {
 
     static void update(Connection connection,BranchType type,Map<String,Object> values) throws SQLException {
         List<String> names=new ArrayList<>(values.keySet());names.remove(type.idColumn());
-        String assignments=String.join(",",names.stream().map(name->"`"+name+"`=?").toList());
-        try(PreparedStatement statement=connection.prepareStatement("UPDATE `"+type.liveTable()+"` SET "+assignments+" WHERE "+type.idColumn()+"=?")) {
+        String assignments=String.join(",",names.stream().map(name->name+"=?").toList());
+        try(PreparedStatement statement=connection.prepareStatement("UPDATE "+type.liveTable()+" SET "+assignments+" WHERE "+type.idColumn()+"=?")) {
             int i=1;for(String name:names)statement.setObject(i++,values.get(name));statement.setObject(i,values.get(type.idColumn()));
             if(statement.executeUpdate()!=1)throw new SQLException("Publication identity disappeared: "+type+":"+values.get(type.idColumn()));
         }
     }
 
     static void checkpoint(Connection connection,BranchType type,Map<String,Object> work,String state,String phase,String hash,String error) throws SQLException {
-        try(PreparedStatement statement=connection.prepareStatement("UPDATE `"+type.workTable()+"` w SET apply_state=?,apply_phase=?,applied_hash=?,apply_error=? WHERE row_id=? AND branch_id=? AND EXISTS (SELECT 1 FROM branches b WHERE b.id=w.branch_id AND b.state='MERGING')")) {
+        try(PreparedStatement statement=connection.prepareStatement("UPDATE "+type.workTable()+" w SET apply_state=?,apply_phase=?,applied_hash=?,apply_error=? WHERE row_id=? AND branch_id=? AND EXISTS (SELECT 1 FROM branches b WHERE b.id=w.branch_id AND b.state='MERGING')")) {
             statement.setString(1,state);statement.setString(2,phase);statement.setString(3,hash);statement.setString(4,error);
             statement.setLong(5,((Number)work.get("row_id")).longValue());statement.setLong(6,((Number)work.get("branch_id")).longValue());
             if(statement.executeUpdate()!=1)throw new SQLException("Publication checkpoint disappeared");
@@ -165,7 +165,7 @@ final class BranchPublishRows {
 
     private static Map<String,Object> matchingColumns(Connection connection,String table,Map<String,Object> values,Set<String> excluded) throws SQLException {
         Map<String,Object> matching=new LinkedHashMap<>();
-        try(PreparedStatement statement=connection.prepareStatement("SELECT * FROM `"+table+"` WHERE 1=0");ResultSet result=statement.executeQuery()) {
+        try(PreparedStatement statement=connection.prepareStatement("SELECT * FROM "+table+" WHERE 1=0");ResultSet result=statement.executeQuery()) {
             for(int i=1;i<=result.getMetaData().getColumnCount();i++) {
                 String column=result.getMetaData().getColumnName(i);
                 if(!excluded.contains(column)&&values.containsKey(column))matching.put(column,values.get(column));

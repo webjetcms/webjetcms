@@ -5,11 +5,12 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     const fs = require('fs');
     const path = require('path');
     const crypto = require('crypto');
+    const fixtures = process.env.WEBJET_P06_FIXTURES || '/tmp';
     const read = file => Object.fromEntries(fs.readFileSync(file, 'utf8').trim().split('\n').filter(line => line && !line.startsWith('#')).map(line => {
         const separator = line.indexOf('=');
         return [line.slice(0, separator), line.slice(separator + 1)];
     }));
-    const credentials = read('/tmp/webjet-p05-login.properties');
+    const credentials = read(path.join(fixtures, 'webjet-p05-login.properties'));
     const evidence = path.resolve(process.env.WEBJET_P06_EVIDENCE || '../../../build/test-results/p06');
     const digest = bytes => crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex');
     const dialog = '#branchesDataTable_modal';
@@ -17,8 +18,8 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     const comparisonDialog = dialog+' dialog.pg-branch-merge';
     const busy = dialog+' [aria-busy=true]';
     const itemButton = id => `${dialog} [data-branch-compare="${id}"]`;
-    const retain = () => read('/tmp/webjet-p06-manual.properties');
-    const disposable = () => read('/tmp/webjet-p06-publish.properties');
+    const retain = () => read(path.join(fixtures, 'webjet-p06-manual.properties'));
+    const disposable = () => read(path.join(fixtures, 'webjet-p06-publish.properties'));
 
     if (!/^http:\/\/(iwcm\.interway\.sk|127\.0\.0\.1|localhost):8086\/?$/.test(process.env.CODECEPT_URL || '')) {
         throw new Error('P06 browser publishing requires the isolated local POC on port 8086.');
@@ -330,7 +331,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     });
 
     Scenario('P06 the existing trash recovery restores the deleted subtree with its original nesting, IDs and full page', async ({ I, DT, Document }) => {
-        const fixture = read('/tmp/webjet-p06-trash.properties');
+        const fixture = read(path.join(fixtures, 'webjet-p06-trash.properties'));
         Document.setConfigValue('editorDisableHistory', 'true', true);
         const before = await trashDetails(I, fixture);
         I.assertNotEqual(before.section.parentGroupId, Number(fixture.root), 'The prepared subtree must start under the existing trash.');
@@ -371,7 +372,7 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
     });
 
     Scenario('P06 a persisted partial failure shows completed and pending items and resumes without rewriting a completed page', async ({ I }) => {
-        const fixture = read('/tmp/webjet-p06-partial.properties');
+        const fixture = read(path.join(fixtures, 'webjet-p06-partial.properties'));
         if (!fixture.groupId) fixture.groupId = fixture.root;
         const before = await report(I, fixture);
         I.assertEqual(before.state, 'MERGE_FAILED', 'Prepare a fresh retained partial fixture before this scenario.');

@@ -44,15 +44,13 @@ public final class BranchDocumentQuery {
         }
         groups.removeIf(id->view.group(id)==null||(!GroupsDB.isGroupEditable(options.getCurrentUser(),id)&&!GroupsDB.isGroupViewable(options.getCurrentUser(),id)));
         if(groups.isEmpty()) return Page.empty(options.getPageable());
-        List<Object> arguments=new ArrayList<>(groups);
-        StringBuilder where=new StringBuilder(" WHERE d.group_id IN ("+String.join(",",Collections.nCopies(groups.size(),"?"))+")");
+        List<Object> arguments=new ArrayList<>();
+        StringBuilder where=new StringBuilder(" WHERE ").append(DB.getInCondition("d.group_id",groups,arguments));
         List<Integer> editableGroups=groups.stream().filter(id->GroupsDB.isGroupEditable(options.getCurrentUser(),id)).toList();
         List<Integer> editablePages=BranchFields.normalizedIds(options.getCurrentUser().getEditablePages());
         if(editableGroups.isEmpty()&&editablePages.isEmpty())return Page.empty(options.getPageable());
-        where.append(" AND (");
-        if(!editableGroups.isEmpty()) {where.append("d.group_id IN (").append(String.join(",",Collections.nCopies(editableGroups.size(),"?"))).append(')');arguments.addAll(editableGroups);}
-        if(!editablePages.isEmpty()) {if(!editableGroups.isEmpty())where.append(" OR ");where.append("d.doc_id IN (").append(String.join(",",Collections.nCopies(editablePages.size(),"?"))).append(')');arguments.addAll(editablePages);}
-        where.append(')');
+        where.append(" AND (").append(DB.getInCondition("d.group_id",editableGroups,arguments))
+            .append(" OR ").append(DB.getInCondition("d.doc_id",editablePages,arguments)).append(')');
         Map<String,String> params=DatatableRestControllerV2.getParamsMap(options.getRequest());
         String status=params.remove("searchEditorFields.statusIcons");
         if(status!=null&&!status.isBlank()) {
@@ -61,7 +59,7 @@ public final class BranchDocumentQuery {
                 String[] parts=status.split(":",2);
                 String column=parts.length==2?COLUMNS.get(parts[0]):null;
                 if(column==null)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Unsupported status filter");
-                if("notEmpty".equals(parts[1]))where.append(" AND COALESCE(d.`").append(column).append("`,'')<>''");
+                if("notEmpty".equals(parts[1]))where.append(" AND COALESCE(d.").append(column).append(",'')<>''");
                 else if("virtual_path".equals(column)) {where.append(" AND d.virtual_path ").append(parts[1].startsWith("!")?"NOT LIKE ?":"LIKE ?");arguments.add(parts[1].startsWith("!")?parts[1].substring(1):parts[1]);}
                 else params.put("search"+parts[0],parts[1]);
             }
@@ -81,8 +79,9 @@ public final class BranchDocumentQuery {
             }
             if("defaultPage".equals(property)) {
                 List<Integer> ids=view.groups().stream().map(GroupDetails::getDefaultDocId).filter(id->id>0).toList();
-                if(!ids.isEmpty()) {where.append(" AND d.doc_id ").append("false".equals(value)?"NOT IN (":"IN (").append(String.join(",",Collections.nCopies(ids.size(),"?"))).append(")");arguments.addAll(ids);}
-                else if(!"false".equals(value))where.append(" AND 1=0");continue;
+                where.append(" AND ").append("false".equals(value) ? DB.getNotInCondition("d.doc_id",ids,arguments)
+                    : DB.getInCondition("d.doc_id",ids,arguments));
+                continue;
             }
             String column=COLUMNS.get(property);
             if(column==null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Unsupported branch filter: "+property);
@@ -121,6 +120,6 @@ public final class BranchDocumentQuery {
             return new PageImpl<>(docs,options.getPageable(),count);
         } catch(SQLException ex) {throw new IllegalStateException("Cannot query branch pages",ex);}
     }
-    private static String expression(String column) {return "@author".equals(column)?"CONCAT(COALESCE(u.title,''),' ',COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))":"d.`"+column+"`";}
+    private static String expression(String column) {return "@author".equals(column)?"CONCAT(COALESCE(u.title,''),' ',COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))":"d."+column;}
     private static int bind(PreparedStatement statement,BranchSql.Fragment source,List<Object> arguments)throws SQLException {int index=source.bind(statement,1);for(Object value:arguments)statement.setObject(index++,value);return index;}
 }

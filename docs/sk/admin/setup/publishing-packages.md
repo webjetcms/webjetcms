@@ -6,7 +6,7 @@ Na zapnutie pracovných verzií slúži `branchesEnabled=true`. Súkromné súbo
 
 > Pri vlastnom `branchStorageRoot` vyberte adresár, ktorý žiadna doména nesprístupňuje cez web. Ak používate `cloudStaticFilesDir`, overte skutočné umiestnenie verejných priečinkov `/files`, `/images` a `/shared` vrátane cieľov symbolických odkazov. Ak úložisko umiestnite pod niektorý z nich, návštevník môže stiahnuť pracovné súbory ešte pred publikovaním balíka.
 
-Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Podporované rady sú **MariaDB 10.11 LTS, 11.4 LTS a 12.2**, s InnoDB, jednou inštanciou WebJETu, jednou zapisovateľnou DB a lokálnym súborovým úložiskom. Pre rady LTS používajte aktuálnu opravnú verziu. Pred produkčným zapnutím funkciu overte na konkrétnom nasadení.
+Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Podporované sú **MariaDB 10.11 LTS, 11.4 LTS a 12.2 s InnoDB** a **PostgreSQL od verzie 16**. Oba profily počítajú s jednou inštanciou WebJETu, jednou zapisovateľnou databázou a lokálnym súborovým úložiskom. Pre rady LTS používajte aktuálnu opravnú verziu. Pred produkčným zapnutím funkciu overte na konkrétnom nasadení.
 
 ## Inventár a hranice
 
@@ -18,12 +18,12 @@ Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Podporova
 | `NewsApp`, `NewsActionBean`, `news-velocity.jsp` | SQL pred count/paging, existujúce perex kategórie, štandardné filtre/radenia, Velocity, čas náhľadu a výsledok po merge. |
 | Editor, médiá, upload | Stránky/priečinky, mediálne väzby a kategórie; moderný upload, CKEditor, jednotlivé súborové operácie elFinder. |
 
-Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasadenie, CDN/externé storage, IwcmFsDB storage, plný PageBuilder layout a ľubovoľné zákaznícke hooky nie sú týmto deklarované ako podporované. `BranchReadiness` overuje rad MariaDB, engine, stĺpce, oprávnenia a úložisko. Podrobný stav pôvodného pilotu je v [P08 výsledkoch](../../../research/publish-packages/P08-vysledky.md).
+Iné DB vrátane MySQL, SQL Servera a Oracle, MyISAM, viacuzlové nasadenie, CDN/externé storage, IwcmFsDB storage, plný PageBuilder layout a ľubovoľné zákaznícke hooky nie sú týmto deklarované ako podporované. `BranchReadiness` overuje verziu servera, tabuľky a stĺpce, oprávnenia, izoláciu spojení a súkromné úložisko. Na MariaDB kontroluje aj InnoDB. Podrobný stav pôvodného pilotu je v [P08 výsledkoch](../../../research/publish-packages/P08-vysledky.md).
 
 ## Zapnutie na schválenom nasadení
 
 1. Zálohujte konzistentne DB, verejné súbory a súkromné branch úložisko. Overte obnovu na oddelenom prostredí. Zaznamenajte generátory a ID podľa časti Obnova.
-2. Nasaďte kód s vypnutým `branchesEnabled`. Automatická migrácia `Publishing branches` vytvorí päť tabuliek balíkov s InnoDB. Pred zapnutím funkcie overte úložný engine existujúcich tabuliek a podľa potreby vykonajte [konverziu na InnoDB](#konverzia-existujúcich-tabuliek-na-innodb). Perex API potrebuje aj oprávnenia na `perex_group_doc`.
+2. Nasaďte kód s vypnutým `branchesEnabled`. Migrácie vytvoria päť tabuliek balíkov a zaregistrujú plánovač. Na PostgreSQL overte [schému a sekvencie](#postgresql). Na MariaDB overte úložný engine existujúcich tabuliek a podľa potreby vykonajte [konverziu na InnoDB](#konverzia-existujúcich-tabuliek-na-innodb). Perex API potrebuje aj oprávnenia na `perex_group_doc`.
 3. Overte zápis aplikačného účtu do `/WEB-INF`, kde sa automaticky vytvorí predvolené úložisko `/WEB-INF/branches`. Voliteľný `branchStorageRoot` môže smerovať na existujúci súkromný absolútny adresár mimo webrootu. Kontrola pri aktivácii porovnáva cestu s koreňom webovej aplikácie a pri predvolenom úložisku overuje, že aj po rozlíšení symbolických odkazov zostáva v `/WEB-INF`. Právo zápisu sa overuje vytvorením dočasného súboru. Zachovajte existujúci generátor `pkey_generator` pre `media`.
 4. Overte jednu zapisovateľnú DB, aspoň `READ_COMMITTED` pre JDBC aj JPA a rovnaké konfiguračné hodnoty a kód na všetkých uzloch obsluhujúcich obsah. Aktuálny POC deklaruje iba jednu inštanciu; ďalšia topológia potrebuje vlastné overenie súborov/cache/session.
 5. Overte `enableStaticFilesExternalDir=true` a existujúce mapovanie súborov jednotlivých domén. Nastavte `branchesEnabled=true` globálne a obnovte všetky dotknuté uzly. Konfigurácia pracovných verzií je globálna, nie prepínač jednej domény. Priraďte **Pracovné verzie** (`menuBranches`) a existujúce práva stránok, priečinkov a súborov. Prvé vytvorenie balíka vykoná kontrolu aktivácie a pri probléme vráti konkrétny dôvod.
@@ -32,6 +32,22 @@ Iné DB vrátane MySQL, SQL Servera, PostgreSQL/Oracle, MyISAM, viacuzlové nasa
 Pri `fulltextExecuteApps=true` WebJET pri dokončovaní publikovania vykreslí aplikácie v anonymnej požiadavke a ich výstup zahrnie do SQL vyhľadávania. Medzi zápisom stránky a dokončením indexovania môže vyhľadávanie ešte používať jej pôvodný text. Pri chybe renderovania skontrolujte dôvod v priebehu publikovania a po odstránení chyby použite **Pokračovať**.
 
 Kontrola kompatibility odmietne vlastný `fulltextDataAscMethod`. Súbory používajú existujúce externé priečinky domén. Ukladanie do pracovnej verzie nevykonáva živé JSP ani fulltext hooky. Vlastné aplikácie overte pred aktiváciou.
+
+### PostgreSQL
+
+V JDBC URL zdroja `iwcm` nastavte parameter `currentSchema` na schému inštalácie, napríklad `currentSchema=webjet_cms`. JDBC aj priame spojenie JPA musia používať tú istú databázu a schému na zapisovateľnom primárnom serveri. Aplikačný účet potrebuje práva na zápis obsahu, histórie, auditu a tabuliek balíkov aj prístup k sekvenciám. Pri štandardných sekvenciách postačuje na pridelenie ďalšieho čísla oprávnenie `USAGE`.
+
+Pred zapnutím spustite pod aplikačným účtom nasledujúci dotaz. Prvý stĺpec má obsahovať schému WebJETu, ďalšie dva názvy sekvencií priradených k LIVE stĺpcom.
+
+```sql
+SELECT current_schema(),
+       pg_get_serial_sequence('documents', 'doc_id') AS document_sequence,
+       pg_get_serial_sequence('groups', 'group_id') AS group_sequence;
+```
+
+Po aktualizácii overte v úlohách na pozadí, že pre `all-admin` je zaregistrovaná práve jedna aktívna úloha `BranchScheduler`.
+
+Na PostgreSQL **16.16** si nové stránky, priečinok aj médium zachovali rezervované ID po reštarte databázy a pri publikovaní. Po výbere verzií LIVE a WORK videl anonymný návštevník rovnaké menu a Novinky ako redaktor v náhľade, vrátane média a prílohy. V druhom balíku nastala chyba pri dokončovaní indexovania. Pokračovanie cez administráciu dokončilo všetkých 25 položiek. Už publikovaná stránka mala aj po pokračovaní jediný záznam histórie a jeden publikačný audit. Pri vypnutých balíkoch sa zmena uložená cez bežný editor hneď zobrazila v LIVE a rozpracovaná verzia stránky zostala v balíku.
 
 ### Konverzia existujúcich tabuliek na InnoDB
 
@@ -104,7 +120,9 @@ Vypnutie nemaže WORK dáta, rezervované ID ani súkromné súbory a nevracia u
 
 Počas obnovy zastavte aplikačné zápisy a cron na všetkých uzloch. Obnovujte DB, verejný filesystem, file-history a súkromný `branchStorageRoot` z jedného konzistentného bodu, vrátane `branches` a všetkých štyroch WORK tabuliek, snapshotov, rozhodnutí a checkpointov. Čiastočná obnova iba tabuľky `documents` alebo iba WORK súborov nezachová zmluvu publikovania.
 
-Rezervácia nových ID používa rollbackovaný technický insert, ktorý spotrebuje AUTO_INCREMENT, a monotónny `pkey_generator` pre médiá. Rezervované ID preto nemusia byť riadkami LIVE tabuliek. Pred obnovou zaznamenajte `information_schema.TABLES.AUTO_INCREMENT` pre `documents`/`groups`, hodnotu generátora `media`, najvyššie ID vo všetkých LIVE/WORK tabuľkách a rezervácie zo všetkých zachovávaných záloh. Po obnove **neznižujte generátory**: ďalšie document/group ID musí byť vyššie než najvyššia známa rezervácia aj zachytená nasledujúca hodnota; mediálny generátor nesmie byť nižší než jeho zachytená hodnota a známe mediálne ID. Nestačí `MAX(id)` z produkcie. Presný formát/hodnotu generátora overte v `PkeyGenerator`, nevykonávajte univerzálny reset na nulu.
+Na MariaDB rezervácia spotrebuje `AUTO_INCREMENT` technickým vložením a zmazaním riadka v jednej transakcii. Na PostgreSQL balík vyberie ďalšie číslo priamo z existujúcej sekvencie `documents.doc_id` alebo `groups.group_id`. Pre médiá oba profily používajú `PkeyGenerator`. Rezervované ID tak môže existovať iba v pracovnej verzii.
+
+Pri zálohe zaznamenajte na MariaDB nasledujúce hodnoty `AUTO_INCREMENT` a na PostgreSQL stav oboch sekvencií vrátane `last_value` a `is_called`. Pri oboch databázach zaznamenajte hodnotu generátora `media` a najvyššie ID v LIVE aj WORK tabuľkách. Po obnove musí ďalšie pridelené ID prekročiť všetky známe rezervácie vrátane rezervácií zo zachovávaných záloh. Pri obnove neznižujte zaznamenanú hodnotu počítadla ani stav sekvencií. Zachovajte tiež už pridelené rozsahy mediálneho generátora. Samotné `MAX(id)` v LIVE tabuľke neobsahuje čísla rezervované pre nové pracovné stránky, priečinky alebo médiá.
 
 ID zachovávaných balíkov sa nikdy neprečíslujú. Pri obnove staršej zálohy, ktorá rezerváciu ešte neobsahovala, použite zachytené horné hranice aj vtedy, keď sa obsah balíka neobnovuje. Ak ich nemáte, rezervácie nemožno spoľahlivo odvodiť len z LIVE dát; balíky z novšieho bodu nepublikujte do takej DB bez manuálneho zosúladenia.
 

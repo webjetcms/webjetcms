@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.i18n.Prop;
@@ -118,7 +119,7 @@ public final class BranchStore {
         if(old.isEmpty()) insert(connection,"branch_files",row);
         else {
             for(String decision:List.of("resolved_snapshot","resolved_choice","resolved_live_hash","resolved_work_hash","apply_phase","applied_hash","apply_error")) row.put(decision,null);
-            String assignments=String.join(",",row.keySet().stream().map(name->"`"+name+"`=?").toList());
+            String assignments=String.join(",",row.keySet().stream().map(name->name+"=?").toList());
             try(PreparedStatement statement=connection.prepareStatement("UPDATE branch_files SET "+assignments+" WHERE row_id=?")) {
                 int index=1;for(Object value:row.values())statement.setObject(index++,value);
                 statement.setLong(index,((Number)old.get().get("row_id")).longValue());statement.executeUpdate();
@@ -135,7 +136,7 @@ public final class BranchStore {
                 && hasPageMedia(connection, context.branchId(), id)) {
             throw new IllegalStateException(Prop.getInstance().getText("branches.editor.removePageMediaFirst", Integer.toString(id)));
         }
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM `"+type.workTable()+"` WHERE branch_id=? AND "+type.idColumn()+"=?")) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM "+type.workTable()+" WHERE branch_id=? AND "+type.idColumn()+"=?")) {
             statement.setLong(1,context.branchId()); statement.setInt(2,id); statement.executeUpdate();
         }
     }
@@ -185,26 +186,38 @@ public final class BranchStore {
 
     static int reserveNative(Connection connection, BranchType type) throws SQLException {
         if (connection.getAutoCommit()) throw new SQLException("Reservation requires a transaction");
-        String sql = switch (type) {
-            case DOCUMENT -> "INSERT INTO documents(title,data,data_asc,navbar) VALUES ('','','','')";
-            case GROUP -> "INSERT INTO `groups`(group_name) VALUES ('')";
-            default -> throw new IllegalArgumentException("No native allocator for " + type);
-        };
+        if (type != BranchType.DOCUMENT && type != BranchType.GROUP)
+            throw new IllegalArgumentException("No native allocator for " + type);
+        if ("PostgreSQL".equals(connection.getMetaData().getDatabaseProductName())) {
+            try (PreparedStatement statement = connection.prepareStatement("SELECT nextval(pg_get_serial_sequence(?, ?)::regclass)")) {
+                statement.setString(1, type.liveTable());
+                statement.setString(2, type.idColumn());
+                try (ResultSet result = statement.executeQuery()) { return reservedId(result); }
+            }
+        }
+        String sql = type == BranchType.DOCUMENT
+            ? "INSERT INTO documents(title,data,data_asc,navbar) VALUES ('','','','')"
+            : "INSERT INTO groups(group_name) VALUES ('')";
         int id;
         try (PreparedStatement statement = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)) {
             statement.executeUpdate();
             try (ResultSet result = statement.getGeneratedKeys()) {
-                if (!result.next()) throw new SQLException("Native identity was not returned");
-                long generated = result.getLong(1);
-                if (generated <= 0 || generated > Integer.MAX_VALUE) throw new SQLException("Content ID range exhausted");
-                id = (int)generated;
+                id = reservedId(result);
             }
         }
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM `"+type.liveTable()+"` WHERE "+type.idColumn()+"=?")) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM "+type.liveTable()+" WHERE "+type.idColumn()+"=?")) {
             statement.setInt(1,id);
             if (statement.executeUpdate()!=1) throw new SQLException("Technical reservation row disappeared");
         }
         return id;
+    }
+
+    private static int reservedId(ResultSet result) throws SQLException {
+        if (!result.next()) throw new SQLException("Native identity was not returned");
+        long id = result.getLong(1);
+        if (result.wasNull()) throw new SQLException("Missing sequence for the LIVE identity");
+        if (id <= 0 || id > Integer.MAX_VALUE) throw new SQLException("Content ID range exhausted");
+        return (int)id;
     }
 
     private static void insertWork(Connection connection, BranchContext context, BranchType type, Map<String, ?> row,
@@ -217,7 +230,9 @@ public final class BranchStore {
         columns.put("apply_state","PENDING");
         for (String column:BranchFields.forType(type).columns()) {
             if (!row.containsKey(column)) throw new IllegalArgumentException("Missing typed field " + column);
-            columns.put(column,"perex_group".equals(column) ? BranchFields.idTokens(row.get(column)) : row.get(column));
+            Object value = row.get(column);
+            if (value instanceof java.util.Date date && !(value instanceof Timestamp)) value = new Timestamp(date.getTime());
+            columns.put(column,"perex_group".equals(column) ? BranchFields.idTokens(value) : value);
         }
         if (type == BranchType.DOCUMENT && row.containsKey("multigroup_hash")) columns.put("multigroup_hash", row.get("multigroup_hash"));
         if (type==BranchType.MEDIA) columns.put("group_ids_snapshot",BranchFields.normalizedIds(row.get("group_ids_snapshot")).toString());
@@ -226,8 +241,8 @@ public final class BranchStore {
         if (old.isEmpty()) insert(connection,type.workTable(),columns);
         else {
             for (String decision : List.of("resolved_snapshot","resolved_choice","resolved_live_hash","resolved_work_hash","apply_phase","applied_hash","apply_error")) columns.put(decision,null);
-            String assignments = String.join(",",columns.keySet().stream().map(name -> "`"+name+"`=?").toList());
-            try (PreparedStatement statement = connection.prepareStatement("UPDATE `"+type.workTable()+"` SET "+assignments+" WHERE row_id=?")) {
+            String assignments = String.join(",",columns.keySet().stream().map(name -> name+"=?").toList());
+            try (PreparedStatement statement = connection.prepareStatement("UPDATE "+type.workTable()+" SET "+assignments+" WHERE row_id=?")) {
                 int index=1;for (Object value:columns.values())statement.setObject(index++,value);
                 statement.setLong(index,((Number)old.get().get("row_id")).longValue());statement.executeUpdate();
             }
@@ -235,9 +250,9 @@ public final class BranchStore {
     }
 
     static void insert(Connection connection,String table,Map<String, ?> columns) throws SQLException {
-        String names=String.join(",",columns.keySet().stream().map(name->"`"+name+"`").toList());
+        String names=String.join(",",columns.keySet());
         String placeholders=String.join(",",java.util.Collections.nCopies(columns.size(),"?"));
-        try (PreparedStatement statement=connection.prepareStatement("INSERT INTO `"+table+"` ("+names+") VALUES ("+placeholders+")")) {
+        try (PreparedStatement statement=connection.prepareStatement("INSERT INTO "+table+" ("+names+") VALUES ("+placeholders+")")) {
             int i=1; for (Object value:columns.values()) statement.setObject(i++,value); statement.executeUpdate();
         }
     }
@@ -255,11 +270,12 @@ public final class BranchStore {
     }
 
     static Optional<Map<String, Object>> readWork(Connection connection,long branchId,BranchType type,Object key) throws SQLException {
-        return read(connection,type.workTable(),type.idColumn(),key,branchId);
+        Object identity = type != BranchType.FILE && key instanceof String text ? Integer.valueOf(text) : key;
+        return read(connection,type.workTable(),type.idColumn(),identity,branchId);
     }
 
     private static Optional<Map<String, Object>> read(Connection connection,String table,String key,Object value,Long branchId) throws SQLException {
-        try (PreparedStatement statement=connection.prepareStatement("SELECT * FROM `"+table+"` WHERE `"+key+"`=?"+(branchId==null?"":" AND branch_id=?"))) {
+        try (PreparedStatement statement=connection.prepareStatement("SELECT * FROM "+table+" WHERE "+key+"=?"+(branchId==null?"":" AND branch_id=?"))) {
             statement.setObject(1,value); if (branchId!=null) statement.setLong(2,branchId);
             try (ResultSet result=statement.executeQuery()) {
                 if (!result.next()) return Optional.empty();
@@ -276,7 +292,7 @@ public final class BranchStore {
     }
 
     static Object readColumn(ResultSet result,int index,String name)throws SQLException {
-        if(java.util.Set.of("menu_type","logged_menu_type","follow_links","show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap").contains(name)) {
+        if (Constants.DB_TYPE == Constants.DB_MYSQL && java.util.Set.of("menu_type","logged_menu_type","follow_links","show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap").contains(name)) {
             int value=result.getInt(index);return result.wasNull()?null:value;
         }
         return result.getObject(index);

@@ -81,16 +81,16 @@ public final class BranchView {
         // A changed item's LIVE ancestors are also needed to recognize Trash after a move.
         String folderSql = """
             WITH RECURSIVE visible(group_id) AS (
-                SELECT group_id FROM `groups` WHERE parent_group_id=0 AND (domain_name IS NULL OR domain_name IN ('','default',?))
+                SELECT group_id FROM groups WHERE parent_group_id=0 AND (domain_name IS NULL OR domain_name IN ('','default',?))
                 UNION SELECT group_id FROM branch_groups WHERE branch_id=?
-                UNION SELECT g.group_id FROM `groups` g JOIN visible ON g.parent_group_id=visible.group_id
+                UNION SELECT g.group_id FROM groups g JOIN visible ON g.parent_group_id=visible.group_id
                     WHERE g.domain_name IS NULL OR g.domain_name IN ('','default',?)
             ), scope(group_id) AS (
                 SELECT group_id FROM visible
                 UNION SELECT d.group_id FROM documents d JOIN branch_documents w ON w.doc_id=d.doc_id WHERE w.branch_id=?
-                UNION SELECT g.parent_group_id FROM `groups` g JOIN scope ON scope.group_id=g.group_id WHERE g.parent_group_id>0
+                UNION SELECT g.parent_group_id FROM groups g JOIN scope ON scope.group_id=g.group_id WHERE g.parent_group_id>0
             )
-            SELECT g.* FROM `groups` g JOIN scope ON scope.group_id=g.group_id
+            SELECT g.* FROM groups g JOIN scope ON scope.group_id=g.group_id
             """;
         try (var statement = connection.prepareStatement(folderSql)) {
             statement.setString(1,context.domainName());
@@ -103,7 +103,7 @@ public final class BranchView {
         }
         groupRows.putAll(liveGroups);
         for (BranchType type : BranchType.values()) {
-            work.put(type, read(connection, "SELECT * FROM `" + type.workTable() + "` WHERE branch_id=? ORDER BY row_id", true));
+            work.put(type, read(connection, "SELECT * FROM " + type.workTable() + " WHERE branch_id=? ORDER BY row_id", true));
             selected.put(type, new LinkedHashSet<>());
         }
         for (Map<String, Object> row : workRows(BranchType.GROUP)) {
@@ -147,8 +147,8 @@ public final class BranchView {
         // Recompute only metadata of pages below changed ancestors; HTML remains in LIVE SQL.
         List<Integer> affected = groups.values().stream().map(GroupDetails::getGroupId).filter(id -> changedAncestor(id, true)).toList();
         if (!affected.isEmpty()) {
-            String ids = affected.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
-            for (Map<String,Object> live : read(connection,"SELECT "+documentColumns("",true)+" FROM documents WHERE group_id IN ("+ids+")",false)) {
+            String condition = DB.getInCondition("group_id", affected);
+            for (Map<String,Object> live : read(connection,"SELECT "+documentColumns("",true)+" FROM documents WHERE "+condition,false)) {
                 int id = id(live,"doc_id");
                 if (usesWork(BranchType.DOCUMENT,Integer.toString(id))) continue;
                 Map<String,Object> calculated = derived(live);
@@ -254,7 +254,7 @@ public final class BranchView {
         if (id <= 0) return null;
         BranchSql.Fragment source = noData ? BranchSql.documentSource("d",METADATA_COLUMNS) : BranchSql.documentSource("d");
         boolean editor=context.mode()==BranchContext.Mode.ADMIN;
-        String rawColumns=editor ? BranchFields.DOCUMENT.supported().stream().map(column -> ",raw.`"+column+"` AS branch_raw_"+column).collect(java.util.stream.Collectors.joining()) : "";
+        String rawColumns=editor ? BranchFields.DOCUMENT.supported().stream().map(column -> ",raw."+column+" AS branch_raw_"+column).collect(java.util.stream.Collectors.joining()) : "";
         try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
             "SELECT "+documentColumns("d",noData)+rawColumns+",u.title AS u_title,u.first_name,u.last_name,u.email,u.photo FROM "+source.sql()+" LEFT JOIN users u ON u.user_id=d.author_id"+(editor?" LEFT JOIN documents raw ON raw.doc_id=d.doc_id":"")+" WHERE d.doc_id=?")) {
             int index = source.bind(statement,1); statement.setInt(index,id);
@@ -340,7 +340,7 @@ public final class BranchView {
     private static String documentColumns(String alias,boolean noData) {
         String prefix = alias.isEmpty() ? "" : alias+".";
         return BranchFields.DOCUMENT.columns().stream().map(column -> noData && ("data".equals(column) || "data_asc".equals(column))
-            ? "NULL AS "+column : prefix+"`"+column+"`").collect(java.util.stream.Collectors.joining(","));
+            ? "NULL AS "+column : prefix+column).collect(java.util.stream.Collectors.joining(","));
     }
 
     private List<Map<String,Object>> read(Connection connection,String sql,boolean branch) throws SQLException {

@@ -1,6 +1,7 @@
 package sk.iway.iwcm.branch;
 
 import jakarta.persistence.*;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +21,7 @@ public abstract class BranchRow
     @Column(name = "base_exists")
     private Boolean baseExists;
     @Lob
+    @Convert(converter = AllowHtmlAttributeConverter.class)
     @Column(name = "base_snapshot")
     private String baseSnapshot;
     @Column(name = "base_hash")
@@ -29,6 +31,7 @@ public abstract class BranchRow
     @Column(name = "updated_at")
     private java.sql.Timestamp updatedAt;
     @Lob
+    @Convert(converter = AllowHtmlAttributeConverter.class)
     @Column(name = "resolved_snapshot")
     private String resolvedSnapshot;
     @Column(name = "resolved_choice")

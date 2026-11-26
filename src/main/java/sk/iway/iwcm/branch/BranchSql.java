@@ -3,6 +3,7 @@ package sk.iway.iwcm.branch;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import sk.iway.iwcm.DB;
 
 /** Explicit effective SQL sources, composed before filtering, counting or paging. */
 public final class BranchSql {
@@ -25,13 +26,14 @@ public final class BranchSql {
         BranchView view = BranchView.current();
         if (view == null) return new Fragment("documents "+alias,List.of());
         List<Object> arguments = new ArrayList<>();
-        String projection = columns.stream().map(column->"l.`"+column+"`").collect(Collectors.joining(","));
+        String projection = columns.stream().map(column->"l."+column).collect(Collectors.joining(","));
         StringBuilder sql = new StringBuilder("(SELECT "+projection+" FROM documents l WHERE ");
         List<Integer> groups=view.groups().stream().map(sk.iway.iwcm.doc.GroupDetails::getGroupId).toList();
-        if (groups.isEmpty()) sql.append("1=0");
-        else { sql.append("l.group_id IN (").append(placeholders(groups.size())).append(")"); arguments.addAll(groups); }
+        sql.append(DB.getInCondition("l.group_id", groups, arguments));
         Set<String> replaced=view.selectedDocumentIds();
-        if (!replaced.isEmpty()) { sql.append(" AND l.doc_id NOT IN (").append(placeholders(replaced.size())).append(")"); for (String id:replaced) arguments.add(Integer.parseInt(id)); }
+        if (!replaced.isEmpty()) sql.append(" AND ").append(DB.getNotInCondition("l.doc_id",
+            replaced.stream().map(Integer::valueOf).toList(), arguments));
+        // The first arm supplies the LIVE SQL type even when all WORK values in a column are NULL.
         for (Map<String,Object> row:view.documentRows()) {
             sql.append(" UNION ALL SELECT ").append(placeholders(columns.size()));
             for (String column:columns) arguments.add(row.get(column));
@@ -41,7 +43,7 @@ public final class BranchSql {
             List<String> fields = new ArrayList<>();
             for (String column:columns) {
                 if (entry.getValue().containsKey(column)) { fields.add("?"); arguments.add(entry.getValue().get(column)); }
-                else fields.add("l.`"+column+"`");
+                else fields.add("l."+column);
             }
             sql.append(String.join(",",fields)).append(" FROM documents l WHERE l.doc_id=?");
             arguments.add(entry.getKey());

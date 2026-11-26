@@ -122,11 +122,12 @@ class BranchReadinessTest {
         assertThrows(IllegalStateException.class,BranchReadiness::requireEnabled);
     }
 
-    /** Eligible MariaDB series still have to satisfy the writable-connection prerequisite. */
+    /** Supported database versions still have to satisfy the writable-connection prerequisite. */
     @ParameterizedTest
     @CsvSource({"MariaDB,10,11,true", "MariaDB,11,4,true", "MariaDB,12,2,true",
-                "MariaDB,10,10,false", "MariaDB,11,8,false", "MariaDB,12,3,false", "MySQL,11,4,false"})
-    void acceptsOnlySupportedMariaDbSeries(String product, int major, int minor, boolean supported) throws SQLException {
+                "MariaDB,10,10,false", "MariaDB,11,8,false", "MariaDB,12,3,false", "MySQL,11,4,false",
+                "PostgreSQL,15,9,false", "PostgreSQL,16,0,true", "PostgreSQL,17,2,true"})
+    void acceptsOnlySupportedDatabaseVersions(String product, int major, int minor, boolean supported) throws SQLException {
         constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(true);
         constants.when(() -> Constants.getBoolean("enableStaticFilesExternalDir")).thenReturn(true);
         Connection connection = mock(Connection.class);

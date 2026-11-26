@@ -16,7 +16,7 @@ public class BranchGroupEntity extends BranchRow
     @Column(name = "group_name")
     private String groupName;
     @Column(name = "internal")
-    private Integer internal;
+    private Boolean internal;
     @Column(name = "parent_group_id")
     private Integer parentGroupId;
     @Column(name = "navbar")
@@ -63,9 +63,9 @@ public class BranchGroupEntity extends BranchRow
     @Column(name = "lng")
     private String lng;
     @Column(name = "hidden_in_admin")
-    private Integer hiddenInAdmin;
+    private Boolean hiddenInAdmin;
     @Column(name = "force_group_template")
-    private Integer forceGroupTemplate;
+    private Boolean forceGroupTemplate;
     @Column(name = "show_in_navbar")
     private Integer showInNavbar;
     @Column(name = "show_in_sitemap")

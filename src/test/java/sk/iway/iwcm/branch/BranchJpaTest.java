@@ -41,8 +41,7 @@ abstract class BranchJpaTest extends BaseWebjetTest {
 
     @BeforeAll static void initializeBranchPersistence() throws Exception {
         try (var connection=DBPool.getConnection()) {
-            if (!"webjet_p01".equals(connection.getCatalog()) || !connection.getMetaData().getURL().contains(":33316/"))
-                throw new IllegalStateException("Branch persistence tests require the isolated P01 database");
+            BranchTestDomains.requireIsolatedDatabase(connection);
         }
         servletContext=Constants.getServletContext();
         previousSpring=servletContext.getAttribute("springContext");

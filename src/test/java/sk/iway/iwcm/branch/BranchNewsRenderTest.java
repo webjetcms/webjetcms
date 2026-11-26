@@ -51,7 +51,7 @@ import sk.iway.iwcm.Tools;
 @EnabledIfEnvironmentVariable(named="WEBJET_P03_DB",matches="true")
 class BranchNewsRenderTest extends BranchJpaTest {
     private static final int ROOT=1_930_001, CHILD=1_930_002, OUTSIDE=1_930_003;
-    private static final int A=1_930_011, B=1_930_012, DELETED=1_930_013, MOVED=1_930_014, OWNER=1_930_015;
+    private int alpha, beta, deleted, moved;
     private static final String DOMAIN="p03-news.example";
     private static final Instant CREATED=Instant.parse("2026-11-04T09:00:00Z");
     private final List<Integer> liveDocs=new ArrayList<>();
@@ -65,7 +65,7 @@ class BranchNewsRenderTest extends BranchJpaTest {
     private final Map<String,String> originalConfig=new LinkedHashMap<>();
 
     @BeforeEach void fixture() throws Exception {
-        try(Connection c=DBPool.getConnection()) { assertEquals("webjet_p01",c.getCatalog()); assertTrue(c.getMetaData().getURL().contains(":33316/")); }
+        try(Connection c=DBPool.getConnection()) { BranchTestDomains.requireIsolatedDatabase(c); }
         for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","docAuthorLazyLoad","perexGroupUseJoin")) originalConfig.put(key,Constants.getString(key));
         Constants.setBoolean("branchesEnabled",true);
         Constants.setBoolean("enableStaticFilesExternalDir",true);
@@ -73,14 +73,14 @@ class BranchNewsRenderTest extends BranchJpaTest {
         Files.createDirectories(Path.of("/tmp/webjet-p02-private"));
         Constants.setString("branchStorageRoot","/tmp/webjet-p02-private");
         group(ROOT,0,"Root"); group(CHILD,ROOT,"Child"); group(OUTSIDE,0,"Outside");
-        document(A,ROOT,"Alpha",10,"intro Alpha"); document(B,OUTSIDE,"Beta LIVE",20,"intro Beta");
-        document(DELETED,ROOT,"Removed",30,"intro removed"); document(MOVED,ROOT,"Moved",40,"intro moved");
-        document(OWNER,OUTSIDE,"News owner",50,"owner");
-        update("UPDATE groups SET default_doc_id=? WHERE group_id=?",A,ROOT);
+        alpha=document(ROOT,"Alpha",10,"intro Alpha"); beta=document(OUTSIDE,"Beta LIVE",20,"intro Beta");
+        deleted=document(ROOT,"Removed",30,"intro removed"); moved=document(ROOT,"Moved",40,"intro moved");
+        document(OUTSIDE,"News owner",50,"owner");
+        update("UPDATE groups SET default_doc_id=? WHERE group_id=?",alpha,ROOT);
         branch=newBranch("N01 fixture");
         RequestBean fixtureRequest=new RequestBean();fixtureRequest.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(fixtureRequest);
-        change(B,Map.of("group_id",ROOT,"title","Beta WORK","perex_group",",1,2,1930081,1930082,"),false);
-        change(DELETED,Map.of(),true); change(MOVED,Map.of("group_id",OUTSIDE),false);
+        change(beta,Map.of("group_id",ROOT,"title","Beta WORK","perex_group",",1,2,1930081,1930082,"),false);
+        change(deleted,Map.of(),true); change(moved,Map.of("group_id",OUTSIDE),false);
         Map<String,Object> values=docValues(1,ROOT,"Fresh WORK",20,"intro fresh");
         fresh=((Number)store.create(adminBranch(),BranchType.DOCUMENT,values).get("doc_id")).intValue();
         GroupsDB.getInstance(true); DocDB.getInstance(true);
@@ -110,15 +110,15 @@ class BranchNewsRenderTest extends BranchJpaTest {
     @ParameterizedTest @ValueSource(booleans={false,true}) void n01n02OverlayCategoriesAndPaging(boolean join) {
         Constants.setBoolean("perexGroupUseJoin",join);
         NewsActionBean first=render(a->{a.setPageSize(2);a.setPaging(true);});
-        assertIds(first,A,B);assertEquals(3,first.getPaginator(Prop.getInstance("sk")).get("totalCount"));
+        assertIds(first,alpha,beta);assertEquals(3,first.getPaginator(Prop.getInstance("sk")).get("totalCount"));
         NewsActionBean second=render(a->{a.setPageSize(2);a.setPaging(true);a.setPage(2);});assertIds(second,fresh);
-        NewsActionBean included=render(a->{a.setNewsQuery(new NewsQuery().addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP,2)));});assertIds(included,B);
-        assertIds(render(a->a.setPerexGroup(new int[]{2})),B);
-        assertIds(render(a->a.setPerexGroupNot(new int[]{2})),A,fresh);
-        request.addParameter("category",new String[]{"2","1930081"});assertIds(render(a->a.setRequestPerexGroupsName("category")),B);request.removeParameter("category");
-        NewsActionBean excluded=render(a->{a.setNewsQuery(new NewsQuery().addCriteria(DatabaseCriteria.not(DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP,2))));});assertIds(excluded,A,fresh);
-        open(BranchContext.live(DOMAIN,1));assertIds(render(a->{}),A,DELETED,MOVED);
-        open(newBranch("second empty branch"));assertIds(render(a->{}),A,DELETED,MOVED);
+        NewsActionBean included=render(a->{a.setNewsQuery(new NewsQuery().addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP,2)));});assertIds(included,beta);
+        assertIds(render(a->a.setPerexGroup(new int[]{2})),beta);
+        assertIds(render(a->a.setPerexGroupNot(new int[]{2})),alpha,fresh);
+        request.addParameter("category",new String[]{"2","1930081"});assertIds(render(a->a.setRequestPerexGroupsName("category")),beta);request.removeParameter("category");
+        NewsActionBean excluded=render(a->{a.setNewsQuery(new NewsQuery().addCriteria(DatabaseCriteria.not(DatabaseCriteria.tokenizedIds(FieldEnum.PEREX_GROUP,2))));});assertIds(excluded,alpha,fresh);
+        open(BranchContext.live(DOMAIN,1));assertIds(render(a->{}),alpha,deleted,moved);
+        open(newBranch("second empty branch"));assertIds(render(a->{}),alpha,deleted,moved);
     }
 
     /** P08: the real production renderer remains compatible with the global feature flag off and on. */
@@ -126,11 +126,11 @@ class BranchNewsRenderTest extends BranchJpaTest {
         open(BranchContext.live(DOMAIN,1));
         Constants.setBoolean("branchesEnabled",enabled);
         NewsActionBean action=render(a->{a.setPageSize(2);a.setPaging(true);});
-        assertIds(action,A,DELETED);
+        assertIds(action,alpha,deleted);
         assertEquals(3,action.getPaginator(Prop.getInstance("sk")).get("totalCount"));
         assertFalse(action.getHtmlOut().contains("Beta WORK"));
         assertFalse(action.getHtmlOut().contains("Fresh WORK"));
-        assertIds(render(a->{a.setPageSize(2);a.setPaging(true);a.setPage(2);}),MOVED);
+        assertIds(render(a->{a.setPageSize(2);a.setPaging(true);a.setPage(2);}),moved);
         assertEquals("documents d",BranchSql.documentSource("d").sql());
     }
 
@@ -140,9 +140,9 @@ class BranchNewsRenderTest extends BranchJpaTest {
         int sub=((Number)store.create(adminBranch(),BranchType.GROUP,group).get("group_id")).intValue();
         int nested=((Number)store.create(adminBranch(),BranchType.DOCUMENT,docValues(1,sub,"Nested",5,"intro nested")).get("doc_id")).intValue();
         open(branch);
-        assertIds(render(a->{a.setAlsoSubGroups(true);a.setSubGroupsDepth(1);}),nested,A,B,fresh);
-        assertIds(render(a->a.setDocMode(1)),A);
-        assertIds(render(a->a.setDocMode(2)),B,fresh);
+        assertIds(render(a->{a.setAlsoSubGroups(true);a.setSubGroupsDepth(1);}),nested,alpha,beta,fresh);
+        assertIds(render(a->a.setDocMode(1)),alpha);
+        assertIds(render(a->a.setDocMode(2)),beta,fresh);
         GroupDetails invalid=new GroupDetails();invalid.setGroupId(Integer.MAX_VALUE);
         assertIds(render(a->a.setGroupIds(List.of(invalid))));
         assertIds(render(a->a.setGroupIds((List<GroupDetails>)null)));
@@ -150,19 +150,19 @@ class BranchNewsRenderTest extends BranchJpaTest {
 
     /** N04: availability, perex and each publication mode run through the renderer. */
     @Test void n04AvailabilityPerexAndPublicationTime() throws Exception {
-        change(A,Map.of("available",false),false);change(B,Map.of("html_data",""),false);open(branch);
-        assertIds(render(a->{}),fresh);assertIds(render(a->a.setPerexNotRequired(true)),B,fresh);
+        change(alpha,Map.of("available",false),false);change(beta,Map.of("html_data",""),false);open(branch);
+        assertIds(render(a->{}),fresh);assertIds(render(a->a.setPerexNotRequired(true)),beta,fresh);
         long at=System.currentTimeMillis()/1000*1000+86_400_000;
-        change(A,Map.of("available",true),false);
-        update("UPDATE documents SET publish_start=?,publish_end=? WHERE doc_id=?",new Timestamp(at),new Timestamp(at),A);
+        change(alpha,Map.of("available",true),false);
+        update("UPDATE documents SET publish_start=?,publish_end=? WHERE doc_id=?",new Timestamp(at),new Timestamp(at),alpha);
         update("UPDATE branches SET state='SCHEDULED',publish_at=? WHERE id=?",new Timestamp(at),branch.branchId());
         open(branch);
         assertEquals(at,BranchView.current().previewAt());
         for(String mode:List.of("new","valid","next","old","all")) {
             NewsActionBean action=render(a->{a.setPublishType(mode);a.setPerexNotRequired(true);});
             assertFalse(action.getHtmlOut().contains("Removed"));
-            if(List.of("new","all").contains(mode)) assertIds(action,A,B,fresh);
-            if(List.of("valid","next","old").contains(mode)) assertIds(action,A);
+            if(List.of("new","all").contains(mode)) assertIds(action,alpha,beta,fresh);
+            if(List.of("valid","next","old").contains(mode)) assertIds(action,alpha);
         }
     }
 
@@ -170,12 +170,12 @@ class BranchNewsRenderTest extends BranchJpaTest {
     @Test void n12MovedCancelledAndStoppedScheduleUsesOneRequestTime() throws Exception {
         long first=System.currentTimeMillis()/1000*1000+86_400_000;
         long second=first+86_400_000;
-        update("UPDATE documents SET publish_start=?,publish_end=NULL WHERE doc_id=?",new Timestamp(first+3_600_000),A);
+        update("UPDATE documents SET publish_start=?,publish_end=NULL WHERE doc_id=?",new Timestamp(first+3_600_000),alpha);
         update("UPDATE branches SET state='SCHEDULED',publish_at=? WHERE id=?",new Timestamp(first),branch.branchId());
         open(branch);
         BranchView initial=BranchView.current();
         assertEquals(first,initial.previewAt());assertTrue(initial.scheduledPreview());
-        assertIds(render(a->a.setPublishType("new")),B,fresh);
+        assertIds(render(a->a.setPublishType("new")),beta,fresh);
         String firstBanner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
         assertTrue(firstBanner.contains(Tools.formatDateTimeSeconds(first)),firstBanner);
         assertFalse(firstBanner.contains(java.time.ZoneId.systemDefault().getId()),firstBanner);
@@ -183,10 +183,10 @@ class BranchNewsRenderTest extends BranchJpaTest {
         update("UPDATE branches SET publish_at=? WHERE id=?",new Timestamp(second),branch.branchId());
         // A page with several News components retains one instant until the next request.
         assertSame(initial,BranchView.current());assertEquals(first,BranchView.current().previewAt());
-        assertIds(render(a->a.setPublishType("new")),B,fresh);
+        assertIds(render(a->a.setPublishType("new")),beta,fresh);
         open(branch);
         assertEquals(second,BranchView.current().previewAt());
-        assertIds(render(a->a.setPublishType("new")),A,B,fresh);
+        assertIds(render(a->a.setPublishType("new")),alpha,beta,fresh);
         String secondBanner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
         assertNotEquals(firstBanner,secondBanner);
 
@@ -195,7 +195,7 @@ class BranchNewsRenderTest extends BranchJpaTest {
             long before=System.currentTimeMillis();open(branch);
             BranchView current=BranchView.current();
             assertFalse(current.scheduledPreview());assertTrue(current.previewAt()>=before);assertTrue(current.previewAt()<=System.currentTimeMillis());
-            assertIds(render(a->a.setPublishType("new")),B,fresh);
+            assertIds(render(a->a.setPublishType("new")),beta,fresh);
             String banner=Jsoup.parse(BranchPreviewUrls.rewriteHtml("<html><body></body></html>",request)).selectFirst("#branch-preview-status").text();
             assertFalse(banner.contains(Tools.formatDateTimeSeconds(second)),banner);
         }
@@ -208,37 +208,37 @@ class BranchNewsRenderTest extends BranchJpaTest {
     @Test void n05FiltersOrderLoadDataAndOffsets() {
         for(NewsQuery.OrderEnum order:NewsQuery.OrderEnum.values()) {
             NewsActionBean action=render(a->{a.setOrder(order.name());a.setLoadData(true);});
-            assertIds(action,A,B,fresh);assertTrue(action.getNewsList().stream().allMatch(d->d.getData().contains("body")));
+            assertIds(action,alpha,beta,fresh);assertTrue(action.getNewsList().stream().allMatch(d->d.getData().contains("body")));
             assertEquals(3,Jsoup.parse(action.getHtmlOut()).select("li[data-id]").size());
         }
-        assertIds(render(a->{a.setOrder("title");a.setAscending(false);}),fresh,B,A);
-        assertIds(render(a->{a.setOrder("priority");a.setAscending(false);}),B,fresh,A);
-        assertIds(render(a->a.setFilter(Map.of("title_co",List.of("Beta","Fresh")))),B,fresh);
-        assertIds(render(a->a.setSearch(Map.of("title_co",List.of("Beta","Fresh")))),B,fresh);
-        assertIds(render(a->a.setTag("p03tag")),B);assertIds(render(a->a.setAuthor("p03author")),B);
-        assertIds(render(a->{a.setPageSize(1);a.setOffset(1);}),B);
+        assertIds(render(a->{a.setOrder("title");a.setAscending(false);}),fresh,beta,alpha);
+        assertIds(render(a->{a.setOrder("priority");a.setAscending(false);}),beta,fresh,alpha);
+        assertIds(render(a->a.setFilter(Map.of("title_co",List.of("Beta","Fresh")))),beta,fresh);
+        assertIds(render(a->a.setSearch(Map.of("title_co",List.of("Beta","Fresh")))),beta,fresh);
+        assertIds(render(a->a.setTag("p03tag")),beta);assertIds(render(a->a.setAuthor("p03author")),beta);
+        assertIds(render(a->{a.setPageSize(1);a.setOffset(1);}),beta);
         NewsActionBean none=render(a->a.setFilter(Map.of("title_co",List.of("absent"))));assertIds(none);assertNull(none.getPaginator(Prop.getInstance("sk")));
     }
 
     /** N06: multiple matching attribute rows never duplicate a document or reorder enrichment. */
     @Test void n06AttributeOrAndCustomCriteriaBoundary() throws Exception {
         update("INSERT INTO doc_atr_def(atr_id,atr_name,atr_type) VALUES(1930091,'p03colour',0),(1930092,'p03size',0)");
-        for(int id:List.of(A,B)) {update("INSERT INTO doc_atr(doc_id,atr_id,value_string) VALUES(?,1930091,'red'),(?,1930092,'large')",id,id);}
+        for(int id:List.of(alpha,beta)) {update("INSERT INTO doc_atr(doc_id,atr_id,value_string) VALUES(?,1930091,'red'),(?,1930092,'large')",id,id);}
         NewsQuery query=new NewsQuery().addCriteria(DatabaseCriteria.or(DatabaseCriteria.Atribute.equal("p03colour","red"),DatabaseCriteria.Atribute.equal("p03size","large")));
-        NewsActionBean action=render(a->{a.setNewsQuery(query);a.setReturnDocsWithAtributes(true);});assertIds(action,A,B);assertEquals(2,query.getNewsCount());
+        NewsActionBean action=render(a->{a.setNewsQuery(query);a.setReturnDocsWithAtributes(true);});assertIds(action,alpha,beta);assertEquals(2,query.getNewsCount());
         assertThrows(IllegalStateException.class,()->new NewsQuery().addCriteria(ResultCriteria.perexNotEmpty()));
         assertThrows(IllegalStateException.class,()->render(a->a.setContextClasses("java.lang.System")));
     }
 
     /** N07: protected pages honor visitor groups and two components share request deduplication only. */
     @Test void n07ProtectionAndRepeatedComponents() throws Exception {
-        change(B,Map.of("password_protected",",77,"),false);open(branch);
-        assertIds(render(a->{}),A,fresh);
+        change(beta,Map.of("password_protected",",77,"),false);open(branch);
+        assertIds(render(a->{}),alpha,fresh);
         Identity user=new Identity();user.setUserId(1);user.setUserGroupsIds("77");request.getSession().setAttribute(Constants.USER_KEY,user);
-        assertIds(render(a->{}),A,B,fresh);
-        assertIds(render(a->{a.setCheckDuplicity(true);a.setPageSize(1);}),A);
-        assertIds(render(a->{a.setCheckDuplicity(true);a.setPageSize(1);}),B);
-        open(branch);assertIds(render(a->{a.setCheckDuplicity(true);a.setPageSize(1);}),A);
+        assertIds(render(a->{}),alpha,beta,fresh);
+        assertIds(render(a->{a.setCheckDuplicity(true);a.setPageSize(1);}),alpha);
+        assertIds(render(a->{a.setCheckDuplicity(true);a.setPageSize(1);}),beta);
+        open(branch);assertIds(render(a->{a.setCheckDuplicity(true);a.setPageSize(1);}),alpha);
     }
 
     /** Seeds the normal immutable definition cache from actual fixture rows, without a Spring web context. */
@@ -270,7 +270,16 @@ class BranchNewsRenderTest extends BranchJpaTest {
         try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"groups",values);}liveGroups.add(id);
     }
     private Map<String,Object> docValues(int id,int group,String title,int priority,String perex) {Map<String,Object> values=new LinkedHashMap<>(BranchDocumentMapper.initialValues(id,1,CREATED,false));values.put("group_id",group);values.put("title",title);values.put("navbar",title);values.put("data","<p>body "+title+"</p>");values.put("html_data",perex);values.put("available",true);values.put("show_in_menu",true);values.put("sort_priority",priority);values.put("virtual_path","/p03-news/"+id+".html");values.put("perex_group",",1,");return values;}
-    private void document(int id,int group,String title,int priority,String perex) throws Exception {try(Connection c=DBPool.getConnection()){BranchStore.insert(c,"documents",docValues(id,group,title,priority,perex));}liveDocs.add(id);}
+    private int document(int group,String title,int priority,String perex) throws Exception {
+        try (Connection connection=DBPool.getConnection()) {
+            connection.setAutoCommit(false);
+            int id=BranchStore.reserveNative(connection,BranchType.DOCUMENT);
+            BranchStore.insert(connection,"documents",docValues(id,group,title,priority,perex));
+            connection.commit();
+            liveDocs.add(id);
+            return id;
+        }
+    }
     private void change(int id,Map<String,Object> fields,boolean delete) throws Exception {
         Map<String,Object> current;try(Connection c=DBPool.getConnection()){current=BranchStore.readWork(c,branch.branchId(),BranchType.DOCUMENT,id).orElseGet(()->{try{return BranchStore.readLive(c,BranchType.DOCUMENT,id).orElseThrow();}catch(Exception e){throw new IllegalStateException(e);}});}
         Map<String,Object> work=new LinkedHashMap<>(current);work.putAll(fields);store.put(adminBranch(),BranchType.DOCUMENT,id,work,BranchStore.snapshot(BranchType.DOCUMENT,current).hash(),delete);

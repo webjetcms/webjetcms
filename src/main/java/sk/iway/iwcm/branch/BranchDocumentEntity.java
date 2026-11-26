@@ -1,6 +1,7 @@
 package sk.iway.iwcm.branch;
 
 import jakarta.persistence.*;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,9 +17,11 @@ public class BranchDocumentEntity extends BranchRow
     @Column(name = "title")
     private String title;
     @Lob
+    @Convert(converter = AllowHtmlAttributeConverter.class)
     @Column(name = "data")
     private String data;
     @Lob
+    @Convert(converter = AllowHtmlAttributeConverter.class)
     @Column(name = "data_asc")
     private String dataAsc;
     @Column(name = "external_link")
@@ -43,11 +46,11 @@ public class BranchDocumentEntity extends BranchRow
     @Column(name = "views_month")
     private Integer viewsMonth;
     @Column(name = "searchable")
-    private Integer searchable;
+    private Boolean searchable;
     @Column(name = "available")
-    private Integer available;
+    private Boolean available;
     @Column(name = "cacheable")
-    private Integer cacheable;
+    private Boolean cacheable;
     @Column(name = "file_name")
     private String fileName;
     @Column(name = "file_change")
@@ -63,9 +66,11 @@ public class BranchDocumentEntity extends BranchRow
     @Column(name = "password_protected")
     private String passwordProtected;
     @Lob
+    @Convert(converter = AllowHtmlAttributeConverter.class)
     @Column(name = "html_head")
     private String htmlHead;
     @Lob
+    @Convert(converter = AllowHtmlAttributeConverter.class)
     @Column(name = "html_data")
     private String htmlData;
     @Column(name = "perex_place")
@@ -75,7 +80,7 @@ public class BranchDocumentEntity extends BranchRow
     @Column(name = "perex_group")
     private String perexGroup;
     @Column(name = "show_in_menu")
-    private Integer showInMenu;
+    private Boolean showInMenu;
     @Column(name = "event_date")
     private java.sql.Timestamp eventDate;
     @Column(name = "virtual_path")
@@ -113,7 +118,7 @@ public class BranchDocumentEntity extends BranchRow
     @Column(name = "field_l")
     private String fieldL;
     @Column(name = "disable_after_end")
-    private Integer disableAfterEnd;
+    private Boolean disableAfterEnd;
     @Column(name = "forum_count")
     private Integer forumCount;
     @Column(name = "field_m")
@@ -133,7 +138,7 @@ public class BranchDocumentEntity extends BranchRow
     @Column(name = "field_t")
     private String fieldT;
     @Column(name = "require_ssl")
-    private Integer requireSsl;
+    private Boolean requireSsl;
     @Column(name = "root_group_l1")
     private Integer rootGroupL1;
     @Column(name = "root_group_l2")
@@ -149,25 +154,25 @@ public class BranchDocumentEntity extends BranchRow
     @Column(name = "temp_field_d_docid")
     private Integer tempFieldDDocid;
     @Column(name = "show_in_navbar")
-    private Integer showInNavbar;
+    private Boolean showInNavbar;
     @Column(name = "show_in_sitemap")
-    private Integer showInSitemap;
+    private Boolean showInSitemap;
     @Column(name = "logged_show_in_menu")
-    private Integer loggedShowInMenu;
+    private Boolean loggedShowInMenu;
     @Column(name = "logged_show_in_navbar")
-    private Integer loggedShowInNavbar;
+    private Boolean loggedShowInNavbar;
     @Column(name = "logged_show_in_sitemap")
-    private Integer loggedShowInSitemap;
+    private Boolean loggedShowInSitemap;
     @Column(name = "url_inherit_group")
-    private Integer urlInheritGroup;
+    private Boolean urlInheritGroup;
     @Column(name = "generate_url_from_title")
-    private Integer generateUrlFromTitle;
+    private Boolean generateUrlFromTitle;
     @Column(name = "editor_virtual_path")
     private String editorVirtualPath;
     @Column(name = "publish_after_start")
-    private Integer publishAfterStart;
+    private Boolean publishAfterStart;
     @Column(name = "planned_media_initialized")
-    private Integer plannedMediaInitialized;
+    private Boolean plannedMediaInitialized;
     @Column(name = "follow_links")
     private Integer followLinks;
 }
