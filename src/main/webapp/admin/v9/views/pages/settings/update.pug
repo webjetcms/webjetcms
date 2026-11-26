@@ -87,6 +87,10 @@ block content
         window.domReady.add(function () {
             let versionSelector = $("#version-selector");
             let versionsTabContent = $("#versions-tab-content");
+            // Replace YouTube thumbnails before the browser can request them.
+            const versionNotes = $(document.createElement("template").content);
+            const embedYouTube = /^(strict-origin-when-cross-origin|strict-origin|origin-when-cross-origin|origin)$/i
+                .test(versionsTabContent.attr("data-referrer-policy")?.trim());
             var isFirst = true;
 
             actualVersion = ( (actualVersion).split(" ")[0] ).replace(/(.*)\.[0-9]*/, '$1');
@@ -149,7 +153,7 @@ block content
                         else
                            bodyContent = bodyContent.replace("REPLACE_CLASS", "");
 
-                        versionsTabContent.append(bodyContent);
+                        versionNotes.append(bodyContent);
 
                         //Is first, only if it's real version
                         if(isFirst) {
@@ -159,16 +163,18 @@ block content
                     });
 
                     // Embed YouTube thumbnails from the update server and fix documentation links.
-                    versionsTabContent.find("a").each(function() {
+                    versionNotes.find("a").each(function() {
                         const link = $(this);
                         let href = link.attr("href");
                         const videoId = href?.match(/^https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})$/)?.[1];
                         const thumbnail = link.children("img:only-child");
                         if (videoId && thumbnail.attr("src")?.startsWith(`https://img.youtube.com/vi/${videoId}/`)) {
-                            link.before(`<div class="ratio ratio-16x9 mb-2">
-                                <iframe src="https://www.youtube.com/embed/${videoId}" title="YouTube" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                            </div>`);
-                            link.text(thumbnail.attr("alt") || "YouTube").attr({ target: "_blank", rel: "noopener" });
+                            if (embedYouTube) {
+                                link.before(`<div class="ratio ratio-16x9 mb-2">
+                                    <iframe src="https://www.youtube.com/embed/${videoId}" title="YouTube" loading="lazy" allowfullscreen></iframe>
+                                </div>`);
+                            }
+                            link.text(thumbnail.attr("alt") || "YouTube").attr({ target: "_blank", rel: "noopener noreferrer" });
                         }
 
                         if(href != undefined && href != null && href.indexOf("docs.webjetcms") != -1) {
@@ -185,6 +191,7 @@ block content
                             link.attr("href", href);
                         }
                     });
+                    versionsTabContent.append(versionNotes);
 
                     //Add new defau option, UPLOAD VIA FILE
                     var uploadVersion = versionSelectorOptionTemplate.replace("REPLACE_A", "[[\#{update.update_from_file}]]" + uploadBadgeTemplate);
@@ -235,7 +242,7 @@ block content
         </div>
 
         <div class="col-sm-9">
-            <div class="tab-content" id="versions-tab-content">
+            <div class="tab-content" id="versions-tab-content" data-th-attr="data-referrer-policy=${layout.getConstantExecuteMacro('refererPolicy')}">
                 <div class="tab-pane fade" id="UPLOAD" role="tabpanel">
                     <p data-th-if="${importedFileNameSucc ne null}" class="alert alert-success">[[\#{settings.update.upload_file_succ_notif}]] <span data-th-text="${importedFileNameSucc}"></span> </p>
 
