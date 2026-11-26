@@ -1,6 +1,7 @@
 # Tesseract Editing for WebJET Feature Videos
 
-Read this reference when assembling or revising a finished video. Use the
+Use this reference for a requested native revision of an existing `.tsrct`.
+For new videos, follow [Shotcut editing](shotcut-editing.md). Use the
 installed Tesseract video skill for CLI installation, schemas and rendering;
 its current documentation is authoritative. The details below preserve the
 WebJET production decisions and lessons from the PR 332 edit.
