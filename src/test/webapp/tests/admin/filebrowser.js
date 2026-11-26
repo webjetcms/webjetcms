@@ -174,7 +174,7 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
 
     I.say("A non-recursive scan only returns files from the selected folder");
     startUnusedFilesScan(I);
-    waitForUnusedFilesScanInUi(I, DT);
+    await waitForUnusedFilesScanInUi(I, DT);
     I.waitForText("Počet nájdených nepoužívaných súborov: 2", 20, "#unused-files-status-message");
     I.see(unusedFilesTestData.selectedFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
     I.see(unusedFilesTestData.deleteAllFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
@@ -183,7 +183,7 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
     I.say("A recursive scan also returns a file from the child folder");
     I.checkOption("#unused-files-include-subfolders");
     startUnusedFilesScan(I);
-    waitForUnusedFilesScanInUi(I, DT);
+    await waitForUnusedFilesScanInUi(I, DT);
     I.waitForText("Počet nájdených nepoužívaných súborov: 3", 20, "#unused-files-status-message");
     I.see(unusedFilesTestData.childFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
     I.see(unusedFilesTestData.logicChildPath + "/" + unusedFilesTestData.childFileName,
@@ -198,7 +198,7 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
         unusedFilesTestData.logicFolderName,
         unusedFilesTestData.logicFolderPath
     );
-    waitForUnusedFilesScanInUi(I, DT);
+    await waitForUnusedFilesScanInUi(I, DT);
     I.seeCheckboxIsChecked("#unused-files-include-subfolders");
     I.waitForText("Počet nájdených nepoužívaných súborov: 3", 20, "#unused-files-status-message");
     I.see(unusedFilesTestData.selectedFileName, "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
@@ -225,12 +225,12 @@ Scenario('unused files - scan and delete @singlethread @screenshot', async ({ I,
         "#" + UNUSED_FILES_TABLE_ID + "_wrapper");
 });
 
-Scenario('unused files - separate scan per user @singlethread', ({ I, DT }) => {
+Scenario('unused files - separate scan per user @singlethread', async ({ I, DT }) => {
     I.say("The first administrator scans the folder and sees the unused file");
-    scanBaseFolderForUnusedFiles(I, DT, "admin");
+    await scanBaseFolderForUnusedFiles(I, DT, "admin");
 
     I.say("A second administrator runs an independent scan and sees the same unused file");
-    scanBaseFolderForUnusedFiles(I, DT, "tester3");
+    await scanBaseFolderForUnusedFiles(I, DT, "tester3");
 
     I.logout();
 });
@@ -328,13 +328,13 @@ function openUnusedFilesTab(I, parentPath, folderName, expectedFolderPath) {
 }
 
 function startUnusedFilesScan(I) {
-    I.wait(1);
-    I.clickCss("#" + UNUSED_FILES_TABLE_ID + "_wrapper button.buttons-unused-files-analyze");
-    I.wait(1);
+    I.clickCss("#" + UNUSED_FILES_TABLE_ID + "_wrapper button.buttons-unused-files-analyze:enabled:not(.disabled)");
 }
 
-function waitForUnusedFilesScanInUi(I, DT) {
-    I.waitForElement("#unused-files-status.alert-success", UNUSED_FILES_SCAN_TIMEOUT / 1000);
+async function waitForUnusedFilesScanInUi(I, DT) {
+    I.waitForVisible("#unused-files-status:is(.alert-success, .alert-danger)", UNUSED_FILES_SCAN_TIMEOUT / 1000);
+    const [message] = await I.grabTextFromAll("#unused-files-status-message");
+    I.assertEqual(await I.grabNumberOfVisibleElements("#unused-files-status.alert-success"), 1, message);
     DT.waitForLoader("#" + UNUSED_FILES_TABLE_ID + "_processing", 30);
 }
 
@@ -351,7 +351,7 @@ function screenshotUnusedFilesDialog(I, Document, fileName) {
     I.switchTo("#modalIframeIframeElement");
 }
 
-function scanBaseFolderForUnusedFiles(I, DT, user) {
+async function scanBaseFolderForUnusedFiles(I, DT, user) {
     I.relogin(user);
     openUnusedFilesTab(
         I,
@@ -364,7 +364,7 @@ function scanBaseFolderForUnusedFiles(I, DT, user) {
     DT.waitForLoader("#" + UNUSED_FILES_TABLE_ID + "_processing", 30);
 
     startUnusedFilesScan(I);
-    waitForUnusedFilesScanInUi(I, DT);
+    await waitForUnusedFilesScanInUi(I, DT);
 
     // A non-recursive scan of the base folder only returns the file placed directly in it
     I.waitForText("Počet nájdených nepoužívaných súborov: 1", 20, "#unused-files-status-message");
