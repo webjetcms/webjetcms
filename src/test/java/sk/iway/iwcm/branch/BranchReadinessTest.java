@@ -126,6 +126,7 @@ class BranchReadinessTest {
     @ParameterizedTest
     @CsvSource({"MariaDB,10,11,true", "MariaDB,11,4,true", "MariaDB,12,2,true",
                 "MariaDB,10,10,false", "MariaDB,11,8,false", "MariaDB,12,3,false", "MySQL,11,4,false",
+                "Microsoft SQL Server,11,0,false", "Microsoft SQL Server,15,0,false", "Microsoft SQL Server,16,0,true",
                 "PostgreSQL,15,9,false", "PostgreSQL,16,0,true", "PostgreSQL,17,2,true"})
     void acceptsOnlySupportedDatabaseVersions(String product, int major, int minor, boolean supported) throws SQLException {
         constants.when(() -> Constants.getBoolean("branchesEnabled")).thenReturn(true);

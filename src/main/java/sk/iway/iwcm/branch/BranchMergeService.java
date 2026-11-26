@@ -648,7 +648,7 @@ public final class BranchMergeService {
     static void checkFilePlans(Connection c,String domain,Collection<String> paths)throws SQLException {
         if(paths.isEmpty())return;
         Set<Path> targets=new HashSet<>();for(String path:paths)targets.add(Path.of(Tools.getRealPath(path)).toAbsolutePath().normalize());
-        try(Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT DISTINCT doc_id,group_id FROM documents_history WHERE publicable=true OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')")) {
+        try(Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT DISTINCT doc_id,group_id FROM documents_history WHERE publicable="+DB.getBooleanSql(true)+" OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')")) {
             while(r.next()) {
                 int id=r.getInt(1);String plannedDomain=GroupsDB.getInstance().getDomain(r.getInt(2));
                 if(!domain.equalsIgnoreCase(plannedDomain))continue;
@@ -667,7 +667,7 @@ public final class BranchMergeService {
 
     private static void checkIndividualPlans(Connection c,Entry e)throws SQLException {
         if(e.type==BranchType.FILE)return;
-        String sql=e.type==BranchType.GROUP?"SELECT 1 FROM groups_scheduler WHERE group_id=? AND ((when_to_publish IS NOT NULL AND date_published IS NULL) OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) LIMIT 1":"SELECT 1 FROM documents_history WHERE doc_id=? AND (publicable=true OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) LIMIT 1";
+        String sql=e.type==BranchType.GROUP?"SELECT 1 FROM groups_scheduler WHERE group_id=? AND ((when_to_publish IS NOT NULL AND date_published IS NULL) OR (awaiting_approve IS NOT NULL AND awaiting_approve<>''))":"SELECT 1 FROM documents_history WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR (awaiting_approve IS NOT NULL AND awaiting_approve<>''))";
         int id=e.type==BranchType.MEDIA?number(e.row,"media_fk_id"):Integer.parseInt(e.change.objectKey());
         try(PreparedStatement s=c.prepareStatement(sql)){s.setInt(1,id);try(ResultSet r=s.executeQuery()){if(r.next())throw new IllegalStateException("Individuálny plán alebo čakajúce schválenie: "+e.change.identity());}}
     }
@@ -677,7 +677,7 @@ public final class BranchMergeService {
         String title=Objects.toString(entry.live.fields().get("title"),label(entry));
         Prop prop=Prop.getInstance();
         String sql="SELECT history_id,save_date,publish_start,awaiting_approve FROM documents_history "
-            +"WHERE doc_id=? AND (publicable=true OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) ORDER BY history_id";
+            +"WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) ORDER BY history_id";
         try(PreparedStatement statement=c.prepareStatement(sql)) {
             statement.setInt(1,Integer.parseInt(id));
             try(ResultSet history=statement.executeQuery()) {
@@ -693,7 +693,7 @@ public final class BranchMergeService {
                 }
             }
         }
-        try(PreparedStatement statement=c.prepareStatement("SELECT 1 FROM documents WHERE doc_id=? AND (publish_after_start=true OR disable_after_end=true) LIMIT 1")) {
+        try(PreparedStatement statement=c.prepareStatement("SELECT 1 FROM documents WHERE doc_id=? AND (publish_after_start="+DB.getBooleanSql(true)+" OR disable_after_end="+DB.getBooleanSql(true)+")")) {
             statement.setInt(1,Integer.parseInt(id));
             try(ResultSet result=statement.executeQuery()) {
                 if(result.next()) throw new IllegalStateException(prop.getText("branches.merge.pageTiming",title,id));
@@ -850,7 +850,7 @@ public final class BranchMergeService {
     }
 
     private static Map<String,Object> branch(Connection c,long id,String domain,long revision,boolean lock,String columns)throws SQLException {
-        try (PreparedStatement s = c.prepareStatement("SELECT "+columns+" FROM branches WHERE id=? AND domain_id=?" + (lock ? " FOR UPDATE" : ""))) {
+        try (PreparedStatement s = c.prepareStatement(lock ? BranchSql.lockedSelect(columns,"branches","id=? AND domain_id=?") : "SELECT "+columns+" FROM branches WHERE id=? AND domain_id=?")) {
             s.setLong(1, id);
             s.setInt(2, BranchDomains.id(domain));
             try (ResultSet r = s.executeQuery()) {

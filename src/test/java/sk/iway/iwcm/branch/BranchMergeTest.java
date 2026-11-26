@@ -30,6 +30,8 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.perex_groups.*;
+import sk.iway.iwcm.components.news.NewsQuery;
+import sk.iway.iwcm.components.news.criteria.DatabaseCriteria;
 import sk.iway.iwcm.doc.*;
 import sk.iway.iwcm.editor.util.EditorUtils;
 import sk.iway.iwcm.i18n.Prop;
@@ -250,6 +252,31 @@ class BranchMergeTest extends BranchJpaTest {
         new BranchPublishService().run(f.branch,user.getUserId());assertEquals(histories,count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")"));
     }
 
+    /** Attribute filtering uses the effective source twice, including for the count and second page. */
+    @Test void attributeNewsPagesTwentyWorkDocuments() throws Exception {
+        int attribute;
+        try (Connection connection = DBPool.getConnection(); PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO doc_atr_def(atr_name,atr_type) VALUES (?,0)", new String[]{"atr_id"})) {
+            insert.setString(1, "autotest P06 " + f.branch);
+            insert.executeUpdate();
+            try (ResultSet keys = insert.getGeneratedKeys()) { assertTrue(keys.next()); attribute = keys.getInt(1); }
+        }
+        try (var scope = BranchContexts.open(null, new BranchContext(f.branch, DOMAIN, 1, BranchContext.Mode.PREVIEW))) {
+            assertEquals(20, BranchView.current().documentRows().size());
+            for (int id : f.pages.subList(0, 4))
+                sql("INSERT INTO doc_atr(doc_id,atr_id,value_string) VALUES (?,?,'red')", id, attribute);
+            var news = new NewsQuery().addCriteria(DatabaseCriteria.Atribute.equal(attribute, "red"))
+                .addOrder(NewsQuery.OrderEnum.ID, NewsQuery.SortEnum.ASC).setLoadData(true).setLimit(2).setOffset(2);
+            assertEquals(4, news.getNewsCount());
+            var page = news.getNewsList();
+            assertEquals(f.pages.subList(2, 4), page.stream().map(DocDetails::getDocId).toList());
+            assertEquals("autotest P06 WORK 2", page.get(0).getTitle());
+        } finally {
+            sql("DELETE FROM doc_atr WHERE atr_id=?", attribute);
+            sql("DELETE FROM doc_atr_def WHERE atr_id=?", attribute);
+        }
+    }
+
     /** Text, nullable flags and folder navigation modes survive comparison, preview and publication. */
     @Test void typedPreviewMatchesPublishedSnapshot() throws Exception {
         int id = f.pages.get(0);
@@ -300,10 +327,15 @@ class BranchMergeTest extends BranchJpaTest {
                 for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP)) {
                     int reserved = BranchStore.reserveNative(work, type);
                     String insert = type == BranchType.DOCUMENT
-                        ? "INSERT INTO documents(title,data,data_asc,navbar) VALUES ('p06','','','')"
-                        : "INSERT INTO groups(group_name) VALUES ('p06')";
+                        ? "INSERT INTO documents(title,data,data_asc,navbar,date_created,author_id,temp_id,searchable,available,cacheable,sort_priority) VALUES ('p06','','','',CURRENT_TIMESTAMP,1,1,?,?,?,0)"
+                        : "INSERT INTO groups(group_name,internal,parent_group_id,sort_priority) VALUES ('p06',?,0,0)";
                     try (PreparedStatement statement = live.prepareStatement(insert, new String[]{type.idColumn()})) {
                         statement.setQueryTimeout(5);
+                        statement.setBoolean(1,false);
+                        if (type == BranchType.DOCUMENT) {
+                            statement.setBoolean(2,false);
+                            statement.setBoolean(3,false);
+                        }
                         statement.executeUpdate();
                         try (ResultSet keys = statement.getGeneratedKeys()) {
                             assertTrue(keys.next());
@@ -1154,7 +1186,7 @@ class BranchMergeTest extends BranchJpaTest {
     Fixture create(String suffix,boolean work)throws Exception {
         String url="/p06-autotest-"+suffix;int root,section,home;List<Integer> pages=new ArrayList<>();int category=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media_groups")),media=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media"));
         int template,perex;
-        try(Connection c=DBPool.getConnection();Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT temp_id FROM templates WHERE forward='/templates/aceintegration/jet/blank.jsp' LIMIT 1")){assertTrue(r.next());template=r.getInt(1);}
+        try(Connection c=DBPool.getConnection();Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT temp_id FROM templates WHERE forward='/templates/aceintegration/jet/blank.jsp'")){assertTrue(r.next());template=r.getInt(1);}
         try(Connection c=DBPool.getConnection()) {
             c.setAutoCommit(false);
             try(PreparedStatement s=c.prepareStatement("INSERT INTO perex_groups(perex_group_name,available_groups,domain_id) VALUES (?,'',"+BranchDomains.id(DOMAIN)+")",new String[]{"perex_group_id"})){s.setString(1,"autotest P06 "+suffix);s.executeUpdate();try(ResultSet r=s.getGeneratedKeys()){r.next();perex=r.getInt(1);}}

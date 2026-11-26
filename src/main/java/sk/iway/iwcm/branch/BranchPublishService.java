@@ -169,8 +169,10 @@ public final class BranchPublishService {
                 }
                 BranchPublishRows.checkpoint(connection,item.type,item.row,"APPLYING",subtreePage?"TRASH_WAIT":"DATA",BranchPublishRows.liveSnapshot(connection,item.type,item.row).hash(),null);
                 connection.commit();
-            } catch(Exception ex) {connection.rollback();throw ex;}
-            finally {connection.setAutoCommit(true);}
+            } catch(Exception ex) {
+                try { connection.rollback(); } catch (SQLException rollback) { ex.addSuppressed(rollback); }
+                throw ex;
+            }
         }
         audit(item);
         afterCommit.accept(item.type+":"+item.key());
@@ -443,7 +445,7 @@ public final class BranchPublishService {
         Logger.error(BranchPublishService.class,error);
         try(Connection connection=DBPool.getConnection()) {
             boolean applied=false;
-            for(BranchType type:BranchType.values())try(PreparedStatement check=connection.prepareStatement("SELECT 1 FROM "+type.workTable()+" WHERE branch_id=? AND ((applied_hash IS NOT NULL AND COALESCE(apply_phase,'')<>'NOOP') OR apply_phase LIKE 'FILE_%') LIMIT 1")) {
+            for(BranchType type:BranchType.values())try(PreparedStatement check=connection.prepareStatement("SELECT 1 FROM "+type.workTable()+" WHERE branch_id=? AND ((applied_hash IS NOT NULL AND COALESCE(apply_phase,'')<>'NOOP') OR apply_phase LIKE 'FILE_%')")) {
                 check.setLong(1,id);try(ResultSet result=check.executeQuery()){applied|=result.next();}
             }
             String reason=error instanceof org.springframework.web.server.ResponseStatusException response?Objects.toString(response.getReason(),sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.permission")):Objects.toString(error.getMessage(),error.getClass().getSimpleName());

@@ -142,7 +142,7 @@ public final class BranchStore {
     }
 
     private static boolean hasPageMedia(Connection connection, long branchId, int docId) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM branch_media WHERE branch_id=? AND media_fk_id=? LIMIT 1")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM branch_media WHERE branch_id=? AND media_fk_id=?")) {
             statement.setLong(1, branchId);
             statement.setInt(2, docId);
             try (ResultSet rows = statement.executeQuery()) { return rows.next(); }
@@ -158,7 +158,7 @@ public final class BranchStore {
             boolean completed = false;
             try {
                 try (PreparedStatement statement = connection.prepareStatement(
-                        "SELECT state FROM branches WHERE id=? AND domain_id=? FOR UPDATE")) {
+                        BranchSql.lockedSelect("state","branches","id=? AND domain_id=?"))) {
                     statement.setLong(1, context.branchId()); statement.setInt(2, context.domainId());
                     try (ResultSet result = statement.executeQuery()) {
                         if (!result.next() || !"DRAFT".equals(result.getString(1))) throw new IllegalStateException("Package is absent or not editable");
@@ -195,15 +195,28 @@ public final class BranchStore {
                 try (ResultSet result = statement.executeQuery()) { return reservedId(result); }
             }
         }
+        java.sql.Savepoint reservation = null;
         String sql = type == BranchType.DOCUMENT
             ? "INSERT INTO documents(title,data,data_asc,navbar) VALUES ('','','','')"
             : "INSERT INTO groups(group_name) VALUES ('')";
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) {
+            // Rolling back to this point releases the placeholder lock but consumes the IDENTITY.
+            reservation = connection.setSavepoint();
+            sql = type == BranchType.DOCUMENT
+                ? "INSERT INTO documents(title,data,data_asc,navbar,date_created,author_id,temp_id,searchable,available,cacheable,sort_priority)"
+                    + " VALUES ('','','','',CURRENT_TIMESTAMP,0,0,0,0,0,0)"
+                : "INSERT INTO groups(group_name,internal,parent_group_id,sort_priority) VALUES ('',0,0,0)";
+        }
         int id;
         try (PreparedStatement statement = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)) {
             statement.executeUpdate();
             try (ResultSet result = statement.getGeneratedKeys()) {
                 id = reservedId(result);
             }
+        }
+        if (reservation != null) {
+            connection.rollback(reservation);
+            return id;
         }
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM "+type.liveTable()+" WHERE "+type.idColumn()+"=?")) {
             statement.setInt(1,id);
@@ -294,6 +307,11 @@ public final class BranchStore {
     static Object readColumn(ResultSet result,int index,String name)throws SQLException {
         if (Constants.DB_TYPE == Constants.DB_MYSQL && java.util.Set.of("menu_type","logged_menu_type","follow_links","show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap").contains(name)) {
             int value=result.getInt(index);return result.wasNull()?null:value;
+        }
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) {
+            int type = result.getMetaData().getColumnType(index);
+            if (type == java.sql.Types.CLOB || type == java.sql.Types.NCLOB || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.LONGNVARCHAR)
+                return result.getString(index);
         }
         return result.getObject(index);
     }

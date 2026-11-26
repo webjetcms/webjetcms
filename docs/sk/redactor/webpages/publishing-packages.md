@@ -1,6 +1,6 @@
 # Publikačné balíky (POC)
 
-Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a súborov. Tím môže upravovať kampaň a preklikávať jej náhľad, kým návštevníci vidia pôvodný web. Funkciu musí najprv zapnúť správca na overenom prostredí. Predvolene je vypnutá.
+Publikačný balík spojí prípravu viacerých stránok, priečinkov, médií a súborov. Tím môže upravovať kampaň a preklikávať jej náhľad, kým návštevníci vidia pôvodný web. Funkciu musí najprv zapnúť správca na overenom prostredí. Predvolene je vypnutá. Ak používate Microsoft SQL Server, pre publikačné balíky je potrebný **SQL Server 2022 (16.x)**. [Podmienky zapnutia](../../admin/setup/publishing-packages.md#microsoft-sql-server-2022)
 
 ## Príprava kampane
 

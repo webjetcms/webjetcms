@@ -12,7 +12,8 @@ final class BranchTestDomains {
         String url = connection.getMetaData().getURL();
         boolean maria = "webjet_p01".equals(connection.getCatalog()) && url.contains(":33316/");
         boolean postgres = "wjbranch".equals(connection.getCatalog()) && url.startsWith("jdbc:postgresql://127.0.0.1:55461/wjbranch");
-        if (!maria && !postgres) throw new IllegalStateException("Branch fixtures require an isolated test database");
+        boolean mssql = "wjbranch_mssql".equals(connection.getCatalog()) && url.startsWith("jdbc:jtds:sqlserver://127.0.0.1:11433/wjbranch_mssql");
+        if (!maria && !postgres && !mssql) throw new IllegalStateException("Branch fixtures require an isolated test database");
     }
 
     static int ensure(String name) {

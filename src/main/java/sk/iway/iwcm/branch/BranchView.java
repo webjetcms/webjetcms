@@ -92,11 +92,30 @@ public final class BranchView {
             )
             SELECT g.* FROM groups g JOIN scope ON scope.group_id=g.group_id
             """;
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) folderSql = """
+            WITH visible(group_id,visited) AS (
+                SELECT seed.group_id, CAST('/'+CAST(seed.group_id AS varchar(11))+'/' AS varchar(max))
+                FROM (SELECT group_id FROM groups WHERE parent_group_id=0 AND (domain_name IS NULL OR domain_name IN ('','default',?))
+                      UNION SELECT group_id FROM branch_groups WHERE branch_id=?) seed
+                UNION ALL SELECT g.group_id, v.visited+CAST(g.group_id AS varchar(11))+'/' FROM groups g JOIN visible v ON g.parent_group_id=v.group_id
+                WHERE (g.domain_name IS NULL OR g.domain_name IN ('','default',?)) AND v.visited NOT LIKE '%/'+CAST(g.group_id AS varchar(11))+'/%'
+            ), ancestors(group_id,visited) AS (
+                SELECT seed.group_id, CAST('/'+CAST(seed.group_id AS varchar(11))+'/' AS varchar(max))
+                FROM (SELECT group_id FROM branch_groups WHERE branch_id=?
+                      UNION SELECT d.group_id FROM documents d JOIN branch_documents w ON w.doc_id=d.doc_id WHERE w.branch_id=?) seed
+                UNION ALL SELECT g.parent_group_id, a.visited+CAST(g.parent_group_id AS varchar(11))+'/'
+                FROM groups g JOIN ancestors a ON a.group_id=g.group_id WHERE g.parent_group_id>0
+                    AND a.visited NOT LIKE '%/'+CAST(g.parent_group_id AS varchar(11))+'/%'
+            )
+            SELECT g.* FROM groups g WHERE g.group_id IN (SELECT group_id FROM visible UNION SELECT group_id FROM ancestors)
+            OPTION (MAXRECURSION 0)
+            """;
         try (var statement = connection.prepareStatement(folderSql)) {
             statement.setString(1,context.domainName());
             statement.setLong(2,context.branchId());
             statement.setString(3,context.domainName());
             statement.setLong(4,context.branchId());
+            if (Constants.DB_TYPE == Constants.DB_MSSQL) statement.setLong(5,context.branchId());
             try (var rows = statement.executeQuery()) {
                 while (rows.next()) liveGroups.put(rows.getInt("group_id"),BranchPublishRows.row(rows));
             }

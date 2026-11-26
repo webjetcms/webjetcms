@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import sk.iway.iwcm.Constants;
@@ -40,27 +41,29 @@ public final class BranchReadiness {
         String versionSeries = database.getDatabaseMajorVersion() + "." + database.getDatabaseMinorVersion();
         boolean postgres = "PostgreSQL".equals(database.getDatabaseProductName());
         boolean maria = "MariaDB".equals(database.getDatabaseProductName()) && SUPPORTED_MARIADB_SERIES.contains(versionSeries);
-        if (!maria && !(postgres && database.getDatabaseMajorVersion() >= 16))
-            throw new SQLException("Publishing packages require MariaDB 10.11, 11.4 or 12.2, or PostgreSQL 16 or later");
+        boolean mssql = "Microsoft SQL Server".equals(database.getDatabaseProductName()) && database.getDatabaseMajorVersion() == 16;
+        if (!mssql && !maria && !(postgres && database.getDatabaseMajorVersion() >= 16))
+            throw new SQLException("Publishing packages require MariaDB 10.11, 11.4 or 12.2, PostgreSQL 16 or later, or Microsoft SQL Server 2022 (16.x)");
         if (connection.isReadOnly() || connection.getTransactionIsolation() < Connection.TRANSACTION_READ_COMMITTED)
             throw new SQLException("Branches require a writable connection at READ_COMMITTED or stronger");
         List<String> tables = new ArrayList<>(List.of("documents", "groups", "media", "media_group_to_media",
             "documents_history", "groups_scheduler", "branches", "branch_documents", "branch_groups", "branch_media", "branch_files"));
-        if (postgres) tables.addAll(List.of("pkey_generator", "perex_group_doc", "_adminlog_", "file_history"));
-        String tableCheck = postgres
+        if (postgres || mssql) tables.addAll(List.of("pkey_generator", "perex_group_doc", "_adminlog_", "file_history"));
+        String tableCheck = mssql ? "SELECT 1 FROM sys.tables WHERE schema_id=SCHEMA_ID() AND name=?" : postgres
             ? "SELECT 1 FROM pg_class WHERE oid=to_regclass(?) AND relnamespace=current_schema()::regnamespace AND relkind='r' AND relpersistence='p'"
             : "SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND ENGINE='InnoDB'";
         try (PreparedStatement statement = connection.prepareStatement(tableCheck)) {
             for (String table : tables) {
                 statement.setString(1, table);
                 try (ResultSet result = statement.executeQuery()) {
-                    if (!result.next()) throw new SQLException(postgres ? "Missing permanent table in current schema: " + table
+                    if (!result.next()) throw new SQLException(postgres || mssql ? "Missing permanent table in current schema: " + table
                         : "Publishing branches require InnoDB: " + table);
                 }
             }
         }
         if (postgres) verifyPostgresWriter(connection);
-        String currentSchema = postgres ? "current_schema()" : "DATABASE()";
+        if (mssql) sqlServerWriter(connection);
+        String currentSchema = mssql ? "SCHEMA_NAME()" : postgres ? "current_schema()" : "DATABASE()";
         for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP, BranchType.MEDIA)) {
             Set<String> actual = new LinkedHashSet<>();
             try (PreparedStatement statement = connection.prepareStatement(
@@ -92,9 +95,11 @@ public final class BranchReadiness {
         connection.setAutoCommit(false);
         try { verifyWritePrivileges(connection); }
         finally {
-            try { connection.rollback(); }
-            catch (SQLException ex) { try { connection.abort(Runnable::run); } catch (SQLException abort) { ex.addSuppressed(abort); } throw ex; }
-            connection.setAutoCommit(true);
+            if (!connection.isClosed()) {
+                try { connection.rollback(); }
+                catch (SQLException ex) { try { connection.abort(Runnable::run); } catch (SQLException abort) { ex.addSuppressed(abort); } throw ex; }
+                connection.setAutoCommit(true);
+            }
         }
         try (Connection jpa = sk.iway.iwcm.DBPool.getInstance().getDataSource("iwcm").getConnection()) {
             verifyJpaConnection(connection, jpa);
@@ -104,10 +109,70 @@ public final class BranchReadiness {
     static void verifyJpaConnection(Connection jdbc, Connection jpa) throws SQLException {
         if (jpa.isReadOnly() || jpa.getTransactionIsolation() < Connection.TRANSACTION_READ_COMMITTED)
             throw new SQLException("Direct JPA datasource must be writable at READ_COMMITTED or stronger");
+        if ("Microsoft SQL Server".equals(jdbc.getMetaData().getDatabaseProductName())) {
+            if (!sqlServerWriter(jdbc).equals(sqlServerWriter(jpa)))
+                throw new SQLException("JDBC and JPA must use the same SQL Server, database, schema and user");
+        }
         if ("PostgreSQL".equals(jdbc.getMetaData().getDatabaseProductName())) {
             if (!jdbc.getSchema().equals(jpa.getSchema()) || !jdbc.getCatalog().equals(jpa.getCatalog()))
                 throw new SQLException("JDBC and JPA must use the same PostgreSQL database and schema");
             verifyPostgresWriter(jpa);
+        }
+    }
+
+    private static List<String> sqlServerWriter(Connection connection) throws SQLException {
+        try (var statement = connection.createStatement(); var rows = statement.executeQuery("""
+                SELECT SERVERPROPERTY('ServerName'),DB_NAME(),SCHEMA_NAME(),CURRENT_USER
+                FROM sys.databases WHERE database_id=DB_ID() AND is_read_only=0 AND compatibility_level>=130
+                AND DATABASEPROPERTYEX(DB_NAME(),'Updateability')='READ_WRITE'
+                """)) {
+            if (!rows.next()) throw new SQLException("Publishing packages require a writable SQL Server database at compatibility level 130 or higher");
+            return List.of(rows.getString(1), rows.getString(2), rows.getString(3), rows.getString(4));
+        }
+    }
+
+    private static void verifySqlServerPrivileges(Connection connection) throws SQLException {
+        String check = "SELECT HAS_PERMS_BY_NAME(QUOTENAME(SCHEMA_NAME())+'.'+QUOTENAME(?),'OBJECT',?)";
+        try (var statement = connection.prepareStatement(check)) {
+            for (String table : List.of("documents","groups","media","pkey_generator","media_group_to_media","perex_group_doc",
+                    "branches","branch_documents","branch_groups","branch_media","branch_files","documents_history","groups_scheduler","_adminlog_","file_history")) {
+                List<String> permissions = switch (table) {
+                    case "_adminlog_" -> List.of("INSERT");
+                    case "file_history", "groups_scheduler" -> List.of("SELECT","INSERT");
+                    case "documents_history", "pkey_generator" -> List.of("SELECT","INSERT","UPDATE");
+                    case "documents", "groups" -> List.of("SELECT","INSERT","UPDATE","DELETE","ALTER");
+                    default -> List.of("SELECT","INSERT","UPDATE","DELETE");
+                };
+                for (String permission : permissions) {
+                    statement.setString(1,table);
+                    statement.setString(2,permission);
+                    try (var rows = statement.executeQuery()) {
+                        if (!rows.next() || rows.getInt(1) != 1) throw new SQLException("Missing " + permission + " on " + table);
+                    }
+                }
+            }
+        }
+        // Resolve the actual WORK projection and exercise long Unicode parameters with this driver.
+        for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP, BranchType.MEDIA)) {
+            String columns = String.join(",", BranchFields.forType(type).columns());
+            try (var statement = connection.createStatement();
+                 var rows = statement.executeQuery("SELECT TOP (0) " + columns + " FROM " + type.workTable())) {
+                if (rows.getMetaData().isAutoIncrement(rows.findColumn(type.idColumn())))
+                    throw new SQLException("WORK content IDs must use their reserved LIVE values: " + type.workTable());
+            }
+        }
+        String sample = "Ž漢🐴".repeat(1200);
+        try (var statement = connection.prepareStatement("SELECT sample FROM OPENJSON(CAST(? AS nvarchar(max))) WITH (sample nvarchar(max))")) {
+            statement.setString(1,"{\"sample\":\"" + sample + "\"}");
+            try (var rows = statement.executeQuery()) {
+                if (!rows.next() || !sample.equals(rows.getString(1))) throw new SQLException("The JDBC driver must preserve long Unicode parameters");
+            }
+        }
+        for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP)) {
+            int id = BranchStore.reserveNative(connection,type);
+            Map<String,Object> probe = type == BranchType.DOCUMENT ? BranchDocumentMapper.initialValues(id,1,java.time.Instant.now(),false)
+                : BranchGroupMapper.initialValues(id,"default");
+            BranchRowWriter.insertReserved(connection,type,probe);
         }
     }
 
@@ -157,6 +222,10 @@ public final class BranchReadiness {
     /** Checks actual DML grants without publishing content; the caller must roll back. */
     public static void verifyWritePrivileges(Connection connection) throws SQLException {
         if (connection.getAutoCommit()) throw new SQLException("Privilege probe requires an explicit rollback transaction");
+        if ("Microsoft SQL Server".equals(connection.getMetaData().getDatabaseProductName())) {
+            verifySqlServerPrivileges(connection);
+            return;
+        }
         if ("PostgreSQL".equals(connection.getMetaData().getDatabaseProductName())) {
             verifyPostgresPrivileges(connection);
         }

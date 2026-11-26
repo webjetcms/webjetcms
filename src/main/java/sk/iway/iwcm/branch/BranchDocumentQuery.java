@@ -113,8 +113,11 @@ public final class BranchDocumentQuery {
                 bind(statement,source,arguments);try(ResultSet result=statement.executeQuery()){result.next();count=result.getLong(1);}
             }
             List<DocDetails> docs=new ArrayList<>();
-            try(PreparedStatement statement=connection.prepareStatement("SELECT d.doc_id FROM "+from+where+" ORDER BY "+order+" LIMIT ? OFFSET ?")) {
-                int index=bind(statement,source,arguments);statement.setInt(index++,options.getPageable().getPageSize());statement.setLong(index,options.getPageable().getOffset());
+            try(PreparedStatement statement=connection.prepareStatement("SELECT d.doc_id FROM "+from+where+" ORDER BY "+order+(Constants.DB_TYPE == Constants.DB_MSSQL ? " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" : " LIMIT ? OFFSET ?"))) {
+                int index=bind(statement,source,arguments);
+                boolean offsetFirst = Constants.DB_TYPE == Constants.DB_MSSQL;
+                statement.setInt(offsetFirst ? index+1 : index,options.getPageable().getPageSize());
+                statement.setLong(offsetFirst ? index : index+1,options.getPageable().getOffset());
                 try(ResultSet result=statement.executeQuery()){while(result.next())docs.add(view.document(result.getInt(1),true));}
             }
             return new PageImpl<>(docs,options.getPageable(),count);

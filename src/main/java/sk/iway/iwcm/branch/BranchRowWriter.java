@@ -2,9 +2,14 @@ package sk.iway.iwcm.branch;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.zaxxer.hikari.HikariDataSource;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
 
 /** Low-level INSERT only; history, authorization, normalization and publication belong to P06. */
 public final class BranchRowWriter {
@@ -40,6 +45,44 @@ public final class BranchRowWriter {
             columns.put(name,values.get(name));
         }
         // Duplicate keys deliberately fail. This writer must never silently UPDATE an identity.
-        BranchStore.insert(connection,type.liveTable(),columns);
+        insertReserved(connection,type,columns);
+    }
+
+    static void insertReserved(Connection connection, BranchType type, Map<String, ?> columns) throws SQLException {
+        String table = type.liveTable();
+        if (type == BranchType.MEDIA || Constants.DB_TYPE != Constants.DB_MSSQL) {
+            BranchStore.insert(connection,table,columns);
+            return;
+        }
+        // The cleanup also runs when the response to SET ... ON is lost.
+        try (Statement session = connection.createStatement();
+             IdentityScope scope = () -> resetIdentity(connection, session, table)) {
+            session.execute("SET IDENTITY_INSERT " + table + " ON");
+            BranchStore.insert(connection,table,columns);
+        }
+    }
+
+    @FunctionalInterface
+    private interface IdentityScope extends AutoCloseable {
+        @Override void close() throws SQLException;
+    }
+
+    static void resetIdentity(Connection connection, Statement session, String table) throws SQLException {
+        try { session.execute("SET IDENTITY_INSERT " + table + " OFF"); }
+        catch (SQLException reset) {
+            // A rollback cannot clear this session setting. Evict the checked-out Hikari connection.
+            try {
+                var pool = DBPool.getInstance().getDataSource("iwcm");
+                if (pool.isWrapperFor(HikariDataSource.class)) {
+                    pool.unwrap(HikariDataSource.class).evictConnection(connection);
+                    // Finish closing the proxy here. Hikari 6.3 may try to reset an already evicted session.
+                    try { connection.close(); } catch (Exception close) { reset.addSuppressed(close); }
+                } else connection.abort(Runnable::run);
+            } catch (Exception eviction) {
+                reset.addSuppressed(eviction);
+                try { connection.abort(Runnable::run); } catch (Exception abort) { reset.addSuppressed(abort); }
+            }
+            throw reset;
+        }
     }
 }

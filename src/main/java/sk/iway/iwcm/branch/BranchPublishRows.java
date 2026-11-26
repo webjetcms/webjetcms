@@ -71,10 +71,10 @@ final class BranchPublishRows {
     }
 
     static void lockLive(Connection connection,BranchType type,Map<String,Object> work) throws SQLException {
-        try(PreparedStatement statement=connection.prepareStatement("SELECT "+type.idColumn()+" FROM "+type.liveTable()+" WHERE "+type.idColumn()+"=? FOR UPDATE")) {
+        try(PreparedStatement statement=connection.prepareStatement(BranchSql.lockedSelect(type.idColumn(), type.liveTable(), type.idColumn()+"=?"))) {
             statement.setInt(1,number(work,type.idColumn()));try(ResultSet ignored=statement.executeQuery()) {while(ignored.next()) { /* Lock the current physical identity. */ }}
         }
-        if(type==BranchType.MEDIA)try(PreparedStatement statement=connection.prepareStatement("SELECT media_id FROM media_group_to_media WHERE media_id=? FOR UPDATE")) {
+        if(type==BranchType.MEDIA)try(PreparedStatement statement=connection.prepareStatement(BranchSql.lockedSelect("media_id","media_group_to_media","media_id=?"))) {
             statement.setInt(1,number(work,"media_id"));try(ResultSet ignored=statement.executeQuery()) {while(ignored.next()) { /* Lock category membership with the owner. */ }}
         }
     }
@@ -117,7 +117,7 @@ final class BranchPublishRows {
     }
 
     static void checkpoint(Connection connection,BranchType type,Map<String,Object> work,String state,String phase,String hash,String error) throws SQLException {
-        try(PreparedStatement statement=connection.prepareStatement("UPDATE "+type.workTable()+" w SET apply_state=?,apply_phase=?,applied_hash=?,apply_error=? WHERE row_id=? AND branch_id=? AND EXISTS (SELECT 1 FROM branches b WHERE b.id=w.branch_id AND b.state='MERGING')")) {
+        try(PreparedStatement statement=connection.prepareStatement("UPDATE "+type.workTable()+" SET apply_state=?,apply_phase=?,applied_hash=?,apply_error=? WHERE row_id=? AND branch_id=? AND EXISTS (SELECT 1 FROM branches b WHERE b.id="+type.workTable()+".branch_id AND b.state='MERGING')")) {
             statement.setString(1,state);statement.setString(2,phase);statement.setString(3,hash);statement.setString(4,error);
             statement.setLong(5,((Number)work.get("row_id")).longValue());statement.setLong(6,((Number)work.get("branch_id")).longValue());
             if(statement.executeUpdate()!=1)throw new SQLException("Publication checkpoint disappeared");
@@ -131,7 +131,9 @@ final class BranchPublishRows {
         // A newer or unrelated history entry can exist even when the live content still matches.
         int historyId;
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT * FROM documents_history WHERE doc_id=? AND actual=true AND publicable=false AND disapproved_by=-1 ORDER BY history_id DESC LIMIT 1 FOR UPDATE")) {
+                BranchSql.lockedSelect(Constants.DB_TYPE == Constants.DB_MSSQL ? "TOP (1) *" : "*", "documents_history",
+                    "doc_id=? AND actual=" + DB.getBooleanSql(true) + " AND publicable=" + DB.getBooleanSql(false)
+                    + " AND disapproved_by=-1 ORDER BY history_id DESC" + (Constants.DB_TYPE == Constants.DB_MSSQL ? "" : " LIMIT 1")))) {
             statement.setInt(1, docId);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next() || !hash.equals(BranchDocumentMapper.snapshot(row(result)).hash())) return;
