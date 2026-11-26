@@ -110,6 +110,10 @@ export class CkEditorToolbarOverflow {
         this.listen(this.win, 'scroll', () => this.position(), true);
         try {
             if (this.win.frameElement) {
+                this.listen(this.doc, 'WJ.PageBuilder.close', () => this.destroy());
+                this.listen(this.win, 'pagehide', event => {
+                    if (!event.persisted) this.destroy();
+                });
                 this.listen(this.win.parent, 'resize', () => this.schedule());
                 this.listen(this.win.parent, 'scroll', () => this.position(), true);
                 this.listen(this.win.frameElement.ownerDocument, 'mousedown', () => this.close());
@@ -334,6 +338,7 @@ export class CkEditorToolbarOverflow {
     }
 
     destroy() {
+        if (this.destroyed) return;
         this.destroyed = true;
         this.close();
         this.win.cancelAnimationFrame(this.frame);
