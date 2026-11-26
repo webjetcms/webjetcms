@@ -37,6 +37,16 @@ důležitý je konstruktor, který předává Spring DATA repozitář ```Redirec
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
+!>**Upozornění:** anotace `@PreAuthorize` na třídě kontroléru chrání pouze metody deklarované v této třídě. U metody zděděné z bázové třídy Spring Security hledá anotaci od třídy, která metodu deklaruje, směrem k jejím předkům, ne v podtřídě. Pokud přidáváte REST metodu (`@GetMapping`, `@PostMapping` …) do bázové třídy, kterou dědí kontroléry s různými právy, dejte její anotaci přímo na metodu. Stejně to dělají metody v `DatatableRestControllerV2`:
+
+```java
+@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+@PostMapping("/preview/")
+public String preview(@RequestBody DocDetails entity, HttpServletRequest request) {
+```
+
+Metoda `checkAccessAllowedOnController` ověří právo z anotace `@PreAuthorize` na třídě konkrétního kontroléru a jeho metodu `checkAccessAllowed`. Pokud kontrolér nemá ani jedno, povolí přístup každému administrátorovi. Každý kontrolér odvozený od `DatatableRestControllerV2` proto potřebuje `@PreAuthorize` na třídě, a to i tehdy, když jej používá pouze vnořená tabulka na stránce chráněné jiným kontrolérem. Druhou možností je vlastní metoda `checkAccessAllowed`. Test `InheritedHandlerPreAuthorizeTest` najde kontroléry bez práva i metody kontrolérů s anotací na třídě, které zůstaly bez kontroly práv.
+
 !>**Upozornění:** Spring DATA entita musí mít jako PK ```Long id``` (ne např. ```adminlogId``` a podobně), pokud se sloupec v databázi jmenuje jinak, je třeba mu nastavit jméno sloupce:
 
 ```java

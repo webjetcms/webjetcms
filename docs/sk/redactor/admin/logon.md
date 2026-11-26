@@ -92,7 +92,7 @@ Ak prihlásenie poznáte, potvrďte ho odkazom **Bol som to ja** v emaile alebo 
 
 ![](device-confirm-code.png)
 
-Ak prihlásenie nepoznáte, postupujte podľa [návodu na zablokovanie zariadenia](welcome.md#ak-prihlásenie-nepoznáte).
+Ak prihlásenie nepoznáte, postupujte podľa [návodu na zablokovanie zariadenia](welcome.md#ak-prihlásenie-nepoznáte). Vo [videu o prihlásení z nového prehliadača](welcome.md#nové-prihlásenie-z-neznámeho-zariadenia) uvidíte potvrdenie vlastného prihlásenia aj odhlásenie zablokovaného prehliadača.
 
 ![](device-block.png)
 

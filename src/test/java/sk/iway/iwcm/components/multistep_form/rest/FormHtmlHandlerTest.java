@@ -31,6 +31,7 @@ import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -272,7 +273,9 @@ class FormHtmlHandlerTest {
              MockedStatic<CloudToolsForCore> cloud = mockStatic(CloudToolsForCore.class);
              MockedStatic<Prop> props = mockStatic(Prop.class);
              MockedStatic<ShowDoc> showDoc = mockStatic(ShowDoc.class);
+             MockedStatic<Cache> caches = mockStatic(Cache.class);
              MockedStatic<FormHtmlHandler> handlers = mockStatic(FormHtmlHandler.class, CALLS_REAL_METHODS)) {
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
             cloud.when(CloudToolsForCore::getDomainId).thenReturn(7);
             props.when(() -> Prop.getInstance("en")).thenReturn(prop);
             handlers.when(() -> FormHtmlHandler.getCssDataLink(10, false, null)).thenReturn(new Pair<>("", ""));

@@ -4,6 +4,72 @@ This section contains descriptions of the features and **functionalities of WebJ
 
 ---
 
+## Custom editor tabs and fields for individual brands
+
+A company manages two brands in one WebJET CMS, each on a domain with separate data. For a brand with a product catalog, the administrator adds the **Product Data** tab to the website editor. The **Catalog Number** field is placed first, followed by **Material**. Thus, when preparing a product page, the editor fills in both data on one tab.
+
+The second brand offers training. On its domain, the administrator can create a **Training Details** card with the fields **Instructor** and **Venue**. The names and order of the fields are set once for the website editor of the domain.
+
+**Main benefits**
+
+- **Uniform Material Names** – The administrator can prepare a list of options for the Material field. Editors then choose from the same names for different products.
+- **Edits without programming** – when a team needs additional data on a card, the administrator assigns it an optional field directly in the administration.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="Vytvorenie vlastnej karty SEO a presun polí v editore stránky" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+[Custom tab with optional fields](../../frontend/datatables/tabs-settings.md#custom-tab-with-optional-fields) | [Field settings and their order](../../frontend/datatables/fields-settings.md)
+
+## Inquiries, approvals, and upcoming publishing on one screen
+
+In the morning, the merchant adds a large **Forms** card to the home screen. In its settings, he selects the campaign inquiry form and saves the report. The most recent inquiry is first in the list. The merchant opens it directly from the card and reads what the customer is interested in.
+
+The editor moves the **For Approval** and **Upcoming Publishing** tabs to the top of his overview. After logging in, he can immediately see which pages are waiting for his decision and when the next campaign page is due to be published. If he needs to check another campaign page, he can press **Ctrl+K** (on Mac, **⌘K**) in any part of the administration, search for it by name or URL, and open it in the editor.
+
+**Main benefits:**
+
+- **Overview by job** – everyone selects the cards they need from the cards available according to their permissions and determines their order.
+- **Faster response to the customer** – the merchant can access the inquiry without going through other forms.
+- **Easier work prioritization** – the manager can see both approval requests and publication deadlines and can decide which page to work on first.
+
+![Home screen of administration with tabs](../../redactor/admin/dashboard.png)
+
+Detailed documentation: [Welcome screen](../../redactor/admin/welcome.md) | [Quick search in header](../../redactor/admin/search/README.md)
+
+## From background to finished website design with an AI assistant
+
+The editor opens **AI Chat in the page editor**, attaches the training program in PDF format, and sends the request "Prepare a training invitation with schedule from the program." Attachments are supported by OpenAI and Gemini assistants. The PDF must contain readable text.
+
+The editor responds to the first suggestion with the words "Shorten the introduction to two sentences and keep the lecture times." In PageBuilder, he looks at the **preview of the invitation in the appearance of his website** and compares the training date and lecture times with the program. Only then does he insert the selected suggestion into the page with the **Add** button.
+
+**Main benefits:**
+
+- **No manual rewriting of the program** – the assistant prepares the schedule directly from the PDF.
+- **No copying between external chat and CMS** – the editor prepares and inserts the invitation in the page editor.
+- **The choice of design remains with the editor** – he can refine the invitation with additional messages and decide which version to use.
+
+![Page design preview from AI Chat in PageBuilder](../../redactor/ai/datatables/pb-chat-preview.png)
+
+Detailed documentation: [AI Chat](../../redactor/ai/chat/README.md)
+
+## Publish the campaign, including attachments, at the scheduled time
+
+The new price list is valid from Monday. The editor will prepare the next version of the site on Friday, upload the PDF with the new prices to the protected folder **Files - Scheduled** and schedule the publication for Monday morning. The function is turned on by the administrator and the protection applies to new files uploaded to the scheduled folders.
+
+Over the weekend, visitors still see the original page and **they won't open the new PDF even via a direct link**. At the scheduled time, WebJET will automatically publish the prepared page and its attachments.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="Plánované publikovanie stránky s chránenými súbormi" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+**Main benefits:**
+
+- **Hands-free launch** – the editor doesn't have to change the page or upload files on Monday morning.
+- **Current price list for download** – when making a new offer, the customer downloads the price list valid from the same day.
+
+Detailed documentation: [Planned Publishing with Protected Files](../../redactor/webpages/planned-publishing.md)
+
 ## Clearer and faster page creation in PageBuilder
 
 WebJET CMS modernizes **PageBuilder – a tool for composing pages from ready-made blocks**. The editor has control over the selected part in one place in the fixed top bar. A clickable path shows him whether he is editing a column, its container or the entire section, and allows him to easily move to the parent part. **A copy of the block is inserted right next to the original and the order of the blocks is changed with a quick shift**, which saves time when editing product pages, campaigns and recurring offers.
@@ -186,6 +252,8 @@ Detailed documentation: [Semantic Search (RAG)](../../redactor/apps/semantic-sea
 
 WebJET CMS delivers **semantic search** that goes beyond keyword matching, but also understands **the meaning of the user query**. This means that visitors will find relevant content even when they don't use the exact wording from the web. The result is a more natural search that behaves more closely to how people actually ask questions.
 
+Readers can search directly in **company manuals in Markdown** and, after enabling AI responses, get explanations from the found passages without the editors having to rewrite the manuals into websites.
+
 For the customer, this means **higher success rate of finding an answer on the first try**, fewer page bounces and a better user experience, especially on content-intensive websites. The feature is suitable for the public sector, corporate portals, product websites and customer service centers, where regular full-text search often returns too many irrelevant results.
 
 The solution is also **flexible and extensible**. It is possible to combine classic full-text and semantic search (hybrid mode), adjust the sensitivity of results and adapt it to the customer's infrastructure, including a separate vector database. In practice, this brings lower operational risk, better scalability and the possibility of gradual deployment without the need to change the entire website at once.
@@ -200,7 +268,7 @@ The solution is also **flexible and extensible**. It is possible to combine clas
 
 ![Semantic Search - Index Settings](../../redactor/apps/semantic-search/index-dialog.png)
 
-Detailed documentation: [Semantic Search](../../custom-apps/apps/rag/semantic-search/README.md) | [Managing Indexed Data](../../redactor/apps/semantic-search/README.md)
+Detailed documentation: [Semantic Search](../../custom-apps/apps/rag/semantic-search/README.md) | [Managing Indexed Data](../../redactor/apps/semantic-search/README.md) | [Searching Markdown Documentation](../../custom-apps/apps/rag/markdown-search.md)
 
 ## Smart forms that adapt to user responses
 

@@ -4702,6 +4702,7 @@ CREATE TABLE `users` (
   `domain_id` int(11) NOT NULL DEFAULT 1,
   `mobile_device` varchar(255) DEFAULT NULL,
   `api_key` varchar(255) DEFAULT NULL,
+  `webauthn_user_id` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `IX_login_name` (`login`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

@@ -24,6 +24,24 @@ class FormsControllerTest {
 
     private static final String ORIGINAL_FORM_ID_ATTRIBUTE = FormsController.class.getName() + ".originalFormId";
 
+    /** A new definition records the logged-in editor even when the request already carries a user ID. */
+    @Test
+    void savesLoggedInEditorAsFormAuthor() {
+        Identity editor = new Identity();
+        editor.setUserId(21);
+        FormsController controller = createController(mock(FormsServiceImpl.class), editor, new MockHttpServletRequest());
+        FormsEntity form = new FormsEntity();
+        form.setFormName("draft");
+        form.setUserId(99L);
+        when(controller.getRepo().save(form)).thenReturn(form);
+
+        FormsEntity saved = controller.insertItem(form);
+
+        verify(controller.getRepo()).save(form);
+        assertEquals(21L, saved.getUserId());
+        assertNull(saved.getCreateDate());
+    }
+
     /**
      * Verifies that duplication is rejected and the source ID is not stored when the
      * user cannot access the source form.

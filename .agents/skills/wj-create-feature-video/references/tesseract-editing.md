@@ -39,11 +39,17 @@ WebJET production decisions and lessons from the PR 332 edit.
    at adjacent output frames; a fast time remap can still expose an intermediate
    blank editor or unrelated list for one frame.
 5. Prefer a clean screen recording without numbered chapter-title overlays.
-   Use smooth zooms for important fields, autocomplete thumbnails, menu choices
-   and settings. Hold the detail while it is explained, then widen before
-   actions outside the crop. Keep the full drag-and-drop path visible. Verify
+   Start each browser shot at 100% of the recorded frame. Use the full view for
+   opening and closing dialogs, navigation, results and the next action. For a
+   spoken detail, place a short zoom between two full-frame keyframes. Return
+   immediately after the text entry or explanation so one detail never pans
+   straight into the next. Keep the full drag-and-drop path visible. Verify
    Save/Done buttons, dropdowns and dialog headers during each camera move.
    Do not add decorative motion or sound to every click.
+6. For a named menu choice, park the visible cursor on the actual row long
+   enough to read its label before clicking. Check the outgoing menu and
+   incoming window in the export. Use the narration over the first view of a
+   result as its reading time. Trim extra silent holds if the picture is idle.
 
 ## Native Project and Performance
 

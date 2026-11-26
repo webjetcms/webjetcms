@@ -75,10 +75,18 @@ public class WeatherForecast {
 
         if (this.dayForecastBeanList == null || this.hourForecastBeanList == null) {
             ImportWeather importWeather = new ImportWeather();
-            this.dayForecastBeanList = importWeather.readWeather(city.getDecimal1(), city.getDecimal2());// lat, lon
-            c.setObjectByExpiry(WEATHER_CACHE_PREFIX + CACHE_KEY_SUFFIX, dayForecastBeanList, dayForecastBeanList.get(1).getDate().getTime(),false);
+            this.dayForecastBeanList = importWeather.readWeather(lat, lon);
+            if (dayForecastBeanList == null) {
+                dayForecastBeanList = List.of();
+                hourForecastBeanList = List.of();
+                return;
+            }
             this.hourForecastBeanList = importWeather.getHourForecastBeanList();
-            c.setObjectByExpiry(WEATHER_CACHE_PREFIX + HOUR + CACHE_KEY_SUFFIX, hourForecastBeanList, dayForecastBeanList.get(1).getDate().getTime(),false);
+            if (dayForecastBeanList.size() >= 2) {
+                long expiryTime = dayForecastBeanList.get(1).getDate().getTime();
+                c.setObjectByExpiry(WEATHER_CACHE_PREFIX + CACHE_KEY_SUFFIX, dayForecastBeanList, expiryTime, false);
+                c.setObjectByExpiry(WEATHER_CACHE_PREFIX + HOUR + CACHE_KEY_SUFFIX, hourForecastBeanList, expiryTime, false);
+            }
         }
     }
 
@@ -113,6 +121,7 @@ public class WeatherForecast {
                 break;
             }
         }
+        if (start == null) return List.of();
         int i = this.hourForecastBeanList.indexOf(start);
         if (i+8<this.hourForecastBeanList.size())
             return this.hourForecastBeanList.subList(i, i+8);

@@ -283,6 +283,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Přidána možnost nastavit volitelné pole jako povinné (#58413).
+- Prázdná povinná volitelná pole již neblokují mazání záznamů v datových tabulkách včetně složek webových stránek (#414).
 - Přidány nové typy volitelných polí [přepínač a zaškrtávací pole](frontend/webpages/customfields/custom-fields-settings.md#rozdíl-mezi-selectmultiselect-a-radiocheckbox) s podporou statických možností i propojení na číselník. Typ `multiselect` nyní také podporuje [propojení na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Původní typ `enumeration` byl nahrazen přepínačem zdroje možností u typů `select`, `multiselect`, `radio` a `checkbox` kde se pro všechny tyto typy polí načtou možnosti z propojeného číselníku (#58637).
 - Přidán typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pro přímé zadávání JSON objektu s čísly řádků a tlačítkem pro formátování (#311).
 
@@ -339,6 +340,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Skupiny práv - pokud má redaktor přes skupinu přiděleny pouze jednotlivé stránky, po přihlášení se jeho práva na úpravu omezí na tyto stránky (#419).
+- [Formuláře](redactor/apps/form/README.md) - redaktor může otevřít vícekrokový formulář i před prvním odesláním, pokud má právo upravovat alespoň jednu stránku, na které je formulář vložen. Autor může prázdný formulář upravovat hned po vytvoření nebo duplikování (#419).
+- Vícekrokové formuláře - při otevření karty **Položky formuláře** nebo **Statistiky formuláře** bez přístupu k danému formuláři se zobrazí chybová zpráva (#419).
+- Webové stránky - editor při uložení upraví ručně zadanou URL adresu, pokud obsahuje mezery nebo diakritiku. Při kolizi zděděné URL uloží a zobrazí přidělenou koncovku (#417).
+- AI Čet - po smazání otevřeného četu se v novém četě zobrazí výběr asistenta pouze jednou (#58878).
 - Vložení HTML kódu - obsah se dekóduje v UTF-8 bez závislosti na výchozím kódování JVM, aby se na serveru nepoškodila diakritika a další znaky Unicode.
 - Zrcadlení struktury - při selhání překladu, například po vyčerpání kvóty DeepL, uživatel obdrží upozornění s konkrétním důvodem z výjimky překladače včetně HTTP kódu a dostupné chybové zprávy DeepL. Pevné mezery a jejich HTML entity se normalizují v názvech složek a generovaných URL, aby nevznikaly adresy s textem `nbsp` ani zbytečná přesměrování (#402).
 - Datové tabulky - po úpravě jednoho záznamu se při vynuceném obnovení údajů zobrazí strana s upraveným záznamem podle aktuálního třídění. V konfiguraci se proměnná vyhledává podle názvu i při změně jejího ID. Při mazání se zachová aktuální strana, případně se zobrazí poslední platná strana. Při pořizování záznamu se stránkování nadále resetuje (#400).
@@ -393,6 +399,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Bezpečnost
 
+- Aktualizované knihovny`org.json 20260719`, PostgreSQL JDBC aktualizován na `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` na `2.6.1`, Apache Commons Codec `1.23.0`, knihovna PDFBox na `3.0.8` a Swagger UI na @@ (#421).
+- Počasí - import předpovědi odmítne XML s deklarací `DOCTYPE`. Pokud používáte vlastní zdroj v `weatherSourceApi`, musí poskytovat předpověď bez DTD (#421).
+- Lokální AI - pro `ai.djl:api 0.36.0` přibyla výjimka Dependency Check pro `CVE-2026-129266`. WebJET AI rozbaluje a ověřuje modely vlastním kódem. Tokenizéry DJL dostávají již ověřené lokální soubory (#421).
 - AI asistenti - vyhledávání ve statistice a grafy používání zobrazují pouze záznamy a asistenty aktuální domény (#58850).
 - Webové stránky - mazání ověřuje práva ke všem zrcadleným stránkám au složek vyžaduje i `deleteDir`. [Zrušení zrcadlení](redactor/apps/clone-structure/README.md#zrušení-zrcadlení) kontroluje oprávnění pro celý podstrom včetně nakonfigurovaných omezení domény a uživatelských skupin (#370).
 - Dependency Check - aktualizované knihovny `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizace Jackson zpřísňuje kontrolu typů při polymorfní deserializaci; vlastní integrace používající názvy Java tříd v JSON je třeba ověřit (#385).
@@ -410,6 +419,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - přidána ochrana před `prompt injection` útoky s oddělením systémových instrukcí od uživatelského obsahu a detekcí kódovaných vstupů (#58549).
 - HTML sanitizace - `AllowSafeHtmlAttributeConverter` zachovává na všech dosud povolených HTML elementech atributy `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl` (`-1`, `0`). Umožňuje tak používat atributy přístupnosti a vlastní datové atributy (#317).
+- Opravena kontrola práv pro náhled stránky, náhled HTTP hlaviček, nastavení složek galerie a historii a plánování konfiguračních proměnných.
 
 ### Dokumentace
 
@@ -793,8 +803,10 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - AI asistenti - při aktualizaci se modely OpenAI nahradí novějšími: `gpt-image-2` modelem `gpt-image-2.6-sunburst` pro generování a úpravu obrázků, `gpt-5`, `gpt-5-pro`, `o3` a `o3-pro` modelem `gpt-5.6-sol`, `gpt-5-mini` modelem @@ `gpt-5.6-luna`. OpenAI vypne původní textové modely 11. prosince 2026 a obrazový model 10. února 2027. Asistenti s původními modely Pro přejdou na standardní režim Sol.
 - Datové tabulky - opraveno generování podmínek při filtrování polí odkazujících na jinou entitu. Textové vyhledávání se pro tato pole přeskočí, aby nevznikaly neplatné SQL podmínky (#397).
 - Šablony - [Ninja objekt](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` vrátí prefix textových klíčů skupiny šablon. Dříve getter volal sám sebe a použití v šabloně skončilo chybou `StackOverflowError` (#409).
+- Archiv souborů - administrace nyní nabízí správný název nastavení `fileArchivCacheTime`, které určuje, jak dlouho archiv uchovává v cache například historii verzí souboru. Hlavní seznam souborů aplikace načítá přímo z databáze. Výchozí doba je nadále 120 minut. Vlastní hodnota pod správným názvem fungovala i před opravou a nastavení pro konkrétní metodu má přednost. Pokud jste zadali hodnotu pod původním názvem `fileArchivatorCacheTime`, zadejte ji pod názvem `fileArchivCacheTime` (#411).
 - Soubory - opravený název konfigurační proměnné `elfinderMetadataAutopopup`, která po nahrání souboru automaticky zobrazí dialog metadat. Proměnná byla deklarována s překlepem jako `elfinerMetadataAutopopup`, který se nikde nečetl, proto její změna v administraci neměla efekt. Výchozí hodnota `false` zůstává. Pokud jste si nastavili proměnnou s překlepem, nastavte místo ní `elfinderMetadataAutopopup` (#410).
 - Opraveno zacyklení při HTTP přesměrování během stahování souborů, načtení nastavení uživatele, inicializaci generátoru primárních klíčů a obnově cache souborů uložených v databázi. Doplněny ukončovací podmínky opakovaných pokusů. Pokud generátor primárních klíčů zůstane nedostupný i po jednom pokusu o vytvoření záznamu a obnovení paměti cache, metody `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodí `IllegalStateException`. Volající musí přerušit operaci vyžadující identifikátor a předat chybu svému zpracování výjimek (#412).
+- Menu - opraveno generování atributu `class` na položce `<li>` při použití nastavení Menu Info (`menuInfoDirName`). Třída `menu-info-li` se přidává k ostatním CSS třídám položky.
 
 ## 2026.0.40
 

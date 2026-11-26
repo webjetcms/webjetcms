@@ -129,7 +129,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     public FormsEntity insertItem(FormsEntity entity) {
         // Create form pattern record
         entity.setData("empty");
-        entity.setUserId(Long.valueOf(-1));
+        entity.setUserId((long) getUser().getUserId());
         entity.setDocId(-1);
         entity.setDomainId(CloudToolsForCore.getDomainId());
         entity.setCreateDate(null);

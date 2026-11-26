@@ -283,6 +283,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](frontend/webpages/customfields/custom-fields-settings-editor.png)
 
 - Added option to set optional field as required (#58413).
+- Empty required optional fields no longer block deleting records in data tables, including website folders (#414).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
 - Added [JSON Editor](developer/datatables-editor/customfields.md#json-editor) type (`jsoneditor`) for direct input of JSON object with line numbers and formatting button (#311).
 
@@ -339,6 +340,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Rights groups - if an editor has only individual pages assigned to them through a group, after logging in, their editing rights will be limited to these pages (#419).
+- [Forms](redactor/apps/form/README.md) - the editor can open a multi-step form even before the first submission, if he has the right to edit at least one page on which the form is embedded. The author can edit an empty form immediately after creation or duplication (#419).
+- Multi-step forms - when opening the **Form Items** or **Form Statistics** tab without access to the given form, an error message (#419) appears.
+- Websites - the editor will edit a manually entered URL address when saving if it contains spaces or diacritics. In case of an inherited URL collision, it will save and display the assigned suffix (#417).
+- AI Chat - after deleting an open chat, the assistant selection will only appear once in a new chat (#58878).
 - HTML code embedding - content is decoded in UTF-8 without depending on the default JVM encoding, so that diacritics and other Unicode characters are not corrupted on the server.
 - Structure mirroring - when a translation fails, for example after running out of DeepL quota, the user will receive a notification with the specific reason for the translator exception, including the HTTP code and available DeepL error message. Hard spaces and their HTML entities are normalized in folder names and generated URLs to avoid `nbsp` addresses and unnecessary redirects (#402).
 - Data tables - after editing a single record, when forced to refresh the data, the page with the edited record is displayed according to the current sorting. In the configuration, the variable is searched by name even when its ID is changed. When deleting, the current page is preserved, or the last valid page is displayed. When creating a record, the pagination is still reset (#400).
@@ -393,6 +399,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Safety
 
+- Updated libraries `org.json 20260719`, PostgreSQL JDBC updated to `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` to `2.6.1`, Apache Commons Codec `1.23.0`, PDFBox library to `3.0.8` and Swagger UI to `5.34.1` with DOMPurify `3.4.17` (#421).
+- Weather - forecast import will reject XML with `DOCTYPE` declaration. If you use your own source in `weatherSourceApi`, it must provide a forecast without a DTD (#421).
+- Local AI - for `ai.djl:api 0.36.0`, a Dependency Check exception for `CVE-2026-129266` has been added. WebJET AI unpacks and verifies models with its own code. DJL tokenizers receive already verified local files (#421).
 - AI assistants - search in statistics and usage graphs only show records and assistants of the current domain (#58850).
 - Websites - deletion checks permissions for all mirrored pages and also requires `deleteDir` for folders. [Unmirroring](redactor/apps/clone-structure/README.md#unmirroring) checks permissions for the entire subtree including configured domain and user group restrictions (#370).
 - Dependency Check - updated libraries `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` with fix `CVE-2026-110879` and `undici 6.28.1 → 6.29.1` with fix `CVE-2026-109383`. Jackson update tightens type checking during polymorphic deserialization; custom integrations using Java class names in JSON need to be verified (#385).
@@ -410,6 +419,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
 - AI assistants - added protection against `prompt injection` attacks with separation of system instructions from user content and detection of coded inputs (#58549).
 - HTML sanitization - `AllowSafeHtmlAttributeConverter` preserves the `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) and `tabindex` (`-1`, `0`) attributes on all previously allowed HTML elements. This allows the use of accessibility attributes and custom data attributes (#317).
+- Fixed rights checking for page preview, HTTP header preview, gallery folder settings and history and scheduling configuration variables.
 
 ### Documentation
 
@@ -793,8 +803,10 @@ Redesigned application properties settings in the editor from the old code in `J
 - AI assistants - when updating, OpenAI models will be replaced with newer ones: `gpt-image-2` by the `gpt-image-2.6-sunburst` model for image generation and editing, `gpt-5`, `gpt-5-pro`, `o3` and `o3-pro` by the `gpt-5.6-sol` model, `gpt-5-mini` by the `gpt-5.6-terra` model and `gpt-5-nano` by the `gpt-5.6-luna` model. OpenAI will shut down the original text models on December 11, 2026 and the image model on February 10, 2027. Assistants with the original Pro models will switch to the standard Sol mode.
 - Data tables - fixed condition generation when filtering fields that reference another entity. Text search is skipped for these fields to avoid invalid SQL conditions (#397).
 - Templates - [Ninja object](frontend/ninja-starter-kit/ninja-jv/temp-group/README.md) `${ninja.temp.group.textPrefix}` returns the prefix of the template group text keys. Previously, the getter called itself and using it in a template ended with error `StackOverflowError` (#409).
+- File archive - administration now offers the correct setting name `fileArchivCacheTime`, which determines how long the archive keeps the file version history in the cache, for example. The application loads the main file list directly from the database. The default time is still 120 minutes. The custom value under the correct name worked before the fix, and the setting for a specific method takes precedence. If you entered a value under the original name `fileArchivatorCacheTime`, enter it under the name `fileArchivCacheTime` (#411).
 - Files - fixed the name of the configuration variable `elfinderMetadataAutopopup`, which automatically displays the metadata dialog after uploading a file. The variable was declared with a typo as `elfinerMetadataAutopopup`, which was not read anywhere, so changing it in the administration had no effect. The default value `false` remains. If you set a variable with a typo, set it to `elfinderMetadataAutopopup` instead (#410).
 - Fixed looping in HTTP redirects during file downloads, user settings loading, primary key generator initialization, and database file cache refresh. Added retry exit conditions. If the primary key generator remains unavailable after one attempt to create a record and refresh the cache, the `PkeyGenerator.getNextValue(String)` and `getNextValueAsLong(String)` methods throw `IllegalStateException`. The caller must abort the operation requiring the identifier and pass the error to its exception handler (#412).
+- Menu - fixed generation of `class` attribute on `<li>` item when using Menu Info setting (`menuInfoDirName`). Class `menu-info-li` is added to other CSS classes of the item.
 
 ## 2026.0.40
 

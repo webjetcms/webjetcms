@@ -2805,6 +2805,48 @@ Scenario('bug - open window for file selection', ({ I, DTE ,Document}) => {
     I.switchTo();
 });
 
+Scenario('clicking a switched preview image edits only that image', async ({ I, DTE, Document }) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const preview = workbenchFixture+' .autotest-preview';
+    const first = '/admin/images/logo.gif';
+    const second = '/templates/aceintegration/jet/assets/images/logo-jet.png';
+    const replacement = '/admin/skins/webjet8/ckeditor/dist/plugins/image/images/noimage.png';
+    await I.executeScript((root, [first, second]) => {
+        const section = document.querySelector('section.pb-workbench-autotest');
+        const preview = section.querySelector('.pb-column:last-child [data-ckeditor-instance]');
+        preview.innerHTML = '<div class="autotest-preview"><img class="autoimg" src="'+first+'" style="display:block"> '+
+            '<img class="autoimg" src="'+second+'" style="display:none"></div>';
+        // Switch from the other editable column without invoking the CKEditor button dialog.
+        section.querySelector('h2').addEventListener('click', () => {
+            const images = preview.querySelectorAll('img');
+            images[0].style.display = 'none';
+            images[1].style.display = 'block';
+        });
+    }, [first, second]);
+    I.click(preview+' img:first-child');
+    I.waitForVisible('.cke_dialog_container', 10);
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_cancel');
+    I.waitForInvisible('.cke_dialog_container', 10);
+    I.click(workbenchFixture+' h2');
+    I.click(preview+' img:nth-of-type(2)');
+    I.waitForVisible('.cke_dialog_container', 10);
+    I.switchTo('#wjImageIframeElement');
+    I.waitForVisible('#txtUrl', 10);
+    I.retry({retries: 8, minTimeout: 250, maxTimeout: 500}).seeInField('#txtUrl', second);
+    I.fillField('#txtUrl', replacement);
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
+    I.waitForInvisible('.cke_dialog_container', 10);
+
+    I.seeNumberOfElements(preview+' img', 2);
+    assert.equal(await I.grabAttributeFrom(preview+' img:first-child', 'src'), first);
+    assert.equal(await I.grabAttributeFrom(preview+' img:last-child', 'src'), replacement);
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('bug - /thumb prefix and parameters in image url', async ({ I, DTE, Document }) => {
     Document.resetPageBuilderMode();
 
