@@ -19,7 +19,13 @@ Druhá značka nabízí školení. Na její doméně může správce vytvořit k
     <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="Vytvorenie vlastnej karty SEO a presun polí v editore stránky" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-[Vlastní karta s volitelnými polemi](../../frontend/datatables/tabs-settings.md#vlastní-karta-s-volitelnými-polemi) | [Nastavení polí a jejich pořadí](../../frontend/datatables/fields-settings.md)
+Pro stránku o službě můžete nastavit povinné pole **Typ služby**. Redaktor v něm vybere například **Školení**. Když nabídku rozšíříte o **Servisní zásah**, stačí jej přidat do číselníku. Při dalším otevření stránky redaktor uvidí novou možnost a původní výběr zůstane zachován.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+[Vlastní karta s volitelnými polemi](../../frontend/datatables/tabs-settings.md#vlastní-karta-s-volitelnými-polemi) | [Nastavení polí a jejich pořadí](../../frontend/datatables/fields-settings.md) | [Volitelná pole](../../frontend/datatables/custom-fields-settings.md)
 
 ## Poptávky, schvalování a nejbližší publikování na jedné obrazovce
 
@@ -34,6 +40,12 @@ Vedoucí redakce si na začátek svého přehledu přesune karty **Ke schválen�
 - **Jednodušší určení pořadí práce** – vedoucí vidí žádosti o schválení i termíny publikování a může se rozhodnout, které stránce se bude věnovat jako první.
 
 ![Úvodní obrazovka administrace s kartami](../../redactor/admin/dashboard.png)
+
+Na úvodní obrazovce redaktor uvidí také upozornění, když se do jeho účtu někdo přihlásí z nového prohlížeče. Vlastní prohlížeč může potvrdit kódem z emailu. Pokud přihlášení nezná, může druhý prohlížeč zablokovat a sám zůstat přihlášen.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Podrobná dokumentace: [Úvodní obrazovka](../../redactor/admin/welcome.md) | [Rychlé vyhledávání v hlavičce](../../redactor/admin/search/README.md)
 
@@ -50,6 +62,12 @@ Na první návrh redaktor odpoví slovy „Zkrať úvod na dvě věty a ponech �
 - **Výběr návrhu zůstává na redaktorovi** – dalšími zprávami může pozvánku upřesňovat a sám rozhodne, kterou verzi použije.
 
 ![Náhled návrhu stránky z AI Četu v PageBuilderu](../../redactor/ai/datatables/pb-chat-preview.png)
+
+Ve videu si můžete prohlédnout přípravu pozvánky v klasickém editoru stránky.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Podrobná dokumentace: [AI Čet](../../redactor/ai/chat/README.md)
 
@@ -246,6 +264,12 @@ Důležitou výhodou je **kontrola a bezpečnější provoz**. Odpověď se tvo�
 - **Kontrola nad kvalitou a náklady**: Nastavitelné limity kontextu, podobnosti a volba asistenta pomáhají držet odpovědi přesné a efektivně.
 - **Rozšiřitelnost pro enterprise projekty**: Funkci lze přizpůsobit konfigurací i propojeními na stávající procesy zákazníka.
 
+Host se na webu penzionu zeptá na pobyt se psem i na parkování. Ve videu uvidíte, jak při jedné otázce obdrží stručnou odpověď a odkazy na obě stránky s podmínkami pobytu.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Podrobná dokumentace: [Sémantické vyhledávání (RAG)](../../redactor/apps/semantic-search/README.md)
 
 ## Inteligentní vyhledávání podle významu otázky
@@ -286,6 +310,12 @@ Pro zákazníka to přináší měřitelný obchodní efekt: **vyšší míru do
 - **Nížší provozní riziko**: Kontroly závislostí mezi polemi pomáhají předcházet neplatným nastavením a regresím.
 
 ![Podmíněné zobrazení polí ve formuláři](../../redactor/apps/multistep-form/tab-visibilityConditions.png)
+
+Soukromá osoba může poslat poptávku bez telefonního čísla. Od firmy si ve stejném formuláři můžete zeptat název i telefon. Ve videu uvidíte nastavení obou pravidel i výsledek na veřejné stránce.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Podrobná dokumentace: [Podmíněné zobrazení/validování položky](../../redactor/apps/multistep-form/README.md#podmíněné-zobrazenívalidování-položky)
 

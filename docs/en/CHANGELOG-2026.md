@@ -42,6 +42,10 @@
 
 ![Verify a blocked device before entering the administration](redactor/admin/logon-device-verification.png)
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Specific logins via `doFilterLogon` and `wjlogontoken` will be rejected by the blocked browser without an email prompt. To unblock, the regular login form in the same browser must be used (#340).
 
 Device tracking can be disabled by setting the configuration variable `adminNewDeviceDetectionEnabled` to false. When logging in, the [approximate location](admin/setup/configuration/dashboard.md#login-approximate-location) is also determined by the IP address, which can be disabled by setting `adminLoginLocationApiKey` to the value `DISABLED`.
@@ -134,6 +138,10 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 - AI Chat by field - added saved history filtered by the same field and record. You can search, open and continue an older conversation even after closing the editor; replies remain available for insertion into the field.
 - AI Chat in the field and in the page editor - added image and document upload for assistants with history support. You can select files with the plus icon, drag and drop into the message, or insert an image from the clipboard - the assistant will process them along with the page content (#386).
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless mode
@@ -194,6 +202,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](editor/apps/multistep-form/tab-relations.png)
 
 - Multi-step forms - when setting display conditions and obligations, the compared value for selection fields is selected from their options, including code lists and common radio groups. There is no need to enter values ​​manually (#391).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Multi-step forms - selecting **Form Step** in the item editor now shows the current step number even after changing the order of steps by dragging with the mouse (#392).
 - Regular expressions - the list displays the translated name according to the administration language and indicates the original name as **Translation key**. The **Allowed value** selection in multi-step forms uses the format **code - name** (#387).
 - Multi-step forms - fixed typo in translation keys from `components.mustistep.*` to `components.multistep.*` (#378).
@@ -207,6 +220,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
 - Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
@@ -285,6 +302,11 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Added option to set optional field as required (#58413).
 - Empty required optional fields no longer block deleting records in data tables, including website folders (#414).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Added [JSON Editor](developer/datatables-editor/customfields.md#json-editor) type (`jsoneditor`) for direct input of JSON object with line numbers and formatting button (#311).
 
 ![](frontend/webpages/customfields/webpages-jsoneditor.png)
