@@ -42,6 +42,10 @@
 
 ![Overenie zablokovaného zariadenia pred vstupom do administrácie](redactor/admin/logon-device-verification.png)
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Špecifické prihlásenia cez `doFilterLogon` a `wjlogontoken` odmietnu zablokovaný prehliadač bez emailovej výzvy. Na odblokovanie treba použiť bežný prihlasovací formulár v tom istom prehliadači (#340).
 
 Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `adminNewDeviceDetectionEnabled` na false. Pri prihlásení sa aj zisťuje [približná poloha](admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia) podľa IP adresy, vypnúť sa dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
@@ -134,6 +138,10 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 - AI Čet pri poli - pridaná ukladaná história filtrovaná podľa rovnakého poľa a záznamu. Starší rozhovor môžete vyhľadať, otvoriť a pokračovať v ňom aj po zatvorení editora; odpovede zostávajú dostupné na vloženie do poľa.
 - AI Čet pri poli a v editore stránky - pridané nahrávanie obrázkov a dokumentov pre asistentov s podporou histórie. Súbory môžete vybrať ikonou plus, pretiahnuť do správy alebo vložiť obrázok zo schránky - asistent ich spracuje spolu s obsahom stránky (#386).
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless režim
@@ -194,6 +202,11 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ![](redactor/apps/multistep-form/tab-relations.png)
 
 - Viackrokové formuláre - pri nastavovaní podmienok zobrazenia a povinnosti sa porovnávaná hodnota pre výberové polia vyberá z ich možností vrátane číselníkov a spoločných rádiových skupín. Nie je potrebné zadávať hodnoty ručne (#391).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Viackrokové formuláre - výber **Krok formuláru** v editore položky zobrazuje aktuálne číslo kroku aj po zmene poradia krokov potiahnutím myšou (#392).
 - Regulárne výrazy - zoznam zobrazuje preložený názov podľa jazyka administrácie a pôvodný názov označuje ako **Prekladový kľúč**. Výber **Povolená hodnota** vo viackrokových formulároch používa formát **kód - názov** (#387).
 - Viackrokové formuláre - opravený preklep v prekladových kľúčoch z `components.mustistep.*` na `components.multistep.*` (#378).
@@ -207,6 +220,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
 - Doplnený hybridný režim sémantického vyhľadávania a voliteľná RAG odpoveď z indexovaného obsahu. Aplikácia **Vyhľadávanie** má nové nastavenia pre typ vyhľadávania, hybridné správanie, výber AI asistenta a limity kontextu odpovede (#58521).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
@@ -285,6 +302,11 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Pridaná možnosť nastaviť voliteľné pole ako povinné (#58413).
 - Prázdne povinné voliteľné polia už neblokujú mazanie záznamov v dátových tabuľkách vrátane priečinkov webových stránok (#414).
 - Pridané nové typy voliteľných polí [prepínač a zaškrtávacie pole](frontend/webpages/customfields/custom-fields-settings.md#rozdiel-medzi-selectmultiselect-a-radiocheckbox) s podporou statických možností aj prepojenia na číselník. Typ `multiselect` teraz tiež podporuje [prepojenie na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Pôvodný typ `enumeration` bol nahradený prepínačom zdroja možností pri typoch `select`, `multiselect`, `radio` a `checkbox` kde sa pre všetky tieto typy polí načítajú možnosti z prepojeného číselníka (#58637).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Pridaný typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pre priame zadávanie JSON objektu s číslami riadkov a tlačidlom na formátovanie (#311).
 
 ![](frontend/webpages/customfields/webpages-jsoneditor.png)
