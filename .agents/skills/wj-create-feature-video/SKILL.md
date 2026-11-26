@@ -9,7 +9,7 @@ Prepare a customer-focused product story and repeatable browser footage. Keep
 shot metadata, localized narration, preparation and browser steps in one
 JavaScript object; derive the narration, shot plan and walkthrough from it.
 
-Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Check ElevenLabs access when generating a voice and the local Shotcut bundle when editing. For a prepared scenario, locate its recorded shots, retakes and approved narration first. When they match the plan and language, start at section 7. If a prerequisite is missing, report the affected step and complete the steps supported by the available inputs. Resolve project paths from the target checkout and references from this skill's own directory.
+Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Check ElevenLabs access when generating a voice. Before rendering, [locate or install Shotcut](references/shotcut-editing.md#locate-or-install-shotcut) and verify its command-line tools. For a prepared scenario, locate its recorded shots, retakes and approved narration first. When they match the plan and language, start at section 7. If a prerequisite is missing, report the affected step and complete the steps supported by the available inputs. Resolve project paths from the target checkout and references from this skill's own directory.
 
 Read [references/production-reference.md](references/production-reference.md)
 before implementing or changing a video scenario. It contains the exact schema,
@@ -409,8 +409,7 @@ retakes and middle excerpts within their requested time ranges.
 
 Hand off links to the finished MP4 and editable `.mlt`. Keep both together with
 the relatively linked `media/` directory under gitignored `docs/feature-video/`
-so the user can move the project and edit it later. For an explicit request to revise a legacy `.tsrct` in its native
-format, consult the [Tesseract editing reference](references/tesseract-editing.md).
+so the user can move the project and edit it later.
 
 ## Talking Heads and Credits
 

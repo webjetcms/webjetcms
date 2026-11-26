@@ -1,8 +1,26 @@
 # Write an editable Shotcut project and render it with melt
 
-## Set up the project
+## Locate or install Shotcut
 
-On macOS, check the installed Shotcut bundle and run `/Applications/Shotcut.app/Contents/MacOS/melt -version`. The same directory contains FFmpeg and ffprobe. If Shotcut is missing, use the [official macOS distribution](https://shotcut.org/download/) and follow the system installation approval.
+Shotcut ships `melt`, `ffmpeg` and `ffprobe` together. First check the installation directory for the host below and any tools already on `PATH`. Use a working installation as is. If the tools are missing, install the build for the host OS and CPU. For a direct download, use the release archive and matching SHA-256 checksum from the [official downloads page](https://shotcut.org/download/).
+
+- **macOS.** Look for `Shotcut.app` in `/Applications` and `~/Applications`. With Homebrew, run `brew install --cask shotcut`. Otherwise mount the official DMG with `hdiutil attach -nobrowse "$dmg"`, copy `Shotcut.app` from the mounted volume into an Applications directory using `ditto`, then detach that volume. Set `bin` to the app’s `Contents/MacOS` directory, e.g. `bin=/Applications/Shotcut.app/Contents/MacOS`. [Homebrew cask](https://formulae.brew.sh/cask/shotcut)
+- **Windows.** Check the Shotcut installation folder, normally `$env:ProgramFiles\Shotcut`. Install with `winget install --id Meltytech.Shotcut --exact --source winget`, or extract the official portable ZIP with `Expand-Archive -LiteralPath $zip -DestinationPath $toolsDir` in a user-writable directory. In PowerShell, set `$bin` to the folder containing `melt.exe`, e.g. `$bin = Join-Path $env:ProgramFiles 'Shotcut'`. [WinGet package](https://github.com/microsoft/winget-pkgs/tree/master/manifests/m/Meltytech/Shotcut)
+- **Linux.** For a compatible host, download the official portable tar archive and extract it into an existing user-writable tools directory with `tar -xf "$archive" -C "$tools_dir"`. Set `bin` to the extracted `Shotcut.app` directory. Its top-level launchers set the library and plugin paths. If using distro packages on Debian or Ubuntu, install `shotcut melt ffmpeg frei0r-plugins` with `apt install` and use the tools on `PATH`. For an existing Flatpak use `flatpak run --command=melt org.shotcut.Shotcut` and substitute `ffmpeg` or `ffprobe` for the other tools. [Shotcut command-line launchers](https://forum.shotcut.org/pub/export-at-the-command-line)
+
+For the commands below, prepend the selected tool directory to the current shell’s path with `export PATH="$bin:$PATH"` (POSIX) or `$env:Path = "$bin;$env:Path"` (PowerShell). For Flatpak, use its launchers in a directory accessible to the app.
+
+Run `melt -version`. On a fresh installation, run this one-second render in a new temporary directory to check the text filter and MP4 encoders before assembling the project.
+
+```sh
+melt -profile atsc_1080p_25 color:black out=24 -filter dynamictext:WebJET fgcolour=white -consumer avformat:shotcut-check.mp4 f=mp4 vcodec=libx264 pix_fmt=yuv420p acodec=aac frequency=48000 channels=2 real_time=-1 -silent
+ffprobe -v error -count_frames -show_entries stream=codec_name,nb_read_frames,width,height -of compact shotcut-check.mp4
+ffmpeg -v error -i shotcut-check.mp4 -frames:v 1 shotcut-check.png
+```
+
+Expect 25 H.264 frames at 1920 × 1080, an AAC stream and the word `WebJET` visible in the PNG. If melt reports a missing filter or encoder, check the selected launcher and its registered services with `melt -query`. [MLT command-line reference](https://www.mltframework.org/docs/melt/)
+
+## Set up the project
 
 Set the MLT `<profile>` to 1920 × 1080, 25 fps, progressive, square pixels for the standard WebJET project. Write the timeline directly to `docs/feature-video/<production>/<film>.mlt`. Copy the browser recordings, approved MP3 parts and other media used on the timeline into a `media/` subdirectory. Shotcut projects reference these files. Keep paths relative to the MLT file and transfer the whole directory. For an alternative cut, use a separate production directory. Reuse the original recordings, retakes and approved narration. A previous edit can supply cue times, and its MP4 can serve as the comparison copy.
 
@@ -65,12 +83,11 @@ After the last spoken sentence and a short closing hold, append a copy of `src/t
 
 ## Export and verify
 
-Run the bundled `melt` from the project directory. Set `film` to the project filename without its extension. Use 48 kHz stereo AAC by default. To reproduce the pilot with an exact 12.000-second container, its 96 kHz AAC setting aligns the final frame with a packet boundary.
+Run the verified tools from the project directory. The examples below use POSIX shell syntax. In PowerShell, assign `$film` to the project name and enter each command on one line. Use 48 kHz stereo AAC by default. To reproduce the pilot with an exact 12.000-second container, its 96 kHz AAC setting aligns the final frame with a packet boundary.
 
 ```sh
-bin=/Applications/Shotcut.app/Contents/MacOS
 film=WebJET-demo
-"$bin/melt" -profile atsc_1080p_25 "$film.mlt" \
+melt -profile atsc_1080p_25 "$film.mlt" \
   -consumer "avformat:$film.mp4" f=mp4 vcodec=libx264 crf=16 preset=medium \
   pix_fmt=yuv420p acodec=aac ab=192k frequency=48000 channels=2 \
   movflags=+faststart rescale=lanczos real_time=-1 -progress
@@ -79,10 +96,10 @@ film=WebJET-demo
 To preview a join, add `in=<first-frame> out=<last-frame>` immediately after the MLT filename and choose a separate output filename. For the full export, check the decoded video frame count against the timeline. Measure the video, audio and container durations separately because AAC packet boundaries can extend the container slightly. Decode both streams through the end.
 
 ```sh
-"$bin/ffprobe" -v error -count_frames -show_entries \
+ffprobe -v error -count_frames -show_entries \
   'format=duration:stream=codec_name,width,height,r_frame_rate,nb_read_frames,channels,sample_rate,duration' \
   -of compact "$film.mp4"
-"$bin/ffmpeg" -v error -xerror -i "$film.mp4" -map 0:v:0 -map 0:a:0 -f null -
+ffmpeg -v error -xerror -i "$film.mp4" -map 0:v:0 -map 0:a:0 -f null -
 ```
 
 If the macOS sandbox reports Qt's `Incompatible processor ... neon` error, request approval to rerun the same bundled melt outside the sandbox.
