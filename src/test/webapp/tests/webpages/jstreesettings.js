@@ -12,9 +12,9 @@ Before(({ I, login }) => {
 });
 
 function setSettings(I, checkedNames=null, treeWidth=4, galeria=false) {
+    I.waitForFunction(() => Boolean(window.jstreeSettings?.jstree), [], 10);
     I.clickCss("button.buttons-jstree-settings");
-    I.waitForElement("#jstreeSettingsModal");
-    I.wait(1);
+    I.waitForVisible("#jstreeSettingsModal", 10);
 
     if (galeria == false) {
         I.uncheckOption("#jstree-settings-showid");
@@ -52,6 +52,7 @@ function setSettings(I, checkedNames=null, treeWidth=4, galeria=false) {
     I.checkOption("#jstree-settings-treeSortOrderAsc");
 
     I.clickCss("#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 10);
 }
 
 Scenario('zobrazenie ID a poradia @singlethread', ({ I }) => {

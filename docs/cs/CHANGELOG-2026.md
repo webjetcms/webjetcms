@@ -392,6 +392,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Editor stránek - při automatické maximalizaci v nízkém nebo úzkém okně zůstává celý panel nástrojů nad obsahem stránky. Obsah již neprosvítá pod ikonami a názvy skupin (#372).
 - Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
 - Page Builder - při selhání načítání obsahu lze přepnout do HTML režimu obnovením posledního dostupného HTML. Obnova vyžaduje potvrzení, protože nemusí obsahovat nejnovější změny (#369).
+- Page Builder - po opětovném otevření stránky se i při pomalém připojení dá přepnout do HTML režimu. Ve zdrojovém kódu se zobrazí také neuložené úpravy z Page Buildera (#423).
+- Page Builder - opraveno zobrazení potvrzení o opuštění stránky pokud formulář nebo samotná web stránka nastavuje událost `onbeforeunload` (#423).
 - Page Builder - opraveno zamrznutí editoru při otevření HTML se zbývajícím atributem `contenteditable="true"`. CKEditor se na stejném bloku již neinicializuje dvakrát.
 - Page Builder - obnovení fokusu po vložení obsahu nebo strukturálního bloku, přesunu, duplikování a zavření vlastností či knihovny neposouvá stránku k začátku editoru. Oprava funguje také v šablonách s plynulým posouváním (`scroll-behavior: smooth`) (#389).
 - Page Builder - nepodporované elementy označené `pb-editable`, například položky seznamu `li`, již nezablokují přepnutí z HTML editoru. Jejich obsah zůstává zachován a lze jej upravovat přes nadřazenou editovatelnou oblast (#382).
