@@ -9,7 +9,7 @@ Prepare a customer-focused product story and repeatable browser footage. Keep
 shot metadata, localized narration, preparation and browser steps in one
 JavaScript object; derive the narration, shot plan and walkthrough from it.
 
-Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Check ElevenLabs access when generating a voice and the local Shotcut bundle when editing. An edit from supplied footage and approved audio can start at section 7. If a prerequisite is missing, report the affected step and complete the steps supported by the available inputs. Resolve project paths from the target checkout and references from this skill's own directory.
+Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Check ElevenLabs access when generating a voice and the local Shotcut bundle when editing. For a prepared scenario, locate its recorded shots, retakes and approved narration first. When they match the plan and language, start at section 7. If a prerequisite is missing, report the affected step and complete the steps supported by the available inputs. Resolve project paths from the target checkout and references from this skill's own directory.
 
 Read [references/production-reference.md](references/production-reference.md)
 before implementing or changing a video scenario. It contains the exact schema,
@@ -392,15 +392,15 @@ than doing every click immediately and holding only the final screen.
 
 ## 7. Assemble the Finished Video
 
-For a finished video or a retiming, write the Shotcut timeline directly as MLT XML.
-Render that file with Shotcut’s bundled `melt` and verify the project and MP4 from
-the command line. Open the graphical editor only if the user explicitly requests it.
+For a finished video or a retiming, the default is an editable Shotcut timeline
+written directly as MLT XML and an MP4 rendered with Shotcut’s bundled `melt`.
+Verify both from the command line. Open the graphical editor only on request.
 Follow the [MLT editing and export guide](references/shotcut-editing.md) for
-project structure, narration sync, camera keyframes and export checks.
+time remapping, camera keyframes, optional comparison overlays and export checks.
 Keep the approved speech on a separate audio track and keyframe the zoom on
 the picture clip. Show the full interface for window changes. Zoom only while
-the viewer needs to read typed text or locate a control, then return to the full frame. Omit numbered
-chapter titles unless requested.
+the viewer needs to read typed text or locate a control, then return to the
+full frame. Omit numbered chapter titles unless requested.
 
 Include the opening AI disclosure and append the complete shared animation
 from `src/test/webapp/video/assets/outro.mp4` once at original speed after the
