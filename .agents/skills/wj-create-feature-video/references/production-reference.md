@@ -1,8 +1,8 @@
 # WebJET Feature Video Production Reference
 
-For the finished Tesseract edit, narration retiming, camera zooms and the shared
-brand outro, read [Tesseract Editing](tesseract-editing.md). That reference also
-distinguishes reusable repository instructions from gitignored render artifacts.
+Once the browser recording and approved narration are available, follow the
+[MLT editing and export guide](shotcut-editing.md) to write the Shotcut project,
+render the MP4 with `melt` and verify the result from the command line.
 
 ## Repository Recording Profile
 
@@ -390,7 +390,7 @@ completed MP3/MP4 atomically replaces
 video generation keeps the previous MP4 and newly generated speech. Scenario 308
 uses head only for intro, preserving its narration and duration estimate; its
 output is `308-pb-redesign-intro-sk.mp4`. Clip duration follows audio, not
-`durationSeconds`. Assembly remains a manual editing step.
+`durationSeconds`. Place the generated head clip on the Shotcut timeline during final editing.
 
 Both commands read `GET /v1/user/subscription` before and after generation.
 Remaining credits in the current limit are

@@ -50,6 +50,8 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.form.FormMailAction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -258,7 +260,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 		DocDB docDB = DocDB.getInstance();
 		for (E form : allForms)
 		{
-			boolean pridaj = isFormAccessible(form, userEditableGroups, userEditablePages, docDB);
+			boolean pridaj = isFormAccessible(form, user, userEditableGroups, userEditablePages, docDB);
 			if (pridaj) ret.add(form);
 		}
 
@@ -273,6 +275,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
      * @return {@code true} when the form is accessible to the user
      */
     public boolean isFormAccessible(String formName, UserDetails user) {
+        if (user == null || Tools.isEmpty(formName)) return false;
         Integer domainId = CloudToolsForCore.getDomainId();
         GroupsDB groupsDB = GroupsDB.getInstance();
 
@@ -282,22 +285,28 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
 
 		DocDB docDB = DocDB.getInstance();
 
-        E lastOne = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(formName, domainId);
-		if (lastOne == null) return false;
+        E form = formsRepository.findTopByFormNameAndDomainIdAndCreateDateNotNullOrderByCreateDateDesc(formName, domainId);
+        if (form == null && formsRepository instanceof FormsRepository) {
+            form = formsRepository.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(formName, domainId);
+        }
+        if (form == null) return false;
 
-        return isFormAccessible(lastOne, userEditableGroups, userEditablePages, docDB);
+        return isFormAccessible(form, user, userEditableGroups, userEditablePages, docDB);
     }
 
     /**
      * Checks whether a form belongs to a page or directory in the user's editable scope.
      *
      * @param form  form whose associated document is checked
+     * @param user  user whose page permissions are checked when the form has no document ID
      * @param userEditableGroups  identifiers of editable directories, including expanded child directories
      * @param userEditablePages  identifiers of individually editable pages
      * @param docDB  document cache used to resolve the form's page
      * @return {@code true} when the form is in an editable page or directory
      */
-    private boolean isFormAccessible(E form, int[] userEditableGroups, int[] userEditablePages, DocDB docDB) {
+    private boolean isFormAccessible(E form, UserDetails user, int[] userEditableGroups, int[] userEditablePages, DocDB docDB) {
+        if (form.getDocId() < 1) return canAccessFormWithoutDocId(form, user, docDB);
+
         if (userEditableGroups!=null && userEditableGroups.length>0)
         {
             DocDetails doc = docDB.getBasicDocDetails(form.getDocId(), false);
@@ -323,6 +332,35 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
             }
         }
         return false;
+    }
+
+    /** Grants the author access to an empty form, otherwise checks the pages containing its multistep include. */
+    private boolean canAccessFormWithoutDocId(E form, UserDetails user, DocDB docDB) {
+        if (!(form instanceof FormsEntity)) return false;
+        // The list and detail both carry the latest submission date, so null means there are no responses.
+        if (form.getCreateDate() == null && user.getUserId() > 0 && Long.valueOf(user.getUserId()).equals(form.getUserId())) return true;
+
+        Identity identity = user instanceof Identity loggedUser ? loggedUser : new Identity(user);
+        if (!identity.isEnabledItem("menuWebpages")) return false;
+
+        String quotedPattern = formIncludePattern("&quot;" + form.getFormName() + "&quot;");
+        String unquotedPattern = formIncludePattern(form.getFormName() + ",");
+        boolean separateDomains = InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir");
+        for (Long pageId : formsRepository.findDocIdsByFormInclude(quotedPattern, unquotedPattern)) {
+            DocDetails page = docDB.getBasicDocDetails(pageId.intValue(), false);
+            if (page == null) continue;
+            if (separateDomains && GroupsDB.getDomainId(GroupsDB.getInstance().getDomain(page.getGroupId())) != form.getDomainId()) continue;
+            if (EditorDB.isPageEditable(identity, new EditorForm(page))) return true;
+        }
+        return false;
+    }
+
+    private static String formIncludePattern(String parameterValue) {
+        String include = "!INCLUDE(sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp, formName=" + parameterValue;
+        String escaped = include.replace("~", "~~").replace("%", "~%").replace("_", "~_");
+        // SQL Server also treats an opening bracket as a LIKE wildcard.
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) escaped = escaped.replace("[", "~[");
+        return "%" + escaped + "%";
     }
 
     /**

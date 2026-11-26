@@ -2915,15 +2915,17 @@ public class UpdateDatabase
 
 	public static void setIsDeleteDocHistory() {
 		String note = "26.03.2026 [sivan] nastavenie is_delete v documents_history pre zaznamy oznacene [DELETE]";
+		// Earlier PostgreSQL installations recorded success even when the integer assignment failed.
+		if (Constants.DB_TYPE == Constants.DB_PGSQL) note += " (PostgreSQL)";
 		if (isAllreadyUpdated(note)) return;
 
 		try {
-			DB.execute("UPDATE documents_history SET is_delete = 1 WHERE title LIKE '[DELETE]%' AND data_asc LIKE '[DELETE]'");
+			DB.execute("UPDATE documents_history SET is_delete = " + DB.getBooleanSql(true)
+					+ " WHERE title LIKE '[DELETE]%' AND data_asc LIKE '[DELETE]'");
+			saveSuccessUpdate(note);
 		} catch (Exception e) {
-			sk.iway.iwcm.Logger.error(e);
+			Logger.error(UpdateDatabase.class, e);
 		}
-
-		saveSuccessUpdate(note);
 	}
 
 	public static void ragUpdateDatabase() {

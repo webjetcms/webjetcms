@@ -2749,17 +2749,9 @@ export class DatatablesCkEditor {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
 			if (setData != null) data = setData;
-			else if (data == null) data = this.ckEditorInstance.getData();
-			if (data != null && "pageBuilder"===oldEditingMode) {
-				ck.setMode('wysiwyg');
-				ck.setData(data);
-			}
-			modeReady = new Promise(resolve => {
-				setTimeout(() => {
-					// Preserve the CodeMirror layout delay, but wait for the final content before taking a snapshot.
-					setMode('source').then(() => ck.setData(data, resolve));
-				}, 500);
-			});
+			else if (data == null) data = ck.getData();
+			// Page Builder already keeps the hidden CKEditor in source mode.
+			modeReady = setMode('source').then(() => this.setData(data));
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "html");
@@ -2814,11 +2806,11 @@ export class DatatablesCkEditor {
 			editorTypeSelector.show();
 		}
 
-		this.editorHeightLatest = 0;
-		setTimeout(() => {
+		return modeReady.then(() => {
+			// CodeMirror can have zero dimensions if it was initialized behind Page Builder.
+			this.editorHeightLatest = 0;
 			this.resizeEditor(this);
-		}, 500);
-		return modeReady;
+		});
 	}
 
 	setStyleComboList(sessionCssParsed) {

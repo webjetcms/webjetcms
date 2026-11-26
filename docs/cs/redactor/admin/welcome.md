@@ -127,6 +127,10 @@ Chyby zůstávají viditelné do vyřešení příčiny. Běžné varování mů
 
 Pokud se přihlásíte z prohlížeče, který WebJET CMS při vašem účtu nerozpozná jako použitý během posledních 90 dnů, zobrazí se upozornění a obdržíte email. Zkontrolujte prohlížeč, operační systém, IP adresu a čas přihlášení. U aktuálního prohlížeče se zobrazí **Přihlásili jste se z nového prohlížeče** a označení **Tento prohlížeč**.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![Upozornění po přihlášení z nového prohlížeče](device-new-browser.png)
 
 Email **Nové přihlášení do WebJET CMS** obsahuje údaje o přihlášení a tlačítka pro jeho potvrzení nebo zabezpečení účtu.

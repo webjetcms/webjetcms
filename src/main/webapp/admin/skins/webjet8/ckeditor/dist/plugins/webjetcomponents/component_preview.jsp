@@ -187,6 +187,12 @@ else
 	%>
 	<html>
 	<head>
+		<script>
+			// Handle beforeunload before template and component scripts can request a leave-page prompt.
+			window.addEventListener("beforeunload", function(event) {
+				event.stopImmediatePropagation();
+			}, true);
+		</script>
 		<%=Tools.insertJQuery(request) %>
 
 		<% if ("cloud".equals(Constants.getInstallName())) { %>

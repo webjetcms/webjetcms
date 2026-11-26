@@ -20,7 +20,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import  sk.iway.iwcm.components.multistep_form.jpa.ConditionType;
+import sk.iway.iwcm.components.forms.FormsServiceImpl;
+import sk.iway.iwcm.components.multistep_form.jpa.ConditionType;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
@@ -41,12 +42,40 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
 
     private final MultistepFormsService multistepFormsService;
     private final FormItemsRepository formItemsRepository;
+    private final FormItemsConditionsRepository conditionsRepository;
+    private final FormsServiceImpl formsService;
 
     @Autowired
-    public FormItemsConditionsRestController(FormItemsConditionsRepository formItemsConditionsRepository, MultistepFormsService multistepFormsService, FormItemsRepository formItemsRepository) {
+    public FormItemsConditionsRestController(FormItemsConditionsRepository formItemsConditionsRepository, MultistepFormsService multistepFormsService, FormItemsRepository formItemsRepository, FormsServiceImpl formsService) {
         super(formItemsConditionsRepository);
         this.multistepFormsService = multistepFormsService;
         this.formItemsRepository = formItemsRepository;
+        this.conditionsRepository = formItemsConditionsRepository;
+        this.formsService = formsService;
+    }
+
+    @Override
+    public Page<FormItemsConditionEntity> searchItem(Map<String, String> params, Pageable pageable, FormItemsConditionEntity search) {
+        formsService.requireFormAccess(MultistepFormsService.getFormName(params), getUser());
+        return super.searchItem(params, pageable, search);
+    }
+
+    @Override
+    public boolean checkItemPerms(FormItemsConditionEntity entity, Long id) {
+        String formName = MultistepFormsService.getFormName(getRequest());
+        if (!formsService.isFormAccessible(formName, getUser())) return false;
+        long itemId = Tools.getLongValue(getRequest().getParameter("itemId"), -1);
+        int domainId = CloudToolsForCore.getDomainId();
+        if (id != null && id > 0) {
+            // The request supplies formName and itemId. Check both against the stored condition
+            // so its ID cannot grant access to a condition on another form or field.
+            return conditionsRepository.findFirstByIdAndDomainId(id, domainId)
+                    .filter(stored -> formName.equals(stored.getFormName()) && Long.valueOf(itemId).equals(stored.getFormItemId()))
+                    .isPresent();
+        }
+        // A new condition has no stored ID yet. Verify that its parent field belongs to the accessible form.
+        return formItemsRepository.findFirstByIdAndDomainId(itemId, domainId)
+                .filter(item -> formName.equals(item.getFormName())).isPresent();
     }
 
     @Override
@@ -70,6 +99,7 @@ public class FormItemsConditionsRestController extends DatatableRestControllerV2
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<FormItemsConditionEntity> root, CriteriaBuilder builder) {
         int itemId = Tools.getIntValue(params.get("itemId"), -1);
         predicates.add(builder.equal(root.get("formItemId"), itemId));
+        predicates.add(builder.equal(root.get("formName"), MultistepFormsService.getFormName(params)));
 
         ConditionType conditionType = ConditionType.fromString( getRequest().getParameter("conditionType") );
         if(conditionType == null) {

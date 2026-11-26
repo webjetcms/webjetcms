@@ -4,6 +4,90 @@ Tato sekce obsahuje popisy vlastností a **funkcionalit WebJET CMS srozumitelný
 
 ---
 
+## Vlastní karty a pole editoru pro jednotlivé značky
+
+Firma spravuje v jednom WebJET CMS dvě značky, každou na doméně s oddělenými údaji. Pro značku s katalogem výrobků správce přidá do editoru webových stránek kartu **Produktové údaje**. Na první místo dá pole **Katalogové číslo** a za něj **Materiál**. Redaktor tak při přípravě produktové stránky vyplní oba údaje na jedné kartě.
+
+Druhá značka nabízí školení. Na její doméně může správce vytvořit kartu **Údaje o školení** s poli **Lektor** a **Místo konání**. Názvy i pořadí polí nastaví jednou pro editor webových stránek dané domény.
+
+**Hlavní benefity**
+
+- **Jednotné názvy materiálů** – správce může pro pole Materiál připravit seznam možností. Redaktoři pak u různých výrobků vybírají ze stejných názvů.
+- **Úpravy bez programování** – když tým potřebuje na kartě další údaj, správce mu přiřadí volitelné pole přímo v administraci.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/xkgdP7odoPA" title="Vytvorenie vlastnej karty SEO a presun polí v editore stránky" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Pro stránku o službě můžete nastavit povinné pole **Typ služby**. Redaktor v něm vybere například **Školení**. Když nabídku rozšíříte o **Servisní zásah**, stačí jej přidat do číselníku. Při dalším otevření stránky redaktor uvidí novou možnost a původní výběr zůstane zachován.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+[Vlastní karta s volitelnými polemi](../../frontend/datatables/tabs-settings.md#vlastní-karta-s-volitelnými-polemi) | [Nastavení polí a jejich pořadí](../../frontend/datatables/fields-settings.md) | [Volitelná pole](../../frontend/datatables/custom-fields-settings.md)
+
+## Poptávky, schvalování a nejbližší publikování na jedné obrazovce
+
+Obchodník si ráno na úvodní obrazovku přidá velkou kartu **Formuláře**. V jejích nastaveních vybere poptávkový formulář kampaně a přehled uloží. Nejnovější poptávka je v seznamu první. Obchodník jej otevře přímo z karty a přečte si, o co má zákazník zájem.
+
+Vedoucí redakce si na začátek svého přehledu přesune karty **Ke schválení** a **Nejbližší publikování**. Po přihlášení hned vidí, které stránky čekají na jeho rozhodnutí a kdy má vyjít další stránka kampaně. Když potřebuje prověřit i jinou stránku kampaně, v kterékoli části administrace stiskne **Ctrl+K** (na Macu **⌘K**), vyhledá ji podle názvu či URL a otevře ji v editoru.
+
+**Hlavní benefity:**
+
+- **Přehled podle práce** – každý si z karet dostupných podle jeho oprávnění vybere ty, které potřebuje, a určí si jejich pořadí.
+- **Rychlejší odpověď zákazníkovi** – obchodník se k poptávce dostane bez procházení ostatních formulářů.
+- **Jednodušší určení pořadí práce** – vedoucí vidí žádosti o schválení i termíny publikování a může se rozhodnout, které stránce se bude věnovat jako první.
+
+![Úvodní obrazovka administrace s kartami](../../redactor/admin/dashboard.png)
+
+Na úvodní obrazovce redaktor uvidí také upozornění, když se do jeho účtu někdo přihlásí z nového prohlížeče. Vlastní prohlížeč může potvrdit kódem z emailu. Pokud přihlášení nezná, může druhý prohlížeč zablokovat a sám zůstat přihlášen.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Podrobná dokumentace: [Úvodní obrazovka](../../redactor/admin/welcome.md) | [Rychlé vyhledávání v hlavičce](../../redactor/admin/search/README.md)
+
+## Z podkladů na hotový návrh stránky s AI asistentem
+
+Redaktor otevře **AI Čet v editoru stránky**, přiloží program školení v PDF a odešle požadavek „Připrav z programu pozvánku na školení s harmonogramem.“ Přílohy podporují asistenti OpenAI a Gemini. PDF musí obsahovat čitelný text.
+
+Na první návrh redaktor odpoví slovy „Zkrať úvod na dvě věty a ponech časy přednášek.“ V PageBuilderu si prohlédne **náhled pozvánky ve vzhledu svého webu** a porovná datum školení a časy přednášek s programem. Teprve poté vloží vybraný návrh do stránky tlačítkem **Přidat**.
+
+**Hlavní benefity:**
+
+- **Bez ručního přepisování programu** – asistent připraví harmonogram přímo z PDF.
+- **Bez kopírování mezi externím četem a CMS** – redaktor připraví i vloží pozvánku v editoru stránky.
+- **Výběr návrhu zůstává na redaktorovi** – dalšími zprávami může pozvánku upřesňovat a sám rozhodne, kterou verzi použije.
+
+![Náhled návrhu stránky z AI Četu v PageBuilderu](../../redactor/ai/datatables/pb-chat-preview.png)
+
+Ve videu si můžete prohlédnout přípravu pozvánky v klasickém editoru stránky.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Podrobná dokumentace: [AI Čet](../../redactor/ai/chat/README.md)
+
+## Zveřejnění kampaně is přílohami v naplánovaném čase
+
+Nový ceník platí od pondělí. Redaktor již v pátek připraví příští verzi stránky, nahraje PDF s novými cenami do chráněné složky **Soubory - plánované** a naplánuje zveřejnění na pondělní ráno. Funkci zapíná správce a ochrana se vztahuje na nové soubory nahrané do plánovaných složek.
+
+O víkendu návštěvníci stále vidí původní stránku a **nové PDF neotevře ani přes přímý odkaz**. V naplánovaném termínu WebJET automaticky zveřejní připravenou stránku i její přílohy.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="Plánované publikovanie stránky s chránenými súbormi" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+**Hlavní benefity:**
+
+- **Spuštění bez ruční práce** – redaktor nemusí v pondělí ráno měnit stránku ani nahrávat soubory.
+- **Aktuální ceník ke stažení** – zákazník si při nové nabídce stáhne ceník platný od téhož dne.
+
+Podrobná dokumentace: [Plánované publikování s chráněnými soubory](../../redactor/webpages/planned-publishing.md)
+
 ## Přehlednější a rychlejší tvorba stránek v PageBuilderu
 
 WebJET CMS modernizuje **PageBuilder – nástroj pro skládání stránek z připravených bloků**. Redaktor má ovládání vybrané části na jednom místě v pevné horní liště. Klikatelná cesta mu ukáže, zda upravuje sloupec, jeho kontejner nebo celou sekci, a umožní jednoduše přejít na nadřazenou část. **Kopii bloku vloží hned vedle původního a pořadí bloků změní rychlým posunem**, což šetří čas při úpravách produktových stránek, kampaní i opakujících se nabídek.
@@ -180,11 +264,19 @@ Důležitou výhodou je **kontrola a bezpečnější provoz**. Odpověď se tvo�
 - **Kontrola nad kvalitou a náklady**: Nastavitelné limity kontextu, podobnosti a volba asistenta pomáhají držet odpovědi přesné a efektivně.
 - **Rozšiřitelnost pro enterprise projekty**: Funkci lze přizpůsobit konfigurací i propojeními na stávající procesy zákazníka.
 
+Host se na webu penzionu zeptá na pobyt se psem i na parkování. Ve videu uvidíte, jak při jedné otázce obdrží stručnou odpověď a odkazy na obě stránky s podmínkami pobytu.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Podrobná dokumentace: [Sémantické vyhledávání (RAG)](../../redactor/apps/semantic-search/README.md)
 
 ## Inteligentní vyhledávání podle významu otázky
 
 WebJET CMS přináší **sémantické vyhledávání**, které nepracuje jen se shodou klíčových slov, ale rozumí i **významu uživatelské poptávky**. Návštěvník tak najde relevantní obsah i tehdy, když nepoužije přesnou formulaci z webu. Výsledkem je přirozenější vyhledávání, které se chová blíže tomu, než lidé reálně kladou otázky.
+
+Čtenáři mohou vyhledávat přímo ve **firemních příručkách v Markdownu** a po zapnutí AI odpovědí získat vysvětlení z nalezených pasáží, aniž by redakce přepisovala příručky do webových stránek.
 
 Pro zákazníka to znamená **vyšší úspěšnost nalezení odpovědi na první pokus**, méně odchodů ze stránky a lepší uživatelský zážitek zejména na obsahově rozsáhlých webech. Funkce je vhodná pro veřejný sektor, korporátní portály, produktové weby i zákaznická centra, kde běžné fulltextové hledání často vrací příliš mnoho nerelevantních výsledků.
 
@@ -200,7 +292,7 @@ Pro zákazníka to znamená **vyšší úspěšnost nalezení odpovědi na prvn�
 
 ![Sémantické vyhledávání - nastavení indexu](../../redactor/apps/semantic-search/index-dialog.png)
 
-Podrobná dokumentace: [Sémantické vyhledávání](../../custom-apps/apps/rag/semantic-search/README.md) | [Správa indexovaných dat](../../redactor/apps/semantic-search/README.md)
+Podrobná dokumentace: [Sémantické vyhledávání](../../custom-apps/apps/rag/semantic-search/README.md) | [Správa indexovaných údajů](../../redactor/apps/semantic-search/README.md) | [Vyhledávání v Markdown dokumentaci](../../custom-apps/apps/rag/markdown-search.md)
 
 ## Inteligentní formuláře, které se přizpůsobují odpovědím uživatele
 
@@ -218,6 +310,12 @@ Pro zákazníka to přináší měřitelný obchodní efekt: **vyšší míru do
 - **Nížší provozní riziko**: Kontroly závislostí mezi polemi pomáhají předcházet neplatným nastavením a regresím.
 
 ![Podmíněné zobrazení polí ve formuláři](../../redactor/apps/multistep-form/tab-visibilityConditions.png)
+
+Soukromá osoba může poslat poptávku bez telefonního čísla. Od firmy si ve stejném formuláři můžete zeptat název i telefon. Ve videu uvidíte nastavení obou pravidel i výsledek na veřejné stránce.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 Podrobná dokumentace: [Podmíněné zobrazení/validování položky](../../redactor/apps/multistep-form/README.md#podmíněné-zobrazenívalidování-položky)
 

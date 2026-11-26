@@ -13,6 +13,12 @@ Volitelně může nad stejným indexem zobrazit také **RAG odpověď** - krátk
 - Při povolené RAG odpovědi se nad výsledky zobrazí blok **Odpověď AI z vyhledávání**.
 - Pokud odpověď nelze sestavit z indexovaného obsahu, nezobrazí se žádná RAG odpověď.
 
+Host ve videu zadá otázku „Můžeme přijít se psem a nechat auto u vás?“ a otevře si podmínky pobytu. Uvidíte, kde v aplikaci **Vyhledávání** zapnete volbu **Přidat odpověď RAG** ​​a jak se pak změní výsledek téže otázky.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ## Podporované databáze a verze
 
 Pro ukládání a vyhledávání vektorů stačí jedna z následujících databází:

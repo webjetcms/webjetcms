@@ -42,6 +42,10 @@
 
 ![Ověření zablokovaného zařízení před vstupem do administrace](redactor/admin/logon-device-verification.png)
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Specifická přihlášení přes `doFilterLogon` a `wjlogontoken` odmítnou zablokovaný prohlížeč bez emailové výzvy. K odblokování je třeba použít běžný přihlašovací formulář ve stejném prohlížeči (#340).
 
 Sledování zařízení lze vypnout nastavením konfigurační proměnné `adminNewDeviceDetectionEnabled` na false. Při přihlášení se také zjišťuje [přibližná poloha](admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení) podle IP adresy, vypnout se dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
@@ -134,6 +138,10 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 - AI Čet u pole - přidána ukládaná historie filtrovaná podle stejného pole a záznamu. Starší rozhovor můžete vyhledat, otevřít a pokračovat v něm i po zavření editoru; odpovědi zůstávají dostupné pro vložení do pole.
 - AI Čet při poli a v editoru stránky - přidáno nahrávání obrázků a dokumentů pro asistenty s podporou historie. Soubory můžete vybrat ikonou plus, přetáhnout do zprávy nebo vložit obrázek ze schránky - asistent je zpracuje spolu s obsahem stránky (#386).
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless režim
@@ -194,6 +202,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ![](redactor/apps/multistep-form/tab-relations.png)
 
 - Vícekrokové formuláře - při nastavování podmínek zobrazení a povinnosti se srovnávaná hodnota pro výběrová pole vybírá z jejich možností včetně číselníků a společných rádiových skupin. Není třeba zadávat hodnoty ručně (#391).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Vícekrokové formuláře - výběr **Krok formuláře** v editoru položky zobrazuje aktuální číslo kroku i po změně pořadí kroků potažením myší (#392).
 - Regulární výrazy - seznam zobrazuje přeložený název podle jazyka administrace a původní název označuje jako **Překladový klíč**. Výběr **Povolená hodnota** ve vícekrokových formulářích používá formát **kód - název** (#387).
 - Vícekrokové formuláře - opravený překlep v překladových klíčích z `components.mustistep.*` na `components.multistep.*` (#378).
@@ -207,6 +220,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
 - Doplněný hybridní režim sémantického vyhledávání a volitelná RAG odpověď z indexovaného obsahu. Aplikace **Vyhledávání** má nová nastavení pro typ vyhledávání, hybridní chování, výběr AI asistenta a limity kontextu odpovědi (#58521).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
@@ -285,6 +302,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Přidána možnost nastavit volitelné pole jako povinné (#58413).
 - Prázdná povinná volitelná pole již neblokují mazání záznamů v datových tabulkách včetně složek webových stránek (#414).
 - Přidány nové typy volitelných polí [přepínač a zaškrtávací pole](frontend/webpages/customfields/custom-fields-settings.md#rozdíl-mezi-selectmultiselect-a-radiocheckbox) s podporou statických možností i propojení na číselník. Typ `multiselect` nyní také podporuje [propojení na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Původní typ `enumeration` byl nahrazen přepínačem zdroje možností u typů `select`, `multiselect`, `radio` a `checkbox` kde se pro všechny tyto typy polí načtou možnosti z propojeného číselníku (#58637).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Přidán typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pro přímé zadávání JSON objektu s čísly řádků a tlačítkem pro formátování (#311).
 
 ![](frontend/webpages/customfields/webpages-jsoneditor.png)
@@ -340,6 +362,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Skupiny práv - pokud má redaktor přes skupinu přiděleny pouze jednotlivé stránky, po přihlášení se jeho práva na úpravu omezí na tyto stránky (#419).
+- [Formuláře](redactor/apps/form/README.md) - redaktor může otevřít vícekrokový formulář i před prvním odesláním, pokud má právo upravovat alespoň jednu stránku, na které je formulář vložen. Autor může prázdný formulář upravovat hned po vytvoření nebo duplikování (#419).
+- Vícekrokové formuláře - při otevření karty **Položky formuláře** nebo **Statistiky formuláře** bez přístupu k danému formuláři se zobrazí chybová zpráva (#419).
 - Webové stránky - editor při uložení upraví ručně zadanou URL adresu, pokud obsahuje mezery nebo diakritiku. Při kolizi zděděné URL uloží a zobrazí přidělenou koncovku (#417).
 - AI Čet - po smazání otevřeného četu se v novém četě zobrazí výběr asistenta pouze jednou (#58878).
 - Vložení HTML kódu - obsah se dekóduje v UTF-8 bez závislosti na výchozím kódování JVM, aby se na serveru nepoškodila diakritika a další znaky Unicode.
@@ -367,6 +392,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Editor stránek - při automatické maximalizaci v nízkém nebo úzkém okně zůstává celý panel nástrojů nad obsahem stránky. Obsah již neprosvítá pod ikonami a názvy skupin (#372).
 - Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
 - Page Builder - při selhání načítání obsahu lze přepnout do HTML režimu obnovením posledního dostupného HTML. Obnova vyžaduje potvrzení, protože nemusí obsahovat nejnovější změny (#369).
+- Page Builder - po opětovném otevření stránky se i při pomalém připojení dá přepnout do HTML režimu. Ve zdrojovém kódu se zobrazí také neuložené úpravy z Page Buildera (#423).
+- Page Builder - opraveno zobrazení potvrzení o opuštění stránky pokud formulář nebo samotná web stránka nastavuje událost `onbeforeunload` (#423).
 - Page Builder - opraveno zamrznutí editoru při otevření HTML se zbývajícím atributem `contenteditable="true"`. CKEditor se na stejném bloku již neinicializuje dvakrát.
 - Page Builder - obnovení fokusu po vložení obsahu nebo strukturálního bloku, přesunu, duplikování a zavření vlastností či knihovny neposouvá stránku k začátku editoru. Oprava funguje také v šablonách s plynulým posouváním (`scroll-behavior: smooth`) (#389).
 - Page Builder - nepodporované elementy označené `pb-editable`, například položky seznamu `li`, již nezablokují přepnutí z HTML editoru. Jejich obsah zůstává zachován a lze jej upravovat přes nadřazenou editovatelnou oblast (#382).
@@ -396,6 +423,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Bezpečnost
 
+- Aktualizované knihovny`org.json 20260719`, PostgreSQL JDBC aktualizován na `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` na `2.6.1`, Apache Commons Codec `1.23.0`, knihovna PDFBox na `3.0.8` a Swagger UI na @@ (#421).
+- Počasí - import předpovědi odmítne XML s deklarací `DOCTYPE`. Pokud používáte vlastní zdroj v `weatherSourceApi`, musí poskytovat předpověď bez DTD (#421).
+- Lokální AI - pro `ai.djl:api 0.36.0` přibyla výjimka Dependency Check pro `CVE-2026-129266`. WebJET AI rozbaluje a ověřuje modely vlastním kódem. Tokenizéry DJL dostávají již ověřené lokální soubory (#421).
 - AI asistenti - vyhledávání ve statistice a grafy používání zobrazují pouze záznamy a asistenty aktuální domény (#58850).
 - Webové stránky - mazání ověřuje práva ke všem zrcadleným stránkám au složek vyžaduje i `deleteDir`. [Zrušení zrcadlení](redactor/apps/clone-structure/README.md#zrušení-zrcadlení) kontroluje oprávnění pro celý podstrom včetně nakonfigurovaných omezení domény a uživatelských skupin (#370).
 - Dependency Check - aktualizované knihovny `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizace Jackson zpřísňuje kontrolu typů při polymorfní deserializaci; vlastní integrace používající názvy Java tříd v JSON je třeba ověřit (#385).
@@ -800,6 +830,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Archiv souborů - administrace nyní nabízí správný název nastavení `fileArchivCacheTime`, které určuje, jak dlouho archiv uchovává v cache například historii verzí souboru. Hlavní seznam souborů aplikace načítá přímo z databáze. Výchozí doba je nadále 120 minut. Vlastní hodnota pod správným názvem fungovala i před opravou a nastavení pro konkrétní metodu má přednost. Pokud jste zadali hodnotu pod původním názvem `fileArchivatorCacheTime`, zadejte ji pod názvem `fileArchivCacheTime` (#411).
 - Soubory - opravený název konfigurační proměnné `elfinderMetadataAutopopup`, která po nahrání souboru automaticky zobrazí dialog metadat. Proměnná byla deklarována s překlepem jako `elfinerMetadataAutopopup`, který se nikde nečetl, proto její změna v administraci neměla efekt. Výchozí hodnota `false` zůstává. Pokud jste si nastavili proměnnou s překlepem, nastavte místo ní `elfinderMetadataAutopopup` (#410).
 - Opraveno zacyklení při HTTP přesměrování během stahování souborů, načtení nastavení uživatele, inicializaci generátoru primárních klíčů a obnově cache souborů uložených v databázi. Doplněny ukončovací podmínky opakovaných pokusů. Pokud generátor primárních klíčů zůstane nedostupný i po jednom pokusu o vytvoření záznamu a obnovení paměti cache, metody `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodí `IllegalStateException`. Volající musí přerušit operaci vyžadující identifikátor a předat chybu svému zpracování výjimek (#412).
+- Menu - opraveno generování atributu `class` na položce `<li>` při použití nastavení Menu Info (`menuInfoDirName`). Třída `menu-info-li` se přidává k ostatním CSS třídám položky.
 
 ## 2026.0.40
 
