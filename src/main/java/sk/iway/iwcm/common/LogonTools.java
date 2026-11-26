@@ -446,6 +446,9 @@ public class LogonTools {
                 user.setEditableGroups("");
                 // clear also editablePages to avoid residual restrictions when all groups are editable
                 user.setEditablePages("");
+            } else if (Tools.isNotEmpty(user.getEditablePages()) && Tools.isEmpty(user.getEditableGroups())) {
+                // Pages inherited from permission groups need the same My Pages folder as directly assigned pages.
+                user.setEditableGroups(Integer.toString(Constants.getInt("systemPagesMyPages")));
             }
             if (hasAllWritableFolders) {
                 user.setWritableFolders("*");

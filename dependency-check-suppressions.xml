@@ -3,38 +3,6 @@
 
  <!-- DO NOT MODIFY THIS FILE, here are exceptions for WebJET CMS, write project exceptions to dependency-check-suppressions-project.xml -->
 
- <!-- we do not use PDComplexFileSpecification.getFilename() -->
- <suppress>
-   <notes><![CDATA[
-   file name: pdfbox-io-3.0.7.jar
-   ]]></notes>
-   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-io@.*$</packageUrl>
-   <cve>CVE-2026-23907</cve>
- </suppress>
- <suppress>
-   <notes><![CDATA[
-   file name: pdfbox-3.0.7.jar
-   ]]></notes>
-   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
-   <cve>CVE-2026-23907</cve>
- </suppress>
-
- <!-- we do not use such path traversal example -->
- <suppress>
-   <notes><![CDATA[
-   file name: pdfbox-3.0.7.jar
-   ]]></notes>
-   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
-   <cve>CVE-2026-33929</cve>
- </suppress>
- <suppress>
-   <notes><![CDATA[
-   file name: pdfbox-io-3.0.7.jar
-   ]]></notes>
-   <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-io@.*$</packageUrl>
-   <cve>CVE-2026-33929</cve>
- </suppress>
-
  <!-- we do not use toSvg() export -->
  <suppress>
    <notes><![CDATA[
@@ -60,15 +28,6 @@
    <cve>CVE-2025-15056</cve>
  </suppress>
 
- <!-- used only for admin bundle, not relevant for user inputs -->
- <suppress>
-   <notes><![CDATA[
-   file name: postcss:8.5.9
-   ]]></notes>
-   <packageUrl regex="true">^pkg:npm/postcss@.*$</packageUrl>
-   <vulnerabilityName>CVE-2026-41305</vulnerabilityName>
- </suppress>
-
  <!-- we are using latest 4.x version and connecting only to trusted sources -->
  <suppress>
     <notes><![CDATA[
@@ -83,15 +42,6 @@
     ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.httpcomponents/httpcore@.*$</packageUrl>
     <cve>CVE-2026-54428</cve>
- </suppress>
-
- <!-- This vulnerability is fixed in 2.18.9, 2.21.5, and 3.1.4 -->
- <suppress>
-   <notes><![CDATA[
-   file name: jackson-databind-2.22.0.jar
-   ]]></notes>
-   <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson-databind@.*$</packageUrl>
-   <cve>CVE-2026-54515</cve>
  </suppress>
 
  <!-- not 7.x version mentioned: Affected versions: Spring Security 5.7.0 through 5.7.24; 5.8.0 through 5.8.26; 6.3.0 through 6.3.17; 6.4.0 through 6.4.17; 6.5.0 through 6.5.10. -->
@@ -124,55 +74,6 @@
     <packageUrl regex="true">^pkg:maven/org\.slf4j/log4j-over-slf4j@.*$</packageUrl>
     <cve>CVE-2020-9493</cve>
     <cve>CVE-2022-23307</cve>
-  </suppress>
-
-  <suppress>
-    <notes><![CDATA[
-    CVE-2026-116804 (GHSA-cg2g-xh64-v4q7) requires SAFE_FOR_TEMPLATES together with
-    RETURN_DOM, RETURN_DOM_FRAGMENT, or IN_PLACE and DOM input carrying a shadow root.
-    File: src/main/webapp/admin/swagger-ui/swagger-ui-bundle.js (matched by SHA-1 below).
-    Swagger UI 5.34.0 uses DOMPurify 3.4.16 only to sanitize Markdown-rendered HTML
-    strings and returns strings. Its sanitizer does not enable any of these options,
-    and its only DOMPurify hook adds rel="noopener noreferrer" to links.
-    This is non-applicability for this exact bundle, not a patched DOMPurify version.
-    Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
-    Verified on 2026-10-29 against this checkout, including its final newline.
-    https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7
-    ]]></notes>
-    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
-    <vulnerabilityName>CVE-2026-116804</vulnerabilityName>
-  </suppress>
-
-  <suppress>
-    <notes><![CDATA[
-    CVE-2026-116803 requires DOMPurify IN_PLACE mode and an application hook that
-    detaches a parent or sibling subtree. Swagger UI 5.34.0 with DOMPurify 3.4.16 sanitizes
-    Markdown-rendered HTML strings without IN_PLACE. Its only DOMPurify hook sets
-    rel="noopener noreferrer" on links and does not detach nodes.
-    This is non-applicability, not a patched DOMPurify version.
-    Reassess if the bundle, sanitizer options, hooks, or Swagger plugins change.
-    Verified on 2026-10-29 against this checkout, including its final newline.
-    https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr
-    ]]></notes>
-    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
-    <vulnerabilityName>CVE-2026-116803</vulnerabilityName>
-  </suppress>
-
-  <suppress>
-    <notes><![CDATA[
-    CVE-2026-116802 requires PARSER_MEDIA_TYPE="application/xhtml+xml" and an
-    allowlist enabling SVG animation elements and attributeName. Swagger UI 5.34.0
-    with DOMPurify 3.4.16 sanitizes Markdown-rendered HTML strings using the default
-    text/html parser. Its sanitizer only sets ADD_ATTR=["target"], FORBID_TAGS,
-    ALLOW_DATA_ATTR, and FORBID_ATTR; it does not enable XHTML or SVG animation.
-    File: src/main/webapp/admin/swagger-ui/swagger-ui-bundle.js (matched by SHA-1).
-    This is non-applicability for this exact bundle, not a patched DOMPurify version.
-    Reassess if the bundle, parser mode, allowlists, hooks, or Swagger plugins change.
-    Verified on 2026-10-29 against this checkout, including its final newline.
-    https://github.com/cure53/DOMPurify/security/advisories/GHSA-c6gr-qvv4-5v3f
-    ]]></notes>
-    <sha1>77eee8a70b9b8090dfa27e8aff4d36a106bd8f84</sha1>
-    <vulnerabilityName>CVE-2026-116802</vulnerabilityName>
   </suppress>
 
   <suppress>

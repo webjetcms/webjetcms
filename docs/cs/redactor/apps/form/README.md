@@ -6,6 +6,10 @@ Formuláře mohou být odeslány na email adresu, přičemž v email zprávě fo
 
 Navíc všechny formuláře se ukládají do databáze, v administrační části Web JET je možné se k nim kdykoli vrátit. Položky ve formulářích lze pořádat podle libovolného sloupce a exportovat do programu MS Excel.
 
+Máte-li právo upravovat pouze vybrané stránky nebo složky, přístup k vícekrokovému formuláři určuje stránka posledního odeslání. Před prvním odesláním nebo pokud při poslední odpovědi chybí ID stránky, formulář uvidíte, pokud můžete upravovat alespoň jednu stránku, na které je vložen.
+
+Jako autor můžete nový formulář nebo jeho kopii upravovat hned po vytvoření, ještě před vložením na stránku. Toto právo platí, dokud formulář nemá žádné odpovědi.
+
 ![](detail.png)
 
 V seznamu formulářů se pro [víceleté formuláře](../multistep-form/README.md) zobrazuje také sloupec Trvání vyplnění, který zobrazuje jak dlouho trvalo vyplnění formuláře uživatelem (čas od jeho zobrazení po odeslání).

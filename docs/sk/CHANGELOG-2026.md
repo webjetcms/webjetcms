@@ -362,6 +362,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Skupiny práv - ak má redaktor cez skupinu pridelené iba jednotlivé stránky, po prihlásení sa jeho práva na úpravu obmedzia na tieto stránky (#419).
+- [Formuláre](redactor/apps/form/README.md) - redaktor môže otvoriť viackrokový formulár aj pred prvým odoslaním, ak má právo upravovať aspoň jednu stránku, na ktorej je formulár vložený. Autor môže prázdny formulár upravovať hneď po vytvorení alebo duplikovaní (#419).
+- Viackrokové formuláre - pri otvorení karty **Položky formuláru** alebo **Štatistiky formulára** bez prístupu k danému formuláru sa zobrazí chybová správa (#419).
 - Webové stránky - editor pri uložení upraví ručne zadanú URL adresu, ak obsahuje medzery alebo diakritiku. Pri kolízii zdedenej URL uloží a zobrazí pridelenú koncovku (#417).
 - AI Čet - po zmazaní otvoreného četu sa v novom čete zobrazí výber asistenta iba raz (#58878).
 - Vloženie HTML kódu - obsah sa dekóduje v UTF-8 bez závislosti od predvoleného kódovania JVM, aby sa na serveri nepoškodila diakritika a ďalšie znaky Unicode.
@@ -418,6 +421,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Aktualizované knižnice`org.json 20260719`, PostgreSQL JDBC aktualizovaný na `42.7.15`, MariaDB JDBC `3.5.11`, `json-smart` na `2.6.1`, Apache Commons Codec `1.23.0`, knižnica PDFBox na `3.0.8` a Swagger UI na `5.34.1` s DOMPurify `3.4.17` (#421).
+- Počasie - import predpovede odmietne XML s deklaráciou `DOCTYPE`. Ak používate vlastný zdroj v `weatherSourceApi`, musí poskytovať predpoveď bez DTD (#421).
+- Lokálna AI - pre `ai.djl:api 0.36.0` pribudla výnimka Dependency Check pre `CVE-2026-129266`. WebJET AI rozbaľuje a overuje modely vlastným kódom. Tokenizéry DJL dostávajú už overené lokálne súbory (#421).
 - AI asistenti - vyhľadávanie v štatistike a grafy používania zobrazujú iba záznamy a asistentov aktuálnej domény (#58850).
 - Webové stránky - mazanie overuje práva ku všetkým zrkadleným stránkam a pri priečinkoch vyžaduje aj `deleteDir`. [Zrušenie zrkadlenia](redactor/apps/clone-structure/README.md#zrušenie-zrkadlenia) kontroluje oprávnenia pre celý podstrom vrátane nakonfigurovaných obmedzení domény a používateľských skupín (#370).
 - Dependency Check - aktualizované knižnice `Jackson 2.22.3 → 2.22.4`, `Jackson 3.2.3 → 3.2.4` s opravou `CVE-2026-110879` a `undici 6.28.1 → 6.29.1` s opravou `CVE-2026-109383`. Aktualizácia Jackson sprísňuje kontrolu typov pri polymorfnej deserializácii; vlastné integrácie používajúce názvy Java tried v JSON je potrebné overiť (#385).
@@ -822,6 +828,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Archív súborov - administrácia teraz ponúka správny názov nastavenia `fileArchivCacheTime`, ktoré určuje, ako dlho archív uchováva v cache napríklad históriu verzií súboru. Hlavný zoznam súborov aplikácia načítava priamo z databázy. Predvolená doba je naďalej 120 minút. Vlastná hodnota pod správnym názvom fungovala aj pred opravou a nastavenie pre konkrétnu metódu má prednosť. Ak ste zadali hodnotu pod pôvodným názvom `fileArchivatorCacheTime`, zadajte ju pod názvom `fileArchivCacheTime` (#411).
 - Súbory - opravený názov konfiguračnej premennej `elfinderMetadataAutopopup`, ktorá po nahratí súboru automaticky zobrazí dialóg metadát. Premenná bola deklarovaná s preklepom ako `elfinerMetadataAutopopup`, ktorý sa nikde nečítal, preto jej zmena v administrácii nemala efekt. Predvolená hodnota `false` zostáva. Ak ste si nastavili premennú s preklepom, nastavte namiesto nej `elfinderMetadataAutopopup` (#410).
 - Opravené zacyklenie pri HTTP presmerovaniach počas sťahovania súborov, načítaní nastavení používateľa, inicializácii generátora primárnych kľúčov a obnove cache súborov uložených v databáze. Doplnené ukončovacie podmienky opakovaných pokusov. Ak generátor primárnych kľúčov zostane nedostupný aj po jednom pokuse o vytvorenie záznamu a obnove cache, metódy `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodia `IllegalStateException`. Volajúci musí prerušiť operáciu vyžadujúcu identifikátor a odovzdať chybu svojmu spracovaniu výnimiek (#412).
+- Menu - opravené generovanie atribútu `class` na položke `<li>` pri použití nastavenia Menu Info (`menuInfoDirName`). Trieda `menu-info-li` sa pridáva k ostatným CSS triedam položky.
 
 ## 2026.0.40
 
