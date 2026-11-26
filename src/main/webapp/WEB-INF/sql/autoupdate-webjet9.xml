@@ -1836,7 +1836,7 @@
                 <void property="mysql"><string>ALTER TABLE file_archiv ADD index_file tinyint(1) DEFAULT 1; UPDATE file_archiv SET index_file = 0 WHERE reference_id > -1 OR show_file = 0;</string></void>
                 <void property="mssql"><string>ALTER TABLE file_archiv ADD index_file INT DEFAULT 1; UPDATE file_archiv SET index_file = 0 WHERE reference_id > -1 OR show_file = 0;</string></void>
                 <void property="oracle"><string>ALTER TABLE file_archiv ADD index_file SMALLINT DEFAULT 1; UPDATE file_archiv SET index_file = 0 WHERE reference_id > -1 OR show_file = 0;</string></void>
-                <void property="pgsql"><string>ALTER TABLE file_archiv ADD COLUMN index_file BOOLEAN DEFAULT TRUE; UPDATE file_archiv SET index_file = FALSE WHERE reference_id > -1 OR show_file = 0;</string></void>
+                <void property="pgsql"><string>ALTER TABLE file_archiv ADD COLUMN IF NOT EXISTS index_file BOOLEAN DEFAULT TRUE; UPDATE file_archiv SET index_file = FALSE WHERE reference_id > -1 OR show_file = FALSE;</string></void>
             </object>
         </void>
 
