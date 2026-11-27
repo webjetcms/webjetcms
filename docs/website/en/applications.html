@@ -28,6 +28,19 @@
 .wj-website-content .wj-news h3 { font-size: 22px; line-height: 1.35; margin-bottom: 12px; }
 .wj-website-content .wj-news h3 a { color: inherit; }
 .wj-website-content .wj-news-item > p:last-child { font-size: 17px; line-height: 1.5; }
+.wj-website-content .wj-editions { overflow-x: auto; }
+.wj-website-content .wj-editions:focus-visible { outline: 2px solid #003289; outline-offset: 2px; }
+.wj-website-content .wj-editions table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; text-align: center; }
+.wj-website-content .wj-editions th, .wj-website-content .wj-editions td { min-width: 0; padding: .5rem .75rem; vertical-align: middle; }
+.wj-website-content .wj-editions thead th { background: #fff; }
+.wj-website-content .wj-editions th:first-child { text-align: left; }
+.wj-website-content .wj-editions th[scope="row"] { position: sticky; left: 0; min-width: 9rem; background: #fff; font-weight: normal; }
+.wj-website-content .wj-editions tbody tr:nth-child(odd) > th[scope="row"] { background-color: #f2f2f2; }
+.wj-website-content .wj-editions thead th:first-child { position: sticky; left: 0; }
+.wj-website-content .wj-editions th[scope="rowgroup"] { background: #ebeff5; }
+@media print {
+  .wj-website-content .wj-editions { overflow: visible; }
+}
 @media (max-width: 767.98px) {
   .wj-website-content .wj-actions { gap: 16px; }
   .wj-website-content .wj-hero-media { margin: 28px 0; }
@@ -45,9 +58,10 @@
 
   <section class="md-intro" aria-labelledby="aplikacie-vyber">
       <h2 id="aplikacie-vyber">Choose applications for the work your website needs to do</h2>
-      <p>A corporate website can accept applications, provide current documents and share event information. The selection below shows practical uses for WebJET CMS applications. During a demo, we can discuss which applications fit your project and their availability.</p>
-      <nav class="wj-section-nav" aria-label="Application categories">
+      <p>A corporate website can accept applications, provide current documents and share event information. The selection below shows practical uses for WebJET CMS applications. The edition comparison shows which applications each edition includes.</p>
+      <nav class="wj-section-nav" aria-label="Application overview">
         <ul>
+          <li><a href="#aplikacie-edicie">Editions and the Apache 2.0 licence</a></li>
           <li><a href="#aplikacie-formulare">Enquiries and forms</a></li>
           <li><a href="#aplikacie-dokumenty">Documents and content</a></li>
           <li><a href="#aplikacie-vyhladavanie">Search and content access</a></li>
@@ -169,6 +183,111 @@
             <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/eshop/invoice/">Order documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/apps/eshop/stats/">E-commerce reports</a></p>
           </div>
         </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-edicie">
+      <h2 id="aplikacie-edicie">Applications by edition</h2>
+      <p>The <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a> covers WebJET CMS source code for modules marked “Yes” under Community. Each column shows which modules that edition includes.</p>
+      <div class="wj-editions" role="region" aria-labelledby="aplikacie-edicie" tabindex="0">
+        <table class="table table-striped" aria-labelledby="aplikacie-edicie">
+          <thead>
+            <tr>
+              <th scope="col">Application</th>
+              <th scope="col">Community (Open Source)</th>
+              <th scope="col">Basic</th>
+              <th scope="col">Professional</th>
+              <th scope="col">Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="rowgroup" colspan="5">Community · Apache 2.0 (30)</th></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/sysadmin/audit/">Audit of changes</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/language-redirect/">Browser language redirect</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-cookiebar/">Cookie banner</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-date/">Date and name days</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Date and Time</th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-disqus/">Disqus comments</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-htmlembed/">Embed HTML code</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/emoticon/">Emoticons</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Facebook comments <small>(service discontinued by Meta)</small></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-facebook_like_box/">Facebook Like Box</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Facebook Like button <small>(service discontinued by Meta)</small></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-vyhladavanie/">Google search</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/image-editor/">Image editor</a></th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-docsembed/">Insert a document</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-social_icon/">Links to social networks</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-smartsupp/">Live chat (Smartsupp)</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/user/">Logged-in user</a></th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/menu/">Menu</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/news/">News</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/frontend/templates/">Page templates</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/gallery/">Photo gallery</a></th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/inquiry/">Poll</a></th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/qa/">Questions and answers</a></th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/webpages/redirects/">Redirects</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/htmlbox/">Reusable content blocks</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">RSS feed and reader</th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Sharing icons</th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/inquiry/inquiry-simple">Simple poll</a></th><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/admin/users/">Users</a></th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/video/">Video</a></th><td>Yes</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+          </tbody>
+          <tbody>
+            <tr><th scope="rowgroup" colspan="5">Commercial editions only (51)</th></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/abtesting/">AB testing</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/ai/">AI Tools</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/admin/settings/cronjob/">Automated tasks</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/banner/">Banner management</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/blog/">Blog</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/calendar/">Calendar</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">CAPTCHA</th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/carousel_slider/">Carousel Slider</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/clone-structure/">Clone structure</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/enumeration/">Code lists</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/sysadmin/data-deleting/">Data deletion</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Dictionary</th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/forum/">Discussion Forum</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/files/file-archive/">Document manager</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/basket/">eShop</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/export/">Export data</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/files/fbrowser/">Files</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/form/encryption">Form encryption</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/form/">Forms</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/gdpr/">GDPR cookie consent</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/admin/settings/response-header/">HTTP headers</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-impress_slideshow/">Impress slideshow</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/files/fbrowser/folder-settings/">Index files</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/map/">Map</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/webpages/media">Media</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/docmirroring/">Mirroring</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row">Multi-domain management</th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/dmail/campaings/">Newsletter</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/webpages/doc-attributes/">Page attributes</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/webpages/import-export">Page import and export</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/rating/">Page ratings</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/proxy/">Proxy</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/quiz/">Questionnaires</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/related-pages/">Related pages</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/reservation/reservations/">Reservations</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/restaurant-menu/">Restaurant menu</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/insert-script/">Scripts</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/search/">Search</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row">Send message</th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/send_link/">Send page by e-mail</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/seo/">SEO</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/sysadmin/monitoring/">Server monitoring</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/formsimple/">Simple form</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/sitemap/">Sitemap</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/slider/">Slider</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-slit_slider/">Slit Slider</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-testimonials/">Testimonials</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/tooltip/">Tooltip</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/stat/">Traffic statistics</a></th><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/site-browser/">View files</a></th><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/app-weather/">Weather</a></th><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>
+          </tbody>
+        </table>
       </div>
   </section>
 

@@ -26,6 +26,8 @@ Anglické fragmenty patria do existujúceho webu **`https://www.webjetcms.com`**
 
 Každý súbor obsahuje **celý obsah na vloženie dovnútra existujúceho `article.ly-article`**. Neobsahuje ďalší `article` ani obal celej HTML stránky. V úvode súboru je malý `style` obmedzený na `.wj-website-content`; nadväzuje na typografiu, farby a komponenty súčasného webu s Bootstrap 4.1.3. Netreba nový CSS alebo JavaScript framework.
 
+Pri zmene zloženia edícií aktualizujte tabuľku `#aplikacie-edicie` v oboch fragmentoch stránky Aplikácie. V administrácii otvorte `/admin/modules_allinfo.jsp` a porovnajte stĺpce podľa názvu edície. Export CSV obsahuje aj kľúč modulu, podľa ktorého spárujete slovenské a anglické názvy. Do prvej skupiny tabuľky patria všetky riadky s označením `X` v stĺpci Community. Na tento zoznam odkazujú [licenčné podmienky projektu](../../LICENSE.md).
+
 ## Vloženie do CMS
 
 1. **Najprv nahrajte obrázky, až potom aktualizujte obsah.** Snímky z [sk/images](sk/images/) okrem `logo-*.png` patria do **`/images/webjetcms-2026/sk/`**, snímky z [en/images](en/images/) do **`/images/webjetcms-2026/en/`**. Šesť spoločných `logo-*.png` zostáva v **`/images/webjetcms-2026/`**. Pri nahrávaní zachovajte názvy z príslušného jazykového priečinka; EN snímky majú anglické názvy, napríklad `publication-history.png`. Zoznam potrebných a voliteľných obrázkov je v [manifeste](image-manifest.md). Obrázky musia byť dostupné na príslušnej SK aj EN doméne. **Pôvodné obrázky v koreňovom priečinku nemažte ani nepresúvajte:** už publikované SK stránky ich môžu používať. Aktualizované SK fragmenty už odkazujú na `/sk/`; EN používa `/en/` a spoločné logá z koreňa.

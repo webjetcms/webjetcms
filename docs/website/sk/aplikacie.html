@@ -28,6 +28,19 @@
 .wj-website-content .wj-news h3 { font-size: 22px; line-height: 1.35; margin-bottom: 12px; }
 .wj-website-content .wj-news h3 a { color: inherit; }
 .wj-website-content .wj-news-item > p:last-child { font-size: 17px; line-height: 1.5; }
+.wj-website-content .wj-editions { overflow-x: auto; }
+.wj-website-content .wj-editions:focus-visible { outline: 2px solid #003289; outline-offset: 2px; }
+.wj-website-content .wj-editions table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; text-align: center; }
+.wj-website-content .wj-editions th, .wj-website-content .wj-editions td { min-width: 0; padding: .5rem .75rem; vertical-align: middle; }
+.wj-website-content .wj-editions thead th { background: #fff; }
+.wj-website-content .wj-editions th:first-child { text-align: left; }
+.wj-website-content .wj-editions th[scope="row"] { position: sticky; left: 0; min-width: 9rem; background: #fff; font-weight: normal; }
+.wj-website-content .wj-editions tbody tr:nth-child(odd) > th[scope="row"] { background-color: #f2f2f2; }
+.wj-website-content .wj-editions thead th:first-child { position: sticky; left: 0; }
+.wj-website-content .wj-editions th[scope="rowgroup"] { background: #ebeff5; }
+@media print {
+  .wj-website-content .wj-editions { overflow: visible; }
+}
 @media (max-width: 767.98px) {
   .wj-website-content .wj-actions { gap: 16px; }
   .wj-website-content .wj-hero-media { margin: 28px 0; }
@@ -45,9 +58,10 @@
 
   <section class="md-intro" aria-labelledby="aplikacie-vyber">
       <h2 id="aplikacie-vyber">Vyberte aplikácie podľa práce, ktorú má web vykonať</h2>
-      <p>Firemný web môže prijímať žiadosti, sprístupňovať aktuálne dokumenty aj informovať o podujatiach. Nasledujúci výber ukazuje praktické použitie aplikácií WebJET CMS. Vhodnú zostavu a jej dostupnosť pre váš projekt prejdeme na ukážke.</p>
-      <nav class="wj-section-nav" aria-label="Kategórie aplikácií">
+      <p>Firemný web môže prijímať žiadosti, sprístupňovať aktuálne dokumenty aj informovať o podujatiach. Nasledujúci výber ukazuje praktické použitie aplikácií WebJET CMS. Dostupnosť každej aplikácie nájdete v porovnaní edícií.</p>
+      <nav class="wj-section-nav" aria-label="Prehľad aplikácií">
         <ul>
+          <li><a href="#aplikacie-edicie">Edície a licencia Apache 2.0</a></li>
           <li><a href="#aplikacie-formulare">Dopyty a formuláre</a></li>
           <li><a href="#aplikacie-dokumenty">Dokumenty a obsah</a></li>
           <li><a href="#aplikacie-vyhladavanie">Vyhľadávanie a prístupy</a></li>
@@ -169,6 +183,111 @@
             <p><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/eshop/invoice/">Objednávky v dokumentácii</a> · <a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/eshop/stats/">Prehľady elektronického obchodu</a></p>
           </div>
         </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="aplikacie-edicie">
+      <h2 id="aplikacie-edicie">Aplikácie podľa edície</h2>
+      <p>Licencia <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a> sa vzťahuje na zdrojový kód WebJET CMS pre moduly označené „Áno“ v stĺpci Community. Každý stĺpec uvádza, ktoré moduly daná edícia obsahuje.</p>
+      <div class="wj-editions" role="region" aria-labelledby="aplikacie-edicie" tabindex="0">
+        <table class="table table-striped" aria-labelledby="aplikacie-edicie">
+          <thead>
+            <tr>
+              <th scope="col">Aplikácia</th>
+              <th scope="col">Community (Open Source)</th>
+              <th scope="col">Basic</th>
+              <th scope="col">Professional</th>
+              <th scope="col">Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="rowgroup" colspan="5">Community · Apache 2.0 (30)</th></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/inquiry/">Anketa</a></th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/inquiry/inquiry-simple">Anketa ľahko</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/sysadmin/audit/">Audit zmien</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-cookiebar/">Cookie lišta</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row">Dátum a čas</th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-date/">Dátum a meniny</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-disqus/">Disqus komentáre</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/image-editor/">Editor obrázkov</a></th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/emoticon/">Emotikony</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row">Facebook komentáre <small>(Meta ukončila službu)</small></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-facebook_like_box/">Facebook Like Box</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row">Facebook Like tlačidlo <small>(Meta ukončila službu)</small></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/gallery/">Fotogaléria</a></th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-vyhladavanie/">Google vyhľadávanie</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-smartsupp/">Live chat (Smartsupp)</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/menu/">Menu</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/news/">Novinky</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-social_icon/">Odkazy na sociálne siete</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/qa/">Otázky a odpovede</a></th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/admin/users/">Používatelia</a></th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/htmlbox/">Predpripravené bloky</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/webpages/redirects/">Presmerovania</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/language-redirect/">Presmerovanie podľa jazyka prehliadača</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/user/">Prihlásený používateľ</a></th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row">RSS export a čítačka</th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/frontend/templates/">Šablóny stránok</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/video/">Video</a></th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-docsembed/">Vloženie dokumentu</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-htmlembed/">Vloženie HTML kódu</a></th><td>Áno</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row">Zdieľacie ikonky</th><td>Áno</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+          </tbody>
+          <tbody>
+            <tr><th scope="rowgroup" colspan="5">Iba v komerčných edíciách (51)</th></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/abtesting/">AB testovanie</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/ai/">AI nástroje</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/webpages/doc-attributes/">Atribúty stránky</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/admin/settings/cronjob/">Automatizované úlohy</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/banner/">Bannerový systém</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/blog/">Blog</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row">CAPTCHA</th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/carousel_slider/">Carousel Slider</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/enumeration/">Číselníky</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/forum/">Diskusia</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/quiz/">Dotazníky</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/basket/">Elektronický obchod</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/export/">Export dát</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/formsimple/">Formulár ľahko</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/form/">Formuláre</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/gdpr/">GDPR Cookies súhlas</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/rating/">Hodnotenie stránok</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/dmail/campaings/">Hromadný e-mail</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/admin/settings/response-header/">HTTP hlavičky</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/webpages/import-export">Import a export stránok</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/files/fbrowser/folder-settings/">Indexovanie súborov</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/calendar/">Kalendár udalostí</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/clone-structure/">Klonovanie štruktúry</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/files/file-archive/">Manažér dokumentov</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/map/">Mapa</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/sitemap/">Mapa stránok</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/sysadmin/data-deleting/">Mazanie dát</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/webpages/media">Médiá</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/sysadmin/monitoring/">Monitorovanie servera</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/tooltip/">Nápovedy</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-testimonials/">Odporúčania</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-weather/">Počasie</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row">Poslať správu</th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/send_link/">Poslať stránku e-mailom</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-impress_slideshow/">Pôsobivá prezentácia</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/related-pages/">Príbuzné stránky</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/proxy/">Proxy</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/restaurant-menu/">Reštauračné menu</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/reservation/reservations/">Rezervácie</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/seo/">SEO</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/insert-script/">Skripty</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/slider/">Slider</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/app-slit_slider/">Slit slider</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row">Slovník</th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row">Správa viacerých domén</th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/files/fbrowser/">Súbory</a></th><td>Nie</td><td>Áno</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/form/encryption">Šifrovanie formulárov</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/stat/">Štatistika návštevnosti</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/search/">Vyhľadávanie</a></th><td>Nie</td><td>Nie</td><td>Áno</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/site-browser/">Zobrazenie súborov</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+            <tr><th scope="row"><a href="https://docs.webjetcms.sk/latest/sk/redactor/apps/docmirroring/">Zrkadlenie</a></th><td>Nie</td><td>Nie</td><td>Nie</td><td>Áno</td></tr>
+          </tbody>
+        </table>
       </div>
   </section>
 
