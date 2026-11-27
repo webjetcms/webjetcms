@@ -1,14 +1,11 @@
 package sk.iway.iwcm.editor.service;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -22,7 +19,6 @@ import org.springframework.data.jpa.domain.Specification;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
-import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
@@ -516,39 +512,9 @@ public class WebpagesService {
 	 * @param attributeName - meno DB stlpca
 	 * @param attributeValue - hodnota
 	 */
-	public void  setAttributeToSubgroups(int groupId, String attributeName, Object attributeValue){
-		GroupsDB groupsDB = GroupsDB.getInstance();
-        Connection db_conn = DBPool.getConnection();
-        PreparedStatement ps = null;
-        String groupIds = groupsDB.getSubgroupsIds(groupId);
-
-        Adminlog.add(Adminlog.TYPE_GROUP, "Force "+DB.removeSlashes(attributeName)+" to subgroups: " + groupIds + " value=" + attributeValue, groupId, -1);
-
-        try {
-			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE " + DB.getInCondition("group_id", groupIds));
-
-			if (attributeValue instanceof String string) ps.setString(1, string);
-			else if (attributeValue instanceof Integer integer) ps.setInt(1, integer);
-			else if (attributeValue instanceof Boolean bool) ps.setBoolean(1, bool);
-			else ps.setObject(1, attributeValue);
-
-            ps.execute();
-        } catch (Exception ex) {
-            Logger.error(WebpagesService.class, ex);
-        } finally {
-            try {
-                if (ps != null)
-                    ps.close();
-                if (db_conn != null)
-                    db_conn.close();
-            } catch (Exception ex) {
-                Logger.error(WebpagesService.class, ex);
-            }
-		  }
-
-		  //mame zmeny je najlepsie refreshnut celu GroupsDB
-		  GroupsDB.getInstance(true);
-    }
+	public void setAttributeToSubgroups(int groupId, String attributeName, Object attributeValue) {
+		GroupsDB.getInstance().setAttributeToSubgroups(groupId, attributeName, attributeValue);
+	}
 
 	/**
 	 * Regenerates URLs in a folder and its descendants without publishing pages or changing approval state.

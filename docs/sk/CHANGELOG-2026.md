@@ -362,6 +362,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Web stránky - pri hromadnej zmene dostupnosti priečinka dostanú integrácie udalosť `AFTER_SAVE` až po aktualizácii podpriečinkov. Po opätovnom zverejnení môžu zaindexovať aj ich stránky a tieto stránky sa znova zobrazia vo vyhľadávaní obmedzenom na daný priečinok (#425).
 - Skupiny práv - ak má redaktor cez skupinu pridelené iba jednotlivé stránky, po prihlásení sa jeho práva na úpravu obmedzia na tieto stránky (#419).
 - [Formuláre](redactor/apps/form/README.md) - redaktor môže otvoriť viackrokový formulár aj pred prvým odoslaním, ak má právo upravovať aspoň jednu stránku, na ktorej je formulár vložený. Autor môže prázdny formulár upravovať hneď po vytvorení alebo duplikovaní (#419).
 - Viackrokové formuláre - pri otvorení karty **Položky formuláru** alebo **Štatistiky formulára** bez prístupu k danému formuláru sa zobrazí chybová správa (#419).

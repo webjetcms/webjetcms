@@ -957,6 +957,20 @@ public class GroupsDB extends DB
 	 */
 	public boolean setGroup(GroupDetails group, boolean publishEvents, boolean addGroupSchedulerRecord)
 	{
+		return setGroup(group, publishEvents, addGroupSchedulerRecord, false);
+	}
+
+	/**
+	 * Saves an existing folder and applies its internal flag to the subtree before updating page search paths.
+	 * The editor publishes the save events around the complete edit, including its other recursive changes.
+	 */
+	public boolean updateGroupWithSubgroupVisibility(GroupDetails group) {
+		if (group.getGroupId() < 1) return false;
+		return setGroup(group, false, true, true);
+	}
+
+	private boolean setGroup(GroupDetails group, boolean publishEvents, boolean addGroupSchedulerRecord, boolean applyInternalToSubgroups)
+	{
 		if (publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_START)).publishEvent();
 
 		if (InitServlet.isTypeCloud() && group.getGroupId()>0 && Tools.isNotEmpty(group.getDomainName()))
@@ -1152,11 +1166,17 @@ public class GroupsDB extends DB
 			//oznam ostatnym, ze nastala zmena
 			ClusterDB.addRefresh(GroupsDB.class);
 
-			//aktualizuj FT fieldy
-			DocDB.updateFileNameField(newGroup.getGroupId());
+			try {
+				if (applyInternalToSubgroups) {
+					GroupsDB.getInstance().setAttributeToSubgroups(newGroup.getGroupId(), "internal", newGroup.isInternal());
+				}
+			} finally {
+				// The parent is already saved even if updating the descendants fails.
+				DocDB.updateFileNameField(newGroup.getGroupId());
+			}
 
-			//ak sa jedna o system adresar, refreshnem zoznam tychto stranok
-			if("System".equalsIgnoreCase(newGroup.getGroupName())) getAllSystemFolders(true);
+			// A recursive visibility update has already reloaded all folders, including the system folders.
+			if (!applyInternalToSubgroups && "System".equalsIgnoreCase(newGroup.getGroupName())) getAllSystemFolders(true);
 
 			if (publishEvents) (new WebjetEvent<GroupDetails>(newGroup, WebjetEventType.AFTER_SAVE)).publishEvent();
 
@@ -3981,6 +4001,33 @@ public class GroupsDB extends DB
 		return new ArrayList<>(domainsSet);
 	}
 
+	/**
+	 * Pri zmene atributu nastavi jeho hodnotu do databazy dynamickym SQL prikazom
+	 * @param groupId - ID adresara
+	 * @param attributeName - meno DB stlpca
+	 * @param attributeValue - hodnota
+	 */
+	public void setAttributeToSubgroups(int groupId, String attributeName, Object attributeValue) {
+		String groupIds = getSubgroupsIds(groupId);
+		String column = DB.removeSlashes(attributeName);
+
+		Adminlog.add(Adminlog.TYPE_GROUP, "Force " + column + " to subgroups: " + groupIds + " value=" + attributeValue, groupId, -1);
+
+		String sql = "UPDATE groups SET " + column + "=? WHERE " + DB.getInCondition("group_id", groupIds);
+		try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+			if (attributeValue instanceof String string) statement.setString(1, string);
+			else if (attributeValue instanceof Integer integer) statement.setInt(1, integer);
+			else if (attributeValue instanceof Boolean bool) statement.setBoolean(1, bool);
+			else statement.setObject(1, attributeValue);
+
+			statement.execute();
+		} catch (Exception ex) {
+			throw new IllegalStateException("Failed to update " + attributeName + " for subgroups of " + groupId, ex);
+		} finally {
+			GroupsDB.getInstance(true);
+		}
+	}
+
     /**
      * Nastav jazyk na podadresare
      *
@@ -4000,7 +4047,7 @@ public class GroupsDB extends DB
             ps.setString(1, language);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update the language for subgroups of " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)
@@ -4068,7 +4115,7 @@ public class GroupsDB extends DB
             ps.setString(1, passwordProtectedString);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update permissions for subgroups of " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)
@@ -4102,7 +4149,7 @@ public class GroupsDB extends DB
             ps.setInt(1, templateId);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update the template for subgroups of " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)
@@ -4131,7 +4178,7 @@ public class GroupsDB extends DB
             ps.setInt(1, templateId);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update the template for pages in folder " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)

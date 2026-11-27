@@ -33,6 +33,7 @@ public class SaveGroupListener {
 
       Identity user = UsersDB.getCurrentUser(request);
       GroupDetails groupToSave = event.getSource();
+      String requestKey = REQUEST_KEY + "." + groupToSave.getGroupId();
 
       if (event.getEventType().equals(WebjetEventType.ON_START) && groupToSave.getGroupId()>0) {
 
@@ -45,13 +46,13 @@ public class SaveGroupListener {
         if (parentGroupId != groupToSave.getParentGroupId()
             || urlDirName.equals(groupToSave.getUrlDirName()) == false) {
           //musime to preniest takto
-          request.setAttribute(REQUEST_KEY, Boolean.TRUE);
+          request.setAttribute(requestKey, Boolean.TRUE);
         }
       }
 
-      if (event.getEventType().equals(WebjetEventType.AFTER_SAVE) && request.getAttribute(REQUEST_KEY) != null) {
+      if (event.getEventType().equals(WebjetEventType.AFTER_SAVE) && request.getAttribute(requestKey) != null) {
         try {
-          request.removeAttribute(REQUEST_KEY);
+          request.removeAttribute(requestKey);
           WebpagesService.regenerateUrl(groupToSave.getGroupId(), user, request, true);
         } catch (Exception ex) {
           Logger.error(SaveListener.class, ex);

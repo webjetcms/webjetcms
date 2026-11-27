@@ -343,10 +343,14 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
         Identity identity = user instanceof Identity loggedUser ? loggedUser : new Identity(user);
         if (!identity.isEnabledItem("menuWebpages")) return false;
 
-        String quotedPattern = formIncludePattern("&quot;" + form.getFormName() + "&quot;");
-        String unquotedPattern = formIncludePattern(form.getFormName() + ",");
+        String name = form.getFormName();
+        String encodedQuotePattern = formIncludePattern("&quot;" + name + "&quot;");
+        String doubleQuotePattern = formIncludePattern("\"" + name + "\"");
+        String unquotedEndPattern = formIncludePattern(name + ")!");
+        String unquotedPattern = formIncludePattern(name + ",");
         boolean separateDomains = InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir");
-        for (Long pageId : formsRepository.findDocIdsByFormInclude(quotedPattern, unquotedPattern)) {
+        for (Long pageId : formsRepository.findDocIdsByFormInclude(
+                encodedQuotePattern, doubleQuotePattern, unquotedEndPattern, unquotedPattern)) {
             DocDetails page = docDB.getBasicDocDetails(pageId.intValue(), false);
             if (page == null) continue;
             if (separateDomains && GroupsDB.getDomainId(GroupsDB.getInstance().getDomain(page.getGroupId())) != form.getDomainId()) continue;
