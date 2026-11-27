@@ -2,28 +2,35 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-Feature('admin.s3-storage');
+Feature('s3.s3-storage');
 
-// Opt in explicitly: this suite changes runtime storage routing on the local node.
-const s3Scenario = process.env.CODECEPT_S3 === 'true' ? Scenario : Scenario.skip;
 let folderName;
+let originalUseForDirs;
 // elFinder adds zero-width spaces for wrapping; hovering also removes the title attribute.
 const fileSelector = name => locate({ xpath: `//div[contains(@class, 'elfinder-cwd-filename') and translate(., '\u200b', '')="${name}"]` });
 const filesPage = '/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz';
 
 Before(({ login }) => login('admin'));
 
-s3Scenario('configure isolated S3 paths @singlethread', async ({ I, Document }) => {
+Scenario('configure isolated S3 paths @singlethread', async ({ I, Document }) => {
     folderName = 'autotest-s3-' + I.getRandomTextShort();
-    Document.setConfigValue('s3Url', process.env.S3_ENDPOINT || 'http://localhost:9000', true);
-    Document.setConfigValue('s3AccessKey', process.env.S3_ACCESS_KEY || 'webjet-local', true);
-    Document.setConfigValue('s3SecretKey', secret(process.env.S3_SECRET_KEY || 'webjet-local-secret'), true);
-    Document.setConfigValue('s3BucketName', process.env.S3_BUCKET || 'webjet-autotest', true);
+    I.amOnPage('/admin/v9/');
+    originalUseForDirs = await I.executeScript(async () => {
+        const response = await fetch('/admin/rest/settings/configuration/autocomplete/detail?name=s3UseForDirs', {
+            headers: { 'X-CSRF-Token': window.csrfToken }
+        });
+        if (!response.ok) throw new Error('Cannot preserve S3 routing: HTTP ' + response.status);
+        const configuration = await response.json();
+        const value = configuration.displayValue ?? configuration.value;
+        if (configuration.name !== 's3UseForDirs' || typeof value !== 'string') {
+            throw new Error('Cannot preserve the runtime s3UseForDirs configuration');
+        }
+        return value;
+    });
     Document.setConfigValue('s3UseForDirs', `/files/${folderName},/images/gallery/${folderName},/WEB-INF/imgcache/images/gallery/${folderName}`, true);
-    Document.setConfigValue('s3Enabled', 'true', true);
 });
 
-s3Scenario('explorer multiple upload, Unicode rename and HTTP download @singlethread', async ({ I }) => {
+Scenario('explorer multiple upload, Unicode rename and HTTP download @singlethread', async ({ I }) => {
     I.amOnPage(filesPage);
     I.waitForVisible('#nav-iwcm_2_L2ZpbGVz', 20);
     I.clickCss('#nav-iwcm_2_L2ZpbGVz');
@@ -67,7 +74,7 @@ s3Scenario('explorer multiple upload, Unicode rename and HTTP download @singleth
     assert.equal(fs.existsSync(path.resolve('../../main/webapp/files', folderName, 'autotest-žltý obrázok.png')), false);
 });
 
-s3Scenario('chunk upload and conditional download @singlethread', async ({ I }) => {
+Scenario('chunk upload and conditional download @singlethread', async ({ I }) => {
     I.amOnPage('/admin/v9/');
     // Fetch exercises the real authenticated servlet with deterministic chunk boundaries.
     const result = await I.executeScript(async folder => {
@@ -102,7 +109,7 @@ s3Scenario('chunk upload and conditional download @singlethread', async ({ I }) 
     assert.deepEqual(result.rangeBytes, [67, 68, 69]);
 });
 
-s3Scenario('gallery upload and cached thumbnails @singlethread', async ({ I, DT }) => {
+Scenario('gallery upload and cached thumbnails @singlethread', async ({ I, DT }) => {
     I.amOnPage('/admin/v9/');
     const files = ['gallery.png', 'puppy-2785074.jpg'].map(name => ({
         name: 'autotest-' + name,
@@ -155,7 +162,7 @@ s3Scenario('gallery upload and cached thumbnails @singlethread', async ({ I, DT 
     thumbs.forEach(thumb => { assert.equal(thumb.status, 200); assert.ok(thumb.size > 0); });
 });
 
-s3Scenario('cleanup gallery metadata and files @singlethread', async ({ I, DT, DTE }) => {
+Scenario('cleanup gallery metadata and files @singlethread', async ({ I, DT, DTE }) => {
     I.amOnPage(`/admin/v9/apps/gallery/?dir=/images/gallery/${folderName}`);
     DT.waitForLoader();
     if (await I.grabNumberOfVisibleElements(locate('#SomStromcek a').withText(folderName))) {
@@ -165,7 +172,7 @@ s3Scenario('cleanup gallery metadata and files @singlethread', async ({ I, DT, D
     }
 });
 
-s3Scenario('cleanup S3 fixtures and restore routing @singlethread', async ({ I, Document }) => {
+Scenario('cleanup S3 fixtures and restore routing @singlethread', async ({ I, Document }) => {
     I.amOnPage(filesPage);
     I.waitForVisible('#nav-iwcm_2_L2ZpbGVz', 20);
     I.clickCss('#nav-iwcm_2_L2ZpbGVz');
@@ -176,6 +183,5 @@ s3Scenario('cleanup S3 fixtures and restore routing @singlethread', async ({ I, 
         I.clickCss('.elfinder-confirm-accept');
         I.waitForInvisible(fileSelector(folderName), 20);
     }
-    Document.setConfigValue('s3Enabled', 'false', true);
-    Document.setConfigValue('s3UseForDirs', '/files,/images,/shared,/WEB-INF/imgcache/,/WEB-INF/formfiles/', true);
+    if (originalUseForDirs !== undefined) Document.setConfigValue('s3UseForDirs', originalUseForDirs, true);
 });

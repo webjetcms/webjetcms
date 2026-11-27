@@ -73,31 +73,6 @@ Zmeny vykonané týmto uzlom rušia cache metadát. Iný uzol alebo externý S3 
 
 Vlastné rozšírenia používajúce priamo `java.io.File`, `FileInputStream` alebo `FileOutputStream` treba upraviť na WebJET API. Externé nástroje, napr. ImageMagick, potrebujú dočasnú lokálnu kópiu; jadro pri obrazových operáciách túto kópiu vytvorí a výsledok uloží späť.
 
-## Migrácia zo samostatnej MinIO integrácie
-
-1. Zálohujte bucket, konfiguráciu a lokálne súbory. Zastavte zápisy počas migrácie.
-2. Odstráňte samostatný integračný JAR a jeho kópie tried jadra. Nesmú prekryť aktuálne triedy WebJETu.
-3. Premenujte konfiguráciu podľa tabuľky. Staré názvy nie sú aliasmi nových premenných.
-4. Zachovajte rozdelenie domén a skontrolujte existujúce kľúče. Otestujte čítanie aj zápis na vzorke súborov pred sprístupnením redaktorom.
-5. Po reštarte overte galériu, súbory, formulárové prílohy a náhľady. Samotné zapnutie S3 nekopíruje lokálne súbory do bucketu.
-
-| Pôvodná premenná | Nová premenná |
-| --- | --- |
-| `minioEnabled` | `s3Enabled` |
-| `minioUseForDirs` | `s3UseForDirs` |
-| `minioUrl` | `s3Url` |
-| `minioAccessKey` | `s3AccessKey` |
-| `minioSecretKey` | `s3SecretKey` |
-| `minioBucketName` | `s3BucketName` |
-| `minioAwsEnable` | `s3AwsEnable` |
-| `minioAwsRegion` | `s3AwsRegion` |
-| `minioMetaCacheTtlSec` | `s3MetaCacheTtlSec` |
-| `minioMetaCacheMaxDirs` | `s3MetaCacheMaxDirs` |
-
-Pôvodný doplnok `0.7.0-jakarta` odvodzoval prefix aj pre `/shared` z aktuálnej domény. Pri viacerých doménach preto skontrolujte objekty `<doména>/shared/...`: nové jadro ich hľadá v `shared/shared/...` (pri cloudovom delení v `s/h/a/shared/shared/...`). Pred prechodom zjednoťte prípadné rozdielne verzie a skopírujte vybrané spoločné súbory pod nový prefix. Cache náhľadov možno znovu vytvoriť.
-
-Pri migrácii z disku preneste súbory pomocou S3 nástroja pod zodpovedajúci doménový prefix. Porovnajte počet objektov a kontrolné súčty. Pri návrate na disk najprv preneste aj nové súbory vytvorené od zapnutia S3; vypnutie `s3Enabled` samo dáta nepresúva.
-
 ## Testovanie
 
 ```sh
@@ -109,11 +84,11 @@ Pri migrácii z disku preneste súbory pomocou S3 nástroja pod zodpovedajúci d
 
 Testy kontrolujú reálne objekty v buckete, diakritiku, nulové súbory, multipart zápis, viac ako 1 000 objektov, implicitné aj prázdne priečinky, presuny, domény, chyby čítania a prístupu, HTTP rozsahy, chunk upload, úpravu obrázkov a náhľady. Overenie proti SeaweedFS nenahrádza akceptačné testy konkrétneho produkčného S3 poskytovateľa ani nasadenia AWS IAM.
 
-Prehliadačové scenáre sa zapínajú explicitne na lokálnom testovacom WebJETe. Menia dočasnú konfiguráciu S3, vytvoria izolované testovacie priečinky a po overení vypnú S3. Spúšťajte celý súbor vrátane čistiacich scenárov, bez súbežnej kompilácie servera:
+Prehliadačové scenáre sú v priečinku `src/test/webapp/tests/s3`. Pri spustení testov sa pred prvým S3 scenárom overí aktuálna hodnota `s3Enabled` z konfigurácie WebJETu. Ak je `false`, testy z tohto priečinka sa preskočia. Pri hodnote `true` použijú nakonfigurované S3 pripojenie a bucket, vytvoria izolované testovacie priečinky a po overení obnovia pôvodné `s3UseForDirs`. Spúšťajte ich na lokálnom testovacom WebJETe, celý súbor vrátane čistiacich scenárov, bez súbežnej kompilácie servera:
 
 ```sh
 cd src/test/webapp
-CODECEPT_URL='http://iwcm.interway.sk:8080' CODECEPT_S3=true CODECEPT_SHOW=false npx codeceptjs run tests/admin/s3-storage.js
+CODECEPT_URL='http://iwcm.interway.sk:8080' CODECEPT_SHOW=false npx codeceptjs run tests/s3/s3-storage.js
 ```
 
 Prihlásenie používa štandardnú premennú `CODECEPT_DEFAULT_PASSWORD`. Po testoch reštartujte WebJET, aby sa obnovila konfigurácia z databázy. Test presunu DB ↔ S3 používa dočasné tabuľky `file_fat` a `file_data` v jednej relácii lokálnej testovacej MariaDB; nemení schému inštalácie. IAM poskytovateľ sa overuje proti lokálnej simulácii IMDSv2.
