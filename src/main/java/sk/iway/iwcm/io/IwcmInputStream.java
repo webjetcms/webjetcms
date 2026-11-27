@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,7 +17,8 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
 
 /**
- * IwcmInputStream.java
+ * Reads CMS files from local, database, packaged JAR or S3 storage.
+ * S3 streams use the namespace captured by their {@link IwcmFile}.
  *
  * @Title webjet4
  * @Company Interway s.r.o. (www.interway.sk)
@@ -29,6 +31,7 @@ import sk.iway.iwcm.Tools;
 public class IwcmInputStream extends InputStream
 {
 	private File file;
+	private boolean s3;
 	private boolean isDBStorage = false;
 	private boolean isJarPackaging = false;
 	private FileInputStream in = null;
@@ -38,80 +41,88 @@ public class IwcmInputStream extends InputStream
 	private ArrayList<Integer> nodeIds;
 	private int fatId=-1;
 
-	public IwcmInputStream(File f) throws FileNotFoundException
-	{
-		String virtualPath = IwcmFsDB.getVirtualPath(f.getPath());
+	public IwcmInputStream(File f) throws FileNotFoundException {
+		this(new IwcmFile(f));
+	}
 
-		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
-		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);
-		file = f;
-		if (isJarPackaging)
-		{
-			is = JarPackaging.getInputStream(virtualPath);
+	/**
+	 * Opens the file using its selected storage backend.
+	 *
+	 * @param f source file with its captured storage context
+	 * @throws FileNotFoundException if a local file cannot be opened or S3 reports a missing object
+	 * @throws UncheckedIOException if opening the S3 object fails for another reason
+	 */
+	public IwcmInputStream(IwcmFile f) throws FileNotFoundException {
+		file = new File(f.getPath());
+		String virtualPath = f.getVirtualPath();
+		s3 = f.isS3();
+		isDBStorage = !s3 && IwcmFsDB.useDBStorage(virtualPath);
+		isJarPackaging = !s3 && JarPackaging.isJarPackaging(virtualPath);
+		if (s3) {
+			try {
+				is = f.s3Storage().open(f.s3Key());
+			} catch (FileNotFoundException ex) {
+				throw ex;
+			} catch (IOException ex) {
+				throw new UncheckedIOException(ex);
+			}
+		} else if (isJarPackaging) is = JarPackaging.getInputStream(virtualPath);
+		else if (!isDBStorage) in = new FileInputStream(file);
+	}
+
+	/**
+	 * Opens an independent stream positioned at the requested offset.
+	 * S3 limits the response to the requested length; other backends only skip the offset,
+	 * so callers must limit their reads to {@code length} bytes themselves.
+	 *
+	 * @param f source file
+	 * @param offset nonnegative zero-based byte offset
+	 * @param length requested range length in bytes; applied by S3 only
+	 * @throws IOException if opening the stream or skipping to the offset fails
+	 */
+	public IwcmInputStream(IwcmFile f, long offset, long length) throws IOException {
+		if (f.isS3()) {
+			s3 = true;
+			is = f.s3Storage().open(f.s3Key(), offset, length);
+		} else {
+			isJarPackaging = true;
+			is = new IwcmInputStream(f);
+			try { is.skipNBytes(offset); }
+			catch (IOException ex) { is.close(); throw ex; }
 		}
-		else if (!isDBStorage)
-		{
-			in = new FileInputStream(f);
+	}
+
+	public IwcmInputStream(File f, int fatId) {
+		this(IwcmFsDB.getVirtualPath(f.getPath()), fatId);
+	}
+
+	/**
+	 * Selects a database version by its ID, or opens the currently configured storage when no ID is supplied.
+	 * A positive ID keeps database history accessible even when the path now routes to S3.
+	 *
+	 * @param virtualPath absolute CMS path
+	 * @param fatId positive database file ID, or a nonpositive value to select the current file
+	 * @throws UncheckedIOException if opening the current file fails
+	 */
+	public IwcmInputStream(String virtualPath, int fatId) {
+		this.fatId = fatId;
+		file = new File(Tools.getRealPath(virtualPath));
+		isDBStorage = fatId > 0 || IwcmFsDB.useDBStorage(virtualPath);
+		if (fatId <= 0) {
+			try {
+				is = new IwcmInputStream(new IwcmFile(file));
+				isDBStorage = false;
+				isJarPackaging = true;
+			} catch (FileNotFoundException ex) { throw new UncheckedIOException(ex); }
 		}
 	}
 
-	public IwcmInputStream(IwcmFile f) throws FileNotFoundException
-	{
-		this(new File(f.getPath()));
-	}
-
-	public IwcmInputStream(File f,int fatId)
-	{
-		String virtualPath = IwcmFsDB.getVirtualPath(f.getPath());
-		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
-		file=new File(Tools.getRealPath(virtualPath));
-		if (fatId > 0) this.fatId=fatId;
-	}
-
-	public IwcmInputStream(String virtualPath,int fatId)
-	{
-		this.fatId=fatId;
-		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
-		file=new File(Tools.getRealPath(virtualPath));
-	}
-
-	public IwcmInputStream(String filename) throws FileNotFoundException
-	{
+	public IwcmInputStream(String filename) throws FileNotFoundException {
 		this(filename, false);
 	}
 
-	public IwcmInputStream(String virtualPath, boolean isVirtualPath) throws FileNotFoundException
-	{
-		if (isVirtualPath)
-		{
-			isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
-		}
-		else
-		{
-			isDBStorage = IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(virtualPath));
-		}
-		if (!isDBStorage)
-		{
-			if (!isVirtualPath)
-			{
-				in = new FileInputStream(new File(virtualPath));
-			}
-			else
-			{
-				in = new FileInputStream(new File(Tools.getRealPath(virtualPath)));
-			}
-		}
-		else
-		{
-			if (!isVirtualPath)
-			{
-				file = new File(virtualPath);
-			}
-			else
-			{
-				file = new File(Tools.getRealPath(virtualPath));
-			}
-		}
+	public IwcmInputStream(String path, boolean isVirtualPath) throws FileNotFoundException {
+		this(new IwcmFile(isVirtualPath ? Tools.getRealPath(path) : path));
 	}
 
 	@Override
@@ -126,7 +137,7 @@ public class IwcmInputStream extends InputStream
 			step++;
 			return is.read();
 		}
-		else if (isJarPackaging)
+		else if (isJarPackaging || s3)
 		{
 			return is.read();
 		}
@@ -149,7 +160,7 @@ public class IwcmInputStream extends InputStream
 			step += bytesRead;
 			return bytesRead;
 		}
-		else if (isJarPackaging)
+		else if (isJarPackaging || s3)
 		{
 			return is.read(result);
 		}
@@ -173,7 +184,7 @@ public class IwcmInputStream extends InputStream
 			//Logger.debug(IwcmInputStream.class, "read step="+step+" bytesRead="+bytesRead);
 			return bytesRead;
 		}
-		else if (isJarPackaging)
+		else if (isJarPackaging || s3)
 		{
 			return is.read(b, off, len);
 		}
@@ -197,7 +208,7 @@ public class IwcmInputStream extends InputStream
 				sk.iway.iwcm.Logger.error(e);
 			}
 		}
-		else if (isJarPackaging)
+		else if (isJarPackaging || s3)
 		{
 			is.close();
 		}

@@ -123,6 +123,10 @@ exports.config = {
   },
   name: 'webapp',
   plugins: {
+    s3Tests: {
+      enabled: true,
+      require: './helpers/s3_tests.js'
+    },
     retryFailedStep: {
       enabled: true
     },

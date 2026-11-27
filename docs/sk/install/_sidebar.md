@@ -9,6 +9,7 @@
 - Konfigurácia
   - [Základná konfigurácia](/install/config/README.md)
   - [Externá konfigurácia](/install/external-configuration.md)
+  - [Súbory v S3 úložisku](/install/s3-storage.md)
   - [Spam ochrana](/install/config/spam-protection.md)
   - [DB s právami na čítanie](/install/config/ro-user.md)
   - Autorizácia

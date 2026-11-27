@@ -18,7 +18,8 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
 
 /**
- * Multipart odosielanie suboru (potrebne pre mp3 na Apple zariadeniach - tiket #30013)
+ * Serves CMS files with HTTP cache validation, HEAD responses and single or multipart byte ranges.
+ * Each range uses an independent stream, with S3 offsets applied on the server.
  * https://stackoverflow.com/questions/28427339/how-to-implement-http-byte-range-requests-in-spring-mvc
  */
 public class MultipartFileSender {
@@ -53,6 +54,13 @@ public class MultipartFileSender {
       return this;
    }
 
+   /**
+    * Validates request conditions and serves the configured file or an appropriate HTTP status.
+    * HEAD responses contain headers only; missing request or response objects cause no action.
+    * The servlet container owns the response stream, allowing callers to reset an uncommitted response on failure.
+    *
+    * @throws Exception if file metadata, request-header processing or response streaming fails
+    */
    public void serveResource() throws Exception {
       if (response == null || request == null) {
          return;
@@ -64,7 +72,7 @@ public class MultipartFileSender {
          return;
       }
 
-      if (!file.exists()) {
+      if (!file.isFile()) {
          Logger.error(MultipartFileSender.class, "File doesn't exist at URI : "+file.getAbsolutePath());
          response.sendError(HttpServletResponse.SC_NOT_FOUND);
          return;
@@ -73,6 +81,7 @@ public class MultipartFileSender {
       Long length = file.length();
       String fileName = file.getName();
       long lastModified = file.lastModified();
+      String etag = file.getETag();
 
       if (Tools.isEmpty(fileName)) {
          response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -86,9 +95,9 @@ public class MultipartFileSender {
 
       // If-None-Match header should contain "*" or ETag. If so, then return 304.
       String ifNoneMatch = request.getHeader("If-None-Match");
-      if (ifNoneMatch != null && HttpUtils.matches(ifNoneMatch, fileName)) {
-         response.setHeader("ETag", fileName); // Required in 304.
-         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+      if (ifNoneMatch != null && HttpUtils.matches(ifNoneMatch, etag)) {
+         response.setHeader("ETag", etag); // Required in 304.
+         response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
          return;
       }
 
@@ -96,8 +105,8 @@ public class MultipartFileSender {
       // This header is ignored if any If-None-Match header is specified.
       long ifModifiedSince = request.getDateHeader("If-Modified-Since");
       if (ifNoneMatch == null && ifModifiedSince != -1 && ifModifiedSince + 1000 > lastModified) {
-         response.setHeader("ETag", fileName); // Required in 304.
-         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+         response.setHeader("ETag", etag); // Required in 304.
+         response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
          return;
       }
 
@@ -105,7 +114,7 @@ public class MultipartFileSender {
 
       // If-Match header should contain "*" or ETag. If not, then return 412.
       String ifMatch = request.getHeader("If-Match");
-      if (ifMatch != null && !HttpUtils.matches(ifMatch, fileName)) {
+      if (ifMatch != null && !HttpUtils.matches(ifMatch, etag)) {
          response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
          return;
       }
@@ -124,7 +133,7 @@ public class MultipartFileSender {
       List<Range> ranges = new ArrayList<>();
 
       // Validate and process Range and If-Range headers.
-      String range = request.getHeader("Range");
+      String range = "HEAD".equals(request.getMethod()) ? null : request.getHeader("Range");
       if (range != null) {
 
          // Range header should match format "bytes=n-n,n-n,n-n...". If not, then return 416.
@@ -135,10 +144,10 @@ public class MultipartFileSender {
          }
 
          String ifRange = request.getHeader("If-Range");
-         if (ifRange != null && !ifRange.equals(fileName)) {
+         if (ifRange != null && !ifRange.equals(etag)) {
             try {
                long ifRangeTime = request.getDateHeader("If-Range"); // Throws IAE if invalid.
-               if (ifRangeTime != -1) {
+               if (ifRangeTime < lastModified / 1000 * 1000) {
                   ranges.add(full);
                }
             } catch (IllegalArgumentException ignore) {
@@ -155,14 +164,14 @@ public class MultipartFileSender {
                long end = Range.sublong(part, part.indexOf("-") + 1, part.length());
 
                if (start == -1) {
-                  start = length - end;
+                  start = Math.max(0, length - end);
                   end = length - 1;
                } else if (end == -1 || end > length - 1) {
                   end = length - 1;
                }
 
                // Check if Range is syntactically valid. If not, then return 416.
-               if (start > end) {
+               if (start < 0 || start > end || start >= length) {
                   response.setHeader("Content-Range", "bytes */" + length); // Required in 416.
                   response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
                   return;
@@ -200,67 +209,92 @@ public class MultipartFileSender {
       }
 
       response.setHeader("Content-Type", contentType);
-      response.setHeader("Content-Disposition", disposition + ";filename=\"" + fileName + "\"");
+      response.setHeader("Content-Disposition", org.springframework.http.ContentDisposition.builder(disposition)
+            .filename(fileName, java.nio.charset.StandardCharsets.UTF_8).build().toString());
       //Logger.debug(MultipartFileSender.class, "Content-Disposition : "+disposition);
       response.setHeader("Accept-Ranges", "bytes");
-      response.setHeader("ETag", fileName);
+      response.setHeader("ETag", etag);
       response.setDateHeader("Last-Modified", lastModified);
+
+      if ("HEAD".equals(request.getMethod())) {
+         response.setContentLengthLong(length);
+         return;
+      }
 
       // Send requested file (part(s)) to client ------------------------------------------------
 
       // Prepare streams.
-      try (IwcmInputStream input = new IwcmInputStream(file);
-           OutputStream output = response.getOutputStream())
-      {
+      OutputStream output = response.getOutputStream();
 
-         if (ranges.isEmpty() || ranges.get(0) == full) {
-            // Return full file.
-            //Logger.debug(MultipartFileSender.class,"Return full file");
-            response.setContentType(contentType);
-            response.setHeader("Content-Range", "bytes " + full.start + "-" + full.end + "/" + full.total);
-            response.setContentLengthLong(full.length);
-            Range.copy(input, output, length, full.start, full.length);
+      if (ranges.isEmpty() || ranges.get(0) == full) {
+         // Return full file.
+         //Logger.debug(MultipartFileSender.class,"Return full file");
+         response.setContentType(contentType);
+         response.setContentLengthLong(full.length);
+         copyRange(output, full.start, full.length);
 
-         } else if (ranges.size() == 1) {
+      } else if (ranges.size() == 1) {
 
-            // Return single part of file.
-            Range r = ranges.get(0);
-            //Logger.debug(MultipartFileSender.class, "Return 1 part of file : from ("+r.start+") to ("+r.end+")");
-            response.setContentType(contentType);
-            response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
-            response.setContentLengthLong(r.length);
-            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
-            // Copy single part range.
-            Range.copy(input, output, length, r.start, r.length);
+         // Return single part of file.
+         Range r = ranges.get(0);
+         //Logger.debug(MultipartFileSender.class, "Return 1 part of file : from ("+r.start+") to ("+r.end+")");
+         response.setContentType(contentType);
+         response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
+         response.setContentLengthLong(r.length);
+         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
+         // Copy single part range.
+         copyRange(output, r.start, r.length);
 
-         } else {
+      } else {
 
-            // Return multiple parts of file.
-            response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
-            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
+         // Return multiple parts of file.
+         response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
+         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
 
-            // Cast back to ServletOutputStream to get the easy println methods.
-            @SuppressWarnings("resource")
-            ServletOutputStream sos = (ServletOutputStream) output;
+         // Cast back to ServletOutputStream to get the easy println methods.
+         @SuppressWarnings("resource")
+         ServletOutputStream sos = (ServletOutputStream) output;
 
-            // Copy multi part range.
-            for (Range r : ranges) {
-               //Logger.debug(MultipartFileSender.class, "Return multi part of file : from ("+r.start+") to ("+r.end+")");
-               // Add multipart boundary and header fields for every range.
-               sos.println();
-               sos.println("--" + MULTIPART_BOUNDARY);
-               sos.println("Content-Type: " + contentType);
-               sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
-               // Copy single part range of multi part range.
-               Range.copy(input, output, length, r.start, r.length);
-            }
-
-            // End with multipart boundary.
+         // Copy multi part range.
+         for (Range r : ranges) {
+            //Logger.debug(MultipartFileSender.class, "Return multi part of file : from ("+r.start+") to ("+r.end+")");
+            // Add multipart boundary and header fields for every range.
             sos.println();
-            sos.println("--" + MULTIPART_BOUNDARY + "--");
+            sos.println("--" + MULTIPART_BOUNDARY);
+            sos.println("Content-Type: " + contentType);
+            sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
+            sos.println();
+            // Copy single part range of multi part range.
+            copyRange(output, r.start, r.length);
          }
+
+         // End with multipart boundary.
+         sos.println();
+         sos.println("--" + MULTIPART_BOUNDARY + "--");
       }
 
+   }
+
+   /**
+    * Copies exactly the requested range through a fresh stream, with S3 seeking performed on the server.
+    *
+    * @param output response stream, left open for subsequent ranges
+    * @param start zero-based byte offset
+    * @param length number of bytes to copy; zero requires no source stream
+    * @throws IOException if opening, reading, writing or closing the input fails, including premature EOF
+    */
+   private void copyRange(OutputStream output, long start, long length) throws IOException {
+      if (length == 0) return;
+      try (IwcmInputStream input = new IwcmInputStream(file, start, length)) {
+         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+         long remaining = length;
+         while (remaining > 0) {
+            int read = input.read(buffer, 0, (int) Math.min(buffer.length, remaining));
+            if (read < 0) throw new java.io.EOFException("Incomplete resource response");
+            output.write(buffer, 0, read);
+            remaining -= read;
+         }
+      }
    }
 
    private static class Range {
@@ -287,60 +321,8 @@ public class MultipartFileSender {
          return (substring.length() > 0) ? Long.parseLong(substring) : -1;
       }
 
-      /*private static void copy(RandomAccessFile input, OutputStream output, long inputSize, long start, long length) throws IOException {
-         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-         int read;
-
-         if (inputSize == length) {
-            // Write full range.
-            while ((read = input.read(buffer)) > 0) {
-               output.write(buffer, 0, read);
-               output.flush();
-            }
-         } else {
-            input.seek(start);
-            long toRead = length;
-
-            while ((read = input.read(buffer)) > 0) {
-               if ((toRead -= read) > 0) {
-                  output.write(buffer, 0, read);
-                  output.flush();
-               } else {
-                  output.write(buffer, 0, (int) toRead + read);
-                  output.flush();
-                  break;
-               }
-            }
-         }
-      }*/
-
-      private static void copy(IwcmInputStream input, OutputStream output, long inputSize, long start, long length) throws IOException {
-         byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-         int read;
-
-         if (inputSize == length) {
-            // Write full range.
-            while ((read = input.read(buffer)) > 0) {
-               output.write(buffer, 0, read);
-               output.flush();
-            }
-         } else {
-            input.skip(start);
-            long toRead = length;
-
-            while ((read = input.read(buffer)) > 0) {
-               if ((toRead -= read) > 0) {
-                  output.write(buffer, 0, read);
-                  output.flush();
-               } else {
-                  output.write(buffer, 0, (int) toRead + read);
-                  output.flush();
-                  break;
-               }
-            }
-         }
-      }
    }
+
    private static class HttpUtils {
 
       /**

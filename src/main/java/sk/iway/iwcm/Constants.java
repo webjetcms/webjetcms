@@ -188,6 +188,10 @@ public class Constants {
 		return ConfigurationModulePath.normalize(Tools.join(mod, ";"));
 	}
 
+	/**
+	 * Replaces the runtime configuration entries with their built-in defaults and module descriptions.
+	 * Persisted or installation-specific overrides must be loaded again after this reset.
+	 */
 	public static void clearValues() {
 		Logger.info(Constants.class, "Constants - clearValues");
 
@@ -2022,6 +2026,17 @@ public class Constants {
 		setString("logonTokenHeaderName", "x-auth-token", MOD_SECURITY, "Meno HTTP hlavicky v ktorej sa nachadza prihlasovaci token pre API pristup");
 
 		setInt("GroupsDB.parentGroupsCacheMinutes", 60, mods(MOD_WEBPAGES, MOD_PERFORMANCE), "Pocet minut cachovania zoznamu parent priecinkov.");
+
+		setBoolean("s3Enabled", false, MOD_DBSTORAGE, "Používať S3 úložisko pre vybrané adresáre. Zmena S3 konfigurácie vyžaduje reštart.");
+		setString("s3UseForDirs", "/files,/images,/shared,/WEB-INF/imgcache/,/WEB-INF/formfiles/", MOD_DBSTORAGE, "Adresáre ukladané do S3, oddelené čiarkou.");
+		setString("s3Url", "", MOD_DBSTORAGE, "URL S3 API vrátane protokolu a portu.");
+		setString("s3AccessKey", "", MOD_DBSTORAGE, "Prístupový kľúč S3; nepoužíva sa v režime IAM.");
+		setString("s3SecretKey", "", MOD_DBSTORAGE, "Tajný prístupový kľúč S3; nepoužíva sa v režime IAM.");
+		setString("s3BucketName", "", MOD_DBSTORAGE, "Názov existujúceho S3 bucketu.");
+		setBoolean("s3AwsEnable", false, MOD_DBSTORAGE, "Použiť AWS IAM poskytovateľa prihlasovacích údajov namiesto statických kľúčov.");
+		setString("s3AwsRegion", "eu-central-1", MOD_DBSTORAGE, "Región S3 úložiska.");
+		setInt("s3MetaCacheTtlSec", 5, MOD_DBSTORAGE, "Platnosť cache metadát S3 v sekundách; 0 vypne cache.");
+		setInt("s3MetaCacheMaxDirs", 500, MOD_DBSTORAGE, "Maximálny počet adresárov v cache metadát S3.");
 	}
 
 	/**

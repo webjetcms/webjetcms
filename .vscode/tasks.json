@@ -272,6 +272,51 @@
             }
         },
         {
+            "label": "appStartDockerS3",
+            "type": "shell",
+            "command": "./gradlew appStartDebug",
+            "windows": {
+                "command": ".\\gradlew.bat appStartDebug"
+            },
+            "dependsOn": ["Docker S3 Start"],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "webjetDbname": "/poolman-local.xml",
+                    "webjet_s3Enabled": "true",
+                    "webjet_s3UseForDirs": "/files,/images,/shared,/WEB-INF/imgcache/,/WEB-INF/formfiles/",
+                    "webjet_s3Url": "http://localhost:9000",
+                    "webjet_s3AccessKey": "webjet-local",
+                    "webjet_s3SecretKey": "webjet-local-secret",
+                    "webjet_s3BucketName": "webjet-autotest",
+                    "webjet_s3AwsEnable": "false",
+                    "webjet_s3AwsRegion": "eu-central-1"
+                }
+            },
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5005",
+                    "endsPattern": "Listening for transport dt_socket at address: 5005",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
             "label": "appStartDemoDB",
             "type": "shell",
             "command": "webjetDbname=/poolman-local-webjet9demo.xml ./gradlew appStartDebug",
@@ -636,6 +681,41 @@
             },
             "command": "docker compose -f docker-compose-oracle.yml down",
             "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker S3 Start",
+            "type": "process",
+            "command": "docker",
+            "args": ["compose", "-f", "docker-compose-s3.yml", "up", "-d", "--wait", "--wait-timeout", "120"],
+            "options": {
+                "cwd": "${workspaceFolder}/.devcontainer/s3",
+                "env": {
+                    "S3_ACCESS_KEY": "webjet-local",
+                    "S3_SECRET_KEY": "webjet-local-secret",
+                    "S3_BUCKET": "webjet-autotest"
+                }
+            },
+            "group": "build",
+            "problemMatcher": [],
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Docker S3 Stop",
+            "type": "process",
+            "command": "docker",
+            "args": ["compose", "-f", "docker-compose-s3.yml", "down"],
+            "options": {
+                "cwd": "${workspaceFolder}/.devcontainer/s3"
+            },
+            "group": "build",
+            "problemMatcher": [],
             "presentation": {
                 "clear": true,
                 "showReuseMessage": false

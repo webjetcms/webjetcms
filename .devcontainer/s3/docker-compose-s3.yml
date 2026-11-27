@@ -1,0 +1,21 @@
+services:
+  s3:
+    image: chrislusf/seaweedfs:4.55
+    command: mini -dir=/data
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-webjet-local}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-webjet-local-secret}
+      S3_BUCKET: ${S3_BUCKET:-webjet-autotest}
+    ports:
+      - "127.0.0.1:9000:8333"
+    volumes:
+      - webjet-s3-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9333/cluster/status"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+
+volumes:
+  webjet-s3-data:

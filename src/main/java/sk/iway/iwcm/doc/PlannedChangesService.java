@@ -19,14 +19,19 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.media.MediaRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.s3.S3Path;
 import sk.iway.spirit.model.Media;
 
 /**
@@ -307,8 +312,10 @@ public class PlannedChangesService {
     /**
      * Rejects public destinations already used by another pending page's staged files.
      *
-     * <p>With external static-file storage enabled, only plans in the current domain
-     * are compared. This check does not lock other plans against concurrent changes.</p>
+     * <p>External static-file domains and multidomain S3 destinations are compared separately.
+     * Shared local destinations still conflict with another domain's S3-backed plan, whose
+     * files are read in that domain's context before restoring the caller's context.
+     * This check does not lock other plans against concurrent changes.</p>
      *
      * @param docId page being checked, excluded from the comparison
      * @param files mapping from planned source paths to public destination paths
@@ -320,9 +327,23 @@ public class PlannedChangesService {
         for (DocHistory pending : docHistoryRepository.findByPublicableTrue()) {
             if (pending.getDocId() == docId) continue;
             String domain = GroupsDB.getInstance().getGroup(pending.getGroupId()).getDomainName();
-            if (!domain.equalsIgnoreCase(CloudToolsForCore.getDomainName()) && Constants.getBoolean("enableStaticFilesExternalDir")) continue;
-            Map<String, String> other = plannedFiles(pending.getDocId());
-            if (other.values().stream().anyMatch(files::containsValue)) {
+            boolean foreignDomain = !domain.equalsIgnoreCase(CloudToolsForCore.getDomainName());
+            if (foreignDomain && Constants.getBoolean("enableStaticFilesExternalDir")) continue;
+            boolean separateS3Domains = foreignDomain && Constants.getBoolean("multiDomainEnabled") && Constants.getBoolean("s3Enabled");
+            if (separateS3Domains && files.values().stream().allMatch(S3Path::usesS3)) continue;
+            Map<String, String> other;
+            RequestBean previous = SetCharacterEncodingFilter.getCurrentRequestBean();
+            try {
+                if (separateS3Domains) {
+                    RequestBean comparison = new RequestBean();
+                    comparison.setDomain(domain);
+                    SetCharacterEncodingFilter.setCurrentRequestBean(comparison);
+                }
+                other = plannedFiles(pending.getDocId());
+            } finally {
+                if (separateS3Domains) SetCharacterEncodingFilter.setCurrentRequestBean(previous);
+            }
+            if (other.values().stream().anyMatch(path -> files.containsValue(path) && (!separateS3Domains || !S3Path.usesS3(path)))) {
                 throw new IllegalArgumentException("Another active planned page uses the same public asset: " + pending.getDocId());
             }
         }
@@ -332,8 +353,11 @@ public class PlannedChangesService {
      * Checks file access and storage prerequisites before any staged file is published.
      *
      * <p>Requires writable destination folders for the user, readable regular source files
-     * and filesystem storage instead of database storage. The nearest existing destination
-     * ancestor must be writable and on the source file's filesystem for atomic replacement.</p>
+     * and local or S3 storage instead of database storage. Local copies are staged beside
+     * their target so replacement stays on the same filesystem.</p>
+     *
+     * <p>S3 checks use metadata; successful checks do not guarantee permission to download
+     * or upload an object. Those operations can still fail during publication.</p>
      *
      * @param files mapping from planned source paths to public destination paths
      * @param user user whose public-folder write permissions are checked
@@ -343,14 +367,20 @@ public class PlannedChangesService {
         for (Map.Entry<String, String> entry : files.entrySet()) {
             try {
                 if (!user.isFolderWritable(entry.getValue().substring(0, entry.getValue().lastIndexOf('/') + 1))) throw new IOException("Asset access denied");
-                if (IwcmFsDB.useDBStorage(entry.getKey()) || IwcmFsDB.useDBStorage(entry.getValue())) throw new IOException("Planned assets require shared filesystem storage");
-                Path source = Path.of(Tools.getRealPath(entry.getKey()));
-                Path target = Path.of(Tools.getRealPath(entry.getValue()));
-                if (!Files.isRegularFile(source) || !Files.isReadable(source) || Files.isDirectory(target)) throw new IOException("Missing or invalid planned asset");
-                Path parent = target.getParent();
-                while (!Files.exists(parent)) parent = parent.getParent();
-                if (!Files.isWritable(parent) || !Files.getFileStore(parent).equals(Files.getFileStore(source))) throw new IOException("Asset destination must be writable and on the staging filesystem");
-            } catch (IOException exception) {
+                if (IwcmFsDB.useDBStorage(entry.getKey()) || IwcmFsDB.useDBStorage(entry.getValue())) throw new IOException("Planned assets require filesystem or S3 storage");
+                IwcmFile sourceFile = IwcmFile.fromVirtualPath(entry.getKey());
+                IwcmFile targetFile = IwcmFile.fromVirtualPath(entry.getValue());
+                if (!sourceFile.isFile() || !sourceFile.canRead() || targetFile.isDirectory()) throw new IOException("Missing or invalid planned asset");
+                if (targetFile.isS3()) {
+                    IwcmFile parent = targetFile.getParentFile();
+                    while (parent.isS3() && !parent.exists()) parent = parent.getParentFile();
+                    if (parent.isS3() && !parent.isDirectory()) throw new IOException("Asset parent is not a directory");
+                } else {
+                    Path parent = Path.of(targetFile.getPath()).getParent();
+                    while (!Files.exists(parent)) parent = parent.getParent();
+                    if (!Files.isDirectory(parent) || !Files.isWritable(parent)) throw new IOException("Asset destination must be writable");
+                }
+            } catch (IOException | UncheckedIOException exception) {
                 throw new IllegalArgumentException("Cannot publish asset " + entry.getValue(), exception);
             }
         }
@@ -446,19 +476,29 @@ public class PlannedChangesService {
     }
 
     /**
-     * Invalidates WebJET's file cache and removes matching cached thumbnail variants.
+     * Invalidates WebJET's file cache and removes matching thumbnail variants from local or S3 storage.
      *
      * @param target root-relative public path of the replaced file
      * @throws IOException if cached thumbnail files cannot be listed or deleted
+     * @throws UncheckedIOException if an S3 metadata, listing or deletion operation fails
      */
     private void invalidateAsset(String target) throws IOException {
         sk.iway.iwcm.Cache.getInstance().removeObjectStartsWithName(sk.iway.iwcm.io.FileCache.FILE_CACHE_PREFIX + target, true);
-        Path cached = Path.of(Tools.getRealPath(Constants.getString("thumbServletCacheDir") + target.substring(1)));
-        if (!Files.isDirectory(cached.getParent())) return;
-        String name = cached.getFileName().toString();
+        IwcmFile cachedFile = IwcmFile.fromVirtualPath(Constants.getString("thumbServletCacheDir") + target.substring(1));
+        String name = cachedFile.getName();
         int dot = name.lastIndexOf('.');
         if (dot < 0) return;
         String expression = java.util.regex.Pattern.quote(name.substring(0, dot)) + "-\\d+x\\d+[^/]*" + java.util.regex.Pattern.quote(name.substring(dot));
+        if (cachedFile.isS3()) {
+            IwcmFile parent = cachedFile.getParentFile();
+            if (!parent.isDirectory()) return;
+            for (IwcmFile variant : parent.listFiles()) {
+                if (variant.getName().matches(expression) && !variant.delete()) throw new IOException("Cannot delete thumbnail " + variant.getVirtualPath());
+            }
+            return;
+        }
+        Path cached = Path.of(cachedFile.getPath());
+        if (!Files.isDirectory(cached.getParent())) return;
         try (var variants = Files.list(cached.getParent())) {
             for (Path variant : variants.filter(path -> path.getFileName().toString().matches(expression)).toList()) Files.deleteIfExists(variant);
         }
@@ -468,7 +508,9 @@ public class PlannedChangesService {
      * Collects every regular file in the page's planned images and files directories.
      *
      * <p>Includes files not referenced by page content. Missing working directories are
-     * skipped, and each discovered source is mapped to a validated public destination.</p>
+     * skipped, but configured S3 subdirectories are inspected even without a local parent.
+     * Local copies of paths routed to S3 are ignored. Each discovered source is mapped
+     * to a validated public destination.</p>
      *
      * @param docId page ID identifying the planned working directories
      * @return mapping from root-relative planned source paths to decoded public destination paths
@@ -480,12 +522,14 @@ public class PlannedChangesService {
         for (String folder : List.of("images", "files")) {
             String prefix = PlannedAssetPaths.ROOT + docId + "/" + folder + "/";
             try {
+                for (IwcmFile directory : plannedS3Directories(prefix)) collectS3Files(directory, docId, files);
+                if (S3Path.usesS3(prefix)) continue;
                 Path root = Path.of(Tools.getRealPath(prefix));
                 if (!Files.exists(root)) continue;
                 try (var paths = Files.walk(root)) {
                     for (Path path : paths.toList()) {
                         String source = prefix + root.relativize(path).toString().replace('\\', '/');
-                        if (Files.isRegularFile(path)) files.put(source, PlannedAssetPaths.getPublicPath(source, docId));
+                        if (!S3Path.usesS3(source) && Files.isRegularFile(path)) files.put(source, PlannedAssetPaths.getPublicPath(source, docId));
                     }
                 }
             } catch (IOException | UncheckedIOException exception) {
@@ -496,7 +540,37 @@ public class PlannedChangesService {
     }
 
     /**
-     * Deletes the page's planned images and files directories, including their contents.
+     * Finds S3 directories to traverse even when the enclosing planned directory is local or absent.
+     *
+     * @param prefix root-relative planned images or files directory, ending with a slash
+     * @return the prefix itself if routed to S3, otherwise its configured S3 roots; empty if none apply
+     * @throws IllegalArgumentException if the prefix or a configured S3 root is invalid
+     */
+    private List<IwcmFile> plannedS3Directories(String prefix) {
+        if (!Constants.getBoolean("s3Enabled")) return List.of();
+        if (S3Path.usesS3(prefix)) return List.of(IwcmFile.fromVirtualPath(prefix));
+        return S3Path.roots().stream().filter(root -> root.startsWith(prefix))
+            .map(IwcmFile::fromVirtualPath).filter(IwcmFile::isS3).toList();
+    }
+
+    /**
+     * Collects regular S3 descendants using the directory's captured domain namespace.
+     *
+     * @param directory S3 directory to traverse; a missing directory contributes no files
+     * @param docId page ID used to validate ownership and resolve public destinations
+     * @param files receives mappings from planned source paths to validated public paths
+     * @throws IllegalArgumentException if a discovered path has an invalid owner or destination
+     * @throws UncheckedIOException if remote metadata or directory contents cannot be read
+     */
+    private void collectS3Files(IwcmFile directory, int docId, Map<String, String> files) {
+        for (IwcmFile file : directory.listFiles()) {
+            if (file.isDirectory()) collectS3Files(file, docId, files);
+            else if (file.isFile()) files.put(file.getVirtualPath(), PlannedAssetPaths.getPublicPath(file.getVirtualPath(), docId));
+        }
+    }
+
+    /**
+     * Deletes the page's planned images and files directories from local and configured S3 storage.
      *
      * <p>Missing directories are ignored. The separate publication backup directory
      * is retained, and a failure can leave part of a working directory already deleted.</p>
@@ -507,7 +581,12 @@ public class PlannedChangesService {
     private void deletePlannedFiles(int docId) {
         for (String folder : List.of("images", "files")) {
             try {
-                Path root = Path.of(Tools.getRealPath(PlannedAssetPaths.ROOT + docId + "/" + folder + "/"));
+                String prefix = PlannedAssetPaths.ROOT + docId + "/" + folder + "/";
+                for (IwcmFile directory : plannedS3Directories(prefix)) {
+                    if (directory.exists() && !FileTools.deleteDirTree(directory)) throw new IOException("Cannot delete " + directory.getVirtualPath());
+                }
+                if (S3Path.usesS3(prefix)) continue;
+                Path root = Path.of(Tools.getRealPath(prefix));
                 if (!Files.exists(root)) continue;
                 try (var paths = Files.walk(root)) {
                     for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
@@ -521,8 +600,8 @@ public class PlannedChangesService {
     /**
      * Replaces public files from planned sources, backing up existing targets once per history revision.
      *
-     * <p>Each source is copied to a temporary file and atomically moved to its public
-     * destination, then WebJET caches are invalidated. Planned originals are retained
+     * <p>Local replacements use an atomic move; S3 replacements publish a complete staged
+     * object. WebJET caches are then invalidated. Planned originals are retained
      * for retry. Atomicity applies to each file, not the complete set; earlier replacements
      * remain published if a later operation fails.</p>
      *
@@ -530,27 +609,56 @@ public class PlannedChangesService {
      * @param docId page ID identifying the protected backup directory
      * @param historyId history revision ID separating backups of successive publications
      * @throws IOException if backup, replacement, temporary-file cleanup or cache invalidation fails
+     * @throws UncheckedIOException if an S3 metadata, read or cache invalidation operation fails
      */
     private void publishFiles(Map<String, String> files, int docId, long historyId) throws IOException {
         for (Map.Entry<String, String> entry : files.entrySet()) {
-            Path source = Path.of(Tools.getRealPath(entry.getKey()));
-            Path target = Path.of(Tools.getRealPath(entry.getValue()));
-            Files.createDirectories(target.getParent());
-            Path backup = Path.of(Tools.getRealPath(PlannedAssetPaths.ROOT + docId + "/backup/" + historyId + entry.getValue()));
-            if (Files.exists(target) && !Files.exists(backup)) {
-                Files.createDirectories(backup.getParent());
-                Files.copy(target, backup, StandardCopyOption.COPY_ATTRIBUTES);
-                IwcmFsDB.saveFileHistory(new IwcmFile(target.toFile()), false);
+            IwcmFile sourceFile = IwcmFile.fromVirtualPath(entry.getKey());
+            IwcmFile targetFile = IwcmFile.fromVirtualPath(entry.getValue());
+            IwcmFile backupFile = IwcmFile.fromVirtualPath(PlannedAssetPaths.ROOT + docId + "/backup/" + historyId + entry.getValue());
+            if (targetFile.exists() && !backupFile.exists()) {
+                copyAsset(targetFile, backupFile, true);
+                IwcmFsDB.saveFileHistory(targetFile, false);
             }
-            Path temporary = Files.createTempFile(source.getParent(), ".publishing-", ".tmp");
-            try {
-                Files.copy(source, temporary, StandardCopyOption.REPLACE_EXISTING);
-                Files.setLastModifiedTime(temporary, FileTime.fromMillis(System.currentTimeMillis()));
-                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-                invalidateAsset(entry.getValue());
-            } finally {
-                Files.deleteIfExists(temporary);
+            copyAsset(sourceFile, targetFile, false);
+            invalidateAsset(entry.getValue());
+        }
+    }
+
+    /**
+     * Copies an asset without consuming its source, staging complete content before replacement.
+     *
+     * <p>Local destinations use a temporary file beside the target and an atomic move.
+     * S3 destinations use {@link FileTools#copyFile(IwcmFile, IwcmFile)}, which aborts
+     * incomplete writes. Missing destination directories are created.</p>
+     *
+     * @param source existing local or S3 file to copy
+     * @param target local or S3 destination to replace after a complete transfer
+     * @param preserveTimestamp preserves the source timestamp for local-to-local backups when true;
+     *        false gives local copies the publication time; S3 timestamps are not preserved
+     * @throws IOException if copying, directory creation, atomic replacement or temporary-file cleanup fails
+     * @throws UncheckedIOException if opening an S3 source fails for a local destination
+     */
+    private void copyAsset(IwcmFile source, IwcmFile target, boolean preserveTimestamp) throws IOException {
+        if (target.isS3()) {
+            if (!FileTools.copyFile(source, target)) throw new IOException("Cannot publish planned asset " + target.getVirtualPath());
+            return;
+        }
+        Path destination = Path.of(target.getPath());
+        Files.createDirectories(destination.getParent());
+        Path temporary = Files.createTempFile(destination.getParent(), ".publishing-", ".tmp");
+        try {
+            if (source.isS3()) {
+                try (IwcmInputStream input = new IwcmInputStream(source)) {
+                    Files.copy(input, temporary, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } else {
+                Files.copy(Path.of(source.getPath()), temporary, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
             }
+            if (!preserveTimestamp) Files.setLastModifiedTime(temporary, FileTime.fromMillis(System.currentTimeMillis()));
+            Files.move(temporary, destination, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(temporary);
         }
     }
 }

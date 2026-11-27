@@ -12,6 +12,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
@@ -35,9 +36,12 @@ import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.util.FsServiceUtils;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
+/** Verifies upload destination permissions and protection of original content in {@link UploadCommandExecutor}. */
 class UploadCommandExecutorReadOnlyTest extends BaseWebjetTest {
 
     /** The explorer represents its root folder with an empty volume-relative path. */
@@ -266,6 +270,33 @@ class UploadCommandExecutorReadOnlyTest extends BaseWebjetTest {
         assertEquals("original", Files.readString(targetFile));
         assertTrue(json.has("error"));
         assertEquals(0, ((Object[]) json.get("added")).length);
+    }
+
+    /** Verifies that a failed backup reports an error, preserves the original and discards the unread upload. */
+    @Test
+    void shouldKeepOriginalWhenBackupFails(@TempDir Path tempDir) throws Exception {
+        Path original = Files.writeString(tempDir.resolve("existing.txt"), "original");
+        FsService service = mock(FsService.class);
+        FsItemEx folder = writableFilesFolder();
+        FileItem<?> upload = mock(FileItem.class);
+        MockHttpServletRequest request = uploadRequest(Map.of("existing.txt", upload));
+        request.addParameter("renames[]", "existing.txt");
+        JSONObject response = new JSONObject();
+        try (var finder = mockStatic(FsServiceUtils.class);
+             var currentUser = mockCurrentUser();
+             var tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+             var copies = mockStatic(FileTools.class, CALLS_REAL_METHODS);
+             var destinations = mockDestinations(new AtomicReference<>())) {
+            finder.when(() -> FsServiceUtils.findItem(service, "filesHash")).thenReturn(folder);
+            tools.when(() -> Tools.getRealPath("/files/existing.txt")).thenReturn(original.toString());
+            tools.when(() -> Tools.getRealPath("/files/existing-1.txt")).thenReturn(tempDir.resolve("existing-1.txt").toString());
+            copies.when(() -> FileTools.copyTree(any(IwcmFile.class), any(IwcmFile.class))).thenReturn(false);
+            new UploadCommandExecutor().execute(service, request, null, response);
+        }
+        assertTrue(response.has("error"), response.toString());
+        assertEquals("original", Files.readString(original));
+        verify(upload, never()).getInputStream();
+        verify(upload).delete();
     }
 
     private FsItemEx writableFilesFolder() throws Exception {

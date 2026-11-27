@@ -325,6 +325,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Iné menšie zmeny
 
+- Súbory a obrázky možno ukladať do [S3 úložiska](install/s3-storage.md). Integrácia podporuje upload po častiach, aktualizáciu vybraného súboru, históriu, zálohu pri kolízii názvov, galériu, vodotlač, konverziu videí, náhľady a plánované publikovanie chránených súborov; pre lokálny vývoj je pripravený Docker so SeaweedFS (#58886).
+
 - Monitorovanie servera - v aktuálnych hodnotách bola pridaná sekcia [Kódovanie znakov](sysadmin/monitoring/README.md#kódovanie-znakov), ktorá zobrazuje kódovanie HTTP odpovedí, JVM a locale prostredie bežiaceho procesu aplikačného servera (#305).
 - Konfigurácia - pridaný hierarchický strom konfiguračných premenných s pohľadmi **Zmenené**, **Zákaznícke**, **Všetky** a modulovými vetvami (#293).
 - Konfigurácia - premenné sa vo všetkých vetvách stromu predvolene radia podľa názvu od A po Z, takže po úprave hodnoty zostane premenná na svojom mieste. Ak máte uložené vlastné radenie, má prednosť v celom strome.

@@ -178,12 +178,16 @@ public class ImageTools
 			iwparam = writeParam;
 		}
 
-		try (IwcmOutputStream out = new IwcmOutputStream(outputFile);
-			 ImageOutputStream ios = ImageIO.createImageOutputStream(out))
+		try (IwcmOutputStream out = new IwcmOutputStream(outputFile))
 		{
-			writer.setOutput(ios);
-			writer.write(null, new IIOImage(image, null, null), iwparam);
-			ios.flush();
+			try (ImageOutputStream ios = ImageIO.createImageOutputStream(out)) {
+				writer.setOutput(ios);
+				writer.write(null, new IIOImage(image, null, null), iwparam);
+				ios.flush();
+			} catch (Exception ex) {
+				try { out.abort(); } catch (IOException cleanup) { ex.addSuppressed(cleanup); }
+				throw ex;
+			}
 			return 0;
 		}
 		catch (Exception ex)
@@ -516,8 +520,8 @@ public class ImageTools
 	}
 
 	/**
-	 * Processes an image through ImageMagick and copies the staged output to local or database storage.
-	 * Database input is first copied to disk.
+	 * Processes an image through ImageMagick and copies the staged output to local, database or S3 storage.
+	 * Remote input is first copied to disk.
 	 * @param from source image
 	 * @param to destination image; may be the source
 	 * @param args arguments with from/to placeholders; the supplied list is not modified
@@ -528,7 +532,17 @@ public class ImageTools
 		return executeImageMagick(from, to, args, FileTools.getFileExtension(to.getName()));
 	}
 
-	/** Uses an explicit output format when encoding pixels into a destination with a different suffix. */
+	/**
+	 * Runs ImageMagick with local staging files and an explicit output format.
+	 * Remote input is downloaded first, and completed output is copied to the destination backend.
+	 *
+	 * @param from source image
+	 * @param to destination image, which may also be the source
+	 * @param args command arguments with from/to placeholders; the supplied list is not modified
+	 * @param outputFormat encoding format, independent of the destination suffix
+	 * @return 0 on success, 2 for staging/save or AVIF failures, 3 for other native processing failures,
+	 *         or -1 for another execution or I/O failure
+	 */
 	private static int executeImageMagick(IwcmFile from, IwcmFile to, List<String> args, String outputFormat) {
 		boolean avif = "avif".equalsIgnoreCase(outputFormat);
 		args = new ArrayList<>(args);
@@ -536,19 +550,19 @@ public class ImageTools
 		int fromIndex = args.indexOf("from");
 		int toIndex = args.indexOf("to");
 
-		boolean fromDB = IwcmFsDB.useDBStorage(from.getVirtualPath());
-		// AVIF pixel encoding starts with a local PNG, even when the destination is stored in DB.
-		if (fromDB || IwcmFsDB.useDBStorage(to.getVirtualPath()))
+		boolean remoteSource = from.isRemote();
+		// AVIF pixel encoding starts with a local PNG, including remote destinations.
+		if (remoteSource || to.isRemote())
 		{
 			String temporaryFrom = null;
 			String temporaryTo = null;
 			try
 			{
-				temporaryFrom = fromDB ? IwcmFsDB.getTempFilePath(getTempFilePath(from.getPath())) : from.getAbsolutePath();
-				temporaryTo = IwcmFsDB.getTempFilePath(getTempFilePath(to.getPath()));
+				temporaryFrom = remoteSource ? java.nio.file.Files.createTempFile("webjet-image-source-", "." + FileTools.getFileExtension(from.getName())).toString() : from.getAbsolutePath();
+				temporaryTo = java.nio.file.Files.createTempFile("webjet-image-result-", "." + outputFormat).toString();
 
-				//write DB input to disk; the PNG intermediate is already a local file
-				if (fromDB) IwcmFsDB.writeFileToDisk(new File(from.getAbsolutePath()), new File(temporaryFrom), true);
+				// Stage remote input; a local PNG intermediate can be used directly.
+				if (remoteSource && !FileTools.copyFile(from, new IwcmFile(temporaryFrom))) return 2;
 
 				if (fromIndex != -1) args.set(fromIndex, temporaryFrom);
 				if (toIndex != -1) args.set(toIndex, temporaryTo);
@@ -556,7 +570,7 @@ public class ImageTools
 				int result = executeImageMagickCommand(args, outputFormat);
 				if (result == 0)
 				{
-					// IwcmFile selects the destination storage, including local PNG -> DB AVIF conversion.
+					// Publish the completed conversion through the destination storage.
 					return FileTools.copyFile(new IwcmFile(temporaryTo), to) ? 0 : 2;
 				}
 				return result;
@@ -567,7 +581,7 @@ public class ImageTools
 			}
 			finally
 			{
-				if (fromDB) deleteImageMagickTemporaryFile(temporaryFrom);
+				if (remoteSource) deleteImageMagickTemporaryFile(temporaryFrom);
 				deleteImageMagickTemporaryFile(temporaryTo);
 			}
 		}
@@ -991,15 +1005,28 @@ public class ImageTools
 	}
 
 	/**
-	 * Skonvertuje fotku do RGB ak je v CMYK, ak je konverzia povolena.
+	 * Converts a CMYK image to RGB when conversion, ImageMagick and color profiles are configured.
+	 * S3 images are processed through a temporary local copy and then written back.
 	 *
-	 * @param filePath
+	 * @param filePath physical path used to resolve the image and its storage backend
 	 */
 	public static void convertCmykToRgb(String filePath)
 	{
 		if (Constants.getBoolean("galleryConvertCmykToRgb") == false)
 			return;
 
+		IwcmFile source = new IwcmFile(filePath);
+		if (source.isS3()) {
+			java.nio.file.Path temporary = null;
+			try {
+				temporary = java.nio.file.Files.createTempFile("webjet-cmyk-", "." + FileTools.getFileExtension(source.getName()));
+				if (!FileTools.copyFile(source, new IwcmFile(temporary))) return;
+				convertCmykToRgb(temporary.toString());
+				if (!FileTools.copyFile(new IwcmFile(temporary), source)) throw new IOException("Could not save CMYK conversion");
+			} catch (IOException ex) { Logger.error(ex); }
+			finally { if (temporary != null) deleteImageMagickTemporaryFile(temporary.toString()); }
+			return;
+		}
 		String imageMagickDir = getImageMagicDir();
 		boolean isCmyk = false;
 		boolean identifyExist = false;

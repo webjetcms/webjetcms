@@ -254,15 +254,18 @@ public class AdminUploadServlet extends HttpServlet
                         outputFile = new IwcmFile(File.createTempFile(random, "."+extension, tempFolder));
                         fos = new IwcmOutputStream(outputFile);
                     }
-                    try (IwcmOutputStream assembled = fos) {
+                    try {
                         for (String chunkPath : holder.getPartPaths()) {
-                            File inputFile = new File(chunkPath);
-                            try (FileInputStream input = new FileInputStream(inputFile)) {
-                                input.transferTo(assembled);
+                            try (FileInputStream input = new FileInputStream(chunkPath)) {
+                                input.transferTo(fos);
                             }
-                            inputFile.delete();
                         }
+                    } catch (Exception ex) {
+                        try { fos.abort(); } catch (IOException cleanup) { ex.addSuppressed(cleanup); }
+                        throw ex;
                     }
+                    fos.close();
+                    for (String chunkPath : holder.getPartPaths()) new File(chunkPath).delete();
 
                     if (isBase64) {
                         imageResult = decodeBase64File(outputFile);
@@ -359,11 +362,12 @@ public class AdminUploadServlet extends HttpServlet
 
     /**
      * Moves a temporary upload to its final destination, replacing an existing file if necessary.
+     * Existing S3 content is retained until the replacement is copied successfully.
      *
      * @param fileKey unique key of the temporary upload
      * @param destinationFolder virtual path of the destination folder, for example {@code /images/gallery/}
      * @param fileNameParam requested destination file name
-     * @return the final file name, or {@code null} when the temporary file was not moved
+     * @return final file name, or null when the upload key or temporary file is unavailable
      * @throws IOException when the file cannot be moved
      */
     public static String moveAndReplaceFile(String fileKey, String destinationFolder, String fileNameParam) throws IOException
@@ -384,12 +388,12 @@ public class AdminUploadServlet extends HttpServlet
             if (!file.exists()) return null;
             IwcmFile dest = new IwcmFile(dirFile.getAbsolutePath(), fileName);
 
-            if (dest.exists()) {
+            if (dest.exists() && !dest.isS3()) {
                 dest.delete();
             }
 
             Logger.debug(AdminUploadServlet.class, "Moving file "+file.getAbsolutePath()+" to "+dest.getAbsolutePath());
-            FileTools.moveFile(file, dest);
+            if (!FileTools.moveFile(file, dest)) throw new IOException("Could not save upload to " + dest.getVirtualPath());
             Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload (xhr), path=" + dest.getVirtualPath(), -1, 1);
 
             return fileName;

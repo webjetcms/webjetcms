@@ -103,10 +103,14 @@ public class FilePathTools
 	}
 
 	/**
-	 * Vrati meno adresara pre aktualnu domenu (bez celej cesty)
-	 * @return
+	 * Builds the relative storage folder for a domain without adding the storage root.
+	 * Multidomain mode lowercases the name and removes {@code www.}; cloud installations also
+	 * prepend a three-level prefix derived from the first three characters.
+	 *
+	 * @param domain domain name; must be non-null when multidomain mode is enabled
+	 * @return relative domain folder, or {@code defaulthost} when multidomain mode is disabled
 	 */
-	private static String getDomainFolderName(String domain)
+	public static String getDomainFolderName(String domain)
 	{
 		if (Constants.getBoolean("multiDomainEnabled")==false)
 		{
@@ -162,13 +166,15 @@ public class FilePathTools
 	}
 
 	/**
-	 * Zapise dany subor na vystup vratane riesenia RANGE http hlavicky a odpovede
-	 * nastavi korektne aj content-type, riesi if-modified-since hlavicku
-	 * @param f
-	 * @param req
-	 * @param res
-	 * @return
-	 * @throws IOException
+	 * Serves a file with content type, conditional-request and byte-range handling.
+	 * JSP and class files are excluded. Client disconnects count as handled; S3 serving failures
+	 * produce a 503 response when the response has not yet been committed.
+	 *
+	 * @param f source file in its selected storage backend
+	 * @param req HTTP request containing method and conditional or range headers
+	 * @param res HTTP response receiving headers and file content
+	 * @return true if the request was handled, including client aborts and S3 serving errors;
+	 *         false for an unsuitable file or another unhandled serving failure
 	 */
 	public static boolean writeFileOut(IwcmFile f, HttpServletRequest req, HttpServletResponse res)
 	{
@@ -191,11 +197,18 @@ public class FilePathTools
 					}
 					catch (Exception ex)
 					{
-                        if (ex instanceof IOException || isClientAbortException(ex)) {
+                        if ((!f.isS3() && ex instanceof IOException) || isClientAbortException(ex)) {
                             Logger.debug(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
                             return true;
                         }
                         Logger.error(FilePathTools.class, "Error while sending file to client: " + ex.getMessage());
+                        if (f.isS3()) {
+                            if (!res.isCommitted()) {
+                                res.reset();
+                                res.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                            }
+                            return true;
+                        }
 					}
 			}
 		}

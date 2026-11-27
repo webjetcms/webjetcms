@@ -114,6 +114,18 @@
         },
         {
             "type": "java",
+            "name": "Debug Docker S3",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartDockerS3",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
+        },
+        {
+            "type": "java",
             "name": "Debug Demo DB",
             "request": "attach",
             "hostName": "localhost",

@@ -84,46 +84,20 @@ public class FileTools
 	};
 
 	/**
-	 * Skopiruje subor src do dest
-	 * @param src
-	 * @param dest
-	 * @return
+	 * Copies a file through the CMS storage abstraction, creating missing destination directories.
+	 *
+	 * @param src source file
+	 * @param dest destination file, replaced after a successful transfer when using S3
+	 * @return true if copying and closing succeed, false if an operation fails
 	 */
 	public static boolean copyFile(IwcmFile src, IwcmFile dest)
 	{
-		boolean ret = false;
-		try
-		{
-			Logger.debug(FileTools.class,"copyFile: " + src.getAbsolutePath() + "->" + dest.getAbsolutePath());
-			if (dest.getParentFile().exists()==false)
-			{
-				Logger.debug(FileTools.class,"   creating dir");
-				if(dest.getParentFile().mkdirs() == false) return false;
-			}
-			if (dest.exists()==false)
-			{
-				Logger.debug(FileTools.class,"   creating new file");
-				if(dest.createNewFile() == false) return false;
-			}
-			IwcmInputStream is = new IwcmInputStream(src);
-			IwcmOutputStream os = new IwcmOutputStream(dest);
-			byte[] buff = new byte[8000];
-			int size;
-			while (true)
-			{
-				size = is.read(buff);
-				if (size < 1) break;
-				os.write(buff, 0, size);
-			}
-			os.close();
-			is.close();
-			ret = true;
+		try {
+			return copyFile(new IwcmInputStream(src), dest);
+		} catch (Exception ex) {
+			Logger.error(ex);
+			return false;
 		}
-		catch (Exception e)
-		{
-			sk.iway.iwcm.Logger.error(e);
-		}
-		return(ret);
 	}
 
 	/**
@@ -176,52 +150,55 @@ public class FileTools
 	}
 
 	/**
-	 * Copy InputStream to IwcmFile and close InputStream
-	 * @param is - InputStream
-	 * @param dest
-	 * @return
+	 * Copies a stream into a CMS file and closes the supplied input, including on failure.
+	 * A failed transfer aborts S3 publication; local and database writes are not rolled back.
+	 *
+	 * @param is source stream owned and closed by this method
+	 * @param dest destination file whose missing parent directories are created
+	 * @return true if copying and closing succeed, false if an operation fails
 	 */
 	public static boolean copyFile(InputStream is, IwcmFile dest)
 	{
-		boolean ret = false;
-		try
-		{
-			Logger.debug(FileTools.class,"copyFile: MultipartFile/InputStreamSource to " + dest.getAbsolutePath());
-			if (dest.getParentFile().exists()==false)
-			{
-				Logger.debug(FileTools.class,"   creating dir");
-				if(dest.getParentFile().mkdirs() == false) return false;
+		try (InputStream input = is) {
+			IwcmFile parent = dest.getParentFile();
+			if (!parent.exists() && !parent.mkdirs() && !parent.isDirectory()) return false;
+			IwcmOutputStream output = new IwcmOutputStream(dest);
+			try {
+				input.transferTo(output);
+			} catch (Exception ex) {
+				try { output.abort(); } catch (IOException cleanup) { ex.addSuppressed(cleanup); }
+				throw ex;
 			}
-			if (dest.exists()==false)
-			{
-				Logger.debug(FileTools.class,"   creating new file");
-				if(dest.createNewFile() == false) return false;
-			}
+			output.close();
+			return true;
+		} catch (Exception ex) {
+			Logger.error(ex);
+			return false;
+		}
+	}
 
-			try
-			{
-				IwcmOutputStream os = new IwcmOutputStream(dest);
-				try
-				{
-					byte[] buff = new byte[8000];
-					int size;
-					while (true)
-					{
-						size = is.read(buff);
-						if (size < 1) break;
-						os.write(buff, 0, size);
-					}
-				}
-				finally { os.close(); }
-			}
-			finally { is.close(); }
-			ret = true;
+	/**
+	 * Copies a file or directory tree, stopping at the first unsuccessful copy.
+	 * The source is preserved and any targets already copied remain on failure.
+	 *
+	 * @param source source file or directory
+	 * @param destination target file or directory; a directory target must not be inside the source
+	 * @return true if the entire copy succeeds, false for a missing source, invalid target or failed copy
+	 */
+	public static boolean copyTree(IwcmFile source, IwcmFile destination) {
+		if (!source.exists()) return false;
+		if (!source.isDirectory()) return copyFile(source, destination);
+		String sourcePath = source.getCanonicalPath();
+		String destinationPath = destination.getCanonicalPath();
+		if (destinationPath.equals(sourcePath) || destinationPath.startsWith(sourcePath + File.separator)) return false;
+		if (!destination.exists() && !destination.mkdirs() && !destination.isDirectory()) return false;
+		if (!destination.isDirectory()) return false;
+		IwcmFile[] children = source.listFiles();
+		if (children == null) return false;
+		for (IwcmFile child : children) {
+			if (!copyTree(child, new IwcmFile(destination, child.getName()))) return false;
 		}
-		catch (Exception e)
-		{
-			sk.iway.iwcm.Logger.error(e);
-		}
-		return(ret);
+		return true;
 	}
 
 	/**
@@ -239,10 +216,12 @@ public class FileTools
 	}
 
 	/**
-	 * Presunie subor, ak sa presun nepodari na urovni FS pokusi sa subor prekopirovat a povodny zmazat
-	 * @param origFile
-	 * @param destFile
-	 * @return
+	 * Moves a file, falling back to copying and then deleting the source if renaming returns false.
+	 * The fallback deletes the source only after a successful copy.
+	 *
+	 * @param origFile source file
+	 * @param destFile destination file
+	 * @return true if renaming succeeds or both fallback copying and deletion succeed
 	 */
 	public static boolean moveFile(IwcmFile origFile, IwcmFile destFile)
 	{
@@ -257,7 +236,7 @@ public class FileTools
 			Logger.debug(FileTools.class, "moveFile "+origFile.getAbsolutePath()+" to "+destFile.getAbsolutePath()+" fail, trying copy");
 
 			//premenovanie sa nepodarilo, subor moze byt locknuty, sprav kopiu
-			copyFile(origFile, destFile);
+			if (!copyFile(origFile, destFile)) return false;
 			boolean deleted = origFile.delete();
 
 			Logger.debug(FileTools.class, "moveFile "+origFile.getAbsolutePath()+" deleted="+deleted);
@@ -283,10 +262,13 @@ public class FileTools
     }
 
     /**
-     * Zmaze v adresarovej strukture subory starsie ako zadany pocet milisekund, zmaze aj prazdne adresare
-     * @param file
-     * @param minFileAge
-     * @return
+     * Recursively deletes files older than the requested age and removes emptied directories.
+     * Retained young files and failed operations prevent a successful result; implicit S3 directories
+     * that disappear after their last child is deleted count as removed.
+     *
+     * @param file directory to clean; null and non-directory inputs require no action
+     * @param minFileAge minimum age in milliseconds; nonpositive values delete files regardless of age
+     * @return true if no file was retained and no attempted operation failed
      */
 	public static boolean deleteDirTree(IwcmFile file, long minFileAge)
 	{
@@ -311,13 +293,13 @@ public class FileTools
 						f = files[i];
 						if (f.isDirectory())
 						{
-							result = deleteDirTree(f, minFileAge);
+							result = deleteDirTree(f, minFileAge) && result;
 						}
 						else
 						{
 						    if (minFileAge<1 || f.lastModified() < minLastModified)
                             {
-                                result = f.delete();
+                                result = f.delete() && result;
                                 if (f.getVirtualPath().startsWith("/files"))
                                 {
                                     //vymazanie full text indexu
@@ -330,12 +312,13 @@ public class FileTools
                             }
 						}
 					}
-					if (result) result = file.delete();
+					if (result) result = (file.isS3() && !file.exists()) || file.delete();
 				}
 			}
 			catch (Exception e)
 			{
 				sk.iway.iwcm.Logger.error(e);
+				result = false;
 			}
 		}
 		return (result);

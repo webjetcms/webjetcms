@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.text.SimpleDateFormat;
@@ -21,15 +23,17 @@ import org.apache.commons.lang3.StringUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.editor.UploadFileForm;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFsDB;
+import sk.iway.iwcm.io.IwcmFile;
 
 /**
- * VideoConvert.java - trieda pre konverziu video suborov
+ * Converts videos and creates previews with native media tools, staging S3 files locally when required.
  *
  *@Title webjet4
  *@Company Interway s.r.o. (www.interway.sk)
@@ -53,11 +57,28 @@ public class VideoConvert
 		return convert("flv", sourceUrl, destinationUrl, width, height, bitRate, keepOrig, request);
 	}
 
+	/**
+	 * Converts a video and generates previews, staging S3 inputs and outputs in a private temporary directory.
+	 * The original is removed only after all requested variants have been published successfully.
+	 *
+	 * @param format output video format
+	 * @param sourceUrl CMS path of the source video
+	 * @param destinationUrl CMS output path; dimension suffixes are added for each variant
+	 * @param width requested width outside gallery folders
+	 * @param height requested height outside gallery folders
+	 * @param bitRate output bitrate in kilobits per second
+	 * @param keepOrig whether to retain the source after conversion
+	 * @param request request receiving conversion progress in its session
+	 * @return whether conversion and publication completed successfully
+	 */
 	public static boolean convert(String format, String sourceUrl, String destinationUrl, int width, int height, int bitRate, boolean keepOrig,
 				HttpServletRequest request)
 	{
 		Dimension[] dims = null;
 		String flvFilename = null;
+		IwcmFile source = IwcmFile.fromVirtualPath(sourceUrl);
+		boolean s3 = source.isS3() || IwcmFile.fromVirtualPath(destinationUrl).isS3();
+		Path staging = null;
 		if (GalleryDB.isGalleryFolder(destinationUrl))
 		{
 			dims = GalleryDB.getDimension(destinationUrl);
@@ -82,6 +103,11 @@ public class VideoConvert
 		try
 		{
 			String videoPath = Tools.getRealPath(sourceUrl);
+			if (s3) {
+				staging = Files.createTempDirectory("webjet-video-");
+				videoPath = staging.resolve("source." + FileTools.getFileExtension(source.getName())).toString();
+				if (!FileTools.copyFile(source, new IwcmFile(videoPath))) return false;
+			}
 			int originalBitRate = bitRate;
 			for (int y = 0; y < dims.length; y++)
 			{
@@ -98,11 +124,14 @@ public class VideoConvert
 				File f = new File(ffmpegPath);
 				if (f.exists() == false || f.isFile() == false || f.canRead() == false)
 					return false;
-				flvFilename = Tools.getRealPath(
+				String destinationPath = Tools.getRealPath(
 							destinationUrl.substring(0, destinationUrl.lastIndexOf('.')) + "." + d.width + "x" + d.height
 										+ destinationUrl.substring(destinationUrl.lastIndexOf('.'), destinationUrl.length()));
+				flvFilename = destinationPath;
 				Runtime rt = Runtime.getRuntime();
-				if (IwcmFsDB.useDBStorage(sourceUrl))
+				if (s3) {
+					flvFilename = staging.resolve(new File(flvFilename).getName()).toString();
+				} else if (IwcmFsDB.useDBStorage(sourceUrl))
 				{
 					videoPath = IwcmFsDB.getTempFilePath(videoPath);
 					flvFilename = IwcmFsDB.getTempFilePath(flvFilename);
@@ -224,6 +253,7 @@ public class VideoConvert
 				br.close();
 				int exitValue = proc.waitFor();
 				Logger.println(VideoConvert.class, "ExitValue: " + exitValue);
+				if (exitValue != 0) return false;
 				if (format.toLowerCase().equals("flv") || format.toLowerCase().equals("mp4"))
 				{
 					if (format.toLowerCase().equals("flv"))
@@ -264,6 +294,7 @@ public class VideoConvert
 						br.close();
 						exitValue = proc.waitFor();
 						Logger.println(VideoConvert.class, "ExitValue: " + exitValue);
+						if (exitValue != 0) return false;
 
 					}
 					c = 0;
@@ -313,6 +344,7 @@ public class VideoConvert
 					br.close();
 					exitValue = proc.waitFor();
 					Logger.println(VideoConvert.class, "ExitValue: " + exitValue);
+					if (exitValue != 0) return false;
 					// ffmpeg -i video.flv -an -ss 00:00:03 -t 00:00:01 -r 1 -y -s
 					// 320x240 video%d.jpg
 
@@ -336,13 +368,16 @@ public class VideoConvert
 								.lastIndexOf('.'))
 								+ ".jpg");
 					String imageName=flvFilename.substring(0, flvFilename.lastIndexOf('.'))+ ".jpg";
-					flvFilename = Tools.getRealPath(
-								destinationUrl.substring(0, destinationUrl.lastIndexOf('.')) + "." + d.width + "x" + d.height
-											+ destinationUrl.substring(destinationUrl.lastIndexOf('.'), destinationUrl.length()));
+					flvFilename = destinationPath;
 					// sme galeria?
 					String imageUrl = destinationUrl.substring(0, destinationUrl.lastIndexOf('.')) + "." + d.width + "x" + d.height
 								+ ".jpg";
-					if (IwcmFsDB.useDBStorage(sourceUrl))
+					if (s3) {
+						IwcmFile preview = new IwcmFile(imageName);
+						if (!video.isFile() || !preview.isFile()) return false;
+						if (!FileTools.copyFile(new IwcmFile(video), new IwcmFile(flvFilename)) ||
+							!FileTools.copyFile(preview, IwcmFile.fromVirtualPath(imageUrl))) return false;
+					} else if (IwcmFsDB.useDBStorage(sourceUrl))
 					{
 						IwcmFsDB.writeFiletoDest(new FileInputStream(video), new File(flvFilename), (int) video.length());// zapiseme
 						video.delete();
@@ -357,19 +392,26 @@ public class VideoConvert
 						GalleryDB.resizePicture(Tools.getRealPath(imageUrl), imageUrl.substring(0, imageUrl
 									.lastIndexOf('/')));
 					}
+				} else if (s3 && !FileTools.copyFile(new IwcmFile(flvFilename), new IwcmFile(destinationPath))) {
+					return false;
 				}
 			}
 
 			if(keepOrig==false)
 			{
-				if(new File(videoPath).delete() == false) return false; // vymazanie orig. video suboru
+				if (s3 ? !source.delete() : !new File(videoPath).delete()) return false;
 			}
 		}
 		catch (Exception ex)
 		{
 			sk.iway.iwcm.Logger.error(ex);
+			if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
+			return false;
 		}
-		request.getSession().removeAttribute("uploadProgressMessage");
+		finally {
+			if (staging != null && !FileTools.deleteDirTree(new IwcmFile(staging))) Logger.error(VideoConvert.class, "Cannot delete video staging directory: " + staging);
+			request.getSession().removeAttribute("uploadProgressMessage");
+		}
 		return true;
 	}
 
@@ -563,11 +605,12 @@ public class VideoConvert
 	}
 
 	/**
-	 * Skonveruje uploadnuty subor na video, pouziva sa v Editore v uploade a v galerii v uploade
-	 * @param my_form
-	 * @param fileURL
-	 * @param request
-	 * @return
+	 * Converts an uploaded video using editor or gallery settings and returns the selected variant.
+	 *
+	 * @param my_form requested dimensions, bitrate and original retention; invalid sizes are normalized
+	 * @param fileURL CMS source path
+	 * @param request request receiving progress and selected image dimensions
+	 * @return converted video URL, or null when conversion or publication fails
 	 */
 	public static String convert(UploadFileForm my_form, String fileURL, HttpServletRequest request)
 	{
@@ -596,7 +639,7 @@ public class VideoConvert
 			}
 		}
 
-		VideoConvert.convert( Constants.getString("defaultVideoFormat"),fileURL, flvUrl, my_form.getVideoWidth(), my_form.getVideoHeight(),my_form.getBitRate(),my_form.isKeepOriginalVideo(), request);
+		if (!VideoConvert.convert(Constants.getString("defaultVideoFormat"), fileURL, flvUrl, my_form.getVideoWidth(), my_form.getVideoHeight(), my_form.getBitRate(), my_form.isKeepOriginalVideo(), request)) return null;
 
 		if (GalleryDB.isGalleryFolder(flvUrl))
 		{
@@ -697,11 +740,27 @@ public class VideoConvert
 		return false;
 	}
 
+	/**
+	 * Creates a JPEG preview beside the video, staging S3 files locally for ffmpeg.
+	 *
+	 * @param videoPath physical video path used to resolve CMS storage
+	 * @param d optional preview dimensions; null retains the source dimensions
+	 * @return physical preview path, or null if processing or publication fails
+	 * @throws IOException retained for compatibility with existing callers; processing failures are logged
+	 * @throws InterruptedException retained for compatibility; interruption restores the thread's interrupt flag
+	 */
 	public static String makeScreenshot(String videoPath, Dimension d) throws IOException, InterruptedException
 	{
 	    String imageName = null;
+	    IwcmFile source = new IwcmFile(videoPath);
+	    Path staging = null;
 	    try
         {
+            if (source.isS3()) {
+                staging = Files.createTempDirectory("webjet-video-preview-");
+                videoPath = staging.resolve(source.getName()).toString();
+                if (!FileTools.copyFile(source, new IwcmFile(videoPath))) return null;
+            }
             String flvFilename = videoPath;
 
             List<String> arguments = new ArrayList<String>();
@@ -745,6 +804,7 @@ public class VideoConvert
             br.close();
             int exitValue = proc.waitFor();
             Logger.println(VideoConvert.class, "ExitValue: " + exitValue);
+            if (exitValue != 0) return null;
             // ffmpeg -i video.flv -an -ss 00:00:03 -t 00:00:01 -r 1 -y -s
             // 320x240 video%d.jpg
 
@@ -760,10 +820,21 @@ public class VideoConvert
                     .lastIndexOf('.'))
                     + ".jpg");
             imageName = flvFilename.substring(0, flvFilename.lastIndexOf('.')) + ".jpg";
+            if (!new File(imageName).isFile()) return null;
+            if (source.isS3()) {
+                IwcmFile target = new IwcmFile(source.getPath().substring(0, source.getPath().lastIndexOf('.')) + ".jpg");
+                if (!FileTools.copyFile(new IwcmFile(imageName), target)) return null;
+                imageName = target.getPath();
+            }
         }
         catch (Exception ex)
         {
             sk.iway.iwcm.Logger.error(ex);
+            if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
+            return null;
+        }
+        finally {
+            if (staging != null && !FileTools.deleteDirTree(new IwcmFile(staging))) Logger.error(VideoConvert.class, "Cannot delete video staging directory: " + staging);
         }
 		return imageName;
 	}

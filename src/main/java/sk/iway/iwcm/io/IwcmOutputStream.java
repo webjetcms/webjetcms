@@ -11,10 +11,12 @@ import java.util.Date;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.s3.S3OutputStream;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
- * IwcmOutputStream.java
+ * Writes CMS files to local, database or S3 storage.
+ * S3 content is staged locally and published on close; abort a failed source copy to discard its staged data.
  *
  *@Title webjet4
  *@Company Interway s.r.o. (www.interway.sk)
@@ -31,29 +33,31 @@ public class IwcmOutputStream extends OutputStream
 	private byte[] buffer = null;
 	private int bufferStep = 0;
 	private FileOutputStream out = null;
+	private S3OutputStream s3Output;
 	private boolean useDBStorage = false; // ak je false zapisuje sa na disk,ak
 	private boolean fileCreated = false;
 
 	// true do db storage
-	public IwcmOutputStream(File file) throws IOException
-	{
-		useDBStorage = IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(file.getPath()));
-		if (useDBStorage)
-		{
-			buffer=new byte[IwcmFsDB.getBlockSize()];
-			this.file = new IwcmFile(file);
-		}
-		else
-		{
-			//new IwcmFile(file).delete();file.createNewFile();
-			if (file.exists()==false) file.createNewFile();
-			out = new FileOutputStream(file);
-		}
+	public IwcmOutputStream(File file) throws IOException {
+		this(new IwcmFile(file));
 	}
 
-	public IwcmOutputStream(IwcmFile file) throws IOException
-	{
-		this(new File(file.getPath()));
+	/**
+	 * Opens an output stream using the file's selected storage backend.
+	 * Local files are truncated immediately; S3 objects are replaced only when the stream closes successfully.
+	 *
+	 * @param file destination with its captured storage context
+	 * @throws IOException if the local output or S3 staging file cannot be opened
+	 */
+	public IwcmOutputStream(IwcmFile file) throws IOException {
+		this.file = file;
+		if (file.isS3()) {
+			s3Output = new S3OutputStream(file.s3Storage(), file.s3Key());
+			return;
+		}
+		useDBStorage = IwcmFsDB.useDBStorage(file.getVirtualPath());
+		if (useDBStorage) buffer = new byte[IwcmFsDB.getBlockSize()];
+		else out = new FileOutputStream(file.getPath());
 	}
 
 	public IwcmOutputStream(String filename) throws IOException
@@ -61,8 +65,22 @@ public class IwcmOutputStream extends OutputStream
 		this(filename, false);
 	}
 
+	/**
+	 * Resolves a destination path and opens its configured storage for writing.
+	 * Existing local files are deleted and recreated; S3 content is staged until close.
+	 *
+	 * @param filename destination path
+	 * @param isVirtualPath true for a CMS path, false for a physical filesystem path
+	 * @throws IOException if replacing the local file or opening the output or staging file fails
+	 */
 	public IwcmOutputStream(String filename, boolean isVirtualPath) throws IOException
 	{
+		IwcmFile destination = new IwcmFile(isVirtualPath ? Tools.getRealPath(filename) : filename);
+		if (destination.isS3()) {
+			this.file = destination;
+			s3Output = new S3OutputStream(destination.s3Storage(), destination.s3Key());
+			return;
+		}
 		if (isVirtualPath)
 		{
 			useDBStorage = IwcmFsDB.useDBStorage(filename);
@@ -114,9 +132,21 @@ public class IwcmOutputStream extends OutputStream
 		}
 	}
 
+	/**
+	 * Discards an incomplete S3 write, or closes a local or database stream normally.
+	 * Local and database writes are not rolled back; closing a database stream persists its remaining buffer.
+	 *
+	 * @throws IOException if closing the stream or cleaning up S3 staging fails
+	 */
+	public void abort() throws IOException {
+		if (s3Output != null) s3Output.abort();
+		else close();
+	}
+
 	@Override
 	public void write(int in) throws IOException
 	{
+		if (s3Output != null) { s3Output.write(in); return; }
 		if (useDBStorage)
 		{
 			if (bufferStep < IwcmFsDB.getBlockSize())
@@ -140,6 +170,7 @@ public class IwcmOutputStream extends OutputStream
 	@Override
 	public void write(byte[] in) throws IOException
 	{
+		if (s3Output != null) { s3Output.write(in); return; }
 		if (useDBStorage)
 		{
 			for (int i = 0; i < in.length; i++)
@@ -166,6 +197,7 @@ public class IwcmOutputStream extends OutputStream
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException
 	{
+		if (s3Output != null) { s3Output.write(b, off, len); return; }
 		if (useDBStorage)
 		{
 			for (int i = off; i < off + len; i++)
@@ -189,9 +221,22 @@ public class IwcmOutputStream extends OutputStream
 		}
 	}
 
+	/**
+	 * Completes the write and releases the output resources.
+	 * S3 uploads staged content and saves file history once after publication. Database storage saves
+	 * the final block, and local storage closes its output and saves file history.
+	 *
+	 * @throws IOException if local closing or S3 publication or cleanup fails
+	 */
 	@Override
 	public void close() throws IOException
 	{
+		if (s3Output != null) {
+			boolean published = s3Output.isPublished();
+			s3Output.close();
+			if (!published && s3Output.isPublished()) IwcmFsDB.saveFileHistory(file, false);
+			return;
+		}
 		if (useDBStorage)
 		{
 			if (buffer == null)
@@ -264,9 +309,16 @@ public class IwcmOutputStream extends OutputStream
 		}
 	}
 
+	/**
+	 * Flushes local output or S3 staging without publishing S3 content.
+	 * Database buffers are not flushed by this call.
+	 *
+	 * @throws IOException if flushing the underlying output fails
+	 */
 	@Override
 	public void flush() throws IOException
 	{
+		if (s3Output != null) { s3Output.flush(); return; }
 		if (!useDBStorage)
 		{
 			out.flush();

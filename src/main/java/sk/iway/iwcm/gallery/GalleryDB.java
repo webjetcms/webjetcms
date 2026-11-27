@@ -2047,17 +2047,16 @@ public class GalleryDB
 	}
 
 	/**
-	 * Skopiruje subor oldFilePath na newFilePath
+	 * Copies a gallery file, using the CMS copier when either endpoint is stored in S3.
 	 *
-	 *@param oldFilePath
-	 *           Description of the Parameter
-	 *@param newFilePath
-	 *           Description of the Parameter
-	 *@return Description of the Return Value
+	 * @param oldFilePath physical source path used to resolve CMS storage
+	 * @param newFilePath physical destination path
+	 * @return copy result; the legacy database path reports true after delegating to its copier
 	 */
 	public static boolean copyFile(String oldFilePath, String newFilePath)
 	{
 		Logger.debug(GalleryDB.class, "copyFile " + oldFilePath + "->" + newFilePath);
+		if (new IwcmFile(oldFilePath).isS3() || new IwcmFile(newFilePath).isS3()) return FileTools.copyFile(new IwcmFile(oldFilePath), new IwcmFile(newFilePath));
 		if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(oldFilePath)))
 		{
 			IwcmFsDB.copyTo(new IwcmFile(oldFilePath), new IwcmFile(newFilePath));
@@ -2306,10 +2305,23 @@ public class GalleryDB
 		return resizePictureImplWithResult(dims, realPath, out, prop, resizeMode, resizeModeNormal) == 0;
 	}
 
+	/**
+	 * Creates gallery image variants and retains the first processing error.
+	 * Source names beginning with variant prefixes are normalized through the CMS storage abstraction.
+	 *
+	 * @param dims small and large image dimensions, in that order
+	 * @param realPath physical source path used to resolve CMS storage
+	 * @param out optional progress output; messages require a translation provider as well
+	 * @param prop optional translation provider
+	 * @param resizeMode small-image resize mode, or {@code N} to disable variants
+	 * @param resizeModeNormal large-image resize mode; null inherits the small-image mode
+	 * @return 0 if processing succeeds, 2 for a copy or save failure, 4 for unsupported input,
+	 *         or the first other resize error code
+	 */
 	private static int resizePictureImplWithResult(Dimension[] dims, String realPath, PrintWriter out, Prop prop, String resizeMode, String resizeModeNormal)
 	{
 		int ret = 0;
-		File img = new File(realPath);
+		IwcmFile img = new IwcmFile(realPath);
 
 		//uprava pre fotky zacinajuce na o_ alebo s_
 		String imageName = img.getName();
@@ -2319,7 +2331,7 @@ public class GalleryDB
 		}
 		if(!imageName.equals(img.getName()))
 		{
-			File renamedFile = new File(img.getParent()+File.separator+imageName);
+			IwcmFile renamedFile = new IwcmFile(img.getParent()+File.separator+imageName);
 			if(img.renameTo(renamedFile))
 			{
 				img = renamedFile;
@@ -2563,9 +2575,10 @@ public class GalleryDB
 	}
 
 	/**
-	 * Prida vodotlac
+	 * Applies the gallery watermark when enabled and the required ImageMagick command is available.
+	 * Preserves the gallery's original source so variants can be regenerated from it.
 	 *
-	 * @param realPath Absolutna cesta k obrazku, nad ktorym sa bude prevadzat vodotlac
+	 * @param realPath physical image path used to resolve CMS storage
 	 */
 	private static void performWatermarking(String realPath)
 	{
@@ -2576,14 +2589,12 @@ public class GalleryDB
 		if (!Constants.getBoolean("galleryEnableWatermarking")) return;
 
 		boolean shouldPerformWatermarking;
-		if ("avif".equalsIgnoreCase(FileTools.getFileExtension(realPath)))
+		if ("avif".equalsIgnoreCase(FileTools.getFileExtension(realPath)) || new IwcmFile(realPath).isS3())
 		{
-			// AVIF uses magick to apply the watermark to every frame and preserve the animation.
 			shouldPerformWatermarking = ImageTools.existsImageMagickConvertCommand();
 		}
 		else
 		{
-			// Other formats keep using the existing composite command.
 			shouldPerformWatermarking = existImageMagickCompositeCommand();
 		}
 		if (shouldPerformWatermarking)
@@ -2647,10 +2658,11 @@ public class GalleryDB
 	}
 
 	/**
-	 * Samotny kod, ktory sposobi pridanie vodotlace do obrazku. Spolieha
-	 * sa na kniznicu imageMagick a jej program "composite" s parametrom "-watermark"
-	 * Cely prikaz vyzera podobne ako:
-	 *  /usr/bin/composite -watermark 70x70 /watermark.png -gravity SouthWest /dest.jpg /dest.jpg
+	 * Applies a watermark, staging AVIF and S3 assets before publishing the completed image.
+	 * Local non-AVIF images retain the composite command used by existing projects.
+	 *
+	 * @param realPath physical image path used to resolve CMS storage
+	 * @param watermark watermark image, placement and saturation settings
 	 */
 	private static void addWatermarkSignature(String realPath, GalleryDimension watermark)
 	{
@@ -2669,9 +2681,9 @@ public class GalleryDB
 			Logger.debug(GalleryDB.class, "testing S_watermark: "+watermarkPath);
 		}
 
-		if ("avif".equalsIgnoreCase(FileTools.getFileExtension(realPath)))
+		if ("avif".equalsIgnoreCase(FileTools.getFileExtension(realPath)) || imageFile.isS3() || new IwcmFile(watermarkPath).isS3())
 		{
-			addAvifWatermarkSignature(imageFile, watermarkPath, watermark);
+			addStagedWatermarkSignature(imageFile, watermarkPath, watermark);
 			if (imageFile.getName().startsWith("s_"))
 			{
 				String originalPath = imageFile.getParent()+File.separatorChar+imageFile.getName().replace("s_", "");
@@ -2726,17 +2738,24 @@ public class GalleryDB
 		}
 	}
 
-	/** Applies the watermark to every AVIF frame through the staged ImageMagick conversion. */
-	private static void addAvifWatermarkSignature(IwcmFile imageFile, String watermarkPath, GalleryDimension watermark)
+	/**
+	 * Applies the watermark through staged ImageMagick conversion, preserving AVIF frames.
+	 * Database and S3 watermark files are copied to local temporary files; processing failures are logged.
+	 *
+	 * @param imageFile local, database or S3 image to update
+	 * @param watermarkPath physical watermark path used to resolve its CMS storage
+	 * @param watermark placement and saturation settings
+	 */
+	private static void addStagedWatermarkSignature(IwcmFile imageFile, String watermarkPath, GalleryDimension watermark)
 	{
 		File temporaryWatermark = null;
 		try
 		{
 			boolean svg = watermarkPath.toLowerCase().endsWith(".svg");
 			IwcmFile watermarkFile = new IwcmFile(watermarkPath);
-			if (IwcmFsDB.useDBStorage(watermarkFile.getVirtualPath()))
+			if (watermarkFile.isRemote())
 			{
-				temporaryWatermark = File.createTempFile("webjet-avif-watermark-", "."+FileTools.getFileExtension(watermarkPath));
+				temporaryWatermark = File.createTempFile("webjet-watermark-", "."+FileTools.getFileExtension(watermarkPath));
 				IwcmFsDB.writeFileToDisk(new File(watermarkFile.getAbsolutePath()), temporaryWatermark, true);
 				watermarkPath = temporaryWatermark.getAbsolutePath();
 			}
@@ -2753,7 +2772,7 @@ public class GalleryDB
 			args.addAll(List.of(")", "-gravity", watermark.getWatermarkPlacement(), "-compose", "Dissolve", "-define",
 				"compose:args="+watermark.getWatermarkSaturation()+",100", "-layers", "composite", "to"));
 			int result = ImageTools.executeImageMagick(imageFile, args);
-			if (result != 0) Logger.error(GalleryDB.class, "AVIF watermark failed: "+imageFile.getVirtualPath()+", result="+result);
+			if (result != 0) Logger.error(GalleryDB.class, "Watermark failed: "+imageFile.getVirtualPath()+", result="+result);
 		}
 		catch (Exception e){sk.iway.iwcm.Logger.error(e);}
 		finally
@@ -4245,9 +4264,11 @@ public class GalleryDB
 	}
 
 	/**
-	 * Metoda zmaze celu galeriu vratane podadresarov a vsetkych medii v ramci aktualnej domeny
-	 * @param path cesta ku galerii (napr /images/gallery/nejakaGaleria)
-	 * @return true ak sa podari zmazat vsetky media a vratane podadresarov, inak false
+	 * Deletes gallery records and the directory tree in the current domain, including S3 content.
+	 * The gallery root is protected from deletion. Record deletion precedes directory cleanup.
+	 *
+	 * @param path virtual gallery directory, for example {@code /images/gallery/example}
+	 * @return true if directory cleanup succeeds, false for the gallery root, a non-gallery path or cleanup failure
 	 * @throws IllegalArgumentException if path is empty or null
 	 */
 	public static boolean deleteGallery(String path)
@@ -4273,8 +4294,12 @@ public class GalleryDB
 			new SimpleQuery().execute("DELETE from gallery_dimension WHERE image_path LIKE ? "+CloudToolsForCore.getDomainIdSqlWhere(true), path+"%");
 			try{
 				Logger.debug(GalleryDB.class, "Deleting directory: " + Tools.getRealPath(path));
-				FileUtils.deleteDirectory(new File(Tools.getRealPath(path)));
-				success = true;
+				IwcmFile directory = IwcmFile.fromVirtualPath(path);
+				if (directory.isS3()) success = FileTools.deleteDirTree(directory);
+				else {
+					FileUtils.deleteDirectory(new File(Tools.getRealPath(path)));
+					success = true;
+				}
 				Logger.debug(GalleryDB.class, "Gallery "+path+" deleted");
 			}
 			catch(IOException e){
@@ -4432,13 +4457,15 @@ public class GalleryDB
 	}
 
 	/**
-	 * aplikuje na "obrazok" vodotlac podla domeny
-	 * @param obrazok
+	 * Applies the configured domain watermark to an uploaded image, respecting excluded paths.
+	 * S3 and AVIF images require the staged ImageMagick conversion command.
+	 *
+	 * @param obrazok uploaded image in its configured CMS storage
 	 */
 	public static void applyWatermarkOnUpload(IwcmFile obrazok)
 	{
 		if(obrazok == null || obrazok.exists() == false) return;
-		boolean shouldPerformWatermarking = ("avif".equalsIgnoreCase(FileTools.getFileExtension(obrazok.getName()))
+		boolean shouldPerformWatermarking = (("avif".equalsIgnoreCase(FileTools.getFileExtension(obrazok.getName())) || obrazok.isS3())
 				? ImageTools.existsImageMagickConvertCommand() : existImageMagickCompositeCommand())
 				&& Constants.getBoolean("galleryWatermarkApplyOnUpload")
 				&& ImageTools.isResizableImage(obrazok.getName());

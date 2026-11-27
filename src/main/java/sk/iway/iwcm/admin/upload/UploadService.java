@@ -17,12 +17,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
- * Sluzby potrebne pre upload suborov, po volani .process() sa vykonaju vsetky WJ operacie typu
- * - generovania obrazkov galerie
- * - full text index
- * - watermarking obrazku
- * - konverzia CMYK na RGB
- * - video konverzia
+ * Processes uploaded files, including gallery variants, indexing, watermarks and media conversion.
+ * Tracks created and removed URLs for the upload response.
  */
 public class UploadService {
 
@@ -70,9 +66,8 @@ public class UploadService {
     }
 
     /**
-     * vykonaj vsetky potrebne operacie po uploade suborov
-     * - full text index
-     * - galeria
+     * Applies configured media processing, updates the gallery and indexes the uploaded file.
+     * Failed video conversion retains the original in the upload response.
      */
     public void process()
     {
@@ -116,12 +111,11 @@ public class UploadService {
                 }
                 */
 
-                removedUrls.add(virtualPath);
-
                 String fileURL = VideoConvert.convert(my_form, virtualPath, request);
                 Logger.debug(UploadService.class, "Converted video: "+fileURL);
                 if (Tools.isNotEmpty(fileURL) && fileURL.lastIndexOf("/")>1)
                 {
+                    removedUrls.add(virtualPath);
                     String videoFileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
 
                     addedUrls.add(videoFileName);
