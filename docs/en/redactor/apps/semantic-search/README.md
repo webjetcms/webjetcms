@@ -13,6 +13,12 @@ Optionally, it can also display a **RAG answer** above the same index - a short 
 - When RAG response is enabled, the **AI response from search** block will be displayed above the results.
 - If the response cannot be constructed from indexed content, no RAG response will be displayed.
 
+In the video, the guest asks the question "Can we bring our dog and leave the car at your place?" and opens the terms of stay. You can see where you turn on the **Add RAG answer** option in the **Search** app and how the result of the same question changes.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ## Supported databases and versions
 
 To store and search vectors, one of the following databases is sufficient:

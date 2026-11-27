@@ -407,6 +407,8 @@ autoLogin: {
 
 It is possible to define multiple users (repeat the admin attribute), e.g. a registered user, an administrator with limited rights, etc.
 
+When testing locally on `iwcm.interway.sk`, WebJET skips device registration for account `tester` if the browser recognizes it as `HeadlessChrome` or `Unknown` and both the direct connection address and client address are `127.0.0.1`. Scenarios that verify new device notification use a separate account.
+
 Login can be inserted into tests using the ```Before``` function:
 
 ```javascript

@@ -230,8 +230,16 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             value = "%" + value.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
             if (Constants.DB_TYPE == Constants.DB_MSSQL) value = value.replace("[", "![");
 
-            Expression<String> fullName = builder.concat(builder.concat(builder.coalesce(root.get("firstName"), ""), " "), builder.coalesce(root.get("lastName"), ""));
-            List<Expression<String>> fields = List.of(root.get("firstName"), root.get("lastName"), fullName, root.get("email"), root.get("login"));
+            Expression<String> firstName = root.get("firstName");
+            Expression<String> lastName = root.get("lastName");
+            Expression<String> fullName;
+            if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+                // Oracle CONCAT treats NULL as empty. COALESCE would mix NVARCHAR2 columns and VARCHAR2 parameters.
+                fullName = builder.concat(builder.concat(firstName, " "), lastName);
+            } else {
+                fullName = builder.concat(builder.concat(builder.coalesce(firstName, ""), " "), builder.coalesce(lastName, ""));
+            }
+            List<Expression<String>> fields = List.of(firstName, lastName, fullName, root.get("email"), root.get("login"));
             List<Predicate> matches = new ArrayList<>();
             for (Expression<String> field : fields) {
                 if (Constants.DB_TYPE == Constants.DB_PGSQL) field = builder.function("unaccent", String.class, field);

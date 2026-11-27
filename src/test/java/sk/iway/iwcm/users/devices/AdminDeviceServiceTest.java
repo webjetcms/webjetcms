@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -51,6 +52,7 @@ class AdminDeviceServiceTest {
     private static final String TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
     private static final String HEADLESS_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36";
     private static final String MAC_HEADED_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+    private static final String LOCAL_HEADLESS_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36";
     private final DeviceService repository = mock(DeviceService.class);
     private final AdminDeviceService service = spy(new AdminDeviceService(repository, Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC)));
     private final Identity user = mock(Identity.class);
@@ -93,7 +95,7 @@ class AdminDeviceServiceTest {
 
     @AfterEach
     void releaseMocks() {
-        browsers.close();
+        browsers.closeOnDemand();
         users.close();
         tools.close();
         constants.close();
@@ -250,6 +252,46 @@ class AdminDeviceServiceTest {
         prepareHeadlessLogin("cms.example.com");
         request.removeHeader("User-Agent");
         request.addHeader("User-Agent", MAC_HEADED_USER_AGENT);
+
+        assertDeviceRecorded();
+    }
+
+    /** Local tester logins skip recording for parsed headless and unrecognized browsers. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {LOCAL_HEADLESS_USER_AGENT, "Unrecognized test client"})
+    void skipsLocalTesterHeadlessOrUnknownBrowser(String userAgent) {
+        prepareLocalTesterLogin(userAgent);
+
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+
+        verifyNoInteractions(repository);
+        verify(service, never()).sendNotification(any(), any(), any());
+        assertEquals(0, response.getCookies().length);
+    }
+
+    /** Changing any of the host, account or loopback address checks restores tracking. */
+    @ParameterizedTest
+    @CsvSource({
+        "other.interway.sk, tester, 127.0.0.1, 127.0.0.1",
+        "iwcm.interway.sk, other-admin, 127.0.0.1, 127.0.0.1",
+        "iwcm.interway.sk, tester, 127.0.0.1, 192.0.2.1",
+        "iwcm.interway.sk, tester, 192.0.2.1, 127.0.0.1",
+        "iwcm.interway.sk, tester, ::1, ::1"
+    })
+    void recordsHeadlessBrowserOutsideLocalTesterScope(String host, String login, String connectionIp, String clientIp) {
+        prepareLocalTesterLogin(LOCAL_HEADLESS_USER_AGENT);
+        request.setServerName(host);
+        when(user.getLogin()).thenReturn(login);
+        request.setRemoteAddr(connectionIp);
+        tools.when(() -> Tools.getRemoteIP(request)).thenReturn(clientIp);
+
+        assertDeviceRecorded();
+    }
+
+    @Test
+    void recordsRegularBrowserForLocalTester() {
+        prepareLocalTesterLogin(MAC_HEADED_USER_AGENT.replace("131.0.0.0", "155.0.0.0"));
 
         assertDeviceRecorded();
     }
@@ -431,6 +473,18 @@ class AdminDeviceServiceTest {
         request.setServerName(host);
         request.removeHeader("User-Agent");
         request.addHeader("User-Agent", HEADLESS_USER_AGENT);
+    }
+
+    private void prepareLocalTesterLogin(String userAgent) {
+        browsers.closeOnDemand();
+        tools.when(() -> Tools.isEmpty(anyString())).thenCallRealMethod();
+        tools.when(() -> Tools.getServerName(request, false)).thenCallRealMethod();
+        tools.when(() -> Tools.getRemoteIP(request)).thenCallRealMethod();
+        when(user.getLogin()).thenReturn("tester");
+        request.setServerName("iwcm.interway.sk");
+        request.setRemoteAddr("127.0.0.1");
+        request.removeHeader("User-Agent");
+        if (userAgent != null) request.addHeader("User-Agent", userAgent);
     }
 
     private void assertDeviceRecorded() {

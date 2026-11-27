@@ -93,6 +93,12 @@ You can also download an attachment by clicking its name or the download icon di
 
 ## Chat in the field and in the page editor
 
+In the video you will see how to prepare an invitation from the attached training program in PDF, refine it in the same conversation and insert it into the page. After reopening the editor, you will find the conversation in the history under the page content.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 In a text field or in the editor toolbar, click the AI ​​icon and select an assistant with a request type of **Chat**. Type your entry and submit it. Selected text in the supported editor takes precedence over the contents of the set **Source field**. If you do not select text, the source field is used. If this is not set either, the contents of the field or page are not submitted. The same rule applies to saved and new records and bulk editing.
 
 When selecting text in the editor, the assistant is also instructed to return only the modified HTML fragment, preserving its structure. For example, when requesting bold text, it should add `<strong>` tags directly to the text without adding a title or PageBuilder wrappers. This instruction takes precedence over the assistant's rules for creating the entire page when editing the selection and does not depend on the set CSS wrapper classes. It applies to both temporary and saved chats processed by the server provider.

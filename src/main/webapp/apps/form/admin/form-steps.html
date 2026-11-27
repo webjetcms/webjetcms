@@ -370,8 +370,6 @@
     }
 
     window.domReady.add(function () {
-        loadPreviewCssTemplates();
-
         WJ.headerTabs({
             id: 'tabsFilter',
             tabs: [
@@ -382,6 +380,12 @@
                 { url: '/apps/form/admin/regexps/', title: WJ.translate('components.form.reg_exp.js'), active: false }
             ]
         });
+
+        if (document.getElementById("formStepsEditor") === null) {
+            WJ.notifyError("[[#{admin.operationPermissionDenied}]]", "[[#{components.forms.permsDeniedNote}]]", 15000);
+            return;
+        }
+        loadPreviewCssTemplates();
 
         formStepsDataTable = WJ.DataTable({
             url: WJ.urlUpdateParam(stepUrl, "formName", urlFormName),
@@ -1052,7 +1056,7 @@
     </div>
 </template>
 
-<div class="row">
+<div class="row" id="formStepsEditor" data-th-if="${param.formName != null and @formsServiceImpl.isFormAccessible(param.formName[0], layout.user)}">
     <div class="col-md-3" style="border-right: 1px solid #DDDFE6;">
         <table id="formStepsDataTable" class="datatableInit table"></table>
     </div>

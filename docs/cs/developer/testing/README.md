@@ -407,6 +407,8 @@ autoLogin: {
 
 Je možné definovat více uživatelů (opakovat atribut admin). registrovaného uživatele, administrátora s omezenými právy a podobně.
 
+Při lokálním testování na `iwcm.interway.sk` WebJET přeskočí evidenci zařízení účtu `tester`, pokud prohlížeč rozpozná jako `HeadlessChrome` nebo `Unknown` a adresa přímého spojení i adresa klienta jsou `127.0.0.1`. Scénáře, které ověřují upozornění na nové zařízení, používají samostatný účet.
+
 Přihlášení lze do testů vkládat pomocí ```Before``` funkce:
 
 ```javascript
