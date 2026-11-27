@@ -2,6 +2,8 @@
 
 WebJET CMS môže ukladať súbory a obrázky do úložiska s rozhraním S3. Redaktori používajú existujúci prieskumník, upload aj galériu. Aplikácia pristupuje k súborom cez `IwcmFile`, `IwcmInputStream` a `IwcmOutputStream`; URL súborov zostávajú rovnaké.
 
+S3 je určené pre nové projekty, ktoré ho používajú od začiatku. Existujúce projekty ponechávajú svoje lokálne alebo databázové úložisko; predvolená hodnota `s3Enabled=false` sa nemení.
+
 ## Lokálny server
 
 Pre vývoj je pripravený [SeaweedFS](https://github.com/seaweedfs/seaweedfs) s licenciou Apache-2.0. Ide o samostatný projekt kompatibilný s S3. Docker konfigurácia používa verziu `4.55` a vytvorí bucket `webjet-autotest`:
@@ -52,7 +54,7 @@ Pri viacerých doménach priečinok `/shared` a jeho cache náhľadov používaj
 
 ### Prázdny bucket
 
-Pri migrácii sa priečinky odvodia z existujúcich kľúčov. V úplne prázdnom buckete vytvorte základné priečinky cez WebJET API po nastavení doménového kontextu, aby ich prieskumník mohol ponúknuť:
+Ak už bucket obsahuje objekty, priečinky sa odvodia z ich kľúčov. V úplne prázdnom buckete vytvorte základné priečinky cez WebJET API po nastavení doménového kontextu, aby ich prieskumník mohol ponúknuť:
 
 ```java
 for (String path : new String[] {"/files", "/images", "/images/gallery", "/shared"}) {
@@ -67,11 +69,17 @@ Pri viacerých doménach vykonajte inicializáciu pre každú doménu. Pri vlast
 
 Účet potrebuje minimálne oprávnenia na zoznam objektov v buckete a na čítanie, zápis a mazanie objektov používaných WebJETom. Presun v S3 kopíruje objekty na nové kľúče a až potom maže zdroj. Presun celého priečinka nie je transakcia: pri výpadku môžu zostať aj čiastočné cieľové kópie, pričom chyba sa oznámi volajúcemu.
 
+Pri kolízii názvov v prieskumníku voľba **Zálohovať** skopíruje pôvodný objekt na prvý voľný očíslovaný názov v rovnakom úložisku. Pôvodný súbor zostáva dostupný až do jeho nahradenia novým obsahom. Ak záloha zlyhá alebo na ňu používateľ nemá právo, upload sa zastaví pred prepísaním pôvodného súboru.
+
+Voľba **Aktualizovať súbor** nahradí obsah vybraného S3 súboru a zachová jeho názov aj pri uploade po častiach. Pri zapnutom `iwfs_useVersioning` sa po úspešnom zápise uloží aj história súboru cez existujúcu konfiguráciu `fileHistoryPath`. Prerušený alebo neúspešný S3 zápis novú verziu histórie nevytvorí.
+
+[Plánované publikovanie](../redactor/webpages/planned-publishing.md) podporuje S3 aj kopírovanie medzi S3 a lokálnym úložiskom. Uchováva zálohy pôvodných súborov a pri chybe ponechá pracovné podklady na opakovanie publikovania.
+
 Zápis sa najprv uloží do jedinečného dočasného súboru JVM a publikuje pri úspešnom `close()`. Lokálny dočasný disk musí mať kapacitu na súbežné uploady. RAM sa nepoužíva na celý súbor. Kód, ktorý pri kopírovaní zachytí chybu vstupu, musí zavolať `IwcmOutputStream.abort()`, aby nepublikoval neúplný obsah; `FileTools.copyFile` to rieši automaticky.
 
 Zmeny vykonané týmto uzlom rušia cache metadát. Iný uzol alebo externý S3 klient môže zmenu vidieť až po uplynutí `s3MetaCacheTtlSec`. Chyba spojenia alebo oprávnení sa nesmie považovať za prázdny priečinok či chýbajúci súbor. WebJET v nakonfigurovanej S3 vetve nehľadá starú lokálnu kópiu. HTTP sťahovanie podporuje `HEAD`, `ETag`, podmienené požiadavky a bajtové rozsahy.
 
-Vlastné rozšírenia používajúce priamo `java.io.File`, `FileInputStream` alebo `FileOutputStream` treba upraviť na WebJET API. Externé nástroje, napr. ImageMagick, potrebujú dočasnú lokálnu kópiu; jadro pri obrazových operáciách túto kópiu vytvorí a výsledok uloží späť.
+Vlastné rozšírenia používajúce priamo `java.io.File`, `FileInputStream` alebo `FileOutputStream` treba upraviť na WebJET API. Externé nástroje potrebujú dočasnú lokálnu kópiu. Jadro ju vytvára pre obrazové operácie vrátane JPEG/PNG vodotlače aj pre konverziu videí a tvorbu náhľadov. Dokončené výsledky uloží späť do S3 a dočasné súbory odstráni. Na serveri musia byť dostupné nakonfigurované ImageMagick a ffmpeg. Pri zlyhaní konverzie zostáva zdrojové video zachované.
 
 ## Testovanie
 

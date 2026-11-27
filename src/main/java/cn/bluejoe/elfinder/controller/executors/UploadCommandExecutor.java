@@ -5,6 +5,7 @@ import static sk.iway.iwcm.system.elfinder.FsService.isFileTypeAllowed;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,6 +32,7 @@ import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -52,6 +54,7 @@ import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
 import sk.iway.iwcm.users.UsersDB;
 
+/** Handles elFinder file and chunk uploads, including permission checks and conflict backups. */
 @SuppressWarnings("java:S116")
 public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 {
@@ -331,6 +334,20 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				throws IOException;
 	}
 
+	/**
+	 * Processes parsed uploads and writes elFinder results, errors and warnings to the response object.
+	 * Ordinary and chunked updates retain the selected file's path, regardless of the uploaded filename.
+	 *
+	 * <p>Requested conflict backups are copied before any replacement. If a backup is
+	 * rejected or fails, the upload batch and retained chunks are discarded; originals
+	 * and any completed backups remain available.</p>
+	 *
+	 * @param fsService filesystem service used to resolve the requested target
+	 * @param request request containing parsed file items, upload paths and optional chunk or backup parameters
+	 * @param servletContext context supplied by the dispatcher; unused by this executor
+	 * @param json response object receiving added items and any upload errors or warnings
+	 * @throws Exception if target resolution, upload processing or response construction fails
+	 */
 	@SuppressWarnings("java:S1075")
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
@@ -358,49 +375,32 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 		{
 			filesMap = filterUploadTypes(filesMap, dir, request, user, rejectedTypes);
 
+			boolean backupFailed = false;
 			if (renames != null && (rejectedTypes.isEmpty() || filesMap.isEmpty() == false)) {
-				String path = dir.getPath();
 				for (String rename : renames) {
 					if (FileBrowserTools.hasForbiddenSymbol(rename)) {
 						notUploaded.add(rename);
+						backupFailed = true;
 						continue;
 					}
 					if (isFileTypeAllowed(dir.getFsServiceSelectedType(), rename) == false) {
 						rejectedTypes.add(rename);
+						backupFailed = true;
 						continue;
 					}
 
-					File file = new File(Tools.getRealPath(path + "/" + rename));
-
-					if (file.exists()) {
-						FsItemEx sourceItem = getDestination(dir, "", rename);
-						if (isWritable(sourceItem)==false) {
-							notUploaded.add(rename);
-							continue;
-						}
-
-						int i = 1;
-
-						File fileTo = null;
-						String filename;
-						do {
-							filename = rename.contains(".") ? rename.substring(0, rename.lastIndexOf(".")) + "-" + (i++) + rename.substring(rename.lastIndexOf("."), rename.length()) : rename + "-" + (i++);
-							fileTo = new File(Tools.getRealPath(path + "/" + filename));
-						}
-						while (fileTo.exists());
-
-						FsItemEx destinationItem = getDestination(dir, "", filename);
-						if (isWritable(destinationItem)==false) {
-							notUploaded.add(rename);
-							continue;
-						}
-
-						file.renameTo(fileTo); //NOSONAR
-
-						FsItemEx fsItem = new FsItemEx(dir, fileTo.getName());
-						added.add(fsItem);
+					try {
+						if (backupExistingFile(dir, rename, added)) continue;
+					} catch (IOException | UncheckedIOException ex) {
+						Logger.error(ex);
 					}
+					notUploaded.add(rename);
+					backupFailed = true;
 				}
+			}
+			if (backupFailed) {
+				discardUploads(request, filesMap);
+				filesMap = Map.of();
 			}
 
 			for (Entry<String, FileItem<?>> entry : filesMap.entrySet())
@@ -421,10 +421,11 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 
 				String realPathDir = Tools.getRealPath(dir.getPath());
 				File file = new File(realPathDir);
+				final boolean updatingFile = new IwcmFile(file).isFile();
 				FsItemEx destinationItem = dir;
 
 				// is not update
-				if (!file.exists() || !file.isFile()) {
+				if (!updatingFile) {
 					realPathDir = Tools.getRealPath(dir.getPath() + directory + "/" + fileName);
 					file = new File(realPathDir);
 					destinationItem = getDestination(dir, directory, fileName);
@@ -435,14 +436,23 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					continue;
 				}
 				final FsItemEx uploadDestinationParent = destinationItem.getParent();
+				final FsItemEx uploadDirectory = updatingFile ? dir.getParent() : dir;
 
 				final File newFile = file;
 				//fi.write(newFile);
 				final String uploadTypeFinal = uploadType;
-				final String directoryFinal = directory;
 
 				FileWriter fw = new FileWriter()
 				{
+					/**
+					 * Saves assembled chunks after checking write permissions and upload restrictions.
+					 *
+					 * @param fileName filename reconstructed from the chunk request
+					 * @param is stream containing the assembled upload
+					 * @param size total upload size in bytes
+					 * @return saved filesystem item, or null if permission or upload checks reject it
+					 * @throws IOException if target resolution or writing fails
+					 */
 					@Override
 					public FsItemEx createAndSave(String fileName, InputStream is, long size)
 							throws IOException
@@ -456,6 +466,10 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 						if (isWritable(newFileEx)==false) {
 							notUploaded.add(fileName);
 							return null;
+						}
+						if (updatingFile) {
+							fileName = newFile.getName();
+							newFileEx = dir;
 						}
 
 						boolean isAllowedForUpload = UploadFileTools.isFileAllowed(uploadTypeFinal, fileName, size, user, request);
@@ -478,7 +492,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 							File fileToSave = new File(newFile.getParentFile()+File.separator+fileName);
 							IwcmFsDB.writeFiletoDest(is, fileToSave, (int)size, true);
 
-							Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload, path="+dir.getPath()+directoryFinal+"/"+fileName, -1, -1);
+							Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload, path="+new IwcmFile(fileToSave).getVirtualPath(), -1, -1);
 
 							//if (filter.accepts(newFile))
 								added.add(newFileEx);
@@ -513,7 +527,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					{
 						IwcmFsDB.writeFiletoDest(fi.getInputStream(), newFile, (int)fi.getSize(), true);
 
-						Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "elfinder upload, path="+dir.getPath()+directory+"/"+fileName, -1, -1);
+						Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "elfinder upload, path="+new IwcmFile(newFile).getVirtualPath(), -1, -1);
 						fileUploaded = true;
 					}
 					else
@@ -523,14 +537,15 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				}
 
 				if (fileUploaded) {
+					if (updatingFile) {
+						directory = "";
+						fileName = newFile.getName();
+					}
 
 					IwcmFile newFileIwcm = new IwcmFile(newFile);
 					if (newFileIwcm.exists()) {
 						fi.delete();
-						FsItemEx fsItem = new FsItemEx(dir, fileName);
-						if (!dir.isFolder()) {
-							fsItem = dir;
-						}
+						FsItemEx fsItem = updatingFile ? dir : new FsItemEx(dir, fileName);
 
 						if (Tools.isEmpty(directory)) {
 							added.add(fsItem);
@@ -546,7 +561,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					//POZOR: vo WJ9 je toto presunute do UploadService, pozor ale na cast VideoConvert, kde sa pracuje s FsItem kvoli premenovaniu, to tu treba zachovat
 
 					//kvoli chunked uploadu musime zrekonstruovat nanovo
-					newFileIwcm = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/"+fileName));
+					newFileIwcm = updatingFile ? new IwcmFile(newFile) : new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/"+fileName));
 
 					//vycisti metadata
 					MetadataCleaner.removeMetadata(newFileIwcm);
@@ -571,23 +586,17 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 							my_form.setVideoHeight(Constants.getInt("defaultVideoHeight"));
 							my_form.setKeepOriginalVideo(false);
 
-							//zmaz povodny added mpg subor
-							for (FsItemEx item : added)
-							{
-								if (item.getPath().endsWith(fileName))
-								{
-									added.remove(item);
-									break;
-								}
-							}
-
 							String fileURL = VideoConvert.convert(my_form, newFileIwcm.getVirtualPath(), request);
 							Logger.debug(this.getClass(), "Converted video: "+fileURL);
 							if (Tools.isNotEmpty(fileURL) && fileURL.lastIndexOf("/")>1)
 							{
+								String originalPath = newFileIwcm.getVirtualPath();
+								for (var iterator = added.iterator(); iterator.hasNext();) {
+									if (originalPath.equals(iterator.next().getPath())) iterator.remove();
+								}
 								String videoFileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
-								added.add(new FsItemEx(dir, directory, videoFileName));
-								added.add(new FsItemEx(dir, directory, Tools.replace(videoFileName, "."+Constants.getString("defaultVideoFormat"), ".jpg")));
+								added.add(new FsItemEx(uploadDirectory, directory, videoFileName));
+								added.add(new FsItemEx(uploadDirectory, directory, Tools.replace(videoFileName, "."+Constants.getString("defaultVideoFormat"), ".jpg")));
 							}
 						}
 						else
@@ -600,7 +609,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 
 								if (Tools.isEmpty(directory))
 								{
-									added.add(new FsItemEx(dir, imageFilename));
+									added.add(new FsItemEx(uploadDirectory, imageFilename));
 								}
 							}
 						}
@@ -612,7 +621,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 						json.put("warning", Prop.getInstance(request).getText(ImageTools.getErrorKey(result)));
 					}
 					for (String s : galleryAdded) {
-						FsItemEx fsItem = new FsItemEx(dir, directory, s);
+						FsItemEx fsItem = new FsItemEx(uploadDirectory, directory, s);
 						added.add(fsItem);
 					}
 
@@ -620,10 +629,10 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					if (FileIndexer.isFileIndexerConfigured())
 					{
 						List<ResultBean> indexedFiles = new ArrayList<>();
-						FileIndexerTools.indexFile(dir.getPath() + directory + "/" + fileName, indexedFiles, request);
+						FileIndexerTools.indexFile(newFileIwcm.getVirtualPath(), indexedFiles, request);
 					}
 
-					UploadFileAction.reflectionLoader(request, user, dir.getPath() + directory + "/" + fileName);
+					UploadFileAction.reflectionLoader(request, user, newFileIwcm.getVirtualPath());
 				}
 			}
 		}
@@ -645,6 +654,56 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 			if (json.has("error")) errors.put("$1").put(json.remove("error"));
 			if (json.has("warning")) errors.put("$1").put(json.remove("warning"));
 			json.put(added.isEmpty() ? "error" : "warning", errors);
+		}
+	}
+
+	/**
+	 * Copies an existing upload target to the first free numbered name without removing the original.
+	 *
+	 * @param directory folder containing the target and its backup, resolved through CMS storage
+	 * @param name relative target name already checked for forbidden symbols and allowed file type
+	 * @param added receives the backup item only after a successful copy
+	 * @return {@code true} if the source is absent or backed up; {@code false} if write access or copying fails
+	 * @throws IOException if filesystem item resolution or permission checks fail
+	 * @throws UncheckedIOException if S3 metadata cannot be read
+	 */
+	private boolean backupExistingFile(FsItemEx directory, String name, List<FsItemEx> added) throws IOException {
+		IwcmFile source = new IwcmFile(Tools.getRealPath(directory.getPath() + "/" + name));
+		if (source.exists() == false) return true;
+		if (isWritable(getDestination(directory, "", name)) == false) return false;
+
+		int number = 1;
+		int dot = name.lastIndexOf('.');
+		IwcmFile destination;
+		String backupName;
+		do {
+			backupName = dot < 0 ? name + "-" + number : name.substring(0, dot) + "-" + number + name.substring(dot);
+			number++;
+			destination = new IwcmFile(Tools.getRealPath(directory.getPath() + "/" + backupName));
+		} while (destination.exists());
+
+		FsItemEx backupItem = getDestination(directory, "", backupName);
+		if (isWritable(backupItem) == false || FileTools.copyTree(source, destination) == false) return false;
+		added.add(backupItem);
+		return true;
+	}
+
+	/**
+	 * Deletes rejected upload items and removes their retained chunk set after a backup failure.
+	 * Individual deletion failures do not stop cleanup of the remaining items.
+	 *
+	 * @param request request identifying the chunk set in the servlet context, if present
+	 * @param files accepted multipart items whose upload has been cancelled
+	 */
+	private void discardUploads(HttpServletRequest request, Map<String, FileItem<?>> files) {
+		for (FileItem<?> upload : files.values()) {
+			try { upload.delete(); } catch (IOException ex) { Logger.error(ex); }
+		}
+		Matcher chunk = CHUNK_NAME.matcher(Tools.getStringValue(request.getParameter("chunk"), ""));
+		if (request.getParameter("cid") != null && chunk.matches()) {
+			String key = String.format("chunk_%s_%s", request.getParameter("cid"), getChunkFileName(request, chunk));
+			Parts parts = (Parts) request.getServletContext().getAttribute(key);
+			if (parts != null) parts.removeFromApplicationContext(request);
 		}
 	}
 

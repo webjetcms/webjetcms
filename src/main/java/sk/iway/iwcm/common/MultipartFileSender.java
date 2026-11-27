@@ -57,6 +57,7 @@ public class MultipartFileSender {
    /**
     * Validates request conditions and serves the configured file or an appropriate HTTP status.
     * HEAD responses contain headers only; missing request or response objects cause no action.
+    * The servlet container owns the response stream, allowing callers to reset an uncommitted response on failure.
     *
     * @throws Exception if file metadata, request-header processing or response streaming fails
     */
@@ -223,55 +224,53 @@ public class MultipartFileSender {
       // Send requested file (part(s)) to client ------------------------------------------------
 
       // Prepare streams.
-      try (OutputStream output = response.getOutputStream())
-      {
+      OutputStream output = response.getOutputStream();
 
-         if (ranges.isEmpty() || ranges.get(0) == full) {
-            // Return full file.
-            //Logger.debug(MultipartFileSender.class,"Return full file");
-            response.setContentType(contentType);
-            response.setContentLengthLong(full.length);
-            copyRange(output, full.start, full.length);
+      if (ranges.isEmpty() || ranges.get(0) == full) {
+         // Return full file.
+         //Logger.debug(MultipartFileSender.class,"Return full file");
+         response.setContentType(contentType);
+         response.setContentLengthLong(full.length);
+         copyRange(output, full.start, full.length);
 
-         } else if (ranges.size() == 1) {
+      } else if (ranges.size() == 1) {
 
-            // Return single part of file.
-            Range r = ranges.get(0);
-            //Logger.debug(MultipartFileSender.class, "Return 1 part of file : from ("+r.start+") to ("+r.end+")");
-            response.setContentType(contentType);
-            response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
-            response.setContentLengthLong(r.length);
-            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
-            // Copy single part range.
-            copyRange(output, r.start, r.length);
+         // Return single part of file.
+         Range r = ranges.get(0);
+         //Logger.debug(MultipartFileSender.class, "Return 1 part of file : from ("+r.start+") to ("+r.end+")");
+         response.setContentType(contentType);
+         response.setHeader("Content-Range", "bytes " + r.start + "-" + r.end + "/" + r.total);
+         response.setContentLengthLong(r.length);
+         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
+         // Copy single part range.
+         copyRange(output, r.start, r.length);
 
-         } else {
+      } else {
 
-            // Return multiple parts of file.
-            response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
-            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
+         // Return multiple parts of file.
+         response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
+         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // 206.
 
-            // Cast back to ServletOutputStream to get the easy println methods.
-            @SuppressWarnings("resource")
-            ServletOutputStream sos = (ServletOutputStream) output;
+         // Cast back to ServletOutputStream to get the easy println methods.
+         @SuppressWarnings("resource")
+         ServletOutputStream sos = (ServletOutputStream) output;
 
-            // Copy multi part range.
-            for (Range r : ranges) {
-               //Logger.debug(MultipartFileSender.class, "Return multi part of file : from ("+r.start+") to ("+r.end+")");
-               // Add multipart boundary and header fields for every range.
-               sos.println();
-               sos.println("--" + MULTIPART_BOUNDARY);
-               sos.println("Content-Type: " + contentType);
-               sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
-               sos.println();
-               // Copy single part range of multi part range.
-               copyRange(output, r.start, r.length);
-            }
-
-            // End with multipart boundary.
+         // Copy multi part range.
+         for (Range r : ranges) {
+            //Logger.debug(MultipartFileSender.class, "Return multi part of file : from ("+r.start+") to ("+r.end+")");
+            // Add multipart boundary and header fields for every range.
             sos.println();
-            sos.println("--" + MULTIPART_BOUNDARY + "--");
+            sos.println("--" + MULTIPART_BOUNDARY);
+            sos.println("Content-Type: " + contentType);
+            sos.println("Content-Range: bytes " + r.start + "-" + r.end + "/" + r.total);
+            sos.println();
+            // Copy single part range of multi part range.
+            copyRange(output, r.start, r.length);
          }
+
+         // End with multipart boundary.
+         sos.println();
+         sos.println("--" + MULTIPART_BOUNDARY + "--");
       }
 
    }

@@ -16,6 +16,7 @@ public final class S3OutputStream extends OutputStream {
     private final OutputStream output;
     private boolean closed;
     private boolean failed;
+    private boolean published;
 
     /**
      * Opens a temporary file for a pending S3 upload without changing the destination object.
@@ -91,10 +92,18 @@ public final class S3OutputStream extends OutputStream {
         closed = true;
         try {
             output.close();
-            if (!failed) storage.upload(key, temporary);
+            if (!failed) {
+                storage.upload(key, temporary);
+                published = true;
+            }
         } finally {
             Files.deleteIfExists(temporary);
         }
+    }
+
+    /** Returns whether this stream successfully published its staged object. */
+    public boolean isPublished() {
+        return published;
     }
 
     private void ensureOpen() throws IOException {

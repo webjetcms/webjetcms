@@ -1,6 +1,7 @@
 package sk.iway.iwcm.io.s3;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -18,8 +19,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
@@ -32,7 +36,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-/** Exercises real S3 storage through the public CMS file and HTTP APIs. */
+/** Verifies S3 uploads, history, HTTP serving and planned publication. */
 @Tag("s3-integration")
 class S3FileIntegrationTest extends BaseWebjetTest {
     @TempDir Path webroot;
@@ -154,6 +158,151 @@ class S3FileIntegrationTest extends BaseWebjetTest {
         assertFalse(renamed.renameTo(new IwcmFile(renamed, "inside")));
         assertTrue(renamed.renameTo(new IwcmFile(local.getParent())));
         assertEquals("local data", Files.readString(local));
+    }
+
+    /** Verifies that S3 conflict backups skip occupied names and retain the original content after replacement. */
+    @Test
+    void backsUpExplorerConflictBeforeReplacingObject() throws Exception {
+        IwcmFile original = new IwcmFile(directory, "document.pdf");
+        IwcmFile existingBackup = new IwcmFile(directory, "document-1.pdf");
+        write(original, new byte[] {1});
+        write(existingBackup, new byte[] {9});
+        var folder = mock(cn.bluejoe.elfinder.controller.executor.FsItemEx.class);
+        when(folder.getPath()).thenReturn(directory.getVirtualPath());
+        var added = new java.util.ArrayList<cn.bluejoe.elfinder.controller.executor.FsItemEx>();
+        try (var items = mockConstruction(cn.bluejoe.elfinder.controller.executor.FsItemEx.class,
+                (item, context) -> {
+                    when(item.getPath()).thenReturn(directory.getVirtualPath() + "/" + context.arguments().get(1));
+                    when(item.isWritable(item)).thenReturn(true);
+                })) {
+            Boolean copied = ReflectionTestUtils.invokeMethod(new cn.bluejoe.elfinder.controller.executors.UploadCommandExecutor(),
+                    "backupExistingFile", folder, original.getName(), added);
+            assertEquals(Boolean.TRUE, copied);
+        }
+        assertArrayEquals(new byte[] {1}, read(original));
+        assertArrayEquals(new byte[] {9}, read(existingBackup));
+        IwcmFile backup = new IwcmFile(directory, "document-2.pdf");
+        write(original, new byte[] {2});
+        assertArrayEquals(new byte[] {2}, read(original));
+        assertArrayEquals(new byte[] {1}, read(backup));
+    }
+
+    /** Ordinary and chunked updates replace the selected S3 object even when the uploaded name differs. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void updatesSelectedFile(boolean chunked) throws Exception {
+        IwcmFile original = new IwcmFile(directory, "original.txt");
+        write(original, new byte[] {1});
+        var service = mock(cn.bluejoe.elfinder.service.FsService.class);
+        var target = mock(cn.bluejoe.elfinder.controller.executor.FsItemEx.class);
+        var parent = mock(cn.bluejoe.elfinder.controller.executor.FsItemEx.class);
+        when(target.getPath()).thenReturn(original.getVirtualPath());
+        when(target.getName()).thenReturn(original.getName());
+        when(target.getMimeType()).thenReturn("text/plain");
+        when(target.getVolumeId()).thenReturn("files");
+        when(target.getParent()).thenReturn(parent);
+        when(target.isWritable(target)).thenReturn(true);
+        var upload = mock(org.apache.commons.fileupload2.core.FileItem.class);
+        when(upload.getSize()).thenReturn(1L);
+        when(upload.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[] {2}));
+        var request = new MockHttpServletRequest();
+        request.addParameter("target", "selected");
+        request.setAttribute("MultipartWrapper.files", Map.of(chunked ? "upload[]" : "replacement.txt", upload));
+        if (chunked) {
+            request.addParameter("cid", "update");
+            request.addParameter("chunk", "replacement.txt.0_0.part");
+            request.addParameter("range", "0,1,1");
+        }
+        var response = new org.json.JSONObject();
+        try (var finder = mockStatic(cn.bluejoe.elfinder.util.FsServiceUtils.class);
+             var users = mockStatic(sk.iway.iwcm.system.elfinder.FsService.class, CALLS_REAL_METHODS);
+             var audit = mockStatic(sk.iway.iwcm.Adminlog.class);
+             var indexer = mockStatic(sk.iway.iwcm.findexer.FileIndexer.class);
+             var items = mockConstruction(cn.bluejoe.elfinder.controller.executor.FsItemEx.class, (item, context) -> {
+                 when(item.getPath()).thenReturn(directory.getVirtualPath() + "/" + context.arguments().get(1));
+                 when(item.isWritable(item)).thenReturn(true);
+             })) {
+            finder.when(() -> cn.bluejoe.elfinder.util.FsServiceUtils.findItem(service, "selected")).thenReturn(target);
+            users.when(sk.iway.iwcm.system.elfinder.FsService::getCurrentUser)
+                    .thenReturn((sk.iway.iwcm.Identity) adminSession().getAttribute(Constants.USER_KEY));
+            new cn.bluejoe.elfinder.controller.executors.UploadCommandExecutor().execute(service, request, null, response);
+        }
+        assertFalse(response.has("error"), response.toString());
+        assertArrayEquals(new byte[] {2}, read(original));
+        assertEquals(1, directory.listFiles().length);
+    }
+
+    /** Successful S3 writes save recoverable history once; aborted writes add no revision. */
+    @Test
+    void savesHistoryOnlyAfterPublication() throws Exception {
+        previous.put("iwfs_useVersioning", Constants.getString("iwfs_useVersioning"));
+        Constants.setBoolean("iwfs_useVersioning", true);
+        var revisions = new java.util.ArrayList<sk.iway.iwcm.io.FileHistoryBean>();
+        IwcmFile file = new IwcmFile(directory, "history.txt");
+        try (var database = mockConstruction(sk.iway.iwcm.io.FileHistoryDB.class, (db, context) ->
+                when(db.save(org.mockito.ArgumentMatchers.any(sk.iway.iwcm.io.FileHistoryBean.class))).thenAnswer(call -> {
+                    sk.iway.iwcm.io.FileHistoryBean revision = call.getArgument(0);
+                    revision.setId(revisions.size() + 1);
+                    revisions.add(revision);
+                    return true;
+                }))) {
+            IwcmOutputStream first = new IwcmOutputStream(file);
+            first.write(1);
+            first.close();
+            first.close();
+            IwcmOutputStream aborted = new IwcmOutputStream(file);
+            aborted.write(9);
+            aborted.abort();
+            aborted.close();
+            assertEquals(1, revisions.size());
+            var revision = revisions.get(0);
+            assertArrayEquals(new byte[] {1}, read(IwcmFile.fromVirtualPath(revision.getHistoryPath() + revision.getId())));
+            assertArrayEquals(new byte[] {1}, read(file));
+        }
+    }
+
+    /** S3 publication replaces assets, clears thumbnails and preserves backups across retries and cleanup. */
+    @Test
+    void publishesPlannedAssetsAndRetainsBackups() throws Exception {
+        int docId = java.util.concurrent.ThreadLocalRandom.current().nextInt(1_000_000_000, Integer.MAX_VALUE);
+        IwcmFile plannedRoot = IwcmFile.fromVirtualPath(sk.iway.iwcm.doc.PlannedAssetPaths.ROOT + docId);
+        additionalDirectories.add(plannedRoot);
+        IwcmFile target = new IwcmFile(directory, "existing.png");
+        IwcmFile source = new IwcmFile(plannedRoot, target.getVirtualPath().substring(1));
+        assertTrue(source.getParentFile().mkdirs());
+        write(source, new byte[] {2});
+        write(target, new byte[] {1});
+
+        IwcmFile cache = IwcmFile.fromVirtualPath("/WEB-INF/imgcache/files/" + directory.getName());
+        additionalDirectories.add(cache);
+        assertTrue(cache.mkdirs());
+        IwcmFile thumbnail = new IwcmFile(cache, "existing-40x30.png");
+        write(thumbnail, new byte[] {8});
+
+        var service = new sk.iway.iwcm.doc.PlannedChangesService(
+                mock(sk.iway.iwcm.doc.DocDetailsRepository.class),
+                mock(sk.iway.iwcm.doc.DocHistoryRepository.class),
+                mock(sk.iway.iwcm.components.media.MediaRepository.class));
+        var page = new sk.iway.iwcm.doc.DocDetails();
+        page.setDocId(docId);
+        page.setHistoryId(123);
+        String plannedContent = "<img src=\"" + source.getVirtualPath() + "\">";
+        page.setData(plannedContent);
+        var user = (sk.iway.iwcm.Identity) adminSession().getAttribute(Constants.USER_KEY);
+        ReflectionTestUtils.invokeMethod(service, "preparePublication", page, user);
+        assertEquals("<img src=\"" + target.getVirtualPath() + "\">", page.getData());
+        assertArrayEquals(new byte[] {2}, read(target));
+        assertFalse(thumbnail.exists());
+
+        IwcmFile backup = new IwcmFile(plannedRoot, "backup/123" + target.getVirtualPath());
+        assertArrayEquals(new byte[] {1}, read(backup));
+        write(source, new byte[] {3});
+        page.setData(plannedContent);
+        ReflectionTestUtils.invokeMethod(service, "preparePublication", page, user);
+        ReflectionTestUtils.invokeMethod(service, "cleanupPublishedFiles", docId);
+        assertFalse(source.exists());
+        assertArrayEquals(new byte[] {1}, read(backup));
+        assertArrayEquals(new byte[] {3}, read(target));
     }
 
     /** DB files can move to S3 and back; explicit historical IDs still read the original backend. */
@@ -373,7 +522,7 @@ class S3FileIntegrationTest extends BaseWebjetTest {
         assertFalse(new IwcmFile(directory, "forbidden.pdf").exists());
     }
 
-    /** Image-editor saves and gallery resizing operate on remote originals and thumbnails. */
+    /** Image-editor saves and gallery resizing use S3 originals and thumbnails independently of database metadata and indexing. */
     @Test
     void uploadsEditsAndResizesGalleryImage() throws Exception {
         for (String setting : new String[] {"imageAlwaysCreateGalleryBean", "galleryWatermarkApplyOnUpload", "galleryConvertCmykToRgb"}) {
@@ -385,12 +534,18 @@ class S3FileIntegrationTest extends BaseWebjetTest {
         images.mkdirs();
         java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
         assertTrue(javax.imageio.ImageIO.write(new java.awt.image.BufferedImage(80, 60, java.awt.image.BufferedImage.TYPE_INT_RGB), "png", bytes));
-        org.json.JSONObject result = upload(adminSession(), images, "autotest-image.png", java.util.Base64.getEncoder().encode(bytes.toByteArray()), 0, 1, "overwrite", true);
+        org.json.JSONObject result;
+        try (var indexer = mockStatic(sk.iway.iwcm.findexer.FileIndexer.class)) {
+            result = upload(adminSession(), images, "autotest-image.png", java.util.Base64.getEncoder().encode(bytes.toByteArray()), 0, 1, "overwrite", true);
+        }
         assertTrue(result.getBoolean("success"), result.toString());
         IwcmFile original = new IwcmFile(images, "autotest-image.png");
         assertArrayEquals(bytes.toByteArray(), read(original));
         IwcmFile thumbnail = new IwcmFile(images, "s_autotest-image.png");
-        assertEquals(0, sk.iway.iwcm.gallery.GalleryDB.resizePicture(original.getPath(), thumbnail.getPath(), 40, 30));
+        try (var metadata = mockStatic(sk.iway.iwcm.gallery.GalleryDB.class, CALLS_REAL_METHODS)) {
+            metadata.when(() -> sk.iway.iwcm.gallery.GalleryDB.setImage(images.getVirtualPath(), original.getName())).thenReturn(1);
+            assertEquals(0, sk.iway.iwcm.gallery.GalleryDB.resizePicture(original.getPath(), thumbnail.getPath(), 40, 30, "A"));
+        }
         try (InputStream in = new IwcmInputStream(thumbnail)) {
             java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(in);
             assertEquals(40, image.getWidth());

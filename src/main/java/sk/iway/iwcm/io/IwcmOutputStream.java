@@ -223,14 +223,20 @@ public class IwcmOutputStream extends OutputStream
 
 	/**
 	 * Completes the write and releases the output resources.
-	 * S3 uploads staged content, database storage saves the final block, and local storage saves file history.
+	 * S3 uploads staged content and saves file history once after publication. Database storage saves
+	 * the final block, and local storage closes its output and saves file history.
 	 *
 	 * @throws IOException if local closing or S3 publication or cleanup fails
 	 */
 	@Override
 	public void close() throws IOException
 	{
-		if (s3Output != null) { s3Output.close(); return; }
+		if (s3Output != null) {
+			boolean published = s3Output.isPublished();
+			s3Output.close();
+			if (!published && s3Output.isPublished()) IwcmFsDB.saveFileHistory(file, false);
+			return;
+		}
 		if (useDBStorage)
 		{
 			if (buffer == null)

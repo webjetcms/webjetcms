@@ -1,6 +1,8 @@
 package sk.iway.iwcm.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -175,6 +177,30 @@ class FileDownloadHeadersTest {
         assertEquals("no-store, no-cache, must-revalidate, max-age=0", response.getHeader("Cache-Control"));
         assertEquals("no-cache", response.getHeader("Pragma"));
         assertEquals(0, response.getDateHeader("Expires"));
+    }
+
+    /** An input-open failure must leave full and range responses available for an error status. */
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "bytes=2-5")
+    void failedDownloadDoesNotCommitSuccess(String range) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", FILE_URL);
+        if (range != null) request.addHeader("Range", range);
+        MockHttpServletResponse response = new MockHttpServletResponse() {
+            @Override public ServletOutputStream getOutputStream() {
+                return new DelegatingServletOutputStream(super.getOutputStream()) {
+                    @Override public void close() throws IOException { super.close(); setCommitted(true); }
+                };
+            }
+        };
+        IwcmFile source = new IwcmFile(file) {
+            @Override public String getPath() { return root.resolve("missing.txt").toString(); }
+        };
+        assertThrows(IOException.class, () -> MultipartFileSender.fromFile(source).with(request).with(response).serveResource());
+        assertFalse(response.isCommitted());
+        response.reset();
+        response.sendError(503);
+        assertEquals(503, response.getStatus());
     }
 
     @ParameterizedTest

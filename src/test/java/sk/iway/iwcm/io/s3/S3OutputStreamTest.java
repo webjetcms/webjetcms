@@ -26,9 +26,11 @@ class S3OutputStreamTest {
         }).when(storage).upload(eq("key"), any(Path.class));
         S3OutputStream output = new S3OutputStream(storage, "key");
         output.flush();
+        assertFalse(output.isPublished());
         verifyNoInteractions(storage);
         output.close();
         output.close();
+        assertTrue(output.isPublished());
         verify(storage, times(1)).upload(eq("key"), any(Path.class));
         assertFalse(Files.exists(staged.get()));
         assertThrows(IOException.class, () -> output.write(1));
@@ -42,6 +44,7 @@ class S3OutputStreamTest {
         output.write(new byte[] {1, 2, 3});
         output.abort();
         output.close();
+        assertFalse(output.isPublished());
         verifyNoInteractions(storage);
     }
 
@@ -57,6 +60,7 @@ class S3OutputStreamTest {
         S3OutputStream output = new S3OutputStream(storage, "key");
         output.write(new byte[] {0, 1, 2, 3}, 1, 2);
         assertThrows(IOException.class, output::close);
+        assertFalse(output.isPublished());
         assertFalse(Files.exists(staged.get()));
         output.close();
         verify(storage, times(1)).upload(anyString(), any(Path.class));
