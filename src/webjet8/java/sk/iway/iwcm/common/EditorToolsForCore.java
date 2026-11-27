@@ -406,11 +406,13 @@ public class EditorToolsForCore {
                     }
                 };
                 respWrapper = new WJResponseWrapper(response, request);
+                HttpServletRequest renderRequest =
+                        request instanceof MockHttpServletRequest ? wrapForStripes(request) : request;
 
                 if (originalAttributes == null || request instanceof MockHttpServletRequest)
                 {
                     // Synthetic requests need their own scope even when the caller has a Spring request context.
-                    temporaryAttributes = new ServletRequestAttributes(request, respWrapper);
+                    temporaryAttributes = new ServletRequestAttributes(renderRequest, respWrapper);
                     RequestContextHolder.setRequestAttributes(temporaryAttributes);
                 }
 
@@ -419,7 +421,7 @@ public class EditorToolsForCore {
                 RequestDispatcher dispatcher;
                 if (request instanceof MockHttpServletRequest) dispatcher = Constants.getServletContext().getRequestDispatcher(includeFileName);
                 else dispatcher = request.getRequestDispatcher(includeFileName);
-                dispatcher.include(wrapForStripes(request), respWrapper);
+                dispatcher.include(renderRequest, respWrapper);
                 if (Tools.isEmpty(respWrapper.redirectURL))
                 {
                     htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
