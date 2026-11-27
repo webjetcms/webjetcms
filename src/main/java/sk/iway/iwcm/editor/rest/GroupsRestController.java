@@ -391,7 +391,14 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         } else {
             // NORMAL SAVE
             if (deferAfterSave) new WebjetEvent<>(groupDetails, WebjetEventType.ON_START).publishEvent();
-            boolean saved = groupsDB.setGroup(groupDetails, !deferAfterSave);
+            boolean saved;
+            if (deferAfterSave && entity.getEditorFields().isForceInternalToSubgroups()) {
+                saved = groupsDB.updateGroupWithSubgroupVisibility(groupDetails);
+                groupsDB = GroupsDB.getInstance();
+                forceReload = true;
+            } else {
+                saved = groupsDB.setGroup(groupDetails, !deferAfterSave);
+            }
             if (!saved) {
                 throwError("datatables.error.system.js");
                 return entity;
@@ -481,7 +488,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             forceReload = true;
         }
 
-        if (entity.getEditorFields().isForceInternalToSubgroups()) {
+        if (!isEdit && entity.getEditorFields().isForceInternalToSubgroups()) {
             ws.setAttributeToSubgroups(groupId, "internal", groupDetails.isInternal());
             forceReload = true;
         }

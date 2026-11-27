@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_MOCKS;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -43,9 +44,9 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 /** Checks the state an indexer can read synchronously during a folder edit. */
 class GroupsAfterSaveTest extends BaseWebjetTest {
 
-    /** Both directions of propagation and a parent-only edit must publish exactly one event pair. */
+    /** The event must expose the saved visibility and search paths for both recursive and parent-only edits. */
     @ParameterizedTest
-    @CsvSource({"true,true", "false,true", "false,false"})
+    @CsvSource({"true,true", "false,true", "true,false", "false,false"})
     void listenerReadsSavedSubtree(boolean internal, boolean recursive) {
         String name = "group-event-" + UUID.randomUUID();
         String childName = name + "-child";
@@ -60,6 +61,11 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
              var events = mockStatic(WebjetEventPublisher.class)) {
             int parentId = insertGroup(name, 0, !internal);
             int childId = insertGroup(childName, parentId, !internal);
+            String parentPath = "/" + name;
+            String childPath = parentPath + "/" + childName;
+            insertPage(name, parentId, internal ? parentPath : null);
+            insertPage(childName, childId, internal ? childPath : null);
+            docs.when(() -> DocDB.updateFileNameField(parentId)).thenCallRealMethod();
             GroupsDB.getInstance(true);
             GroupDetails parent = controller.getOneItem(parentId);
             GroupEditorField fields = parent.getEditorFields();
@@ -78,6 +84,8 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
                     assertEquals(internal, GroupsDB.getInstance().getGroup(parentId).isInternal());
                     assertEquals(expectedChild, GroupsDB.getInstance().getGroup(childId).isInternal());
                     assertEquals(expectedChild, query.forBoolean("SELECT internal FROM groups WHERE group_id=?", childId));
+                    assertEquals(internal ? null : parentPath, query.forString("SELECT file_name FROM documents WHERE group_id=?", parentId));
+                    assertEquals(expectedChild ? null : childPath, query.forString("SELECT file_name FROM documents WHERE group_id=?", childId));
                 } else {
                     assertEquals(!internal, query.forBoolean("SELECT internal FROM groups WHERE group_id=?", parentId));
                 }
@@ -85,7 +93,9 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
             });
             controller.editItem(parent, parentId);
             assertEquals(List.of(WebjetEventType.ON_START, WebjetEventType.AFTER_SAVE), received);
+            docs.verify(() -> DocDB.updateFileNameField(parentId));
         } finally {
+            query.execute("DELETE FROM documents WHERE title IN (?, ?)", name, childName);
             query.execute("DELETE FROM groups WHERE group_name IN (?, ?)", name, childName);
             Constants.getServletContext().setAttribute(Constants.A_GROUPS_DB, originalGroups);
         }
@@ -96,6 +106,7 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
     void propagatesSubgroupUpdateFailure() throws SQLException {
         GroupsDB groups = mock(GroupsDB.class);
         when(groups.getSubgroupsIds(513)).thenReturn("513,515");
+        doCallRealMethod().when(groups).setAttributeToSubgroups(513, "internal", false);
         Connection connection = mock(Connection.class);
         PreparedStatement statement = mock(PreparedStatement.class);
         when(connection.prepareStatement(anyString())).thenReturn(statement);
@@ -113,5 +124,10 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
     private int insertGroup(String name, int parentId, boolean internal) {
         query.execute("INSERT INTO groups (group_name, parent_group_id, internal) VALUES (?, ?, ?)", name, parentId, internal);
         return query.forInt("SELECT group_id FROM groups WHERE group_name=?", name);
+    }
+
+    private void insertPage(String title, int groupId, String fileName) {
+        query.execute("INSERT INTO documents (title, data, data_asc, navbar, group_id, file_name) VALUES (?, ?, ?, ?, ?, ?)",
+            title, title, title, title, groupId, fileName);
     }
 }
