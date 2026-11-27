@@ -29,5 +29,6 @@ if (Tools.isEmpty(lang))
 }
 
 
-JSONArray keys = new JSONArray(FulltextSearch.suggestSimilar(term,lang));
+Object suggestions = FulltextSearch.suggestSimilar(term,lang);
+JSONArray keys = suggestions == null ? new JSONArray() : new JSONArray(suggestions);
 %><%=keys.toString() %>
