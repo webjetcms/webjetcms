@@ -347,7 +347,7 @@ public class EditorToolsForCore {
             return request;
         }
 
-        Locale locale = request.getLocale() != null ? request.getLocale() : Locale.getDefault();
+        Locale locale = Locale.forLanguageTag(PageLng.getUserLngIso(request));
         return new LocaleStripesRequestWrapper(request, locale);
     }
 
