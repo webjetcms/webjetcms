@@ -22,7 +22,7 @@ List<ModuleInfo> allModules = Modules.getInstance().getItems();
 List<ModuleInfo> filtered = new ArrayList<ModuleInfo>();
 for (ModuleInfo m : allModules)
 {
-	//out.println(m.getItemKey());
+	out.println(m.getItemKey());
 	if (m.getNameKey().equals("webjet_cmp_catalog")) continue;
 	if (m.getNameKey().equals("webjet_cmp__common")) continue;
 	if (m.getNameKey().equals("webjet_cmp_auction")) continue;
@@ -45,6 +45,10 @@ for (ModuleInfo m : allModules)
 	if (m.getNameKey().equals("webjet_cmp_projects_microsite")) continue;
 	if (m.getNameKey().equals("webjet_cmp_elfinder")) continue;
 	if (m.getNameKey().equals("webjet_cmp_content-block")) continue;
+	if (m.getNameKey().equals("webjet_editor_unlimited_upload")) continue;
+	if (m.getNameKey().equals("webjet_make_zip_archive")) continue;
+	if (m.getNameKey().equals("webjet_modRestart")) continue;
+	if (m.getNameKey().equals("webjet_replaceAll")) continue;
 
 	//NET/DSK/LMS appky
 	if (m.getNameKey().equals("webjet_cmp_lms")) continue;
@@ -157,6 +161,8 @@ keysTable.put("tooltip", "Tooltip/nápoveda");
 //keysTable.put("mirroring", "Zrkadlenie štruktúry");
 keysTable.put("response-header", "HTTP hlavičky");
 keysTable.put("webjet_cmp_ai_tools", "AI nástroje");
+keysTable.put("ai_tools", "AI nástroje");
+keysTable.put("app-language-redirect", prop.getText("apps.app-language-redirect.title"));
 
 //desc
 keysTable.put("components.enumerations.menu.desc", "Aplikácia Číselníky umožňuje vytvárať pomenované typy číselníkov, do ktorých je následne možné ukladať rôzne údaje (napr. zoznam okresov). Typy a dáta číselníkov je tiež možné exportovať a importovať pomocou .xls súboru. Čiselník môžete použíť v aplikácii Formuláre alebo nastaviť výberové možnosti pre volné polia vo web stránke, alebo ich využiť v zákazníckej implementácii.");
@@ -194,6 +200,7 @@ keysTable.put("components.adminlog.menu.desc", "Evidencia zmien v systéme WebJE
 keysTable.put("components.response-header.menu.desc", "Aplikácia umožňuje definovať HTTP hlavičky odpovede (HTTP Response Header) na základe URL adries zobrazenej stránky.");
 keysTable.put("components.ai_tools.menu.desc", "AI nástroje vám zjednodušia tvorbu a úpravu obsahu – od opravy gramatiky, cez preklady textov, návrhy titulkov, generovanie ilustračných obrázkov až po kompletný návrh stránky z PageBuilder blokov.");
 keysTable.put("components.menu.users.title.desc", "Správuje používateľov administrácie, zákazníkov pristupujúcich do zákazníckej zóny aj emailové skupiny.");
+keysTable.put("components.app-language-redirect.menu.desc", prop.getText("apps.app-language-redirect.desc"));
 
 String key = null;
 %>
