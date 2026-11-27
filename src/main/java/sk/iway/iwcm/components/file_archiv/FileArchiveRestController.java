@@ -24,7 +24,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -343,8 +343,10 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
         if(entity.getEditorFields() == null) {
             entity.setEditorFields( new FileArchivatorEditorFields() );
-        } else {
-            entity.setFilePath( DocTools.removeCharsDir(entity.getEditorFields().getDir()) );
+        } else if (Tools.isNotEmpty(entity.getEditorFields().getFile())) {
+            String dir = entity.getEditorFields().getDir();
+            if (dir == null || FileBrowserTools.hasForbiddenSymbol(dir)) throwError("components.file_archiv.upload.file_upload_error");
+            entity.setFilePath(dir);
         }
 
         if(entity.getDateInsert() == null) entity.setDateInsert( new Date() );
