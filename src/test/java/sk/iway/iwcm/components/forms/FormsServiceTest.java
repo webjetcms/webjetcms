@@ -359,7 +359,7 @@ class FormsServiceTest {
         String escapedName = "Multistepform~_screens~~100~%";
         String encodedQuotePattern = prefix + "&quot;" + escapedName + "&quot;%";
         String doubleQuotePattern = prefix + "\"" + escapedName + "\"%";
-        String singleQuotePattern = prefix + "'" + escapedName + "'%";
+        String unquotedEndPattern = prefix + escapedName + ")!%";
         String unquotedPattern = prefix + escapedName + ",%";
         FormsEntity form = new FormsEntity();
         form.setFormName(name);
@@ -371,7 +371,7 @@ class FormsServiceTest {
         FormsServiceImpl service = new FormsServiceImpl(forms, null, null, null);
         when(forms.findAllByCreateDateIsNullAndDomainId(42)).thenReturn(List.of(form));
         when(forms.findFirstByFormNameAndDomainIdAndCreateDateIsNullOrderByIdAsc(name, 42)).thenReturn(form);
-        when(forms.findDocIdsByFormInclude(encodedQuotePattern, doubleQuotePattern, singleQuotePattern, unquotedPattern))
+        when(forms.findDocIdsByFormInclude(encodedQuotePattern, doubleQuotePattern, unquotedEndPattern, unquotedPattern))
             .thenReturn(List.of(122L, 123L));
         if (submittedDocId != null) {
             FormsEntity response = new FormsEntity();
@@ -427,7 +427,7 @@ class FormsServiceTest {
             assertEquals(expected, service.isFormAccessible(name, user));
             int expectedLookups = !allFolders && (submittedDocId == null || submittedDocId < 1) ? 2 : 0;
             verify(forms, times(expectedLookups)).findDocIdsByFormInclude(
-                encodedQuotePattern, doubleQuotePattern, singleQuotePattern, unquotedPattern);
+                encodedQuotePattern, doubleQuotePattern, unquotedEndPattern, unquotedPattern);
         }
     }
 

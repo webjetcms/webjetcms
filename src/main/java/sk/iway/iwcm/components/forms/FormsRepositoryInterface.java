@@ -21,13 +21,13 @@ public interface FormsRepositoryInterface<E> extends DomainIdRepository<E, Long>
         SELECT d.id FROM DocDetails d
         WHERE d.data LIKE :encodedQuotePattern ESCAPE '~'
            OR d.data LIKE :doubleQuotePattern ESCAPE '~'
-           OR d.data LIKE :singleQuotePattern ESCAPE '~'
+           OR d.data LIKE :unquotedEndPattern ESCAPE '~'
            OR d.data LIKE :unquotedPattern ESCAPE '~'
         """)
     List<Long> findDocIdsByFormInclude(
             @Param("encodedQuotePattern") String encodedQuotePattern,
             @Param("doubleQuotePattern") String doubleQuotePattern,
-            @Param("singleQuotePattern") String singleQuotePattern,
+            @Param("unquotedEndPattern") String unquotedEndPattern,
             @Param("unquotedPattern") String unquotedPattern);
 
     List<E> findAllByCreateDateIsNull();
