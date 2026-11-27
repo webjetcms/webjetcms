@@ -55,7 +55,7 @@ for (i=2; i<=5; i++)
 }
 
 if (resultsDocId == 0)
-	resultsDocId = ((Integer)session.getAttribute("last_doc_id")).intValue();
+	resultsDocId = ((Integer)session.getAttribute("last_doc_id"));
 	//out.println(session.getAttribute("last_doc_id"));
 
 DocDB docDB = DocDB.getInstance();

@@ -2,10 +2,6 @@
 <%@page import="sk.iway.iwcm.system.fulltext.FulltextSearch"%><%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-page import="java.util.List"%><%@
-page import="java.util.Comparator"%><%@
-page import="java.util.Collections"%><%@
-page import="java.util.Collection"%><%@
 page import="org.json.JSONArray"%><%@
 page pageEncoding="utf-8" import="sk.iway.iwcm.*"
 %><%
@@ -29,5 +25,6 @@ if (Tools.isEmpty(lang))
 }
 
 
-JSONArray keys = new JSONArray(FulltextSearch.suggestSimilar(term,lang));
+Object suggestions = FulltextSearch.suggestSimilar(term,lang);
+JSONArray keys = suggestions == null ? new JSONArray() : new JSONArray(suggestions);
 %><%=keys.toString() %>
