@@ -2602,8 +2602,14 @@ public class UpdateDatabase
 	 */
 	public static void updateStatErrorColumns()
 	{
+		if (Constants.getBoolean("updateDisableFixBrowserId")) return;
+		if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+			updateOracleStatErrorColumns();
+			return;
+		}
+
 		String note = "16.09.2025 [sivan] pridanie stlpca browser_ua_id do stat_error";
-		if (Constants.getBoolean("updateDisableFixBrowserId") || isAllreadyUpdated(note)) return;
+		if (isAllreadyUpdated(note)) return;
 
 		Connection db_conn = null;
 		PreparedStatement ps = null;
@@ -2662,6 +2668,42 @@ public class UpdateDatabase
 		}
 
 		//zapis do DB, ze je to aktualizovane
+		saveSuccessUpdate(note);
+	}
+
+	private static void updateOracleStatErrorColumns() {
+		// The original migration recorded success even when Oracle rejected the ALTER TABLE.
+		String note = "27.11.2026 [webjet] oprava stlpca browser_ua_id v stat_error pre Oracle";
+		if (isAllreadyUpdated(note)) return;
+
+		String sql = """
+				SELECT t.table_name, c.column_name
+				FROM all_tables t
+				LEFT JOIN all_tab_columns c ON c.owner = t.owner AND c.table_name = t.table_name
+					AND c.column_name = 'BROWSER_UA_ID'
+				WHERE t.owner = SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')
+					AND REGEXP_LIKE(t.table_name, '^STAT_ERROR(_[0-9]{4}_[0-9]{1,2})?$', 'c')
+				ORDER BY t.table_name
+				""";
+		try (Connection connection = DBPool.getConnection();
+				PreparedStatement metadata = connection.prepareStatement(sql);
+				ResultSet tables = metadata.executeQuery();
+				Statement alter = connection.createStatement()) {
+			if (!tables.next() || !"STAT_ERROR".equals(tables.getString("table_name"))) {
+				Logger.error(UpdateDatabase.class, "Table STAT_ERROR missing from the current Oracle schema");
+				return;
+			}
+			do {
+				if (tables.getString("column_name") == null) {
+					String table = tables.getString("table_name");
+					Logger.println(UpdateDatabase.class, "Adding browser_ua_id to " + table);
+					alter.executeUpdate("ALTER TABLE " + table + " ADD browser_ua_id INT DEFAULT 0 NOT NULL");
+				}
+			} while (tables.next());
+		} catch (Exception e) {
+			Logger.error(UpdateDatabase.class, e);
+			return;
+		}
 		saveSuccessUpdate(note);
 	}
 
