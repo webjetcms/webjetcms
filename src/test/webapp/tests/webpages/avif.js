@@ -28,7 +28,7 @@ async function inspectImage(I, url) {
         const data = await response.arrayBuffer();
         const bytes = new Uint8Array(data);
         const result = { status: response.status, mime: response.headers.get('content-type'),
-            signature: String.fromCharCode(...bytes.slice(4, 12)), bytes: Array.from(bytes).join(',') };
+            signature: String.fromCharCode(...bytes.slice(4, 12)), bytes: Array.from(bytes) };
         if (!response.ok) return result;
         const image = new Image();
         const objectUrl = URL.createObjectURL(new Blob([data], { type: result.mime }));
@@ -58,7 +58,9 @@ function assertImage(I, image, width, height, transparent = true) {
 }
 
 /** Check rendered frames: canvas drawImage() only exposes the default frame of an animated image. */
-async function assertAnimationPlayback(I, url) {
+async function assertAnimationPlayback(I, url, response) {
+    // Play the bytes whose HTTP status, MIME type and AVIF signature were just checked.
+    const dataUrl = 'data:image/avif;base64,' + Buffer.from(response.bytes).toString('base64');
     await I.executeScript(async source => {
         const image = new Image();
         image.id = 'autotest-avif-playback';
@@ -66,7 +68,7 @@ async function assertAnimationPlayback(I, url) {
         document.body.appendChild(image);
         image.src = source;
         await image.decode();
-    }, url);
+    }, dataUrl);
     // Element screenshots are needed to inspect actual animation playback in Chromium and Firefox.
     const frames = await I.usePlaywrightTo('verify AVIF playback', async ({ page }) => {
         const image = page.locator('#autotest-avif-playback');
@@ -242,7 +244,7 @@ Scenario('AVIF upload, thumbnail and page insertion @singlethread', async ({ I, 
     const original = await inspectImage(I, imageUrl());
     assertImage(I, original, 120, 80);
     assertImage(I, await inspectImage(I, '/thumb' + imageUrl() + '?w=60'), 60, 40);
-    I.assertEqual((await inspectImage(I, imageUrl())).bytes, original.bytes, 'Thumbnails must preserve the original');
+    I.assertDeepEqual((await inspectImage(I, imageUrl())).bytes, original.bytes, 'Thumbnails must preserve the original');
     await verifyPage(helpers);
 });
 Scenario('AVIF page cleanup @singlethread', cleanup);
@@ -255,14 +257,14 @@ Scenario('AVIF gallery upload preserves the animated original @singlethread', as
     const base = '/images/gallery/test/' + folderName + '/';
     const original = await inspectImage(I, base + 'o_' + animatedFileName);
     I.assertEqual(original.status, 200);
-    I.assertEqual(original.bytes, readFileSync(join(__dirname, animatedFileName)).join(','));
+    I.assertDeepEqual(original.bytes, Array.from(readFileSync(join(__dirname, animatedFileName))));
     for (const prefix of ['', 's_']) {
         const image = await inspectImage(I, base + prefix + animatedFileName);
         I.assertEqual(image.status, 200);
         I.assertContain(image.mime, 'image/avif');
         I.assertTrue(['ftypavif', 'ftypavis'].includes(image.signature));
         I.assertTrue(image.width > 0 && image.height > 0);
-        await assertAnimationPlayback(I, base + prefix + animatedFileName);
+        await assertAnimationPlayback(I, base + prefix + animatedFileName, image);
     }
     for (const ip of [-1, 1, 2, 3, 4, 5, 6]) {
         const url = '/thumb' + base + animatedFileName + '?w=60&h=40' + (ip > 0 ? '&ip=' + ip : '');
@@ -270,7 +272,7 @@ Scenario('AVIF gallery upload preserves the animated original @singlethread', as
         I.assertEqual(thumbnail.status, 200);
         I.assertContain(thumbnail.mime, 'image/avif');
         I.assertTrue(['ftypavif', 'ftypavis'].includes(thumbnail.signature));
-        await assertAnimationPlayback(I, url);
+        await assertAnimationPlayback(I, url, thumbnail);
     }
     I.amOnPage('/admin/v9/apps/gallery/?dir=' + base);
     DT.waitForLoader();
@@ -289,7 +291,7 @@ Scenario('AVIF editor reports a missing codec and saves after recovery @singleth
     DTE.waitForLoader();
     I.waitForText('Obrázok sa nepodarilo uložiť.', 30, '.toast-error');
     I.seeElement('#toast-container-upload [data-upload-status="error"]');
-    I.assertEqual((await inspectImage(I, imageUrl())).bytes, original.bytes, 'A failed editor save must preserve the original');
+    I.assertDeepEqual((await inspectImage(I, imageUrl())).bytes, original.bytes, 'A failed editor save must preserve the original');
     I.switchToPreviousTab();
     I.closeOtherTabs();
     Document.setConfigValue('imageMagickDir', codecDirectory, true);
