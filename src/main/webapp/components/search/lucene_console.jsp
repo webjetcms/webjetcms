@@ -83,8 +83,16 @@ else
 {
 	if (index)
 	{
-		FulltextSearch.index(null, out);
-		IndexSearcherBuilder.refresh();
+		try
+		{
+			FulltextSearch.index(null, out);
+			IndexSearcherBuilder.refresh();
+		}
+		catch (IllegalStateException ex)
+		{
+			Logger.error(ex);
+			out.println("CHYBA: " + Tools.escapeHtml(ex.getMessage()));
+		}
 	}
 }
 %>

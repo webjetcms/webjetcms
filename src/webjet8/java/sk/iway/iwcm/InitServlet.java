@@ -98,7 +98,11 @@ public class InitServlet extends HttpServlet
 		//not used anymore, initialized from spring on start
 		if (isSpringInitialized()) {
 
-			//run cron4j, it's here because it may need spring classes to run correctly
+			UpdateDatabase.updateWithSpringInitialized();
+			clusterRefresher = new ClusterRefresher();
+			setWebjetInitialized();
+
+			// Startup jobs can render pages and need a fully initialized WebJET.
 			try
 			{
 				SpringAppInitializer.dtDiff("Starting cron");
@@ -137,13 +141,7 @@ public class InitServlet extends HttpServlet
 				sk.iway.iwcm.Logger.error(e);
 			}
 
-			UpdateDatabase.updateWithSpringInitialized();
-
-			clusterRefresher = new ClusterRefresher();
-
 			SpringAppInitializer.dtDiff("WebJET INIT DONE");
-
-			setWebjetInitialized();
 
 			Logger.println(InitServlet.class,"---------------- INIT DONE, version: "+InitServlet.getActualVersionLong()+" --------------");
 		}
