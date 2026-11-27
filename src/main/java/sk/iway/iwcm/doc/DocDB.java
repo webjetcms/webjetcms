@@ -2,6 +2,7 @@ package sk.iway.iwcm.doc;
 
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
+import net.sourceforge.stripes.controller.StripesFilterIway;
 
 import org.json.JSONObject;
 import sk.iway.Html2Text;
@@ -5064,6 +5065,7 @@ public class DocDB extends DB
 
 	public synchronized void updateInternalCaches(int docId)
 	{
+		boolean clusterRefresh = ClusterRefresher.THREAD_NAME.equals(Thread.currentThread().getName());
 		//najskor vyber z DB rovnako ako pre loadUrls
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -5084,6 +5086,15 @@ public class DocDB extends DB
 
 			if (rs.next())
 			{
+				boolean available = rs.getBoolean("available");
+				boolean searchable = rs.getBoolean("searchable");
+				String externalLink = DB.getDbString(rs, "external_link");
+				boolean needsAppRendering = clusterRefresh && available && searchable && Tools.isEmpty(externalLink)
+						&& Constants.getBoolean("luceneIncrementalDocumentIndexing") && Constants.getBoolean("fulltextExecuteApps");
+				// Defer before changing the cached document or publishing its refresh event.
+				if (needsAppRendering && (!InitServlet.isWebjetInitialized() || !StripesFilterIway.ensureInitialized()))
+					throw new IllegalStateException("Application rendering is not ready for indexing document " + docId);
+
 				doc = getBasicDocDetails(docId, false);
 				if (doc == null)
 				{
@@ -5100,11 +5111,11 @@ public class DocDB extends DB
 				doc.setTitle(DB.getDbString(rs, "title"));
 				String navbar = DB.getDbString(rs, "navbar");
 				if (doc.getTitle().equals(navbar)==false) doc.setNavbar(navbar);
-				doc.setExternalLink(DB.getDbString(rs, "external_link"));
+				doc.setExternalLink(externalLink);
 				doc.setGroupId(rs.getInt("group_id"));
 				doc.setVirtualPath(normalizeVirtualPath(DB.getDbString(rs, "virtual_path")));
-				doc.setAvailable(rs.getBoolean("available"));
-				doc.setSearchable(rs.getBoolean("searchable"));
+				doc.setAvailable(available);
+				doc.setSearchable(searchable);
 				try { doc.setFollowLinks(rs.getInt("follow_links")); } catch (Exception ex) { doc.setFollowLinks(0); }
 				doc.setShowInMenu(rs.getBoolean("show_in_menu"));
 				doc.setSortPriority(rs.getInt("sort_priority"));
@@ -5251,7 +5262,7 @@ public class DocDB extends DB
 		catch (Exception ex)
 		{
 			Logger.error(DocDB.class, ex);
-			if (ClusterRefresher.THREAD_NAME.equals(Thread.currentThread().getName()))
+			if (clusterRefresh)
 			{
 				throw new IllegalStateException("Cannot refresh document " + docId, ex);
 			}

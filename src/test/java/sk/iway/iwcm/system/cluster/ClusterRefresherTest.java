@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
@@ -16,8 +17,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,15 +31,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import net.sourceforge.stripes.controller.StripesFilterIway;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.jpa.JpaTools;
 
 class ClusterRefresherTest {
@@ -188,15 +203,69 @@ class ClusterRefresherTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource({"startup, false", "recent, true", "named, true"})
+    void retriesDocumentWhenApplicationRenderingBecomesReady(String queue, boolean webjetInitiallyReady) throws Exception {
+        int docId = 30;
+        String event = DOC_PREFIX + docId;
+        constants.when(() -> Constants.getString("clusterNames")).thenReturn("named".equals(queue) ? "node1,node2" : "auto");
+        constants.when(() -> Constants.getBoolean("luceneIncrementalDocumentIndexing")).thenReturn(true);
+        constants.when(() -> Constants.getBoolean("fulltextExecuteApps")).thenReturn(true);
+        constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
+        doCallRealMethod().when(docDB).updateInternalCaches(docId);
+        when(docDB.getBasicDocDetails(docId, false)).thenReturn(new DocDetails());
+        ReflectionTestUtils.setField(docDB, "cachedDocs", new HashMap<Integer, DocDetails>());
+
+        Connection connection = mock(Connection.class);
+        PreparedStatement statement = mock(PreparedStatement.class);
+        ResultSet row = mock(ResultSet.class);
+        when(connection.prepareStatement(anyString())).thenReturn(statement);
+        when(statement.executeQuery()).thenReturn(row);
+        when(row.next()).thenReturn(true);
+        when(row.getInt("doc_id")).thenReturn(docId);
+        when(row.getBoolean("available")).thenReturn(true);
+        when(row.getBoolean("searchable")).thenReturn(true);
+        when(row.getTimestamp("date_created")).thenReturn(new Timestamp(0));
+
+        try (MockedConstruction<SimpleQuery> queries = switch (queue) {
+                    case "startup" -> autoQueries(List.of(event), List.of());
+                    case "recent" -> autoQueries(List.of(), List.of(event));
+                    case "named" -> namedQueries(event);
+                    default -> throw new AssertionError(queue);
+                };
+                MockedStatic<DBPool> database = mockStatic(DBPool.class);
+                MockedStatic<GroupsDB> groups = mockStatic(GroupsDB.class);
+                MockedStatic<Cache> caches = mockStatic(Cache.class);
+                MockedStatic<InitServlet> webjet = mockStatic(InitServlet.class);
+                MockedStatic<StripesFilterIway> stripes = mockStatic(StripesFilterIway.class);
+                MockedStatic<Documents> index = mockStatic(Documents.class)) {
+            database.when(DBPool::getConnection).thenReturn(connection);
+            groups.when(GroupsDB::getInstance).thenReturn(mock(GroupsDB.class));
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
+            webjet.when(InitServlet::isWebjetInitialized).thenReturn(webjetInitiallyReady);
+            ClusterRefresher refresher = new ClusterRefresher();
+
+            refresher.run();
+            assertTrue(acknowledgements.isEmpty());
+            index.verifyNoInteractions();
+            verify(docDB, never()).readPagesToPublic();
+            stripes.verify(StripesFilterIway::ensureInitialized, times(webjetInitiallyReady ? 1 : 0));
+
+            webjet.when(InitServlet::isWebjetInitialized).thenReturn(true);
+            stripes.when(StripesFilterIway::ensureInitialized).thenReturn(true);
+            refresher.run();
+
+            index.verify(() -> Documents.updateSingleDocument(docId));
+            assertEquals(List.of(event), acknowledgements);
+        }
+    }
+
     @Test
     void namedModeDoesNotAcknowledgeFailedDocumentRefresh() {
         constants.when(() -> Constants.getString("clusterNames")).thenReturn("node1,node2");
         doThrow(new IllegalStateException("Index is locked")).doNothing().when(docDB).updateInternalCaches(10);
 
-        try (MockedConstruction<SimpleQuery> queries = mockConstruction(SimpleQuery.class, (query, context) -> {
-            when(query.forListString(NAMED_SQL, "node2")).thenReturn(List.of(DOC_PREFIX + "10"));
-            recordAcknowledgements(query);
-        })) {
+        try (MockedConstruction<SimpleQuery> queries = namedQueries(DOC_PREFIX + "10")) {
             ClusterRefresher refresher = new ClusterRefresher();
             refresher.run();
             assertTrue(acknowledgements.isEmpty());
@@ -210,6 +279,13 @@ class ClusterRefresherTest {
     private void enableAutoMode(boolean incrementalIndexing) {
         constants.when(() -> Constants.getString("clusterNames")).thenReturn("auto");
         constants.when(() -> Constants.getBoolean("luceneIncrementalDocumentIndexing")).thenReturn(incrementalIndexing);
+    }
+
+    private MockedConstruction<SimpleQuery> namedQueries(String event) {
+        return mockConstruction(SimpleQuery.class, (query, context) -> {
+            when(query.forListString(NAMED_SQL, "node2")).thenReturn(List.of(event));
+            recordAcknowledgements(query);
+        });
     }
 
     private MockedConstruction<SimpleQuery> autoQueries(List<String> startupEvents, List<String> recentEvents) {
