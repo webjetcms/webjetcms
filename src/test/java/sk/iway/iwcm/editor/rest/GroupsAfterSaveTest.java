@@ -50,10 +50,7 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
     void listenerReadsSavedSubtree(boolean internal, boolean recursive) {
         String name = "group-event-" + UUID.randomUUID();
         String childName = name + "-child";
-        GroupsRestController controller = new GroupsRestController(null, null, null, mock(ApproveService.class), null);
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.getSession().setAttribute(Constants.USER_KEY, mock(Identity.class));
-        ReflectionTestUtils.setField(controller, "request", request);
+        GroupsRestController controller = createController();
         Object originalGroups = Constants.getServletContext().getAttribute(Constants.A_GROUPS_DB);
 
         try (var cluster = mockStatic(ClusterDB.class); var audit = mockStatic(Adminlog.class);
@@ -101,6 +98,51 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
         }
     }
 
+    /** A recursive template edit must refresh cached page metadata before publishing the parent's event. */
+    @Test
+    void listenerReadsNewPageTemplateInSubgroup() {
+        String name = "group-template-" + UUID.randomUUID();
+        String childName = name + "-child";
+        int oldTemplateId = 10;
+        int newTemplateId = 20;
+        GroupsRestController controller = createController();
+        Object originalGroups = Constants.getServletContext().getAttribute(Constants.A_GROUPS_DB);
+        Object originalDocs = Constants.getServletContext().getAttribute(Constants.A_DOC_DB);
+
+        try (var cluster = mockStatic(ClusterDB.class); var audit = mockStatic(Adminlog.class);
+             var history = mockStatic(GroupPublisher.class); var events = mockStatic(WebjetEventPublisher.class)) {
+            int parentId = insertGroup(name, 0, false);
+            int childId = insertGroup(childName, parentId, false);
+            insertPage(childName, childId, null);
+            int pageId = query.forInt("SELECT doc_id FROM documents WHERE group_id=?", childId);
+            query.execute("UPDATE documents SET temp_id=? WHERE doc_id=?", oldTemplateId, pageId);
+            assertEquals(oldTemplateId, DocDB.getInstance(true).getBasicDocDetails(pageId, false).getTempId());
+            GroupsDB.getInstance(true);
+            GroupDetails parent = controller.getOneItem(parentId);
+            parent.setTempId(newTemplateId);
+            parent.getEditorFields().setForceTemplateToSubgroupsAndPages(true);
+
+            List<WebjetEventType> received = new ArrayList<>();
+            events.when(() -> WebjetEventPublisher.publishEvent(any(WebjetEvent.class))).thenAnswer(call -> {
+                WebjetEvent<GroupDetails> event = call.getArgument(0);
+                received.add(event.getEventType());
+                if (event.getEventType() == WebjetEventType.AFTER_SAVE) {
+                    assertEquals(parentId, event.getSource().getGroupId());
+                    assertEquals(newTemplateId, query.forInt("SELECT temp_id FROM documents WHERE doc_id=?", pageId));
+                    assertEquals(newTemplateId, DocDB.getInstance().getBasicDocDetails(pageId, false).getTempId());
+                }
+                return null;
+            });
+            controller.editItem(parent, parentId);
+            assertEquals(List.of(WebjetEventType.ON_START, WebjetEventType.AFTER_SAVE), received);
+        } finally {
+            query.execute("DELETE FROM documents WHERE title=?", childName);
+            query.execute("DELETE FROM groups WHERE group_name IN (?, ?)", name, childName);
+            Constants.getServletContext().setAttribute(Constants.A_DOC_DB, originalDocs);
+            Constants.getServletContext().setAttribute(Constants.A_GROUPS_DB, originalGroups);
+        }
+    }
+
     /** A failed bulk write must reach the controller before it can publish AFTER_SAVE. */
     @Test
     void propagatesSubgroupUpdateFailure() throws SQLException {
@@ -119,6 +161,14 @@ class GroupsAfterSaveTest extends BaseWebjetTest {
             assertSame(failure, error.getCause());
             cache.verify(() -> GroupsDB.getInstance(true));
         }
+    }
+
+    private GroupsRestController createController() {
+        GroupsRestController controller = new GroupsRestController(null, null, null, mock(ApproveService.class), null);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.getSession().setAttribute(Constants.USER_KEY, mock(Identity.class));
+        ReflectionTestUtils.setField(controller, "request", request);
+        return controller;
     }
 
     private int insertGroup(String name, int parentId, boolean internal) {

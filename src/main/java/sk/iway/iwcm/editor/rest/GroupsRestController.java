@@ -453,6 +453,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 groupsDB = GroupsDB.getInstance(true);
                 groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());
                 groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());
+                docsRefresh = true;
             }
         } finally {
             if (refreshGroupsDB) groupsDB = GroupsDB.getInstance(true);
