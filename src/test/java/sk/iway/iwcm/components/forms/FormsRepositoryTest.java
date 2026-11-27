@@ -52,7 +52,7 @@ class FormsRepositoryTest extends BaseWebjetTest {
         if (factory != null) factory.destroy();
     }
 
-    /** Both editor encodings match the full name, even when another form shares its prefix. */
+    /** Editor and manual includes match the full name, even when another form shares its prefix. */
     @Test
     void findsQuotedAndUnquotedIncludesByExactName() {
         String name = "contact" + UUID.randomUUID().toString().replace("-", "");
@@ -60,14 +60,20 @@ class FormsRepositoryTest extends BaseWebjetTest {
             manager.getTransaction().begin();
             try {
                 FormsRepository forms = new JpaRepositoryFactory(manager).getRepository(FormsRepository.class);
-                DocDetails quoted = savePage(manager, "&quot;" + name + "&quot;");
+                DocDetails encoded = savePage(manager, "&quot;" + name + "&quot;");
+                DocDetails doubleQuoted = savePage(manager, "\"" + name + "\"");
+                DocDetails singleQuoted = savePage(manager, "'" + name + "'");
                 DocDetails unquoted = savePage(manager, name);
-                savePage(manager, name + "2");
+                for (String quote : new String[] {"&quot;", "\"", "'", ""}) {
+                    savePage(manager, quote + name + "2" + quote);
+                }
                 manager.flush();
 
                 String prefix = "%!INCLUDE(sk.iway.iwcm.components.multistep~_form.mvc.MultistepFormApp, formName=";
-                assertEquals(Set.of(quoted.getId(), unquoted.getId()), new HashSet<>(forms.findDocIdsByFormInclude(
-                    prefix + "&quot;" + name + "&quot;%", prefix + name + ",%")));
+                Set<Long> expectedIds = Set.of(encoded.getId(), doubleQuoted.getId(), singleQuoted.getId(), unquoted.getId());
+                assertEquals(expectedIds, new HashSet<>(forms.findDocIdsByFormInclude(
+                    prefix + "&quot;" + name + "&quot;%", prefix + "\"" + name + "\"%",
+                    prefix + "'" + name + "'%", prefix + name + ",%")));
             } finally {
                 manager.getTransaction().rollback();
             }
