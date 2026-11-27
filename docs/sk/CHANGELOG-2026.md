@@ -362,6 +362,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Web stránky - pri hromadnej zmene dostupnosti priečinka dostanú integrácie udalosť `AFTER_SAVE` až po aktualizácii podpriečinkov. Po opätovnom zverejnení môžu zaindexovať aj ich stránky a tieto stránky sa znova zobrazia vo vyhľadávaní obmedzenom na daný priečinok (#425).
 - Skupiny práv - ak má redaktor cez skupinu pridelené iba jednotlivé stránky, po prihlásení sa jeho práva na úpravu obmedzia na tieto stránky (#419).
 - [Formuláre](redactor/apps/form/README.md) - redaktor môže otvoriť viackrokový formulár aj pred prvým odoslaním, ak má právo upravovať aspoň jednu stránku, na ktorej je formulár vložený. Autor môže prázdny formulár upravovať hneď po vytvorení alebo duplikovaní (#419).
 - Viackrokové formuláre - pri otvorení karty **Položky formuláru** alebo **Štatistiky formulára** bez prístupu k danému formuláru sa zobrazí chybová správa (#419).
@@ -831,6 +832,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Súbory - opravený názov konfiguračnej premennej `elfinderMetadataAutopopup`, ktorá po nahratí súboru automaticky zobrazí dialóg metadát. Premenná bola deklarovaná s preklepom ako `elfinerMetadataAutopopup`, ktorý sa nikde nečítal, preto jej zmena v administrácii nemala efekt. Predvolená hodnota `false` zostáva. Ak ste si nastavili premennú s preklepom, nastavte namiesto nej `elfinderMetadataAutopopup` (#410).
 - Opravené zacyklenie pri HTTP presmerovaniach počas sťahovania súborov, načítaní nastavení používateľa, inicializácii generátora primárnych kľúčov a obnove cache súborov uložených v databáze. Doplnené ukončovacie podmienky opakovaných pokusov. Ak generátor primárnych kľúčov zostane nedostupný aj po jednom pokuse o vytvorenie záznamu a obnove cache, metódy `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodia `IllegalStateException`. Volajúci musí prerušiť operáciu vyžadujúcu identifikátor a odovzdať chybu svojmu spracovaniu výnimiek (#412).
 - Menu - opravené generovanie atribútu `class` na položke `<li>` pri použití nastavenia Menu Info (`menuInfoDirName`). Trieda `menu-info-li` sa pridáva k ostatným CSS triedam položky.
+- Manažér dokumentov - pri úprave metadát aj pri nahratí nového súboru sa zachová názov priečinka vrátane predložiek, napríklad `-pre-`.
 
 ## 2026.0.40
 

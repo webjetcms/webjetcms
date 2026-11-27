@@ -58,6 +58,8 @@ import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.multiweb.MultiWebService;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
@@ -367,6 +369,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             return entity;
         }
 
+        boolean deferAfterSave = isEdit && !needApproval && entity.getEditorFields().appliesToSubgroups();
         if (needApproval) {
 
             if(isEdit == false) {
@@ -387,15 +390,21 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             }
         } else {
             // NORMAL SAVE
-            boolean saved = groupsDB.save(groupDetails);
+            if (deferAfterSave) new WebjetEvent<>(groupDetails, WebjetEventType.ON_START).publishEvent();
+            boolean saved;
+            if (deferAfterSave && entity.getEditorFields().isForceInternalToSubgroups()) {
+                saved = groupsDB.updateGroupWithSubgroupVisibility(groupDetails);
+                groupsDB = GroupsDB.getInstance();
+                forceReload = true;
+            } else {
+                saved = groupsDB.setGroup(groupDetails, !deferAfterSave);
+            }
             if (!saved) {
                 throwError("datatables.error.system.js");
                 return entity;
             }
         }
         entity.setGroupId(groupDetails.getGroupId());
-
-        if (RequestBean.getAttribute("forceReloadTree") != null) setForceReload(true);
 
         boolean docsRefresh = false;
         boolean refreshGroupsDB = false;
@@ -427,26 +436,27 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         }
 
         int groupId = entity.getGroupId();
-        if (entity.getEditorFields().isForceLngToSubFolders()) {
-            groupsDB.setLngToSubGroups(groupId, entity.getLng());
-            refreshGroupsDB = true;
-        }
+        try {
+            if (entity.getEditorFields().isForceLngToSubFolders()) {
+                refreshGroupsDB = true;
+                groupsDB.setLngToSubGroups(groupId, entity.getLng());
+            }
 
-        if (entity.getEditorFields().isPasswordProtectedSubFolders()) {
-            groupsDB.setPermissionToSubgroups(groupId, groupDetails.getPasswordProtected());
-            refreshGroupsDB = true;
-        }
+            if (entity.getEditorFields().isPasswordProtectedSubFolders()) {
+                refreshGroupsDB = true;
+                groupsDB.setPermissionToSubgroups(groupId, groupDetails.getPasswordProtected());
+            }
 
-        if (entity.getEditorFields().isForceTemplateToSubgroupsAndPages()) {
-            // Use the committed hierarchy even if a cluster cache refresh is still pending.
-            groupsDB = GroupsDB.getInstance(true);
-            groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());
-            groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());
-            refreshGroupsDB = true;
-        }
-
-        if (refreshGroupsDB) {
-            groupsDB = GroupsDB.getInstance(true);
+            if (entity.getEditorFields().isForceTemplateToSubgroupsAndPages()) {
+                // Use the committed hierarchy even if a cluster cache refresh is still pending.
+                refreshGroupsDB = true;
+                groupsDB = GroupsDB.getInstance(true);
+                groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());
+                groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());
+                docsRefresh = true;
+            }
+        } finally {
+            if (refreshGroupsDB) groupsDB = GroupsDB.getInstance(true);
         }
 
         if (entity.getEditorFields().isForceUrlDirNameChange()) {
@@ -479,7 +489,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             forceReload = true;
         }
 
-        if (entity.getEditorFields().isForceInternalToSubgroups()) {
+        if (!isEdit && entity.getEditorFields().isForceInternalToSubgroups()) {
             ws.setAttributeToSubgroups(groupId, "internal", groupDetails.isInternal());
             forceReload = true;
         }
@@ -604,6 +614,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             setForceReload(true);
         }
 
+        boolean restoreControllerDomain = false;
         //toto sa deje len ak nie je zmena domeny, lebo to inak zblble a vytvori duplicitne (vidi este stary rb.getDomainName())
         //ak sa jedna o korenovy adresar a je zapnuty local system group a este neexistuje System adresar, tak ho vytvor
         if (entity.getParentGroupId()<1 && Tools.isNotEmpty(entity.getDomainName()) && Constants.getBoolean("templatesUseDomainLocalSystemFolder")) {
@@ -670,18 +681,36 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                     if (multiWebService.getUserNotify() != null) addNotify(multiWebService.getUserNotify());
 
                     //reset domain back to controller domain because otherwise page will be reloaded
-                    if (rb != null) rb.setDomain(oldDomain);
-                    getRequest().getSession().setAttribute("preview.editorDomainName", oldDomain);
+                    restoreControllerDomain = true;
                     forceReload = false;
                     forceReloadNewDomainName = false;
                 }
             }
         }
 
-        if (docsRefresh) {
-            DocDB.getInstance(true);
-            setForceReload(true);
+        try {
+            if (docsRefresh) {
+                DocDB.getInstance(true);
+                setForceReload(true);
+            }
+
+            if (deferAfterSave) {
+                // The bulk updates can replace GroupsDB. Keep the submitted options on the event only.
+                GroupDetails savedGroup = GroupsDB.getInstance().getGroup(groupId);
+                if (savedGroup == null) throwError("datatables.error.system.js");
+                GroupDetails eventGroup = (GroupDetails) savedGroup.clone();
+                eventGroup.setEditorFields(groupDetails.getEditorFields());
+                new WebjetEvent<>(eventGroup, WebjetEventType.AFTER_SAVE).publishEvent();
+            }
+        } catch (CloneNotSupportedException ex) {
+            throw new IllegalStateException(ex);
+        } finally {
+            if (restoreControllerDomain) {
+                if (rb != null) rb.setDomain(oldDomain);
+                getRequest().getSession().setAttribute("preview.editorDomainName", oldDomain);
+            }
         }
+        if (RequestBean.getAttribute("forceReloadTree") != null) setForceReload(true);
 
         if (forceReloadNewDomainName) {
             if (domainRenamed && InitServlet.isTypeCloud()) {

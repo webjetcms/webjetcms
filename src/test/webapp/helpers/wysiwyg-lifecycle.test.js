@@ -55,6 +55,7 @@ function fixture(t, editExisting = false) {
     };
     const context = vm.createContext({
         window, document: window.document, $, console: { ...console, error: (...args) => errors.push(args) },
+        Event: window.Event,
         setTimeout: window.setTimeout.bind(window),
         WJ: window.WJ
     });
