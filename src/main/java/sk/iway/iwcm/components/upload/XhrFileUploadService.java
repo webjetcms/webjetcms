@@ -260,7 +260,7 @@ public class XhrFileUploadService {
         }
 
         Logger.debug(XhrFileUploadService.class, "moveFile, Moving file "+file.getAbsolutePath()+", to "+dest.getAbsolutePath());
-        FileTools.moveFile(file, dest);
+        if (!FileTools.moveFile(file, dest)) throw new IOException("Could not save upload to " + dest.getVirtualPath());
         Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload (xhr), path=" + dest.getVirtualPath(), -1, 1);
         return filename;
     }
@@ -283,12 +283,12 @@ public class XhrFileUploadService {
         if (file == null || !file.exists()) return null;
         IwcmFile dest = new IwcmFile(dir + fileName);
 
-        if (dest.exists()) {
+        if (dest.exists() && !dest.isS3()) {
             dest.delete();
         }
 
         Logger.debug(XhrFileUploadService.class, "moveAndReplaceFile, Moving file "+file.getAbsolutePath()+", to "+dest.getAbsolutePath());
-        FileTools.moveFile(file, dest);
+        if (!FileTools.moveFile(file, dest)) throw new IOException("Could not save upload to " + dest.getVirtualPath());
         Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload (xhr), path=" + dest.getVirtualPath(), -1, 1);
 
         return fileName;

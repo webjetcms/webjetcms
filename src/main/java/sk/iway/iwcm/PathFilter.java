@@ -1,5 +1,7 @@
 package sk.iway.iwcm;
 
+import sk.iway.iwcm.io.s3.S3Path;
+
 import sk.iway.iwcm.analytics.AnalyticsHelper;
 import sk.iway.iwcm.common.*;
 import sk.iway.iwcm.components.abtesting.ABTesting;
@@ -10,6 +12,7 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocBasic.FollowLinksMode;
+import sk.iway.iwcm.doc.GetProtectedFileServlet;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
@@ -219,6 +222,14 @@ public class PathFilter implements Filter
 			{
 				path = path.substring(req.getContextPath().length());
 			}
+            String decodedPath = path.contains("%") ? Tools.URLDecode(path) : path;
+            if (!isProtectedFilePath(path)
+                    && (isProtectedFilePath(decodedPath) || isProtectedFilePath(req.getServletPath()))) {
+                // The protected servlet authorizes the raw prefix; aliases must never reach direct file serving.
+                setNoCacheHeaders(res);
+                res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
             if (sk.iway.iwcm.doc.PlannedAccess.isPathAccessible(path, req, res)==false) return;
             if (sk.iway.iwcm.components.ai.chat.AiChatPaths.isPrivate(path)) {
                 res.setHeader("Cache-Control", "no-store");
@@ -846,6 +857,18 @@ public class PathFilter implements Filter
 				res.setHeader("Cache-Control","no-Cache");
 			}
 
+            // Keep every storage backend behind the protected servlet's user and group checks.
+            if (isProtectedFilePath(path)) {
+                chain.doFilter(servletRequest, servletResponse);
+                return;
+            }
+            if (S3Path.usesS3(path)) {
+                if (path.toLowerCase(java.util.Locale.ROOT).startsWith("/web-inf/")) {
+                    res.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+                }
+            }
+
 			//nastav kodovanie JS suborom
 			if (path.indexOf("admin/")==-1 && path.endsWith(".js"))
 			{
@@ -1186,7 +1209,7 @@ public class PathFilter implements Filter
 					return;
 				}
 			}
-			if (customPath != null)
+			if (customPath != null && !S3Path.usesS3(path))
 			{
 				//skontroluj, ci pozadovany subor nie je custom
 				IwcmFile f = new IwcmFile(customPath + File.separatorChar + Constants.getInstallName() + path.replace('/', File.separatorChar));
@@ -1229,6 +1252,33 @@ public class PathFilter implements Filter
 				}
 			}
 
+			//preposlanie suboru z historie, tiket 13373, parameter pochadza z file_history.jsp
+			if (req.getParameter("fHistoryId")!=null && user != null && user.isAdmin())
+			{
+				int fHistoryId = Tools.getIntValue(req.getParameter("fHistoryId"), -1);
+				if (fHistoryId > 0)
+				{
+					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, user, res);
+					if (sendOK == false)
+					{
+						res.setStatus(404);
+					}
+					return;
+				}
+			}
+
+			if (S3Path.usesS3(path)) {
+				setDownloadHeaders(path, req, res);
+				setStaticContentHeaders(path, user, req, res);
+				try {
+					sk.iway.iwcm.common.MultipartFileSender.fromFile(IwcmFile.fromVirtualPath(path)).with(req).with(res).serveResource();
+				} catch (Exception ex) {
+					Logger.error(PathFilter.class, "S3 resource could not be served", ex);
+					if (!res.isCommitted()) res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+				}
+				return;
+			}
+
 			if (FilePathTools.isExternalDir(path) && path.startsWith("/files/protected/")==false)
 			{
 				//externy adresar pre cloudStaticFilesDir folder
@@ -1266,24 +1316,6 @@ public class PathFilter implements Filter
 				}
 			}
 
-
-			//preposlanie suboru z historie, tiket 13373, parameter pochadza z file_history.jsp
-			if (req.getParameter("fHistoryId")!=null && user != null && user.isAdmin())
-			{
-				int fHistoryId = Tools.getIntValue(req.getParameter("fHistoryId"), -1);
-				if (fHistoryId > 0)
-				{
-					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, user, res);
-					if (sendOK == false)
-					{
-						res.setStatus(404);
-					}
-					return;
-				}
-			}
-
-
-
 			if (path.startsWith("/templates/")) {
 				Ninja.includeNinja(req);
 			}
@@ -1294,9 +1326,18 @@ public class PathFilter implements Filter
 		catch (RuntimeException rex)
 		{
 			sk.iway.iwcm.Logger.error(rex);
+			if (S3Path.usesS3(path)) {
+				if (!res.isCommitted()) res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+				return;
+			}
 		}
 		catch (Exception ex)
 		{
+			if (S3Path.usesS3(path)) {
+				Logger.error(PathFilter.class, "S3 resource could not be served", ex);
+				if (!res.isCommitted()) res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+				return;
+			}
 			if (ex.getClass().getCanonicalName().startsWith("org.spring")) throw ex;
 			else
 			{
@@ -2233,6 +2274,7 @@ public class PathFilter implements Filter
 	 */
 	public static boolean writeAndCacheFile(String url, HttpServletResponse response)
 	{
+		if (S3Path.usesS3(url)) return false;
         if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(url)) return false;
 		//ak je cache vypnuta, neriesime
 		if (FileCache.useFileCache() == false) return false;
@@ -2879,6 +2921,11 @@ public class PathFilter implements Filter
 	 */
 	private static boolean isJspFromStaticFiles(String requestPath, String servletPath) {
 		return isJspFromStaticFiles(requestPath) || isJspFromStaticFiles(servletPath);
+	}
+
+	private static boolean isProtectedFilePath(String path) {
+		return path != null && (path.equals(GetProtectedFileServlet.DIR_NAME)
+			|| path.startsWith(GetProtectedFileServlet.DIR_NAME + "/"));
 	}
 
 	private static boolean isPathSafe(String path) {

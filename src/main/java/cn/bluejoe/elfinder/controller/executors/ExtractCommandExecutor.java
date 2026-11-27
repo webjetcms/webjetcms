@@ -1,7 +1,7 @@
 package cn.bluejoe.elfinder.controller.executors;
 
 import java.io.File;
-import java.io.FileInputStream;
+import sk.iway.iwcm.io.IwcmInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,7 +107,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 
 	protected boolean areAllExtractEntriesWritable(String zipFile, FsItemEx outputFolder)
 	{
-		try (ZipInputStream zis = new ZipInputStream(new FileInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile))))
+		try (ZipInputStream zis = new ZipInputStream(new IwcmInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile))))
 		{
 			ZipEntry ze = zis.getNextEntry();
 			while (ze != null)
@@ -169,7 +169,7 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 		List<FsItemEx> added = new ArrayList<FsItemEx>();
 
 		byte[] buffer = new byte[64000];
-		try (ZipInputStream zis = new ZipInputStream(new FileInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile))))
+		try (ZipInputStream zis = new ZipInputStream(new IwcmInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile))))
 		{
 			IwcmFile folder = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(outputFolder));
 			if(!folder.exists()){
@@ -220,10 +220,12 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 				{
 					IwcmOutputStream fos = new IwcmOutputStream(newFile);
 
-					int len;
-					while ((len = zis.read(buffer)) > 0)
-					{
-						fos.write(buffer, 0, len);
+					try {
+						int len;
+						while ((len = zis.read(buffer)) > 0) fos.write(buffer, 0, len);
+					} catch (Exception ex) {
+						try { fos.abort(); } catch (IOException cleanup) { ex.addSuppressed(cleanup); }
+						throw ex;
 					}
 					fos.close();
 				}

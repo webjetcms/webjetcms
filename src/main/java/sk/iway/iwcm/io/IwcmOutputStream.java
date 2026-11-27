@@ -11,6 +11,7 @@ import java.util.Date;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.s3.S3OutputStream;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
@@ -31,29 +32,24 @@ public class IwcmOutputStream extends OutputStream
 	private byte[] buffer = null;
 	private int bufferStep = 0;
 	private FileOutputStream out = null;
+	private S3OutputStream s3Output;
 	private boolean useDBStorage = false; // ak je false zapisuje sa na disk,ak
 	private boolean fileCreated = false;
 
 	// true do db storage
-	public IwcmOutputStream(File file) throws IOException
-	{
-		useDBStorage = IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(file.getPath()));
-		if (useDBStorage)
-		{
-			buffer=new byte[IwcmFsDB.getBlockSize()];
-			this.file = new IwcmFile(file);
-		}
-		else
-		{
-			//new IwcmFile(file).delete();file.createNewFile();
-			if (file.exists()==false) file.createNewFile();
-			out = new FileOutputStream(file);
-		}
+	public IwcmOutputStream(File file) throws IOException {
+		this(new IwcmFile(file));
 	}
 
-	public IwcmOutputStream(IwcmFile file) throws IOException
-	{
-		this(new File(file.getPath()));
+	public IwcmOutputStream(IwcmFile file) throws IOException {
+		this.file = file;
+		if (file.isS3()) {
+			s3Output = new S3OutputStream(file.s3Storage(), file.s3Key());
+			return;
+		}
+		useDBStorage = IwcmFsDB.useDBStorage(file.getVirtualPath());
+		if (useDBStorage) buffer = new byte[IwcmFsDB.getBlockSize()];
+		else out = new FileOutputStream(file.getPath());
 	}
 
 	public IwcmOutputStream(String filename) throws IOException
@@ -63,6 +59,12 @@ public class IwcmOutputStream extends OutputStream
 
 	public IwcmOutputStream(String filename, boolean isVirtualPath) throws IOException
 	{
+		IwcmFile destination = new IwcmFile(isVirtualPath ? Tools.getRealPath(filename) : filename);
+		if (destination.isS3()) {
+			this.file = destination;
+			s3Output = new S3OutputStream(destination.s3Storage(), destination.s3Key());
+			return;
+		}
 		if (isVirtualPath)
 		{
 			useDBStorage = IwcmFsDB.useDBStorage(filename);
@@ -114,9 +116,16 @@ public class IwcmOutputStream extends OutputStream
 		}
 	}
 
+	/** Discards an incomplete S3 write; closes an ordinary local or database stream. */
+	public void abort() throws IOException {
+		if (s3Output != null) s3Output.abort();
+		else close();
+	}
+
 	@Override
 	public void write(int in) throws IOException
 	{
+		if (s3Output != null) { s3Output.write(in); return; }
 		if (useDBStorage)
 		{
 			if (bufferStep < IwcmFsDB.getBlockSize())
@@ -140,6 +149,7 @@ public class IwcmOutputStream extends OutputStream
 	@Override
 	public void write(byte[] in) throws IOException
 	{
+		if (s3Output != null) { s3Output.write(in); return; }
 		if (useDBStorage)
 		{
 			for (int i = 0; i < in.length; i++)
@@ -166,6 +176,7 @@ public class IwcmOutputStream extends OutputStream
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException
 	{
+		if (s3Output != null) { s3Output.write(b, off, len); return; }
 		if (useDBStorage)
 		{
 			for (int i = off; i < off + len; i++)
@@ -192,6 +203,7 @@ public class IwcmOutputStream extends OutputStream
 	@Override
 	public void close() throws IOException
 	{
+		if (s3Output != null) { s3Output.close(); return; }
 		if (useDBStorage)
 		{
 			if (buffer == null)
@@ -267,6 +279,7 @@ public class IwcmOutputStream extends OutputStream
 	@Override
 	public void flush() throws IOException
 	{
+		if (s3Output != null) { s3Output.flush(); return; }
 		if (!useDBStorage)
 		{
 			out.flush();

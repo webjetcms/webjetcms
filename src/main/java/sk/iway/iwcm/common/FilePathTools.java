@@ -106,7 +106,7 @@ public class FilePathTools
 	 * Vrati meno adresara pre aktualnu domenu (bez celej cesty)
 	 * @return
 	 */
-	private static String getDomainFolderName(String domain)
+	public static String getDomainFolderName(String domain)
 	{
 		if (Constants.getBoolean("multiDomainEnabled")==false)
 		{
@@ -191,11 +191,18 @@ public class FilePathTools
 					}
 					catch (Exception ex)
 					{
-                        if (ex instanceof IOException || isClientAbortException(ex)) {
+                        if ((!f.isS3() && ex instanceof IOException) || isClientAbortException(ex)) {
                             Logger.debug(FilePathTools.class, "Client aborted connection: " + ex.getMessage());
                             return true;
                         }
                         Logger.error(FilePathTools.class, "Error while sending file to client: " + ex.getMessage());
+                        if (f.isS3()) {
+                            if (!res.isCommitted()) {
+                                res.reset();
+                                res.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                            }
+                            return true;
+                        }
 					}
 			}
 		}

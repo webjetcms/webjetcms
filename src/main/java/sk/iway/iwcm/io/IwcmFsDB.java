@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.net.SocketException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,6 +30,7 @@ import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.s3.S3Path;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FilePathTools;
@@ -393,17 +396,24 @@ public class IwcmFsDB
 	 */
 	public static String getVirtualPath(String realPath)
 	{
+		if (realPath == null) return "/";
 		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir"))
 		{
 			String domainVirtualPath = FilePathTools.getVirtualPathHellper(realPath);
 			if (domainVirtualPath != null) return domainVirtualPath;
 		}
 
-		if (realPath == null || realPath.length() < Tools.getRealPath("/").length())
-		{
-			return "/";
+		String rootPath = Tools.getRealPath("/");
+		if (rootPath == null) return "/";
+		String root = rootPath.replace('\\', '/');
+		String absolute = realPath.replace('\\', '/');
+		if (!root.endsWith("/")) root += "/";
+		if (!absolute.startsWith(root)) {
+			try { absolute = new File(realPath).getCanonicalPath().replace('\\', '/'); }
+			catch (IOException ex) { return "/"; }
+			if (!absolute.startsWith(root)) return "/";
 		}
-		String path = "/" + realPath.substring(Tools.getRealPath("/").length()).replace('\\', '/'); //NOSONAR
+		String path = "/" + absolute.substring(root.length());
 		if (path.endsWith("/") && !"/".equals(path))
 		{
 			path = path.substring(0, path.length() - 1);
@@ -439,6 +449,7 @@ public class IwcmFsDB
 	 */
 	public static boolean useDBStorage(String virtualPath) //NOSONAR
 	{
+		if (S3Path.usesS3(virtualPath)) return false;
 		if (useDBStorage==false) return false;
 
 		if (virtualPath.startsWith("/admin") || virtualPath.endsWith(".jsp")) return false;
@@ -487,6 +498,21 @@ public class IwcmFsDB
 	 */
 	public static void writeFiletoDest(InputStream in, File file, int size,boolean closeInStream)
 	{
+		IwcmFile destination = new IwcmFile(file);
+		if (destination.isS3()) {
+			try {
+				IwcmOutputStream output = new IwcmOutputStream(destination);
+				try { in.transferTo(output); }
+				catch (IOException | RuntimeException ex) { output.abort(); throw ex; }
+				output.close();
+			} catch (IOException ex) { throw new UncheckedIOException(ex); }
+			finally {
+				if (closeInStream) {
+					try { in.close(); } catch (IOException ex) { throw new UncheckedIOException(ex); }
+				}
+			}
+			return;
+		}
 		if (useDBStorage(getVirtualPath(file.getPath())))
 		{
 			Logger.error(IwcmFsDB.class, "writeFileToDest:" + file.getPath());
@@ -657,6 +683,10 @@ public class IwcmFsDB
 	 */
 	public static void copyTo(IwcmFile src, IwcmFile dest)
 	{
+		if (src.isS3() || dest.isS3()) {
+			if (!FileTools.copyFile(src, dest)) throw new UncheckedIOException(new IOException("S3 file copy failed"));
+			return;
+		}
 		if (useDBStorage(src.getVirtualPath()))
 		{
 			try
@@ -742,6 +772,18 @@ public class IwcmFsDB
 	 */
 	public static void writeFileToDisk(File src, File outFile, boolean forceOwerwrite)
 	{
+		IwcmFile source = new IwcmFile(src);
+		if (source.isS3()) {
+			try {
+				if (outFile.exists() && !forceOwerwrite && outFile.lastModified() == source.lastModified()) return;
+				Files.createDirectories(outFile.toPath().toAbsolutePath().getParent());
+				try (InputStream input = new IwcmInputStream(source); OutputStream output = new FileOutputStream(outFile)) {
+					input.transferTo(output);
+				}
+				outFile.setLastModified(source.lastModified());
+			} catch (IOException ex) { throw new UncheckedIOException(ex); }
+			return;
+		}
 		if (useDBStorage(getVirtualPath(src.getPath())))
 		{
 			try

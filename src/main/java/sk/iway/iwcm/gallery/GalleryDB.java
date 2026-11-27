@@ -2058,6 +2058,7 @@ public class GalleryDB
 	public static boolean copyFile(String oldFilePath, String newFilePath)
 	{
 		Logger.debug(GalleryDB.class, "copyFile " + oldFilePath + "->" + newFilePath);
+		if (new IwcmFile(oldFilePath).isS3() || new IwcmFile(newFilePath).isS3()) return FileTools.copyFile(new IwcmFile(oldFilePath), new IwcmFile(newFilePath));
 		if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(oldFilePath)))
 		{
 			IwcmFsDB.copyTo(new IwcmFile(oldFilePath), new IwcmFile(newFilePath));
@@ -2309,7 +2310,7 @@ public class GalleryDB
 	private static int resizePictureImplWithResult(Dimension[] dims, String realPath, PrintWriter out, Prop prop, String resizeMode, String resizeModeNormal)
 	{
 		int ret = 0;
-		File img = new File(realPath);
+		IwcmFile img = new IwcmFile(realPath);
 
 		//uprava pre fotky zacinajuce na o_ alebo s_
 		String imageName = img.getName();
@@ -2319,7 +2320,7 @@ public class GalleryDB
 		}
 		if(!imageName.equals(img.getName()))
 		{
-			File renamedFile = new File(img.getParent()+File.separator+imageName);
+			IwcmFile renamedFile = new IwcmFile(img.getParent()+File.separator+imageName);
 			if(img.renameTo(renamedFile))
 			{
 				img = renamedFile;
@@ -2734,7 +2735,7 @@ public class GalleryDB
 		{
 			boolean svg = watermarkPath.toLowerCase().endsWith(".svg");
 			IwcmFile watermarkFile = new IwcmFile(watermarkPath);
-			if (IwcmFsDB.useDBStorage(watermarkFile.getVirtualPath()))
+			if (watermarkFile.isRemote())
 			{
 				temporaryWatermark = File.createTempFile("webjet-avif-watermark-", "."+FileTools.getFileExtension(watermarkPath));
 				IwcmFsDB.writeFileToDisk(new File(watermarkFile.getAbsolutePath()), temporaryWatermark, true);
@@ -4273,8 +4274,12 @@ public class GalleryDB
 			new SimpleQuery().execute("DELETE from gallery_dimension WHERE image_path LIKE ? "+CloudToolsForCore.getDomainIdSqlWhere(true), path+"%");
 			try{
 				Logger.debug(GalleryDB.class, "Deleting directory: " + Tools.getRealPath(path));
-				FileUtils.deleteDirectory(new File(Tools.getRealPath(path)));
-				success = true;
+				IwcmFile directory = IwcmFile.fromVirtualPath(path);
+				if (directory.isS3()) success = FileTools.deleteDirTree(directory);
+				else {
+					FileUtils.deleteDirectory(new File(Tools.getRealPath(path)));
+					success = true;
+				}
 				Logger.debug(GalleryDB.class, "Gallery "+path+" deleted");
 			}
 			catch(IOException e){

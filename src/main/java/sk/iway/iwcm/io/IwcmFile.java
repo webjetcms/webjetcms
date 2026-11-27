@@ -19,6 +19,9 @@ import org.apache.commons.lang3.StringUtils;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.io.s3.S3Path;
+import sk.iway.iwcm.io.s3.S3Storage;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
@@ -39,6 +42,8 @@ public class IwcmFile
 	private String fileName = null;
 	private String virtualPath = null;
 	private File file = null;
+	private String s3Namespace;
+	private S3Storage s3Storage;
 	private boolean isDBStorage = false; // ak je false zapisuje sa na disk,ak
 	private boolean isJarPackaging = false; //ak je true je subor v JAR archive
 
@@ -50,7 +55,8 @@ public class IwcmFile
 	{
 		this.fileName = filename;
 		virtualPath = IwcmFsDB.getVirtualPath(filename);
-		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
+		initializeS3();
+		isDBStorage = !isS3() && IwcmFsDB.useDBStorage(virtualPath);
 		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);
 		if (!isDBStorage)
 		{
@@ -62,7 +68,8 @@ public class IwcmFile
 	{
 		this.fileName = basename + File.separator + filename;
 		virtualPath = IwcmFsDB.getVirtualPath(basename + File.separator + filename);
-		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
+		initializeS3();
+		isDBStorage = !isS3() && IwcmFsDB.useDBStorage(virtualPath);
 		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);
 		if (!isDBStorage)
 		{
@@ -74,7 +81,8 @@ public class IwcmFile
 	{
 		fileName = file.getPath();
 		virtualPath = IwcmFsDB.getVirtualPath(file.getPath());
-		isDBStorage = IwcmFsDB.useDBStorage(virtualPath);
+		initializeS3();
+		isDBStorage = !isS3() && IwcmFsDB.useDBStorage(virtualPath);
 		isJarPackaging = JarPackaging.isJarPackaging(virtualPath);
 		if (!isDBStorage)
 		{
@@ -82,9 +90,27 @@ public class IwcmFile
 		}
 	}
 
-	public IwcmFile(IwcmFile parent,String child)
-	{
-		this(parent.getAbsolutePath(),child);
+	public IwcmFile(IwcmFile parent, String child) {
+		fileName = parent.getAbsolutePath() + File.separator + child;
+		file = new File(fileName);
+		if (parent.isS3() && S3Path.usesS3(parent.getVirtualPath() + "/" + child)) {
+			virtualPath = S3Path.normalize(parent.getVirtualPath() + "/" + child);
+			s3Namespace = parent.s3Namespace;
+			s3Storage = parent.s3Storage;
+		} else {
+			virtualPath = IwcmFsDB.getVirtualPath(fileName);
+			initializeS3();
+			isDBStorage = !isS3() && IwcmFsDB.useDBStorage(virtualPath);
+			isJarPackaging = !isS3() && JarPackaging.isJarPackaging(virtualPath);
+		}
+	}
+
+	private IwcmFile(String physicalPath, String virtualPath, String namespace, S3Storage storage) {
+		this.fileName = physicalPath;
+		this.file = new File(physicalPath);
+		this.virtualPath = virtualPath;
+		this.s3Namespace = namespace;
+		this.s3Storage = storage;
 	}
 
 	public IwcmFile(Path path) {
@@ -101,8 +127,42 @@ public class IwcmFile
 		return new IwcmFile(Tools.getRealPath(path), fileName);
 	}
 
+	private void initializeS3() {
+		if (S3Path.usesS3(virtualPath)) {
+			virtualPath = S3Path.normalize(virtualPath);
+			s3Namespace = S3Path.namespace(virtualPath);
+			s3Storage = S3Storage.getInstance();
+		}
+	}
+
+	/** Returns whether this file uses S3, without exposing SDK types. */
+	@JsonIgnore
+	public boolean isS3() { return s3Storage != null; }
+
+	/** Returns whether native file tools require a local working copy. */
+	@JsonIgnore
+	public boolean isRemote() { return isS3() || isDBStorage; }
+
+	String s3Key() { return s3Namespace + S3Path.normalize(virtualPath).substring(1); }
+	S3Storage s3Storage() { return s3Storage; }
+
+	/** Returns a content validator for HTTP responses. */
+	@JsonIgnore
+	public String getETag() {
+		if (!isS3()) return getName();
+		S3Storage.Metadata metadata = s3Storage.metadata(s3Key());
+		return metadata == null ? "" : "\"" + metadata.etag() + "\"";
+	}
+
+	private IwcmFile s3Child(String virtual) {
+		String physical = Tools.getRealPath(virtual);
+		if (S3Path.usesS3(virtual)) return new IwcmFile(physical, virtual, s3Namespace, s3Storage);
+		return new IwcmFile(physical);
+	}
+
 	public boolean createNewFile() throws IOException
 	{
+		if (isS3()) return s3Storage.create(s3Key());
 		if (isDBStorage)
 		{
 			if (isDirectory())
@@ -129,6 +189,10 @@ public class IwcmFile
 
 	public boolean isDirectory()
 	{
+		if (isS3()) {
+			S3Storage.Metadata metadata = s3Storage.metadata(s3Key());
+			return metadata != null && metadata.directory() == true;
+		}
 		if (isDBStorage)
 		{
 			if (exists() && IwcmFsDB.getModifiedTable().get(virtualPath) == 0)
@@ -157,6 +221,7 @@ public class IwcmFile
 
 	public boolean delete()
 	{
+		if (isS3()) return s3Storage.delete(s3Key());
 		if (isDBStorage)
 		{
 			if (Tools.isEmpty(fileName))
@@ -251,6 +316,7 @@ public class IwcmFile
 
 	public boolean exists()
 	{
+		if (isS3()) return s3Storage.metadata(s3Key()) != null;
 		if (isDBStorage)
 		{
 			if (IwcmFsDB.getFatIdTable().get(virtualPath) != null)
@@ -299,6 +365,15 @@ public class IwcmFile
 
 	public IwcmFile[] listFiles(final IwcmFileFilter filter)
 	{
+		if (isS3()) {
+			if (!isDirectory()) return new IwcmFile[0];
+			List<IwcmFile> children = new ArrayList<>();
+			for (S3Storage.Metadata metadata : s3Storage.list(s3Key()).values()) {
+				IwcmFile child = s3Child("/" + metadata.key().substring(s3Namespace.length()));
+				if (filter == null || filter.accept(child)) children.add(child);
+			}
+			return children.toArray(new IwcmFile[0]);
+		}
 		if (!this.isDirectory())
 			return new IwcmFile[0];
 		if (isDBStorage)
@@ -350,6 +425,18 @@ public class IwcmFile
 				return false;
 				}
 			});
+			if (Constants.getBoolean("s3Enabled") && getCanonicalPath().equals(new IwcmFile(Tools.getRealPath(getVirtualPath())).getCanonicalPath())) {
+				java.util.Map<String, IwcmFile> combined = new java.util.LinkedHashMap<>();
+				if (files != null) for (File child : files) combined.put(child.getName(), new IwcmFile(child));
+				for (String root : S3Path.roots()) {
+					int slash = root.lastIndexOf('/');
+					String parent = slash == 0 ? "/" : root.substring(0, slash);
+					if (!parent.equals(getVirtualPath())) continue;
+					IwcmFile child = IwcmFile.fromVirtualPath(root);
+					if (child.exists() && (filter == null || filter.accept(child))) combined.put(child.getName(), child);
+				}
+				return combined.values().toArray(new IwcmFile[0]);
+			}
 			if (files==null) return null;
 			IwcmFile[] result = new IwcmFile[files.length];
 			int i = 0;
@@ -386,6 +473,10 @@ public class IwcmFile
 
 	public boolean isFile()
 	{
+		if (isS3()) {
+			S3Storage.Metadata metadata = s3Storage.metadata(s3Key());
+			return metadata != null && metadata.directory() == false;
+		}
 		if (isDBStorage)
 		{
 			if (exists() && IwcmFsDB.getModifiedTable().get(virtualPath) > 0)
@@ -453,6 +544,7 @@ public class IwcmFile
 	@JsonIgnore
 	public IwcmFile getParentFile()
 	{
+		if (isS3()) return s3Child(getVirtualParent());
 		if (isDBStorage)
 		{
 			return new IwcmFile(fileName.substring(0, fileName.lastIndexOf(File.separatorChar)));
@@ -465,6 +557,7 @@ public class IwcmFile
 
 	public boolean mkdirs()
 	{
+		if (isS3()) return s3Storage.mkdirs(s3Key());
 		if (!isDBStorage)
 		{
 			return file.mkdirs();
@@ -508,6 +601,10 @@ public class IwcmFile
 
 	public long length()
 	{
+		if (isS3()) {
+			S3Storage.Metadata metadata = s3Storage.metadata(s3Key());
+			return metadata == null ? 0 : metadata.size();
+		}
 		if (isDBStorage)
 		{
 			try
@@ -533,6 +630,10 @@ public class IwcmFile
 
 	public long lastModified()
 	{
+		if (isS3()) {
+			S3Storage.Metadata metadata = s3Storage.metadata(s3Key());
+			return metadata == null ? 0 : metadata.modified();
+		}
 		if (isDBStorage)
 		{
 			if (IwcmFsDB.getModifiedTable().get(virtualPath) == null)
@@ -553,6 +654,7 @@ public class IwcmFile
 
 	public boolean setLastModified(long time)
 	{
+		if (isS3()) return false;
 		if (isDBStorage)
 		{
 			return IwcmFsDB.updateLastModified(virtualPath, time);
@@ -565,6 +667,11 @@ public class IwcmFile
 
 	public boolean renameTo(IwcmFile out)
 	{
+		if (isS3() || out.isS3()) {
+			if (isS3() && out.isS3() && s3Storage == out.s3Storage) return s3Storage.rename(s3Key(), out.s3Key());
+			// Cross-storage moves must finish the entire copy before deleting any source.
+			return FileTools.copyTree(this, out) && (isDirectory() ? FileTools.deleteDirTree(this) : delete());
+		}
 		if (isDBStorage)
 		{
 		if (out.isDBStorage)
@@ -726,6 +833,7 @@ public class IwcmFile
 
 	public boolean canRead()
 	{
+		if (isS3()) return exists();
 		if (isDBStorage)
 		{
 			return true;

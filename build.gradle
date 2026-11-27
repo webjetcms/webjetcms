@@ -145,6 +145,8 @@ configurations {
 
 dependencies {
 
+    implementation 'io.minio:minio:9.0.4'
+
     implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
     localAi "com.webjetcms:webjet-ai-local:${webjetAiVersion}"
 
@@ -440,10 +442,24 @@ localAiModelTasks.each { taskName, modelDefinition ->
     }
 }
 
+tasks.register('s3IntegrationTest', Test) {
+    description = 'Tests CMS file operations against an explicitly configured S3 server.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    outputs.upToDateWhen { false }
+    useJUnitPlatform { includeTags 's3-integration' }
+    systemProperty 'file.encoding', 'UTF-8'
+    systemProperty 'user.language', 'sk'
+    systemProperty 'user.country', 'SK'
+    systemProperty 'webjetDbname', System.getProperty('webjetDbname') ?: '/poolman-local.xml'
+    testLogging { events 'passed', 'skipped', 'failed'; exceptionFormat = 'full' }
+}
+
 test {
     def failedTestClasses = new TreeSet<String>()
 
-    useJUnitPlatform()
+    useJUnitPlatform { excludeTags 's3-integration' }
     systemProperty 'sun.net.client.defaultConnectTimeout', '10000'
     systemProperty 'sun.net.client.defaultReadTimeout', '10000'
     systemProperty 'file.encoding', 'UTF-8'
