@@ -83,7 +83,6 @@ public class StripesFilterIway extends StripesFilter
 
 	public synchronized void initLazy() throws ServletException
 	{
-		initError = false;
 		try
 		{
 			//doble check
