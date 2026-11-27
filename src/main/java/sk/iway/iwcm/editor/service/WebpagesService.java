@@ -534,7 +534,7 @@ public class WebpagesService {
 
             ps.execute();
         } catch (Exception ex) {
-            Logger.error(WebpagesService.class, ex);
+            throw new IllegalStateException("Failed to update " + attributeName + " for subgroups of " + groupId, ex);
         } finally {
             try {
                 if (ps != null)
@@ -544,10 +544,8 @@ public class WebpagesService {
             } catch (Exception ex) {
                 Logger.error(WebpagesService.class, ex);
             }
-		  }
-
-		  //mame zmeny je najlepsie refreshnut celu GroupsDB
-		  GroupsDB.getInstance(true);
+            GroupsDB.getInstance(true);
+        }
     }
 
 	/**

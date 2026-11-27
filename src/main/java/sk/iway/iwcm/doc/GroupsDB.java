@@ -4000,7 +4000,7 @@ public class GroupsDB extends DB
             ps.setString(1, language);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update the language for subgroups of " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)
@@ -4068,7 +4068,7 @@ public class GroupsDB extends DB
             ps.setString(1, passwordProtectedString);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update permissions for subgroups of " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)
@@ -4102,7 +4102,7 @@ public class GroupsDB extends DB
             ps.setInt(1, templateId);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update the template for subgroups of " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)
@@ -4131,7 +4131,7 @@ public class GroupsDB extends DB
             ps.setInt(1, templateId);
             ps.execute();
         } catch (Exception ex) {
-            sk.iway.iwcm.Logger.error(ex);
+            throw new IllegalStateException("Failed to update the template for pages in folder " + parentGroupId, ex);
         } finally {
             try {
                 if (ps != null)
