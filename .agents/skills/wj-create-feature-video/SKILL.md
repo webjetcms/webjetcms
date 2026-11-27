@@ -1,6 +1,6 @@
 ---
 name: wj-create-feature-video
-description: "Create WebJET CMS feature videos from a pull request or branch: a JavaScript shot plan with localized narration and browser steps, ElevenLabs audio, recordings, and a finished Tesseract edit with the standard WebJET outro. Use when preparing or revising a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
+description: "Create WebJET CMS feature videos from a pull request or branch: a JavaScript shot plan with localized narration and browser steps, ElevenLabs audio, recordings, an editable Shotcut project, and an MP4 rendered with melt. Use when preparing or revising a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
 ---
 
 # Create a WebJET CMS Feature Video
@@ -9,7 +9,7 @@ Prepare a customer-focused product story and repeatable browser footage. Keep
 shot metadata, localized narration, preparation and browser steps in one
 JavaScript object; derive the narration, shot plan and walkthrough from it.
 
-Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Also verify availability of ElevenLabs access and the Tesseract video tools before the steps that require them. If a prerequisite is absent, report it and keep the deliverable to the feasible story/shot plan; do not silently install plugins, copy the core harness or change CMS dependencies. Resolve project paths from the target checkout and references from this skill's own directory.
+Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Check ElevenLabs access when generating a voice. Before rendering, [locate or install Shotcut](references/shotcut-editing.md#locate-or-install-shotcut) and verify its command-line tools. For a prepared scenario, locate its recorded shots, retakes and approved narration first. When they match the plan and language, start at section 7. If a prerequisite is missing, report the affected step and complete the steps supported by the available inputs. Resolve project paths from the target checkout and references from this skill's own directory.
 
 Read [references/production-reference.md](references/production-reference.md)
 before implementing or changing a video scenario. It contains the exact schema,
@@ -340,7 +340,7 @@ file. Preserve manual gaps in `notes`; use `""` only for intentional silence.
 Run the migrated browser actions with a changed shot order to verify that their
 preparation is independent.
 
-For new productions, deliver the derived narration and shot plan, word count,
+For a scenario handoff, deliver the derived narration and shot plan, word count,
 estimated/measured duration, voice/model, documentation URL, scenario path,
 commands, output paths, validation and manual gaps. For workflow refactoring,
 explain the schema, reorder/language controls, changed files and verification;
@@ -392,32 +392,24 @@ than doing every click immediately and holding only the final screen.
 
 ## 7. Assemble the Finished Video
 
-When a finished edit or retiming is requested, use the installed Tesseract video
-skill and read [references/tesseract-editing.md](references/tesseract-editing.md).
-Keep the approved narration as the timing anchor, preserve continuous topic
-flows, and show the full recorded interface by default. Briefly zoom in only
-while text is being entered or the narrator is identifying a specific icon or
-region. Return to the full interface as soon as that cue ends. Show every
-window change at full frame so the viewer can see which window opened. Omit
-numbered chapter-title overlays unless explicitly requested.
+For a finished video or a retiming, the default is an editable Shotcut timeline
+written directly as MLT XML and an MP4 rendered with Shotcut’s bundled `melt`.
+Verify both from the command line. Open the graphical editor only on request.
+Follow the [MLT editing and export guide](references/shotcut-editing.md) for
+time remapping, camera keyframes, optional comparison overlays and export checks.
+Keep the approved speech on a separate audio track and keyframe the zoom on
+the picture clip. Show the full interface for window changes. Zoom only while
+the viewer needs to read typed text or locate a control, then return to the
+full frame. Omit numbered chapter titles unless requested.
 
-Include the opening AI disclosure in every finished video, following the
-wording, placement, timing and readability checks in the reference's
-[AI Disclosure](references/tesseract-editing.md#ai-disclosure) section.
+Include the opening AI disclosure and append the complete shared animation
+from `src/test/webapp/video/assets/outro.mp4` once at original speed after the
+closing hold, unless the user requests a different ending. Keep standalone
+retakes and middle excerpts within their requested time ranges.
 
-Always finish the complete WebJET feature video with the supplied animation in
-`src/test/webapp/video/assets/outro.mp4`, unless the user requests a different
-ending. Append it once, at its original speed, after the final narration and
-the brief closing hold. Preserve the entire animation and any source audio.
-Include it in both the editable Tesseract project and the final MP4; merely
-linking the asset or documenting a manual editing step is not a finished result.
-Feature-only retakes remain standalone; do not append the outro to every shot.
-
-Store reusable editing knowledge in this skill's version-controlled references.
-`docs/feature-video/`, including project readmes and working scripts, is ignored
-and may disappear with the worktree. Keep generated media there, but do not use
-it as the only copy of instructions needed for the next production. Check new
-references and shared source assets with `git status`; leave commits to the user.
+Hand off links to the finished MP4 and editable `.mlt`. Keep both together with
+the relatively linked `media/` directory under gitignored `docs/feature-video/`
+so the user can move the project and edit it later.
 
 ## Talking Heads and Credits
 

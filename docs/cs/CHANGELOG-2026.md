@@ -42,6 +42,10 @@
 
 ![Ověření zablokovaného zařízení před vstupem do administrace](redactor/admin/logon-device-verification.png)
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/GgSgLLz7Nus" title="Neznáme prihlásenie do WebJET CMS? Ako skontrolovať a zabezpečiť účet" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Specifická přihlášení přes `doFilterLogon` a `wjlogontoken` odmítnou zablokovaný prohlížeč bez emailové výzvy. K odblokování je třeba použít běžný přihlašovací formulář ve stejném prohlížeči (#340).
 
 Sledování zařízení lze vypnout nastavením konfigurační proměnné `adminNewDeviceDetectionEnabled` na false. Při přihlášení se také zjišťuje [přibližná poloha](admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení) podle IP adresy, vypnout se dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
@@ -134,6 +138,10 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 - AI Čet u pole - přidána ukládaná historie filtrovaná podle stejného pole a záznamu. Starší rozhovor můžete vyhledat, otevřít a pokračovat v něm i po zavření editoru; odpovědi zůstávají dostupné pro vložení do pole.
 - AI Čet při poli a v editoru stránky - přidáno nahrávání obrázků a dokumentů pro asistenty s podporou historie. Soubory můžete vybrat ikonou plus, přetáhnout do zprávy nebo vložit obrázek ze schránky - asistent je zpracuje spolu s obsahem stránky (#386).
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/60TS777DwrI" title="Ako vytvoriť pozvánku na web z PDF pomocou AI | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](redactor/ai/datatables/pb-chat-preview.png)
 
 ### Headless režim
@@ -194,6 +202,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ![](redactor/apps/multistep-form/tab-relations.png)
 
 - Vícekrokové formuláře - při nastavování podmínek zobrazení a povinnosti se srovnávaná hodnota pro výběrová pole vybírá z jejich možností včetně číselníků a společných rádiových skupin. Není třeba zadávat hodnoty ručně (#391).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Vícekrokové formuláře - výběr **Krok formuláře** v editoru položky zobrazuje aktuální číslo kroku i po změně pořadí kroků potažením myší (#392).
 - Regulární výrazy - seznam zobrazuje přeložený název podle jazyka administrace a původní název označuje jako **Překladový klíč**. Výběr **Povolená hodnota** ve vícekrokových formulářích používá formát **kód - název** (#387).
 - Vícekrokové formuláře - opravený překlep v překladových klíčích z `components.mustistep.*` na `components.multistep.*` (#378).
@@ -207,6 +220,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
 - Doplněný hybridní režim sémantického vyhledávání a volitelná RAG odpověď z indexovaného obsahu. Aplikace **Vyhledávání** má nová nastavení pro typ vyhledávání, hybridní chování, výběr AI asistenta a limity kontextu odpovědi (#58521).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/KL28HZHyCSQ" title="Ako funguje sémantické vyhľadávanie s AI odpoveďou | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
@@ -285,6 +302,11 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Přidána možnost nastavit volitelné pole jako povinné (#58413).
 - Prázdná povinná volitelná pole již neblokují mazání záznamů v datových tabulkách včetně složek webových stránek (#414).
 - Přidány nové typy volitelných polí [přepínač a zaškrtávací pole](frontend/webpages/customfields/custom-fields-settings.md#rozdíl-mezi-selectmultiselect-a-radiocheckbox) s podporou statických možností i propojení na číselník. Typ `multiselect` nyní také podporuje [propojení na číselník](frontend/webpages/customfields/custom-fields-settings.md#zdroj-možností). Původní typ `enumeration` byl nahrazen přepínačem zdroje možností u typů `select`, `multiselect`, `radio` a `checkbox` kde se pro všechny tyto typy polí načtou možnosti z propojeného číselníku (#58637).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/kYG86QHoTho" title="Ako nastaviť vlastné polia priamo v administrácii WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 - Přidán typ [Editor JSON](developer/datatables-editor/customfields.md#json-editor) (`jsoneditor`) pro přímé zadávání JSON objektu s čísly řádků a tlačítkem pro formátování (#311).
 
 ![](frontend/webpages/customfields/webpages-jsoneditor.png)
@@ -370,6 +392,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Editor stránek - při automatické maximalizaci v nízkém nebo úzkém okně zůstává celý panel nástrojů nad obsahem stránky. Obsah již neprosvítá pod ikonami a názvy skupin (#372).
 - Editor stránek - při selhání získání obsahu nebo hodnotě `undefined` se zobrazí chyba a uložení se zastaví, aby se nepřepsal původní obsah. Atributy `contenteditable` se odstraňují při načítání i ukládání HTML včetně kódu vloženého v HTML režimu (#369).
 - Page Builder - při selhání načítání obsahu lze přepnout do HTML režimu obnovením posledního dostupného HTML. Obnova vyžaduje potvrzení, protože nemusí obsahovat nejnovější změny (#369).
+- Page Builder - po opětovném otevření stránky se i při pomalém připojení dá přepnout do HTML režimu. Ve zdrojovém kódu se zobrazí také neuložené úpravy z Page Buildera (#423).
+- Page Builder - opraveno zobrazení potvrzení o opuštění stránky pokud formulář nebo samotná web stránka nastavuje událost `onbeforeunload` (#423).
 - Page Builder - opraveno zamrznutí editoru při otevření HTML se zbývajícím atributem `contenteditable="true"`. CKEditor se na stejném bloku již neinicializuje dvakrát.
 - Page Builder - obnovení fokusu po vložení obsahu nebo strukturálního bloku, přesunu, duplikování a zavření vlastností či knihovny neposouvá stránku k začátku editoru. Oprava funguje také v šablonách s plynulým posouváním (`scroll-behavior: smooth`) (#389).
 - Page Builder - nepodporované elementy označené `pb-editable`, například položky seznamu `li`, již nezablokují přepnutí z HTML editoru. Jejich obsah zůstává zachován a lze jej upravovat přes nadřazenou editovatelnou oblast (#382).

@@ -205,6 +205,12 @@ There are two separate tabs available:
 
 Both cards use the same type of rules and the same scoring method. They differ only in the resulting effect. Settings from one card do not affect the settings of the other card.
 
+In the video, you will set up the **Service Request** form so that the company name is only displayed when **Company** is selected. The phone number will remain visible to everyone, but will only be required for the company. On the [Bonds](#bounds) tab, you will see which fields are used by the answer to the **Customer Type** question.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/rsLmwmGuP8k" title="Formulár, ktorý sa prispôsobí odpovediam návštevníka | WebJET CMS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ![](tab-visibilityConditions.png)
 
 !>**Warning:** The system does not check whether the specified conditions are actually met, so set them so that they can occur. Also avoid situations where an item has a conditional display and its value is used in another condition at the same time, as this may result in a deadlock. We also do not recommend changing the order of steps if you have already set conditions, as this may result in a situation where the field from step 1 is waiting for the value of the field from step 3, which will not work correctly.

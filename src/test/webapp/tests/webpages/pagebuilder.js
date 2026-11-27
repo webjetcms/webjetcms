@@ -291,6 +291,58 @@ Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
     Document.resetPageBuilderMode();
 });
 
+Scenario('reopened Page Builder keeps live HTML when editor styles load slowly', async ({I, DTE, Document, Apps}) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+    DTE.cancel();
+    I.fillField('#tree-doc-id', '57');
+    I.pressKey('Enter');
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+
+    const stylesheet = '**/webjetcomponents/samples/contents.css*';
+    let delayedRequests = 0;
+    const slowStylesheet = async route => {
+        delayedRequests++;
+        // Simulate an iframe stylesheet arriving after the old 500 ms mode switch.
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        await route.continue();
+    };
+    await I.mockRoute(stylesheet, slowStylesheet);
+    try {
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.click(locate('[data-ckeditor-instance][contenteditable="true"]').first());
+        I.type('autotest slow switch');
+        const html = await I.executeScript(() => getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+        assert.ok(html.includes('autotest slow switch'));
+        I.selectOption('.exit-inline-editor select', 'html');
+        I.switchTo();
+        I.waitForVisible('.CodeMirror-code pre.CodeMirror-line', 10);
+        // Lines can overflow a zero-sized CodeMirror. Check the editor itself when the switch completes.
+        const source = await I.executeScript(async () => {
+            await webpagesDatatable.EDITOR.field('data').s.opts.wjeditorReadyPromise;
+            const editor = document.querySelector('.CodeMirror');
+            return {html: editor.CodeMirror.getValue(), visible: editor.clientWidth > 0 && editor.clientHeight > 0};
+        });
+        assert.ok(source.visible, 'The source editor must be visible as soon as the mode switch finishes');
+        assert.ok(source.html === html, 'The complete HTML must match the live Page Builder content');
+
+        Apps.switchEditor('standard');
+        DTE.waitForCkeditor();
+        Apps.switchEditor('html');
+        I.waitForVisible('.CodeMirror-code pre.CodeMirror-line', 10);
+        assert.ok(await I.executeScript(() => document.querySelector('.CodeMirror').CodeMirror.getValue().includes('autotest slow switch')));
+        assert.ok(delayedRequests > 0, 'The WYSIWYG stylesheet must have loaded through the slow route');
+        I.amAcceptingPopups();
+        DTE.cancel();
+    } finally {
+        await I.stopMockingRoute(stylesheet, slowStylesheet);
+        Document.resetPageBuilderMode();
+    }
+});
+
 Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
     //bug: nacitam do editora stranku, prepnem na Standardny editor, prepnem do HTML kodu, ulozim
     //otvorim inu stranku, prepnem editor na Standardny a vidim stary text

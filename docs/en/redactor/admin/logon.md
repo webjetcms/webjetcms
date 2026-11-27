@@ -92,7 +92,7 @@ If you know the login, confirm it with the **It was me** link in the email or th
 
 ![](device-confirm-code.png)
 
-If you don't know the login, follow the [device blocking instructions](welcome.md#if-you-don't-know-the-login).
+If you don't know your login, follow the [device blocking instructions](welcome.md#if-you-don't-know-your-login). In the [video about logging in from a new browser](welcome.md#new-login-from-an-unknown-device) you will see confirmation of your own login and log out of the blocked browser.
 
 ![](device-block.png)
 
