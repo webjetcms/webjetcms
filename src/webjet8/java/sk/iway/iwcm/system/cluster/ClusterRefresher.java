@@ -11,7 +11,12 @@ import java.util.TimerTask;
 
 import org.eclipse.persistence.jpa.JpaEntityManager;
 
-import sk.iway.iwcm.*;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.stat.SessionHolder;
@@ -184,8 +189,6 @@ public class ClusterRefresher extends TimerTask
 	private void replayStartupDocumentRefreshes(String clusterMyNodeName)
 	{
 		if (startupDocumentRefreshMaxId < 0) return;
-		//applications in pages cannot be rendered for index before WebJET is initialized, replay is retried in next run
-		if (!InitServlet.isWebjetInitialized()) return;
 		try
 		{
 			List<String> updateClassNames = new SimpleQuery().forListString("SELECT class_name FROM cluster_refresher WHERE (node_name=? OR node_name=?) AND cluster_refresh_id<=? AND class_name LIKE ? ORDER BY cluster_refresh_id ASC",

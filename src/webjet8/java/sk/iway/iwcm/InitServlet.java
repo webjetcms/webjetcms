@@ -77,7 +77,7 @@ public class InitServlet extends HttpServlet
 
 	private static int licenseId = -1;
 
-	private static boolean webjetInitialized = false;
+	private static volatile boolean webjetInitialized = false;
 	private static boolean webjetConfigured = false;
 	private static boolean springInitialized = false;
 
