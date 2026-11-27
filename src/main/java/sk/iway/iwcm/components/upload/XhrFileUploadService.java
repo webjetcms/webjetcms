@@ -229,6 +229,15 @@ public class XhrFileUploadService {
         }
     }
 
+    /**
+     * Moves a temporary upload to its destination, choosing a numbered name when a file already exists.
+     * Filenames in image, file and form-attachment directories are normalized before moving.
+     *
+     * @param fileKey unique temporary-upload key
+     * @param dir physical destination directory path
+     * @return final filename, or null if the temporary upload is unavailable
+     * @throws IOException if the move fails
+     */
     @SuppressWarnings("java:S1130")
     public String moveFile(String fileKey, String dir) throws IOException
     {
@@ -265,6 +274,16 @@ public class XhrFileUploadService {
         return filename;
     }
 
+    /**
+     * Moves a temporary upload to the requested filename, replacing an existing destination.
+     * Existing S3 content is retained until the replacement is copied successfully.
+     *
+     * @param fileKey unique temporary-upload key
+     * @param dir physical destination directory path including its trailing separator
+     * @param fileNameParam requested filename, normalized for image, file and form-attachment directories
+     * @return final filename, or null if the temporary upload is unavailable
+     * @throws IOException if the move fails
+     */
     @SuppressWarnings("java:S1130")
     public String moveAndReplaceFile(String fileKey, String dir, String fileNameParam) throws IOException
     {

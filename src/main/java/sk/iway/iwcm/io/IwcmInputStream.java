@@ -17,7 +17,8 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
 
 /**
- * IwcmInputStream.java
+ * Reads CMS files from local, database, packaged JAR or S3 storage.
+ * S3 streams use the namespace captured by their {@link IwcmFile}.
  *
  * @Title webjet4
  * @Company Interway s.r.o. (www.interway.sk)
@@ -44,6 +45,13 @@ public class IwcmInputStream extends InputStream
 		this(new IwcmFile(f));
 	}
 
+	/**
+	 * Opens the file using its selected storage backend.
+	 *
+	 * @param f source file with its captured storage context
+	 * @throws FileNotFoundException if a local file cannot be opened or S3 reports a missing object
+	 * @throws UncheckedIOException if opening the S3 object fails for another reason
+	 */
 	public IwcmInputStream(IwcmFile f) throws FileNotFoundException {
 		file = new File(f.getPath());
 		String virtualPath = f.getVirtualPath();
@@ -62,7 +70,16 @@ public class IwcmInputStream extends InputStream
 		else if (!isDBStorage) in = new FileInputStream(file);
 	}
 
-	/** Opens an independent range, including multipart HTTP requests with overlapping ranges. */
+	/**
+	 * Opens an independent stream positioned at the requested offset.
+	 * S3 limits the response to the requested length; other backends only skip the offset,
+	 * so callers must limit their reads to {@code length} bytes themselves.
+	 *
+	 * @param f source file
+	 * @param offset nonnegative zero-based byte offset
+	 * @param length requested range length in bytes; applied by S3 only
+	 * @throws IOException if opening the stream or skipping to the offset fails
+	 */
 	public IwcmInputStream(IwcmFile f, long offset, long length) throws IOException {
 		if (f.isS3()) {
 			s3 = true;
@@ -79,6 +96,14 @@ public class IwcmInputStream extends InputStream
 		this(IwcmFsDB.getVirtualPath(f.getPath()), fatId);
 	}
 
+	/**
+	 * Selects a database version by its ID, or opens the currently configured storage when no ID is supplied.
+	 * A positive ID keeps database history accessible even when the path now routes to S3.
+	 *
+	 * @param virtualPath absolute CMS path
+	 * @param fatId positive database file ID, or a nonpositive value to select the current file
+	 * @throws UncheckedIOException if opening the current file fails
+	 */
 	public IwcmInputStream(String virtualPath, int fatId) {
 		this.fatId = fatId;
 		file = new File(Tools.getRealPath(virtualPath));

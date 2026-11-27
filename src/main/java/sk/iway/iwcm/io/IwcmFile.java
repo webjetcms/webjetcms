@@ -26,7 +26,8 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
- * IwcmFile.java
+ * Represents a CMS path across local, database, packaged JAR and S3 storage.
+ * S3 instances retain their domain namespace and client when the request context changes.
  *
  * @Title webjet4
  * @Company Interway s.r.o. (www.interway.sk)
@@ -49,7 +50,9 @@ public class IwcmFile
 
 	// true do db storage
 	/**
-	 * filename je skutocna cesta napr. C:\foo\bar.jpg
+	 * Resolves a physical path to its configured CMS storage backend.
+	 *
+	 * @param filename physical path, for example {@code C:\foo\bar.jpg}
 	 */
 	public IwcmFile(String filename)
 	{
@@ -64,6 +67,12 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Resolves a physical parent path and child name to their configured storage backend.
+	 *
+	 * @param basename physical parent directory path
+	 * @param filename child path relative to the parent
+	 */
 	public IwcmFile(String basename, String filename)
 	{
 		this.fileName = basename + File.separator + filename;
@@ -77,6 +86,11 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Resolves a filesystem path to its configured CMS storage backend.
+	 *
+	 * @param file physical path used to determine the CMS path and storage
+	 */
 	public IwcmFile(File file)
 	{
 		fileName = file.getPath();
@@ -90,6 +104,13 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Creates a child path, retaining the parent's S3 context when the child also routes to S3.
+	 * Paths outside S3 are resolved using the current storage configuration.
+	 *
+	 * @param parent parent directory with its captured storage context
+	 * @param child child path relative to the parent
+	 */
 	public IwcmFile(IwcmFile parent, String child) {
 		fileName = parent.getAbsolutePath() + File.separator + child;
 		file = new File(fileName);
@@ -135,18 +156,30 @@ public class IwcmFile
 		}
 	}
 
-	/** Returns whether this file uses S3, without exposing SDK types. */
+	/**
+	 * Identifies files routed to S3 without exposing SDK types.
+	 *
+	 * @return true if this instance has a captured S3 client
+	 */
 	@JsonIgnore
 	public boolean isS3() { return s3Storage != null; }
 
-	/** Returns whether native file tools require a local working copy. */
+	/**
+	 * Identifies storage that requires a local working copy for native file tools.
+	 *
+	 * @return true for S3 or database storage
+	 */
 	@JsonIgnore
 	public boolean isRemote() { return isS3() || isDBStorage; }
 
 	String s3Key() { return s3Namespace + S3Path.normalize(virtualPath).substring(1); }
 	S3Storage s3Storage() { return s3Storage; }
 
-	/** Returns a content validator for HTTP responses. */
+	/**
+	 * Supplies the validator used by HTTP file responses.
+	 *
+	 * @return quoted S3 ETag, an empty string for missing S3 metadata, or the filename for other backends
+	 */
 	@JsonIgnore
 	public String getETag() {
 		if (!isS3()) return getName();
@@ -160,6 +193,13 @@ public class IwcmFile
 		return new IwcmFile(physical);
 	}
 
+	/**
+	 * Creates an empty file on local or S3 storage, or prepares a database placeholder.
+	 * Database storage replaces the existing entry; local and S3 storage preserve an existing target.
+	 *
+	 * @return whether the backend created or prepared the entry
+	 * @throws IOException if local or S3 creation fails
+	 */
 	public boolean createNewFile() throws IOException
 	{
 		if (isS3()) return s3Storage.create(s3Key());
@@ -187,6 +227,12 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Determines whether this path represents a directory in its storage backend.
+	 * Database storage also uses the filename to infer directories without directory metadata.
+	 *
+	 * @return whether the path is treated as a directory
+	 */
 	public boolean isDirectory()
 	{
 		if (isS3()) {
@@ -219,6 +265,13 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Deletes this entry using the selected storage backend and its versioning rules.
+	 * Local and S3 directories must be empty; database storage also attempts to delete descendants.
+	 *
+	 * @return backend deletion result; database storage also reports success for a missing entry
+	 * @throws java.io.UncheckedIOException if an S3 lookup or deletion fails
+	 */
 	public boolean delete()
 	{
 		if (isS3()) return s3Storage.delete(s3Key());
@@ -314,6 +367,12 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Checks for an entry in the selected backend, including implicit S3 directories.
+	 *
+	 * @return whether the entry exists
+	 * @throws java.io.UncheckedIOException if S3 metadata cannot be read
+	 */
 	public boolean exists()
 	{
 		if (isS3()) return s3Storage.metadata(s3Key()) != null;
@@ -363,6 +422,14 @@ public class IwcmFile
 		this.virtualPath = virtualPath;
 	}
 
+	/**
+	 * Lists immediate children accepted by the filter, retaining captured S3 context for remote children.
+	 * Local CMS directories also expose existing configured S3 roots beneath them.
+	 *
+	 * @param filter child filter; null is supported only for S3 listings
+	 * @return matching children, an empty array for a non-directory, or null if a local listing fails
+	 * @throws java.io.UncheckedIOException if an S3 listing or metadata lookup fails
+	 */
 	public IwcmFile[] listFiles(final IwcmFileFilter filter)
 	{
 		if (isS3()) {
@@ -471,6 +538,12 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Checks whether the selected backend identifies this entry as a file.
+	 *
+	 * @return true for a file entry, false for a directory or missing entry
+	 * @throws java.io.UncheckedIOException if S3 metadata cannot be read
+	 */
 	public boolean isFile()
 	{
 		if (isS3()) {
@@ -541,6 +614,11 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Resolves the parent while retaining captured storage context when both paths use S3.
+	 *
+	 * @return parent directory wrapper
+	 */
 	@JsonIgnore
 	public IwcmFile getParentFile()
 	{
@@ -555,6 +633,13 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Creates the directory and missing ancestors using the selected backend.
+	 * S3 writes directory markers so empty directories remain visible.
+	 *
+	 * @return backend creation result; local and S3 storage return false for an existing target
+	 * @throws java.io.UncheckedIOException if an S3 lookup or marker write fails
+	 */
 	public boolean mkdirs()
 	{
 		if (isS3()) return s3Storage.mkdirs(s3Key());
@@ -599,6 +684,12 @@ public class IwcmFile
 		return length();
 	}
 
+	/**
+	 * Reads the file size from the selected backend.
+	 *
+	 * @return size in bytes, zero for missing S3 entries and S3 directories, or -1 on a database lookup failure
+	 * @throws java.io.UncheckedIOException if S3 metadata cannot be read
+	 */
 	public long length()
 	{
 		if (isS3()) {
@@ -628,6 +719,12 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Reads the modification timestamp from the selected backend.
+	 *
+	 * @return epoch milliseconds, or zero for missing S3 metadata and S3 directories
+	 * @throws java.io.UncheckedIOException if S3 metadata cannot be read
+	 */
 	public long lastModified()
 	{
 		if (isS3()) {
@@ -652,6 +749,12 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Updates the stored modification timestamp when supported by the backend.
+	 *
+	 * @param time modification time in epoch milliseconds
+	 * @return backend update result, or false for S3 where changing the timestamp is unsupported
+	 */
 	public boolean setLastModified(long time)
 	{
 		if (isS3()) return false;
@@ -665,6 +768,15 @@ public class IwcmFile
 		}
 	}
 
+	/**
+	 * Moves this entry to the destination using backend-specific rename or copy operations.
+	 * Moves involving S3 finish copying the file or tree before starting source deletion;
+	 * they are not atomic and failures can leave destination data or partially deleted sources.
+	 *
+	 * @param out destination path with its own storage context
+	 * @return backend move result; legacy database paths can log errors without reporting false
+	 * @throws java.io.UncheckedIOException if an S3 operation fails
+	 */
 	public boolean renameTo(IwcmFile out)
 	{
 		if (isS3() || out.isS3()) {
@@ -831,6 +943,14 @@ public class IwcmFile
 		return ps;
 	}
 
+	/**
+	 * Checks readability using the backend's available information.
+	 * S3 and packaged resources are checked for existence; database storage always returns true.
+	 * S3 existence does not guarantee permission to download the object.
+	 *
+	 * @return local readability, S3 or packaged-resource existence, or true for database storage
+	 * @throws java.io.UncheckedIOException if S3 metadata cannot be read
+	 */
 	public boolean canRead()
 	{
 		if (isS3()) return exists();

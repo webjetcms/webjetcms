@@ -362,11 +362,12 @@ public class AdminUploadServlet extends HttpServlet
 
     /**
      * Moves a temporary upload to its final destination, replacing an existing file if necessary.
+     * Existing S3 content is retained until the replacement is copied successfully.
      *
      * @param fileKey unique key of the temporary upload
      * @param destinationFolder virtual path of the destination folder, for example {@code /images/gallery/}
      * @param fileNameParam requested destination file name
-     * @return the final file name, or {@code null} when the temporary file was not moved
+     * @return final file name, or null when the upload key or temporary file is unavailable
      * @throws IOException when the file cannot be moved
      */
     public static String moveAndReplaceFile(String fileKey, String destinationFolder, String fileNameParam) throws IOException

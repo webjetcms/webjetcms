@@ -389,10 +389,10 @@ public class IwcmFsDB
 	}
 
 	/**
-	 * Vrati virtualnu cestu
+	 * Maps a physical path under the web root or configured external domain storage to a CMS path.
 	 *
-	 * @param realPath
-	 * @return
+	 * @param realPath physical filesystem path; may be null
+	 * @return CMS path with forward slashes, or {@code /} if the path is null or cannot be mapped
 	 */
 	public static String getVirtualPath(String realPath)
 	{
@@ -441,11 +441,11 @@ public class IwcmFsDB
 	}
 
 	/**
-	 * podla cesty zisti ci sa ma pouzit storage alebo nie.
+	 * Checks whether database storage is enabled for the path, giving S3 routing precedence.
+	 * Administration paths and JSP files are excluded from database storage.
 	 *
-	 * @param virtualPath
-	 *           virtualna cesta!
-	 * @return
+	 * @param virtualPath absolute CMS path
+	 * @return true if database storage is enabled and a configured database directory prefix matches
 	 */
 	public static boolean useDBStorage(String virtualPath) //NOSONAR
 	{
@@ -487,14 +487,14 @@ public class IwcmFsDB
 	}
 
 	/**
-	 * Zapise obsah InputStreamu do file
+	 * Writes stream content through the destination's configured local, database or S3 storage.
+	 * Failed S3 transfers discard staged content; legacy local and database failures are logged.
 	 *
-	 * @param in
-	 *           vstupne data
-	 * @param file
-	 *           vystupny subor
-	 * @param size
-	 *           velkost vystupneho suboru
+	 * @param in source stream
+	 * @param file destination physical path used to resolve CMS storage
+	 * @param size content length used by database storage; S3 reads until end of stream
+	 * @param closeInStream whether to close the source stream after the write attempt
+	 * @throws UncheckedIOException if an S3 transfer or its stream cleanup fails
 	 */
 	public static void writeFiletoDest(InputStream in, File file, int size,boolean closeInStream)
 	{
@@ -676,10 +676,12 @@ public class IwcmFsDB
 		}
 	}
 	/**
-	 * skopiruje subory iba v ramci databazy
+	 * Copies a database-backed file, or delegates to the general copier when either endpoint uses S3.
+	 * Other source backends require no action unless S3 is involved.
 	 *
-	 * @param src
-	 * @param dest
+	 * @param src source file
+	 * @param dest destination file
+	 * @throws UncheckedIOException if a copy involving S3 fails
 	 */
 	public static void copyTo(IwcmFile src, IwcmFile dest)
 	{
@@ -765,10 +767,13 @@ public class IwcmFsDB
 	}
 
 	/**
-	 * Zapise subor src z databazy na disk do outFile, ak je nastavene forceOwerwrite tak subor prepise bez ohladu na to, ci je novsi
-	 * @param src
-	 * @param outFile
-	 * @param forceOwerwrite
+	 * Copies a database or S3 file to local disk, optionally bypassing the modification-time check.
+	 * Local sources require no action. S3 errors propagate, while legacy database errors are logged.
+	 *
+	 * @param src physical source path used to resolve the remote CMS file
+	 * @param outFile local destination file
+	 * @param forceOwerwrite whether to copy even when the destination has the same modification time
+	 * @throws UncheckedIOException if reading S3 content or writing its local copy fails
 	 */
 	public static void writeFileToDisk(File src, File outFile, boolean forceOwerwrite)
 	{

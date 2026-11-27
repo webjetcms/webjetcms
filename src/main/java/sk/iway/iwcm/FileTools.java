@@ -84,10 +84,11 @@ public class FileTools
 	};
 
 	/**
-	 * Skopiruje subor src do dest
-	 * @param src
-	 * @param dest
-	 * @return
+	 * Copies a file through the CMS storage abstraction, creating missing destination directories.
+	 *
+	 * @param src source file
+	 * @param dest destination file, replaced after a successful transfer when using S3
+	 * @return true if copying and closing succeed, false if an operation fails
 	 */
 	public static boolean copyFile(IwcmFile src, IwcmFile dest)
 	{
@@ -149,10 +150,12 @@ public class FileTools
 	}
 
 	/**
-	 * Copy InputStream to IwcmFile and close InputStream
-	 * @param is - InputStream
-	 * @param dest
-	 * @return
+	 * Copies a stream into a CMS file and closes the supplied input, including on failure.
+	 * A failed transfer aborts S3 publication; local and database writes are not rolled back.
+	 *
+	 * @param is source stream owned and closed by this method
+	 * @param dest destination file whose missing parent directories are created
+	 * @return true if copying and closing succeed, false if an operation fails
 	 */
 	public static boolean copyFile(InputStream is, IwcmFile dest)
 	{
@@ -174,7 +177,14 @@ public class FileTools
 		}
 	}
 
-	/** Copies a complete tree and reports every failure before a caller may delete its source. */
+	/**
+	 * Copies a file or directory tree, stopping at the first unsuccessful copy.
+	 * The source is preserved and any targets already copied remain on failure.
+	 *
+	 * @param source source file or directory
+	 * @param destination target file or directory; a directory target must not be inside the source
+	 * @return true if the entire copy succeeds, false for a missing source, invalid target or failed copy
+	 */
 	public static boolean copyTree(IwcmFile source, IwcmFile destination) {
 		if (!source.exists()) return false;
 		if (!source.isDirectory()) return copyFile(source, destination);
@@ -206,10 +216,12 @@ public class FileTools
 	}
 
 	/**
-	 * Presunie subor, ak sa presun nepodari na urovni FS pokusi sa subor prekopirovat a povodny zmazat
-	 * @param origFile
-	 * @param destFile
-	 * @return
+	 * Moves a file, falling back to copying and then deleting the source if renaming returns false.
+	 * The fallback deletes the source only after a successful copy.
+	 *
+	 * @param origFile source file
+	 * @param destFile destination file
+	 * @return true if renaming succeeds or both fallback copying and deletion succeed
 	 */
 	public static boolean moveFile(IwcmFile origFile, IwcmFile destFile)
 	{
@@ -250,10 +262,13 @@ public class FileTools
     }
 
     /**
-     * Zmaze v adresarovej strukture subory starsie ako zadany pocet milisekund, zmaze aj prazdne adresare
-     * @param file
-     * @param minFileAge
-     * @return
+     * Recursively deletes files older than the requested age and removes emptied directories.
+     * Retained young files and failed operations prevent a successful result; implicit S3 directories
+     * that disappear after their last child is deleted count as removed.
+     *
+     * @param file directory to clean; null and non-directory inputs require no action
+     * @param minFileAge minimum age in milliseconds; nonpositive values delete files regardless of age
+     * @return true if no file was retained and no attempted operation failed
      */
 	public static boolean deleteDirTree(IwcmFile file, long minFileAge)
 	{

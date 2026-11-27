@@ -188,15 +188,15 @@ public class PathFilter implements Filter
 	}
 
 	/**
-	 * Select and set (if specified) the character encoding to be used to
-	 * interpret request parameters for this request.
+	 * Routes CMS requests through access checks, redirects, page resolution and static-resource serving.
+	 * Protected-file requests continue to their authorization servlet. Eligible S3 resources are served
+	 * directly with range support, and storage failures do not fall back to local content.
 	 *
-	 * @param chain
-	 *           The filter chain we are processing
-	 * @exception IOException
-	 *               if an input/output error occurs
-	 * @exception ServletException
-	 *               if a servlet error occurs
+	 * @param servletRequest incoming HTTP request
+	 * @param servletResponse outgoing HTTP response
+	 * @param chain remaining filters and target servlet
+	 * @throws IOException if request or response I/O fails
+	 * @throws ServletException if downstream servlet processing fails
 	 */
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException
@@ -2268,9 +2268,12 @@ public class PathFilter implements Filter
 	}
 
 	/**
-	 * Cache pre staticke subory, cachuju sa len subory pre ktore sa nastavuje setStaticContentHeaders
-	 * @param url
-	 * @return
+	 * Writes a static resource from the local file cache, populating the cache when necessary.
+	 * S3 paths, planned assets, disabled caching and database-storage mode bypass this cache.
+	 *
+	 * @param url virtual resource path
+	 * @param response response receiving the resource content and content headers
+	 * @return true if the resource was written successfully, false if caching is bypassed or serving fails
 	 */
 	public static boolean writeAndCacheFile(String url, HttpServletResponse response)
 	{

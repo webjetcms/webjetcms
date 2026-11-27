@@ -520,7 +520,7 @@ public class ImageTools
 	}
 
 	/**
-	 * Processes an image through ImageMagick and copies the staged output to local or database storage.
+	 * Processes an image through ImageMagick and copies the staged output to local, database or S3 storage.
 	 * Remote input is first copied to disk.
 	 * @param from source image
 	 * @param to destination image; may be the source
@@ -532,7 +532,17 @@ public class ImageTools
 		return executeImageMagick(from, to, args, FileTools.getFileExtension(to.getName()));
 	}
 
-	/** Uses an explicit output format when encoding pixels into a destination with a different suffix. */
+	/**
+	 * Runs ImageMagick with local staging files and an explicit output format.
+	 * Remote input is downloaded first, and completed output is copied to the destination backend.
+	 *
+	 * @param from source image
+	 * @param to destination image, which may also be the source
+	 * @param args command arguments with from/to placeholders; the supplied list is not modified
+	 * @param outputFormat encoding format, independent of the destination suffix
+	 * @return 0 on success, 2 for staging/save or AVIF failures, 3 for other native processing failures,
+	 *         or -1 for another execution or I/O failure
+	 */
 	private static int executeImageMagick(IwcmFile from, IwcmFile to, List<String> args, String outputFormat) {
 		boolean avif = "avif".equalsIgnoreCase(outputFormat);
 		args = new ArrayList<>(args);
@@ -995,9 +1005,10 @@ public class ImageTools
 	}
 
 	/**
-	 * Skonvertuje fotku do RGB ak je v CMYK, ak je konverzia povolena.
+	 * Converts a CMYK image to RGB when conversion, ImageMagick and color profiles are configured.
+	 * S3 images are processed through a temporary local copy and then written back.
 	 *
-	 * @param filePath
+	 * @param filePath physical path used to resolve the image and its storage backend
 	 */
 	public static void convertCmykToRgb(String filePath)
 	{

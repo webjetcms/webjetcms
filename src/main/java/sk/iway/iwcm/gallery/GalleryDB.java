@@ -2047,13 +2047,11 @@ public class GalleryDB
 	}
 
 	/**
-	 * Skopiruje subor oldFilePath na newFilePath
+	 * Copies a gallery file, using the CMS copier when either endpoint is stored in S3.
 	 *
-	 *@param oldFilePath
-	 *           Description of the Parameter
-	 *@param newFilePath
-	 *           Description of the Parameter
-	 *@return Description of the Return Value
+	 * @param oldFilePath physical source path used to resolve CMS storage
+	 * @param newFilePath physical destination path
+	 * @return copy result; the legacy database path reports true after delegating to its copier
 	 */
 	public static boolean copyFile(String oldFilePath, String newFilePath)
 	{
@@ -2307,6 +2305,19 @@ public class GalleryDB
 		return resizePictureImplWithResult(dims, realPath, out, prop, resizeMode, resizeModeNormal) == 0;
 	}
 
+	/**
+	 * Creates gallery image variants and retains the first processing error.
+	 * Source names beginning with variant prefixes are normalized through the CMS storage abstraction.
+	 *
+	 * @param dims small and large image dimensions, in that order
+	 * @param realPath physical source path used to resolve CMS storage
+	 * @param out optional progress output; messages require a translation provider as well
+	 * @param prop optional translation provider
+	 * @param resizeMode small-image resize mode, or {@code N} to disable variants
+	 * @param resizeModeNormal large-image resize mode; null inherits the small-image mode
+	 * @return 0 if processing succeeds, 2 for a copy or save failure, 4 for unsupported input,
+	 *         or the first other resize error code
+	 */
 	private static int resizePictureImplWithResult(Dimension[] dims, String realPath, PrintWriter out, Prop prop, String resizeMode, String resizeModeNormal)
 	{
 		int ret = 0;
@@ -2727,7 +2738,14 @@ public class GalleryDB
 		}
 	}
 
-	/** Applies the watermark to every AVIF frame through the staged ImageMagick conversion. */
+	/**
+	 * Applies the watermark to every AVIF frame through staged ImageMagick conversion.
+	 * Database and S3 watermark files are copied to local temporary files; processing failures are logged.
+	 *
+	 * @param imageFile AVIF image to update
+	 * @param watermarkPath physical watermark path used to resolve its CMS storage
+	 * @param watermark placement and saturation settings
+	 */
 	private static void addAvifWatermarkSignature(IwcmFile imageFile, String watermarkPath, GalleryDimension watermark)
 	{
 		File temporaryWatermark = null;
@@ -4246,9 +4264,11 @@ public class GalleryDB
 	}
 
 	/**
-	 * Metoda zmaze celu galeriu vratane podadresarov a vsetkych medii v ramci aktualnej domeny
-	 * @param path cesta ku galerii (napr /images/gallery/nejakaGaleria)
-	 * @return true ak sa podari zmazat vsetky media a vratane podadresarov, inak false
+	 * Deletes gallery records and the directory tree in the current domain, including S3 content.
+	 * The gallery root is protected from deletion. Record deletion precedes directory cleanup.
+	 *
+	 * @param path virtual gallery directory, for example {@code /images/gallery/example}
+	 * @return true if directory cleanup succeeds, false for the gallery root, a non-gallery path or cleanup failure
 	 * @throws IllegalArgumentException if path is empty or null
 	 */
 	public static boolean deleteGallery(String path)

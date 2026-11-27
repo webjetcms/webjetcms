@@ -28,8 +28,22 @@ import sk.iway.iwcm.Constants;
 
 /** S3 operations for CMS files. Keys already contain their captured domain namespace. */
 public final class S3Storage {
-    /** Provider-neutral metadata; directory keys have no trailing slash. */
+    /**
+     * Describes an object or directory returned by a nonrecursive S3 listing.
+     *
+     * @param key object key including its namespace, without a trailing slash for directories
+     * @param directory whether the entry is a directory marker or implicit prefix
+     * @param size object size in bytes, or zero for directories
+     * @param modified modification time in epoch milliseconds, or zero for directories or unavailable timestamps
+     * @param etag provider ETag, or an empty string for directories
+     */
     public record Metadata(String key, boolean directory, long size, long modified, String etag) { }
+    /**
+     * Holds an immutable directory listing and its cache insertion time.
+     *
+     * @param loadedAt insertion time in epoch milliseconds
+     * @param entries immediate children indexed by their full keys
+     */
     private record Listing(long loadedAt, Map<String, Metadata> entries) { }
 
     private static volatile S3Storage instance;
@@ -39,7 +53,15 @@ public final class S3Storage {
     private final int maxDirectories;
     private final Map<String, Listing> cache = new LinkedHashMap<>(64, 0.75f, true);
 
-    /** Creates a storage client with bounded metadata caching. Also used by integration tests. */
+    /**
+     * Creates a storage client with bounded directory metadata caching.
+     *
+     * @param client configured S3 client
+     * @param bucket existing bucket name
+     * @param ttlMillis listing lifetime in milliseconds; nonpositive values disable caching
+     * @param maxDirectories maximum cached directories; nonpositive values disable caching
+     * @throws IllegalArgumentException if the bucket name is null or blank
+     */
     public S3Storage(MinioClient client, String bucket, long ttlMillis, int maxDirectories) {
         if (bucket == null || bucket.isBlank()) throw new IllegalArgumentException("s3BucketName is required");
         this.client = client;
@@ -48,7 +70,12 @@ public final class S3Storage {
         this.maxDirectories = Math.max(0, maxDirectories);
     }
 
-    /** Lazily initializes connection settings after WebJET has loaded its configuration. */
+    /**
+     * Lazily initializes the shared client from WebJET's S3 configuration.
+     *
+     * @return client retained until {@link #reset()} is called
+     * @throws IllegalArgumentException if required connection settings are missing or invalid
+     */
     public static S3Storage getInstance() {
         S3Storage current = instance;
         if (current == null) {
@@ -86,7 +113,14 @@ public final class S3Storage {
         }
     }
 
-    /** Reads all pages, sharing a listing between sibling metadata lookups. Failures are never cached. */
+    /**
+     * Lists immediate children across all result pages, sharing cached listings between sibling lookups.
+     * Failures are not cached; an object takes precedence over a directory prefix with the same name.
+     *
+     * @param key directory key without a trailing slash, or an empty string for the bucket root
+     * @return immutable metadata map indexed by full child keys, excluding the directory itself
+     * @throws UncheckedIOException if the S3 listing fails
+     */
     public synchronized Map<String, Metadata> list(String key) {
         String prefix = key.isEmpty() ? "" : key + "/";
         Listing cached = cache.get(prefix);
@@ -120,12 +154,28 @@ public final class S3Storage {
         return list(parent(key)).get(key);
     }
 
-    /** Opens an object without converting connection or permission failures into a missing file. */
+    /**
+     * Opens an entire object without treating connection or permission failures as a missing file.
+     *
+     * @param key full object key including its namespace
+     * @return object stream that the caller must close
+     * @throws FileNotFoundException if S3 reports {@code NoSuchKey}
+     * @throws IOException if the object cannot be opened for another reason
+     */
     public InputStream open(String key) throws IOException {
         return open(key, 0, null);
     }
 
-    /** Opens a byte range directly on the server, avoiding downloads of skipped bytes. */
+    /**
+     * Opens a byte range directly on the server, avoiding downloads of skipped bytes.
+     *
+     * @param key full object key including its namespace
+     * @param offset zero-based byte offset; must be nonnegative
+     * @param length number of bytes to request, or null to read through the end of the object
+     * @return range stream that the caller must close
+     * @throws FileNotFoundException if S3 reports {@code NoSuchKey}
+     * @throws IOException if the range cannot be opened for another reason
+     */
     public InputStream open(String key, long offset, Long length) throws IOException {
         try {
             GetObjectArgs.Builder args = GetObjectArgs.builder().bucket(bucket).object(key);
@@ -140,7 +190,14 @@ public final class S3Storage {
         }
     }
 
-    /** Publishes a completed local staging file using bounded multipart buffers. */
+    /**
+     * Publishes a completed local staging file using bounded multipart buffers and invalidates cached listings.
+     *
+     * @param key destination object key including its namespace
+     * @param staged local file containing the complete object; this method does not delete it
+     * @throws IOException if the destination is a directory, an ancestor is a file, or reading or uploading fails
+     * @throws UncheckedIOException if a metadata lookup fails
+     */
     public void upload(String key, Path staged) throws IOException {
         Metadata existing = metadata(key);
         if (existing != null && existing.directory()) throw new IOException("Destination is a directory: " + key);
@@ -150,7 +207,14 @@ public final class S3Storage {
         }
     }
 
-    /** Atomically creates an empty object when it does not already exist. */
+    /**
+     * Creates an empty object using a conditional write to avoid replacing an existing object.
+     *
+     * @param key destination object key including its namespace
+     * @return true if created, or false if metadata already exists or S3 rejects the write precondition
+     * @throws IOException if an ancestor is a file or the write fails for another reason
+     * @throws UncheckedIOException if a metadata lookup fails
+     */
     public boolean create(String key) throws IOException {
         if (metadata(key) != null) return false;
         validateAncestors(key);
@@ -164,7 +228,14 @@ public final class S3Storage {
         }
     }
 
-    /** Creates markers for missing ancestors, preserving empty directories in S3. */
+    /**
+     * Creates markers for the requested directory and missing ancestors, preserving empty directories in S3.
+     * Markers already created remain if a later step fails.
+     *
+     * @param key directory key including its namespace, without a trailing slash
+     * @return true if created, or false if the target already exists or an ancestor is a file
+     * @throws UncheckedIOException if a metadata lookup or marker write fails
+     */
     public boolean mkdirs(String key) {
         Metadata existing = metadata(key);
         if (existing != null) return false;
@@ -183,7 +254,13 @@ public final class S3Storage {
         }
     }
 
-    /** Deletes a file or an empty directory, matching the java.io.File contract. */
+    /**
+     * Deletes a file or empty directory and invalidates cached listings.
+     *
+     * @param key file or directory key including its namespace, without a trailing slash
+     * @return true after deletion, or false if the entry is missing or the directory is not empty
+     * @throws UncheckedIOException if a lookup or deletion fails
+     */
     public boolean delete(String key) {
         Metadata metadata = metadata(key);
         if (metadata == null) return false;
@@ -192,7 +269,16 @@ public final class S3Storage {
         return true;
     }
 
-    /** Copies a subtree before removing any source objects. A failed deletion is reported. */
+    /**
+     * Moves a file or subtree by copying all source objects before deleting them.
+     * An existing destination file can be replaced; overlapping paths and existing directory targets are rejected.
+     * The move is not atomic: failures can leave copied targets or partially deleted sources.
+     *
+     * @param source source key including its namespace, without a trailing slash
+     * @param destination destination key including its namespace, without a trailing slash
+     * @return true after a completed move or for an existing identical path; false for a missing source or conflict
+     * @throws UncheckedIOException if lookup, copying, ancestor validation or source deletion fails
+     */
     public boolean rename(String source, String destination) {
         Metadata metadata = metadata(source);
         if (metadata == null) return false;
@@ -231,6 +317,13 @@ public final class S3Storage {
         cache.clear();
     }
 
+    /**
+     * Rejects destination paths whose ancestors are existing files.
+     *
+     * @param key destination object key
+     * @throws IOException if an ancestor is a file
+     * @throws UncheckedIOException if ancestor metadata cannot be read
+     */
     private void validateAncestors(String key) throws IOException {
         String ancestor = parent(key);
         while (!ancestor.isEmpty()) {
@@ -240,6 +333,15 @@ public final class S3Storage {
         }
     }
 
+    /**
+     * Uploads a stream with an inferred content type and invalidates listings even after failure.
+     *
+     * @param key destination object or directory-marker key
+     * @param input content stream owned by the caller
+     * @param size content length in bytes
+     * @param createOnly whether to require that the destination object does not exist
+     * @throws IOException if the S3 write fails
+     */
     private void put(String key, InputStream input, long size, boolean createOnly) throws IOException {
         String type = URLConnection.guessContentTypeFromName(key);
         try {

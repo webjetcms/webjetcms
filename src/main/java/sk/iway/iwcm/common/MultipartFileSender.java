@@ -18,7 +18,8 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
 
 /**
- * Multipart odosielanie suboru (potrebne pre mp3 na Apple zariadeniach - tiket #30013)
+ * Serves CMS files with HTTP cache validation, HEAD responses and single or multipart byte ranges.
+ * Each range uses an independent stream, with S3 offsets applied on the server.
  * https://stackoverflow.com/questions/28427339/how-to-implement-http-byte-range-requests-in-spring-mvc
  */
 public class MultipartFileSender {
@@ -53,6 +54,12 @@ public class MultipartFileSender {
       return this;
    }
 
+   /**
+    * Validates request conditions and serves the configured file or an appropriate HTTP status.
+    * HEAD responses contain headers only; missing request or response objects cause no action.
+    *
+    * @throws Exception if file metadata, request-header processing or response streaming fails
+    */
    public void serveResource() throws Exception {
       if (response == null || request == null) {
          return;
@@ -269,7 +276,14 @@ public class MultipartFileSender {
 
    }
 
-   /** Uses a fresh stream for every range; S3 performs the seek on the server. */
+   /**
+    * Copies exactly the requested range through a fresh stream, with S3 seeking performed on the server.
+    *
+    * @param output response stream, left open for subsequent ranges
+    * @param start zero-based byte offset
+    * @param length number of bytes to copy; zero requires no source stream
+    * @throws IOException if opening, reading, writing or closing the input fails, including premature EOF
+    */
    private void copyRange(OutputStream output, long start, long length) throws IOException {
       if (length == 0) return;
       try (IwcmInputStream input = new IwcmInputStream(file, start, length)) {

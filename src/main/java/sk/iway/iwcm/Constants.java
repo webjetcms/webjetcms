@@ -188,6 +188,10 @@ public class Constants {
 		return ConfigurationModulePath.normalize(Tools.join(mod, ";"));
 	}
 
+	/**
+	 * Replaces the runtime configuration entries with their built-in defaults and module descriptions.
+	 * Persisted or installation-specific overrides must be loaded again after this reset.
+	 */
 	public static void clearValues() {
 		Logger.info(Constants.class, "Constants - clearValues");
 

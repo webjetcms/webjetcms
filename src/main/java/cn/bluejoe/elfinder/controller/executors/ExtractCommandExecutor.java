@@ -105,6 +105,14 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 
 	}
 
+	/**
+	 * Checks write permissions for archive entries whose paths are eligible for extraction.
+	 * Entries with forbidden or unresolved paths are skipped by this preflight check.
+	 *
+	 * @param zipFile virtual archive path in any supported CMS storage backend
+	 * @param outputFolder destination directory used to resolve archive entries
+	 * @return false if an eligible destination is not writable or reading the archive raises an I/O error
+	 */
 	protected boolean areAllExtractEntriesWritable(String zipFile, FsItemEx outputFolder)
 	{
 		try (ZipInputStream zis = new ZipInputStream(new IwcmInputStream(sk.iway.iwcm.Tools.getRealPath(zipFile))))
@@ -155,12 +163,13 @@ public class ExtractCommandExecutor extends AbstractJsonCommandExecutor
 
 	/**
 	 * Extracts permitted entries and collects virtual destination paths of skipped entries.
+	 * A failed entry copy aborts its pending S3 write; previously extracted entries remain.
 	 *
 	 * @param zipFile virtual path of the archive
 	 * @param outputFolder virtual extraction directory
 	 * @param fsi archive item whose parent is the extraction directory
 	 * @param skippedFiles destination list for entries skipped because of forbidden paths
-	 * @return added items, or {@code null} if a destination is not writable
+	 * @return added items, including partial results after an I/O error, or null if a destination is not writable
 	 */
 	protected List<FsItemEx> unZipFile(String zipFile, String outputFolder, FsItemEx fsi, List<String> skippedFiles)
 	{

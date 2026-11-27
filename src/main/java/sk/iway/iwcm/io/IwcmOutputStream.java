@@ -15,7 +15,8 @@ import sk.iway.iwcm.io.s3.S3OutputStream;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
- * IwcmOutputStream.java
+ * Writes CMS files to local, database or S3 storage.
+ * S3 content is staged locally and published on close; abort a failed source copy to discard its staged data.
  *
  *@Title webjet4
  *@Company Interway s.r.o. (www.interway.sk)
@@ -41,6 +42,13 @@ public class IwcmOutputStream extends OutputStream
 		this(new IwcmFile(file));
 	}
 
+	/**
+	 * Opens an output stream using the file's selected storage backend.
+	 * Local files are truncated immediately; S3 objects are replaced only when the stream closes successfully.
+	 *
+	 * @param file destination with its captured storage context
+	 * @throws IOException if the local output or S3 staging file cannot be opened
+	 */
 	public IwcmOutputStream(IwcmFile file) throws IOException {
 		this.file = file;
 		if (file.isS3()) {
@@ -57,6 +65,14 @@ public class IwcmOutputStream extends OutputStream
 		this(filename, false);
 	}
 
+	/**
+	 * Resolves a destination path and opens its configured storage for writing.
+	 * Existing local files are deleted and recreated; S3 content is staged until close.
+	 *
+	 * @param filename destination path
+	 * @param isVirtualPath true for a CMS path, false for a physical filesystem path
+	 * @throws IOException if replacing the local file or opening the output or staging file fails
+	 */
 	public IwcmOutputStream(String filename, boolean isVirtualPath) throws IOException
 	{
 		IwcmFile destination = new IwcmFile(isVirtualPath ? Tools.getRealPath(filename) : filename);
@@ -116,7 +132,12 @@ public class IwcmOutputStream extends OutputStream
 		}
 	}
 
-	/** Discards an incomplete S3 write; closes an ordinary local or database stream. */
+	/**
+	 * Discards an incomplete S3 write, or closes a local or database stream normally.
+	 * Local and database writes are not rolled back; closing a database stream persists its remaining buffer.
+	 *
+	 * @throws IOException if closing the stream or cleaning up S3 staging fails
+	 */
 	public void abort() throws IOException {
 		if (s3Output != null) s3Output.abort();
 		else close();
@@ -200,6 +221,12 @@ public class IwcmOutputStream extends OutputStream
 		}
 	}
 
+	/**
+	 * Completes the write and releases the output resources.
+	 * S3 uploads staged content, database storage saves the final block, and local storage saves file history.
+	 *
+	 * @throws IOException if local closing or S3 publication or cleanup fails
+	 */
 	@Override
 	public void close() throws IOException
 	{
@@ -276,6 +303,12 @@ public class IwcmOutputStream extends OutputStream
 		}
 	}
 
+	/**
+	 * Flushes local output or S3 staging without publishing S3 content.
+	 * Database buffers are not flushed by this call.
+	 *
+	 * @throws IOException if flushing the underlying output fails
+	 */
 	@Override
 	public void flush() throws IOException
 	{
