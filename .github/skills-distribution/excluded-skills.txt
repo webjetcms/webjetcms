@@ -4,3 +4,6 @@
 
 # CKEditor plugin development requires the core and libs-ckeditor4 repositories.
 wj-cke-stylescombo
+
+# Official product website content and decisions are specific to the core repository.
+wj-website-content

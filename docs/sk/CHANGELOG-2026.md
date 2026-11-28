@@ -448,6 +448,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Dokumentácia
 
+- Prehľad aplikácií porovnáva edície WebJET CMS a uvádza moduly Community pod licenciou Apache 2.0. Názvy a popisy modulov v administrácii sa načítavajú z prekladových kľúčov (#406).
 - AI skills - doplnený [prehľad WebJET skillov](developer/guidelines/ai-skills.md#prehľad-webjet-skills) s účelom a príkladmi použitia. Rovnaká tabuľka sa automaticky prenáša do README distribúcie `webjetcms/skills`. Export kontroluje úplnosť zoznamu (#376).
 - Formuláre - doplnený návod [Šifrovanie formulárov](redactor/apps/form/encryption.md) s vytvorením a nastavením kľúčov, dešifrovaním záznamov, rozsahom ochrany a technickým opisom algoritmov (#376).
 - Datatabuľky - doplnené vysvetlenie [upozornení na neuložené zmeny](redactor/datatables/README.md#upozornenia-na-neuložené-zmeny) pri obnovení alebo opustení stránky a pri zatvorení editora tlačidlom Zrušiť (#339).
