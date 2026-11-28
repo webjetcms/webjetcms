@@ -26,6 +26,78 @@ Scenario("Vyhľadávanie - test zobrazovania", ({ I }) => {
     I.waitForText("Neboli nájdené žiadne stránky vyhovujúce zadaným kritériám.", 10);
 });
 
+async function submitLuceneSearch(I) {
+    I.waitForVisible("form.smallSearchForm #searchWords");
+    I.fillField("form.smallSearchForm #searchWords", "Kontakt");
+    I.clickCss("form.smallSearchForm .smallSearchSubmit");
+    I.waitForVisible(".searchResultsH1");
+    const url = new URL(await I.grabCurrentUrl());
+    if (url.pathname === "/showdoc.do") I.assertEqual(url.searchParams.get("docid"), "77875");
+    else I.assertEqual(url.pathname, "/apps/vyhladavanie/");
+}
+
+Scenario("Lucene autocomplete returns JSON suggestions", async ({ I }) => {
+    async function getSuggestions(query) {
+        const result = await I.executeScript(async query => {
+            const response = await fetch("/components/search/ac.jsp?" + query);
+            return { status: response.status, type: response.headers.get("content-type"), suggestions: await response.json() };
+        }, query);
+        I.assertEqual(result.status, 200, query);
+        I.assertStartsWith(result.type, "application/json", query);
+        return result.suggestions;
+    }
+
+    for (const query of ["", "lang=sk", "words=kontakt", "lang=sk&words=", "words=kontakt&lang=%20"]) {
+        I.assertDeepEqual(await getSuggestions(query), [], query);
+    }
+    I.assertDeepEqual(await getSuggestions("lang=sk&words=zzzzzzzzzzzzzzzz"), []);
+    const suggestions = await getSuggestions("lang=sk&words=webjett");
+    I.assertTrue(Array.isArray(suggestions));
+    for (const suggestion of suggestions) I.assertEqual(typeof suggestion, "string", suggestion);
+});
+
+Scenario("Lucene form submits to the current document without a previous page", async ({ I }) => {
+    // Open the component before visiting a public page that would set last_doc_id.
+    I.amOnPage("/components/search/lucene_search.jsp?docid=77875");
+    await submitLuceneSearch(I);
+});
+
+Scenario("Lucene preview paginates on the current document and submits to the configured one", async ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=116601");
+    DTE.waitForEditor();
+    await DTE.fillCkeditor("!INCLUDE(/components/search/lucene_search.jsp, perpage=1, rootGroup=1+15257, resultsDocId=77875)!");
+    I.clickCss("button.btn-preview");
+    await Document.waitForTab();
+    I.switchToNextTab();
+    I.executeScript(() => window.location.assign("/admin/webpages/preview/?docid=116601&words=WebJET&index=0"));
+    I.clickCss(".search .navigation a[href*='index=1']");
+    I.waitForElement(".search .navigation a[href*='index=0']");
+    I.seeInCurrentUrl("/admin/webpages/preview/");
+    I.seeInCurrentUrl("docid=116601");
+    await submitLuceneSearch(I);
+    I.closeCurrentTab();
+});
+
+Scenario("Lucene pagination keeps the current document", async ({ I }) => {
+    // The session points to a different document than the one being rendered.
+    I.amOnPage("/apps/vyhladavanie/vyhladavanie-lucene.html");
+    I.executeScript(() => window.location.assign("/components/search/lucene_search.jsp?docid=77875&rootGroup=1%2B15257&perpage=1&words=WebJET&index=1"));
+    const navigation = ".search .navigation a";
+    I.waitForElement(navigation);
+    const pageUrl = await I.grabCurrentUrl();
+    const action = await I.grabAttributeFrom("form.smallSearchForm", "action");
+    const expectedDocIds = new URL(action, pageUrl).pathname === "/showdoc.do" ? ["77875"] : [];
+    const links = await I.grabAttributeFromAll(navigation, "href");
+    I.assertLengthOf(links, 2);
+    for (const href of links) {
+        const url = new URL(href, pageUrl);
+        I.assertDeepEqual(url.searchParams.getAll("docid"), expectedDocIds);
+    }
+    I.clickCss(navigation + "[href*='index=2']");
+    I.waitForVisible(".searchResultsH1");
+    I.seeInCurrentUrl("index=2");
+});
+
 Scenario('testovanie app - Vyhladavanie', async ({ I, DTE, Apps, Document }) => {
     I.closeOtherTabs();
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=77875');

@@ -35,7 +35,15 @@ for (String name : SearchTools.getCheckInputParams())
 
 if (Tools.getRequestParameter(request, "words") != null) inputText = Tools.getRequestParameter(request, "words");
 
+int currentDocId = Tools.getDocId(request);
+if (currentDocId <= 0)
+{
+	Object lastDocId = Tools.sessionGetAttribute(session, "last_doc_id");
+	if (lastDocId instanceof Integer) currentDocId = (Integer) lastDocId;
+}
 int resultsDocId = pageParams.getIntValue("resultsDocId", 0);
+if (resultsDocId <= 0) resultsDocId = currentDocId;
+int linkType = Constants.getInt("linkType");
 
 request.setAttribute("perpage", perpage);
 request.setAttribute("rootGroup", rootGroup);
@@ -54,10 +62,6 @@ for (i=2; i<=5; i++)
    }
 }
 
-if (resultsDocId == 0)
-	resultsDocId = ((Integer)session.getAttribute("last_doc_id")).intValue();
-	//out.println(session.getAttribute("last_doc_id"));
-
 DocDB docDB = DocDB.getInstance();
 
 //aby Acunetix nepindal
@@ -72,7 +76,8 @@ if (searchType != null)
 	if ("form".equals(searchType) || "complete".equals(searchType))
 	{
 		String url = "/showdoc.do";
-		if (Constants.getInt("linkType")==Constants.LINK_TYPE_HTML) url = DocDB.getURLFromDocId(resultsDocId, request);
+		if (resultsDocId <= 0) url = "";
+		else if (linkType == Constants.LINK_TYPE_HTML) url = DocDB.getURLFromDocId(resultsDocId, request);
 %>
 
 <%@page import="sk.iway.iwcm.doc.SearchAction"%>
@@ -81,7 +86,7 @@ if (searchType != null)
 <%@ page import="sk.iway.iwcm.common.SearchTools" %>
 <form class="smallSearchForm" action="<%=url%>" method="get">
 		<p>
-			<% if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) { %><input type="hidden" name="docid" value="<%=resultsDocId%>" /><% } %>
+			<% if (linkType == Constants.LINK_TYPE_DOCID && resultsDocId > 0) { %><input type="hidden" name="docid" value="<%=resultsDocId%>" /><% } %>
 			<iwcm:autocomplete url='<%="/components/search/ac.jsp?lang="+lng%>' class="smallSearchInput" name="words"
 			value="<%=ResponseUtils.filter(inputText) %>" placeholder="<%=ResponseUtils.filter(placeholder) %>" id="searchWords" size="25" onOptionSelect="search"></iwcm:autocomplete>
 			<input class="smallSearchSubmit" type="submit" value="<%=buttonText %>" />
@@ -121,19 +126,19 @@ if (searchType != null)
 
 			String newNextHref = "";
 			String newPrevHref = "";
+			boolean needsDocId = linkType == Constants.LINK_TYPE_DOCID || Boolean.TRUE.equals(request.getAttribute("isPreview"));
+			String docIdParam = needsDocId && currentDocId > 0 ? "&amp;docid=" + currentDocId : "";
 
 			if(String.valueOf(request.getAttribute("nextHref")).startsWith("lucene_search.do"))
 			{
 				newNextHref	= String.valueOf(request.getAttribute("nextHref"));
-				newNextHref = PathFilter.getOrigPath(request)+newNextHref.substring(newNextHref.indexOf('?'));
-				if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) newNextHref += "&amp;docid=" +session.getAttribute("last_doc_id");
+				newNextHref = PathFilter.getOrigPath(request) + newNextHref.substring(newNextHref.indexOf('?')) + docIdParam;
 			}
 
 			if(String.valueOf(request.getAttribute("prevHref")).startsWith("lucene_search.do"))
 			{
 				newPrevHref	= String.valueOf(request.getAttribute("prevHref"));
-				newPrevHref = PathFilter.getOrigPath(request) + newPrevHref.substring(newPrevHref.indexOf('?'));
-				if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) newPrevHref += "&amp;docid=" +session.getAttribute("last_doc_id");
+				newPrevHref = PathFilter.getOrigPath(request) + newPrevHref.substring(newPrevHref.indexOf('?')) + docIdParam;
 			}
 %>
 
