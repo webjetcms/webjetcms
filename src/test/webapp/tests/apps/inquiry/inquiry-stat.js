@@ -147,13 +147,7 @@ function checkSelects(I) {
  * @param {*} index - used because of failed test steps and to generate all images in one run
  */
 async function validateFilteringBehavior(I, DT, Document, imageNameSuffix, index) {
-    I.switchTo();
-    await adjustScrollbar(I, "#inquiryStatDataTable_extfilter", 0, imageNameSuffix);
-
-    if ("A"==imageNameSuffix) {
-        I.switchTo();
-        I.switchTo('#statIframe');
-    }
+    await adjustScrollbar(I, "#inquiryStatDataTable_extfilter", imageNameSuffix);
 
     if (index == 1) {
         await setPageRowLimit(I, DT, 'Všetky', imageNameSuffix);
@@ -181,18 +175,22 @@ async function validateFilteringBehavior(I, DT, Document, imageNameSuffix, index
 
         await verifyGraphs(I, Document, `4${imageNameSuffix}`, imageNameSuffix);
     } else {
-
+        const table = '#inquiryStatDataTable_wrapper';
+        await adjustScrollbar(I, table, imageNameSuffix);
         DT.filterSelect('userFullName', 'Tester Playwright');
         I.waitForText('Nenašli sa žiadne vyhovujúce záznamy');
 
+        await adjustScrollbar(I, "#inquiryStatDataTable_extfilter", imageNameSuffix);
         I.clickCss('button[data-id="userSelect"]');
         I.click('Všetci');
         DT.waitForLoader();
+        await adjustScrollbar(I, table, imageNameSuffix);
         DT.checkTableRow("inquiryStatDataTable", 1, ["698", "Tester Playwright", "Programovanie"]);
         DT.checkTableRow("inquiryStatDataTable", 2, ["709", "Tester Playwright", "Správa sietí a bezpečnosť"]);
         I.see("Tester Playwright", "td .datatable-column-width");
 
         DT.clearFilter('userFullName');
+        await adjustScrollbar(I, table, imageNameSuffix);
         DT.filterSelect('answerText', 'Programovanie');
         I.waitForText('Záznamy 1 až 1 z 1');
         DT.checkTableRow("inquiryStatDataTable", 1, ["698", "Tester Playwright", "Programovanie"]);
@@ -209,49 +207,25 @@ async function verifyGraphs(I, Document, screenshotNumber, imageNameSuffix) {
     const pieVotesSelector = "#inquiryStat-pieVotes";
     const inquiryStatSelector = "#inquiryStat-lineVotes";
 
-    await adjustScrollbar(I, pieVotesSelector, 0, imageNameSuffix);
+    await adjustScrollbar(I, pieVotesSelector, imageNameSuffix);
     await Document.compareScreenshotElement(pieVotesSelector, `pievotes${screenshotNumber}.png`, 1280, 1200, TOLERANCE);
-    await adjustScrollbar(I, inquiryStatSelector, 0, imageNameSuffix);
+    await adjustScrollbar(I, inquiryStatSelector, imageNameSuffix);
     await Document.compareScreenshotElement(inquiryStatSelector, `linevotes${screenshotNumber}.png`, 1280, 1200, TOLERANCE);
-    await adjustScrollbar(I, '#pills-inquiryStat', 0, imageNameSuffix);
-    await adjustScrollbar(I, pieVotesSelector, 0, imageNameSuffix);
+    await adjustScrollbar(I, '#pills-inquiryStat', imageNameSuffix);
+    await adjustScrollbar(I, pieVotesSelector, imageNameSuffix);
     await Document.compareScreenshotElement(pieVotesSelector, `pievotes${screenshotNumber}.png`, 1280, 1200, TOLERANCE);
-    await adjustScrollbar(I, inquiryStatSelector, 0, imageNameSuffix);
+    await adjustScrollbar(I, inquiryStatSelector, imageNameSuffix);
     await Document.compareScreenshotElement(inquiryStatSelector, `linevotes${screenshotNumber}.png`, 1280, 1200, TOLERANCE);
-    await adjustScrollbar(I, '#pills-inquiryStat', 0, imageNameSuffix);
+    await adjustScrollbar(I, '#pills-inquiryStat', imageNameSuffix);
 }
 
 async function setPageRowLimit(I, DT, rows, imageNameSuffix) {
-    await adjustScrollbar(I, "#inquiryStatDataTable_wrapper", 0, imageNameSuffix);
-    if ("A"==imageNameSuffix) {
-        I.switchTo();
-        I.switchTo('#statIframe');
-    }
+    await adjustScrollbar(I, "#inquiryStatDataTable_wrapper", imageNameSuffix);
     I.click(DT.btn.inquiryStat_settings_button);
     I.clickCss('.buttons-page-length');
-    await adjustScrollbar(I, "#pills-inquiryStat", 0, imageNameSuffix);
-    if ("A"==imageNameSuffix) {
-        I.switchTo();
-        I.switchTo('#statIframe');
-    }
+    await adjustScrollbar(I, "#pills-inquiryStat", imageNameSuffix);
     I.click(locate('button.btn.button-page-length').withText(rows));
     I.clickCss('button.btn.btn-primary.dt-close-modal');
-}
-
-async function getElementPositionFromTop(I, selector) {
-    I.switchTo();
-
-    const result = await I.executeScript(({selector}) => {
-        let element = null;
-        if (document.querySelector("#statIframe")!=null) element = document.querySelector("#statIframe").contentWindow.document.querySelector(selector);
-        else element = document.querySelector(selector);
-        if (element) {
-            return element.offsetTop;
-        } else {
-            throw new Error(`Element not found for selector: ${selector}`);
-        }
-    }, {selector});
-    return result;
 }
 
 function verifyInquiryStatisticsCharts(I) {
@@ -283,27 +257,20 @@ function setDates(I, DT, dateFrom, dateTo) {
     DT.waitForLoader();
 }
 
-async function adjustScrollbar(I, selector, offsetAdjustment = 0, imageNameSuffix = null) {
+async function adjustScrollbar(I, selector, imageNameSuffix) {
     I.switchTo();
 
-    const yOffset = await getElementPositionFromTop(I, selector);
-    const adjustedOffset = yOffset - offsetAdjustment;
+    const inModal = imageNameSuffix === 'A';
+    await I.executeScript(({selector, inModal}) => {
+        const view = inModal ? document.querySelector('#statIframe').contentWindow : window;
+        const target = view.document.querySelector(selector);
+        if (!target) throw new Error(`Element not found for selector: ${selector}`);
+        const scrollbar = view.scrollbarMain;
+        const top = scrollbar.contentEl.contains(target)
+            ? target.getBoundingClientRect().top - scrollbar.contentEl.getBoundingClientRect().top
+            : 0;
+        scrollbar.setPosition(0, top);
+    }, {selector, inModal});
 
-    await I.executeScript((adjustedOffset) => {
-        let scrollContent = null;
-        if (document.querySelector("#statIframe")!=null) scrollContent = document.querySelector("#statIframe").contentWindow.document.querySelector('div.ly-content-wrapper div.scroll-content')
-        else scrollContent = document.querySelector('div.ly-content-wrapper div.scroll-content')
-
-        if (scrollContent) {
-            scrollContent.style.transform = `translate3d(0px, -${adjustedOffset}px, 0px)`;
-        } else {
-            throw Error('Scroll content container not found.');
-        }
-    }, adjustedOffset);
-
-    if ("A"==imageNameSuffix) {
-        I.say("Switching to #statIframe, imageNameSuffix=" + imageNameSuffix);
-        I.switchTo();
-        I.switchTo('#statIframe');
-    }
+    if (inModal) I.switchTo('#statIframe');
 }

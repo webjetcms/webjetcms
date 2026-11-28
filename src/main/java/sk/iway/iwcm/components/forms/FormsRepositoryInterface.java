@@ -17,8 +17,18 @@ import java.util.List;
 public interface FormsRepositoryInterface<E> extends DomainIdRepository<E, Long> {
 
     /** Finds pages containing the form include with a quoted or unquoted name. */
-    @Query("SELECT d.id FROM DocDetails d WHERE d.data LIKE :quotedPattern ESCAPE '~' OR d.data LIKE :unquotedPattern ESCAPE '~'")
-    List<Long> findDocIdsByFormInclude(@Param("quotedPattern") String quotedPattern, @Param("unquotedPattern") String unquotedPattern);
+    @Query("""
+        SELECT d.id FROM DocDetails d
+        WHERE d.data LIKE :encodedQuotePattern ESCAPE '~'
+           OR d.data LIKE :doubleQuotePattern ESCAPE '~'
+           OR d.data LIKE :unquotedEndPattern ESCAPE '~'
+           OR d.data LIKE :unquotedPattern ESCAPE '~'
+        """)
+    List<Long> findDocIdsByFormInclude(
+            @Param("encodedQuotePattern") String encodedQuotePattern,
+            @Param("doubleQuotePattern") String doubleQuotePattern,
+            @Param("unquotedEndPattern") String unquotedEndPattern,
+            @Param("unquotedPattern") String unquotedPattern);
 
     List<E> findAllByCreateDateIsNull();
 

@@ -205,6 +205,15 @@ public class GroupEditorField extends BaseEditorFields {
     )
     private boolean forceLngToSubFolders;
 
+    /** Returns whether this edit also updates descendants of the edited folder. */
+    public boolean appliesToSubgroups() {
+        return forceInternalToSubgroups || passwordProtectedSubFolders || forceLngToSubFolders
+            || forceTemplateToSubgroupsAndPages || forceNewPageDocIdTemplateSubFolders
+            || forceMenuTypeSubfolders || forceNavbarSubfolders || forceSitemapSubfolders
+            || forceLoggedMenuTypeSubfolders || forceLoggedNavbarSubfolders || forceLoggedSitemapSubfolders
+            || forceUrlDirNameChange || forceDomainNameChange || forcePriorityRecalculation;
+    }
+
     //zoznam volnych poli
     public List<Field> fieldsDefinition;
 

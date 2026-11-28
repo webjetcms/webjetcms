@@ -42,8 +42,7 @@ function submitForm(I, DT, DTE) {
 
     I.click("Odoslať", "#formMailForm-multiupload .btn-primary");
 
-    I.waitForElement("#ajaxFormResultContainer");
-    I.see("Formulár bol úspešne odoslaný");
+    I.waitForText("Formulár bol úspešne odoslaný", 30, "#ajaxFormResultContainer");
 }
 
 Scenario('form upload', ({ I, DT, DTE }) => {
@@ -71,7 +70,7 @@ Scenario('form multiupload', ({ I, DT, DTE }) => {
     I.dontSee("Odstrániť súbor");
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', filePath);
     I.waitForText("Odstrániť súbor", 5, "a.dz-remove");
-    I.seeElement("#nahrat-obrazky-dropzone.dz-started");
+    I.waitForElement("#nahrat-obrazky-dropzone .dz-preview.dz-success", 30);
 
     I.fillField("#meno-a-priezvisko", text);
 

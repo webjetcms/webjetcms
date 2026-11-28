@@ -398,6 +398,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Web stránky - pri hromadnej zmene dostupnosti priečinka dostanú integrácie udalosť `AFTER_SAVE` až po aktualizácii podpriečinkov. Po opätovnom zverejnení môžu zaindexovať aj ich stránky a tieto stránky sa znova zobrazia vo vyhľadávaní obmedzenom na daný priečinok (#425).
 - Skupiny práv - ak má redaktor cez skupinu pridelené iba jednotlivé stránky, po prihlásení sa jeho práva na úpravu obmedzia na tieto stránky (#419).
 - [Formuláre](redactor/apps/form/README.md) - redaktor môže otvoriť viackrokový formulár aj pred prvým odoslaním, ak má právo upravovať aspoň jednu stránku, na ktorej je formulár vložený. Autor môže prázdny formulár upravovať hneď po vytvorení alebo duplikovaní (#419).
 - Viackrokové formuláre - pri otvorení karty **Položky formuláru** alebo **Štatistiky formulára** bez prístupu k danému formuláru sa zobrazí chybová správa (#419).
@@ -483,6 +484,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Dokumentácia
 
+- Prehľad aplikácií porovnáva edície WebJET CMS a uvádza moduly Community pod licenciou Apache 2.0. Názvy a popisy modulov v administrácii sa načítavajú z prekladových kľúčov (#406).
 - AI skills - doplnený [prehľad WebJET skillov](developer/guidelines/ai-skills.md#prehľad-webjet-skills) s účelom a príkladmi použitia. Rovnaká tabuľka sa automaticky prenáša do README distribúcie `webjetcms/skills`. Export kontroluje úplnosť zoznamu (#376).
 - Formuláre - doplnený návod [Šifrovanie formulárov](redactor/apps/form/encryption.md) s vytvorením a nastavením kľúčov, dešifrovaním záznamov, rozsahom ochrany a technickým opisom algoritmov (#376).
 - Datatabuľky - doplnené vysvetlenie [upozornení na neuložené zmeny](redactor/datatables/README.md#upozornenia-na-neuložené-zmeny) pri obnovení alebo opustení stránky a pri zatvorení editora tlačidlom Zrušiť (#339).
@@ -840,6 +842,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Vyhľadávanie - opravený cieľ formulára a stránkovanie Lucene pri chýbajúcom ID v relácii. Bez výrazu alebo jazyka vráti dopĺňanie prázdny zoznam návrhov (#427).
+- Vyhľadávanie - naplánované úlohy sa po štarte spúšťajú až po dokončení inicializácie WebJETu. Ak je zapnuté vykonávanie aplikácií pri indexovaní (`fulltextExecuteApps`) a Stripes nie je dostupný, existujúci Lucene index stránok sa pri pokuse o preindexovanie zachová.
 - `/thumb` - opravené generovanie náhľadov pri `ip=1/2`, keď sa v URL zadáva iba šírka alebo výška. Limit `imageMaxThumbsWidth` alebo `imageMaxThumbsHeight` sa pre druhý rozmer overí až po jeho výpočte z pomeru strán, pred generovaním obrázka. Formát kľúčov cache a záznamov povolených rozmerov sa nemení (#408).
 - Vyhľadávanie - zmazaná webová stránka sa odstraňuje podľa ID zo všetkých existujúcich lokálnych jazykových Lucene indexov aj bez údajov v databáze alebo cache. Pri zapnutom priebežnom indexovaní sa aj po reštarte uzla clustra spracujú zachované notifikácie zmien konkrétnych stránok. Pri chybe mazania sa cluster notifikácia nepotvrdí a spracovanie sa zopakuje (#403).
 - Vyhľadávanie - príprava náhľadu aplikácie do indexu v rámci synchronizácie clustra pripraví náhradný `request` objekt pre lepší spôsob zobrazenia aplikácií pre index vyhľadávania (#404).
@@ -871,6 +875,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Súbory - opravený názov konfiguračnej premennej `elfinderMetadataAutopopup`, ktorá po nahratí súboru automaticky zobrazí dialóg metadát. Premenná bola deklarovaná s preklepom ako `elfinerMetadataAutopopup`, ktorý sa nikde nečítal, preto jej zmena v administrácii nemala efekt. Predvolená hodnota `false` zostáva. Ak ste si nastavili premennú s preklepom, nastavte namiesto nej `elfinderMetadataAutopopup` (#410).
 - Opravené zacyklenie pri HTTP presmerovaniach počas sťahovania súborov, načítaní nastavení používateľa, inicializácii generátora primárnych kľúčov a obnove cache súborov uložených v databáze. Doplnené ukončovacie podmienky opakovaných pokusov. Ak generátor primárnych kľúčov zostane nedostupný aj po jednom pokuse o vytvorenie záznamu a obnove cache, metódy `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodia `IllegalStateException`. Volajúci musí prerušiť operáciu vyžadujúcu identifikátor a odovzdať chybu svojmu spracovaniu výnimiek (#412).
 - Menu - opravené generovanie atribútu `class` na položke `<li>` pri použití nastavenia Menu Info (`menuInfoDirName`). Trieda `menu-info-li` sa pridáva k ostatným CSS triedam položky.
+- Manažér dokumentov - pri úprave metadát aj pri nahratí nového súboru sa zachová názov priečinka vrátane predložiek, napríklad `-pre-`.
 
 ## 2026.0.40
 

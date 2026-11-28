@@ -113,8 +113,9 @@ Scenario("aktualne hodnoty", async ({ I }) => {
  * Phase 1, check we see delet button, then to web pages and open "Jet portal 4 - testovacia stranka", close current tab
  * This is importatnt so we can see chnages in out stat's
  */
-function phase1(I, DT) {
+function phase1(I, DT, recordFilter = "") {
   I.waitForElement("button.buttons-remove", 10);
+  if (recordFilter) DT.filterContains("whatWasExecuted", recordFilter);
   I.click("button.buttons-remove")
   DT.waitForLoader();
   I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -130,8 +131,8 @@ function phase1(I, DT) {
 /**
  * Check that remove button (remove current records) works
  */
-function phase2(I, DT) {
-  DT.filterContains("whatWasExecuted", "");
+function phase2(I, DT, recordFilter = "") {
+  DT.filterContains("whatWasExecuted", recordFilter);
   I.click("button.buttons-remove")
   DT.waitForLoader();
   I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 5);
@@ -196,9 +197,11 @@ Scenario("Monitoring server documents @singlethread", ({I, DT}) => {
 });
 
 Scenario("Monitoring server sql @singlethread", ({I, DT}) => {
+  // Background jobs can record unrelated queries immediately after a reset.
+  const bannerQueries = "FROM banner_";
   I.amOnPage("/apps/server_monitoring/admin/sql/");
 
-  phase1(I, DT);
+  phase1(I, DT, bannerQueries);
 
   //Check values
   I.amOnPage("/apps/server_monitoring/admin/sql/");
@@ -211,7 +214,8 @@ Scenario("Monitoring server sql @singlethread", ({I, DT}) => {
   I.see("SELECT id, group_id, banner_id FROM banner_gr WHERE (banner_id = ?)");
   I.dontSee("SELECT id, doc_id, banner_id FROM banner_doc WHERE (banner_id = ?)");
 
-  phase2(I, DT);
+  phase2(I, DT, bannerQueries);
+  DT.filterContains("whatWasExecuted", "");
 
   phase3(I, DT);
 });

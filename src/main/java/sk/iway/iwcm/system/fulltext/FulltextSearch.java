@@ -27,6 +27,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
 import org.apache.lucene.util.Version;
 
+import net.sourceforge.stripes.controller.StripesFilterIway;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -87,6 +88,12 @@ public class FulltextSearch
 	@SuppressWarnings({"deprecation","unchecked"})
 	public static void index(Indexed indexed, Writer log)
 	{
+		boolean indexesDocuments = indexed == null || indexed instanceof Documents;
+		if (indexesDocuments && Constants.getBoolean("fulltextExecuteApps") && !StripesFilterIway.ensureInitialized())
+		{
+			throw new IllegalStateException("Cannot rebuild the document index because Stripes is unavailable.");
+		}
+
 		List<Indexed> indexeds = new ArrayList<>();
 		if (indexed != null)
 		{

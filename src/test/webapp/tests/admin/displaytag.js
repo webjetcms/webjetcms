@@ -8,12 +8,14 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('DisplayTag sorting', ({ I, DT }) => {
+Scenario('DisplayTag sorting', async ({ I }) => {
     I.amOnPage("/admin/modules_allinfo.jsp");
-    I.see("A/B testovanie", "table.sort_table");
-    DT.checkTableRow("m", 1, ["A/B testovanie", "webjet_cmp_abtesting"]);
+    const titleCells = "#m tbody tr td:first-child";
+    const titles = await I.grabTextFromAll(titleCells);
+    I.assertAbove(new Set(titles).size, 1, "Sorting requires at least two different application names.");
+    I.assertBelow(titles[0].localeCompare(titles[titles.length - 1], "sk"), 0, "Application names must initially be ascending.");
     I.click("Aplikácia", "#m thead th a");
-    DT.checkTableRow("m", 1, ["Zrkadlenie", "webjet_cmp_mirroring"]);
+    I.assertDeepEqual(await I.grabTextFromAll(titleCells), titles.reverse(), "Clicking the header must reverse the application order.");
 });
 
 function exportFile(name, type, I) {
@@ -22,9 +24,9 @@ function exportFile(name, type, I) {
     I.waitForFile("../../../build/test/modules-"+randomNumber+"."+type, 30);
 }
 
-Scenario('DisplayTag export', ({ I, DT }) => {
+Scenario('DisplayTag export', ({ I }) => {
     I.amOnPage("/admin/modules_allinfo.jsp");
-    I.see("A/B testovanie", "table.sort_table");
+    I.see("webjet_cmp_abtesting", "#m tbody");
 
     exportFile("Excel", "xls", I);
     exportFile("CSV", "csv", I);

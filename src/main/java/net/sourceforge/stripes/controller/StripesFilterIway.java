@@ -10,6 +10,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
 import net.sourceforge.stripes.config.BootstrapPropertyResolver;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 
 /**
@@ -30,15 +31,43 @@ import sk.iway.iwcm.Logger;
  */
 public class StripesFilterIway extends StripesFilter
 {
-	private boolean wasInit = false;
-	private boolean initError = false;
+	private static volatile StripesFilterIway instance;
+
+	private volatile boolean wasInit = false;
+	private volatile boolean initError = false;
 	private FilterConfig filterConfig = null;
 
 	@Override
 	public void init(FilterConfig filterConfig)
-		throws ServletException
+			throws ServletException
 	{
 		this.filterConfig = filterConfig;
+		instance = this;
+	}
+
+	/**
+	 * Initializes Stripes outside of HTTP request (e.g. in background thread), normally it is initialized lazily on first request.
+	 * Initialization is performed only after WebJET is initialized, because Stripes requires WebJET configuration.
+	 * @return true if Stripes is initialized and can be used
+	 */
+	public static boolean ensureInitialized()
+	{
+		StripesFilterIway filter = instance;
+		if (filter == null) return false;
+		if (!filter.wasInit)
+		{
+			if (!InitServlet.isWebjetInitialized()) return false;
+			try
+			{
+				filter.initLazy();
+			}
+			catch (ServletException ex)
+			{
+				Logger.error(StripesFilterIway.class, ex);
+				return false;
+			}
+		}
+		return !filter.initError;
 	}
 
 	@Override
@@ -53,12 +82,12 @@ public class StripesFilterIway extends StripesFilter
 			//configurations.clear();
 		}
 		catch (Exception ex) {}
+		if (instance == this) instance = null;
 		Logger.debug(StripesFilterIway.class, "StripesFilter Destroyed");
 	}
 
 	public synchronized void initLazy() throws ServletException
 	{
-		initError = false;
 		try
 		{
 			//doble check
@@ -71,14 +100,14 @@ public class StripesFilterIway extends StripesFilter
 			Logger.println(StripesFilterIway.class, "Stripes ActionResolver.Packages=" + bootstrap.getProperty("ActionResolver.Packages"));
 			Logger.println(StripesFilterIway.class, "Stripes MultipartWrapper.Class=" + bootstrap.getProperty("MultipartWrapper.Class"));
 			Logger.println(StripesFilterIway.class, "Stripes LocalizationBundleFactory.Class=" + bootstrap.getProperty("LocalizationBundleFactory.Class"));
-	      //System.out.println("ActionBeanPropertyBinder.Class=" + bootstrap.getProperty("ActionBeanPropertyBinder.Class"));
+			//System.out.println("ActionBeanPropertyBinder.Class=" + bootstrap.getProperty("ActionBeanPropertyBinder.Class"));
 
 			super.init(filterConfig);
 		}
 		catch (Exception ex)
 		{
 			System.out.println("Stripes INIT error:"+ex.getMessage());
-			sk.iway.iwcm.Logger.error(ex);
+			Logger.error(ex);
 			initError = true;
 		}
 

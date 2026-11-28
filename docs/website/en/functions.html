@@ -1,0 +1,216 @@
+<style>
+.wj-website-content { overflow-wrap: break-word; }
+.wj-website-content [hidden] { display: none !important; }
+.wj-website-content [id] { scroll-margin-top: 110px; }
+.wj-website-content .wj-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; margin: 24px 0; }
+.wj-website-content .wj-actions .btn { margin: 0; white-space: normal; }
+.wj-website-content .wj-media { margin: 28px 0; }
+.wj-website-content .wj-media img { display: block; width: 100%; height: auto; }
+.wj-website-content .wj-hero-media { max-width: 1052px; margin: 40px auto; }
+.wj-website-content figcaption { margin-top: 12px; color: #57585c; font-size: 15px; line-height: 1.5; }
+.wj-website-content .wj-references h2 { margin: 40px 0 30px; }
+.wj-website-content .wj-references .logo-container > div { display: flex; align-items: center; justify-content: center; flex-basis: 25%; min-height: 100px; }
+.wj-website-content .wj-references img { width: auto; height: auto; max-width: 180px; max-height: 80px; }
+.wj-website-content .wj-references p { margin: 24px 0; }
+.wj-website-content .wj-roadmap { border-left: 3px solid #007b8e; padding-left: 24px; }
+.wj-website-content .wj-details > summary { cursor: pointer; list-style: none; }
+.wj-website-content .wj-details > summary::-webkit-details-marker { display: none; }
+.wj-website-content .wj-details[open] > summary::before { content: "\f056"; }
+.wj-website-content .wj-details .md-accordion__block { margin: 10px 0 0; }
+.wj-website-content .wj-section-nav ul { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 24px 0; padding: 0; list-style: none; }
+.wj-website-content .wj-section-nav li { padding: 0; }
+.wj-website-content .wj-section-nav li::before { display: none; }
+.wj-website-content a:focus-visible, .wj-website-content summary:focus-visible { outline: 2px solid #003289; outline-offset: 4px; }
+.wj-website-content .wj-news-column { display: flex; margin: 24px 0 16px; }
+.wj-website-content .wj-news-item { width: 100%; }
+.wj-website-content .wj-news-image { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; margin-bottom: 16px; background: #f6f7f9; }
+.wj-website-content .wj-news-meta { color: #57585c; font-size: 15px; margin-bottom: 10px; }
+.wj-website-content .wj-news h3 { font-size: 22px; line-height: 1.35; margin-bottom: 12px; }
+.wj-website-content .wj-news h3 a { color: inherit; }
+.wj-website-content .wj-news-item > p:last-child { font-size: 17px; line-height: 1.5; }
+@media (max-width: 767.98px) {
+  .wj-website-content .wj-actions { gap: 16px; }
+  .wj-website-content .wj-hero-media { margin: 28px 0; }
+  .wj-website-content .wj-references .logo-container > div { flex-basis: 35%; }
+  .wj-website-content .wj-references img { max-width: 135px; max-height: 65px; }
+  .wj-website-content .wj-roadmap { padding-left: 16px; }
+}
+</style>
+<div class="wj-website-content" lang="en">
+  <section class="md-banner">
+      <h1>WebJET CMS features</h1>
+      <p>Create content with AI, review changes before publication and manage corporate websites from one administration interface.</p>
+      <p><a class="btn btn-cta" href="/contact/">Request a demo</a></p>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-publikovanie">
+      <h2 id="funkcie-publikovanie">Approvals and scheduled publishing</h2>
+      <p>Prepare a new price list, product page or announcement in advance. An editor updates the content, the responsible colleague reviews the changes and the page goes live at the scheduled time.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details" open>
+          <summary class="btn--acc-toggle">Drafts, version comparison and publication dates</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Drafts:</strong> prepare new content while visitors see the currently published page.</li>
+              <li><strong>Approvals:</strong> assign approvers to selected folders. They compare the original and proposed versions before making a decision.</li>
+              <li><strong>History:</strong> find published versions and records of approval or rejection.</li>
+              <li><strong>Scheduling:</strong> set a future publication time for a page update. With advanced scheduling enabled, prepare images and attachments that remain protected until publication.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/webpages/approve/">Approval workflow documentation</a> · <a href="https://docs.webjetcms.sk/latest/en/redactor/webpages/planned-publishing">Scheduled publishing</a></p>
+          </div>
+        </details>
+      </div>
+      <figure class="wj-media">
+        <a href="/images/webjetcms-2026/en/publication-history.png"><img class="img-fluid" src="/images/webjetcms-2026/en/publication-history.png" width="1280" height="760" loading="lazy" alt="Page history in WebJET CMS showing saved versions and publication information"></a>
+        <figcaption>Page history provides an overview of saved versions and publication information.</figcaption>
+      </figure>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-ai">
+      <h2 id="funkcie-ai">AI assistance where you create content</h2>
+      <p>Rephrase text, prepare a translation or draft a page from source materials in the same interface where you publish content. Your administrator selects assistants and providers to match the team's tasks.</p>
+      <figure class="wj-media">
+        <a href="/images/webjetcms-2026/en/ai-chat.png"><img class="img-fluid" src="/images/webjetcms-2026/en/ai-chat.png" width="1440" height="1000" loading="lazy" alt="AI chat alongside the WebJET CMS content editor"></a>
+        <figcaption>Work with an AI assistant alongside the content you are editing.</figcaption>
+      </figure>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Text, images, page drafts and AI usage controls</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Text:</strong> generate, edit and translate content in text fields and the editor. An assistant can work with a selected part of the content.</li>
+              <li><strong>Images:</strong> generate an image from a description or edit an existing image, depending on the selected model's capabilities.</li>
+              <li><strong>PageBuilder chat:</strong> attach a PDF with a text layer, a Word document or a PowerPoint presentation and request a page draft. Continue making changes in the same conversation.</li>
+              <li><strong>Custom assistants:</strong> configure instructions, a model and the fields where the assistant should appear.</li>
+              <li><strong>Usage overview:</strong> monitor activity and token consumption by assistant and user. Set token limits and alerts for individual assistants.</li>
+            </ul>
+            <p>Supported external services include OpenAI, Gemini and OpenRouter. With the required models configured, selected text tasks and semantic search can also run on your own server. Available operations and costs depend on the provider and deployment.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/ai/datatables/">Examples of working with AI assistants</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-pagebuilder">
+      <h2 id="funkcie-pagebuilder">Build pages from your own design blocks</h2>
+      <p>Assemble a product or campaign page in PageBuilder using blocks prepared for your website. Your team works within the agreed design and focuses on text, images and the order of content.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Block library, page structure and previews</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li>Choose blocks by preview, category and tag from a library prepared for your project.</li>
+              <li>Find the section you need in the structure tree. Duplicate blocks and change their order.</li>
+              <li>Adjust the layout using the available settings for mobile, tablet and desktop.</li>
+              <li>Preview the page to check the result before publication.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/webpages/pagebuilder">Working with PageBuilder</a></p>
+          </div>
+        </details>
+      </div>
+      <figure class="wj-media">
+        <a href="/images/webjetcms-2026/en/pagebuilder.png"><img class="img-fluid" src="/images/webjetcms-2026/en/pagebuilder.png" width="1280" height="760" loading="lazy" alt="PageBuilder editor with a page preview and a tree of content blocks"></a>
+        <figcaption>Use the PageBuilder structure tree to find and edit blocks on a page.</figcaption>
+      </figure>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-prava">
+      <h2 id="funkcie-prava">Access based on team responsibilities</h2>
+      <p>A regional branch editor needs to update different content from the administrator of the entire website. WebJET CMS lets you assign access to pages, files and applications and trace recorded changes.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Permission groups, audit logs and corporate sign-in</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li><strong>Permission groups:</strong> define permissions for roles in your organisation and add individual user permissions.</li>
+              <li><strong>Content access:</strong> specify which pages and folders users can access and what they can do with applications.</li>
+              <li><strong>Audit:</strong> search recorded events such as publication, permission changes and sign-ins.</li>
+              <li><strong>Corporate identity:</strong> connect sign-in to an OAuth2/OpenID Connect provider, including Keycloak. Groups and permissions can be assigned at sign-in according to your configuration.</li>
+            </ul>
+            <p><a href="https://docs.webjetcms.sk/latest/en/admin/users/perm-groups">Permission management</a> · <a href="https://docs.webjetcms.sk/latest/en/sysadmin/audit/">Event auditing</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-domeny">
+      <h2 id="funkcie-domeny">Multiple websites and languages in one administration interface</h2>
+      <p>Manage your corporate website, product pages and language versions in a shared CMS. Linking language versions helps keep their structures aligned as you add and move content.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Domains, language versions and automatic translation</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li>Switch between managed domains and assign teams access to the relevant content.</li>
+              <li>Mirroring links pages and folders across language versions and carries over their creation, movement and reordering.</li>
+              <li>Once a translation provider is configured, titles, URLs and content are translated when you create a language version. Editors can review and refine the result.</li>
+              <li>The language switcher takes visitors to the corresponding page. Templates can also generate <code>hreflang</code> links.</li>
+            </ul>
+            <p>For separate administration of multiple websites, MultiWeb mode provides domain-specific users and a shared management domain.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/docmirroring/">Mirroring and translating language versions</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-vyhladavanie">
+      <h2 id="funkcie-vyhladavanie">Search by meaning as well as words</h2>
+      <p>Visitors do not need to know the exact service name or wording used in an article. Semantic search finds content with a similar meaning; hybrid mode combines it with full-text search.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Full-text search, semantic results and AI answers</summary>
+          <div class="md-accordion__block">
+            <p>Choose the search method and content folders for each search component. You can display a short AI answer above the results, generated from the relevant parts of your website.</p>
+            <p>Semantic search requires indexing, a supported vector database and a configured AI model. Processing can also use a local model on your organisation's server.</p>
+            <p><a href="https://docs.webjetcms.sk/latest/en/redactor/apps/semantic-search/">Semantic search options</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-meranie">
+      <h2 id="funkcie-meranie">Tools for search visibility and website analytics</h2>
+      <p>Manage URLs, redirects and content for search engines as you update your website. Track traffic and compare page variants within the administration interface.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">URLs, links, statistics and A/B tests</summary>
+          <div class="md-accordion__block">
+            <ul>
+              <li>Manage URLs and redirects when content moves or is renamed.</li>
+              <li>Link checking helps identify broken links and empty pages.</li>
+              <li>Statistics show traffic, page usage and other visit data.</li>
+              <li>A/B testing divides visitors between page variants in a configured ratio.</li>
+              <li>Cookie consent settings control the loading of the corresponding marketing scripts.</li>
+            </ul>
+            <p><a href="/applications/">Applications for marketing and analytics</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro" aria-labelledby="funkcie-integracie">
+      <h2 id="funkcie-integracie">Build custom applications and integrations</h2>
+      <p>Java and Spring give your development team a foundation for custom applications and integrations. The headless API can also supply content to a website with its own presentation layer.</p>
+      <div class="md-accordion md-accordion--cleaner">
+        <details class="wj-details">
+          <summary class="btn--acc-toggle">Custom applications, APIs and headless frontends</summary>
+          <div class="md-accordion__block">
+            <p>Developers can add Java/Spring applications, editor-facing settings and custom administration screens. The documentation covers extending the system and using its existing services.</p>
+            <p>The headless interface provides page content, navigation, news and search. Choose the frontend technology that fits your project. Individual integrations are built around the interfaces and rules of the connected systems.</p>
+            <p><a href="/for-developers/">WebJET CMS for Java developers</a> · <a href="/for-agencies/">WebJET CMS for agencies</a></p>
+          </div>
+        </details>
+      </div>
+  </section>
+
+  <section class="md-intro wj-roadmap" aria-labelledby="funkcie-pripravujeme">
+      <h2 id="funkcie-pripravujeme">In development</h2>
+      <p>We are developing publication packages for shared drafts, change reviews and a common publication time across several pages. A Spring Boot version is also in development.</p>
+  </section>
+
+  <section class="md-intro wj-final-cta" aria-labelledby="funkcie-ukazka">
+      <h2 id="funkcie-ukazka">See the workflow your team needs</h2>
+      <p>Tell us how you prepare and approve content today. We will walk through the relevant WebJET CMS features in a demo.</p>
+      <p><a class="btn btn-cta" href="/contact/">Request a demo</a></p>
+  </section>
+</div>
