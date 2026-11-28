@@ -1,6 +1,6 @@
 # Obsahová stratégia
 
-Stav k 15. 11. 2026: používateľ v dvoch kolách rozhovoru podľa skillu `grilling` potvrdil obsahový smer a rozhodnutia nižšie. Finálne texty sú v `sk/*.html`; tento dokument vysvetľuje stratégiu. Podklad používa postup `content-strategy` a zistenia z dokumentácie aj verejných stránok konkurencie.
+Základ stratégie z 15. 11. 2026: používateľ v dvoch kolách rozhovoru podľa skillu `grilling` potvrdil obsahový smer a rozhodnutia nižšie. Finálne texty sú v `sk/*.html` a od 16. 11. 2026 aj v `en/*.html`; tento dokument vysvetľuje stratégiu. Navigačné poznámky boli 28. 11. 2026 zosúladené s neskoršími potvrdeniami používateľa. Podklad používa postup `content-strategy` a zistenia z dokumentácie aj verejných stránok konkurencie.
 
 ## Zadanie a publikum
 
@@ -55,7 +55,7 @@ Priorita prvých štyroch stránok vyplýva zo zadania. Ako ďalšie samostatné
     └── rozhovor o spolupráci
 ```
 
-Hlavné menu už má osem obsahových položiek a kontakt. Podľa rozhodnutia používateľa zostávajú Pre agentúry a Pre vývojárov zatiaľ mimo horného menu, dostupné cez odkazy v obsahu. Budúce zoskupenie s navrhovaným názvom „Čo WebJET dokáže“ je opísané v [návrhu navigácie](navigation-proposal.md); pôvodný názov „Produkt“ používateľ odmietol. HTML fragment menu automaticky nemení. Aktuálne stránky Služby, Aktuálna verzia a Licencie zostávajú mimo obsahového prepisu.
+Používateľ už na SK webe vytvoril zoskupenie **Čo WebJET dokáže** s rodičovskou adresou `/co-webjet-dokaze/` a podmenu **Benefity, Funkcie, Aplikácie, Pre vývojárov a Pre agentúry**. Nahradil tým pôvodné rozhodnutie ponechať agentúrnu a vývojársku stránku mimo horného menu; názov **Produkt** odmietol. [Poznámky k navigácii](navigation-proposal.md) oddeľujú tento potvrdený stav od pôvodných návrhov dvojstĺpcového podmenu a presunu Aktuálnej verzie. Presmerovanie rodičovskej stránky na Benefity bolo iba odporúčané, jeho nasadenie nie je potvrdené. EN navigáciu treba posúdiť samostatne. HTML fragment menu automaticky nemení. Stránky Služby, Aktuálna verzia a Licencie zostávajú mimo obsahového prepisu.
 
 ## Konverzia a meranie
 

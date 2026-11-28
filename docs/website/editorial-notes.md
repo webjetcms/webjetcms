@@ -1,6 +1,6 @@
 # Redakčné rozhodnutia a metadáta
 
-Stav: 15. 11. 2026. Používateľ potvrdil obsahový smer a rozsah šiestich stránok. Dokument obsahuje interné poznámky k textom; nevkladá sa do verejného článku.
+Základné rozhodnutia: 15. 11. 2026, EN doplnenie: 16. 11. 2026. Používateľ potvrdil obsahový smer a rozsah šiestich stránok v každom jazyku. Navigačné poznámky boli 28. 11. 2026 zosúladené s jeho neskoršími potvrdeniami. Dokument obsahuje interné poznámky k textom; nevkladá sa do verejného článku.
 
 Diagnóza podľa skillu `copywriting`: **A, nový text podľa konkrétneho zadania**. Podkladom sú potvrdené obchodné priority a dokumentácia; existujúci web určuje vizuálny rámec, nie povinnosť zachovať staré argumenty.
 
@@ -33,15 +33,15 @@ Metadáta sa nastavujú vo vlastnostiach stránky v CMS, mimo obsahu `article.ly
 | Pre vývojárov, `sk/pre-vyvojarov.html` | `/pre-vyvojarov/` | WebJET CMS pre vývojárov: Java, Spring a REST API | Rozvíjajte WebJET CMS v Java a Spring. Vytvárajte vlastné aplikácie, administráciu nad dátami a headless weby s pomocou dokumentácie a projektu basecms. |
 | Pre agentúry, `sk/pre-agentury.html` | `/pre-agentury/` | WebJET CMS pre agentúry a ich klientské projekty | Pripravte klientom web s vlastnými šablónami, aplikáciami a redakčnými právami vo WebJET CMS. Porozprávajme sa o vašich projektoch a spolupráci. |
 
-Pre úvod odporúčame zachovať verejnú adresu `/`. Ak CMS interne používa stránku s cestou `/domov/`, text sa vloží do nej podľa existujúceho smerovania; nevytvára sa druhá indexovateľná kópia úvodu. Ostatné existujúce URL zostávajú zachované. Dve nové adresy treba vytvoriť v CMS pred zverejnením odkazov na ne.
+Pre úvod odporúčame zachovať verejnú adresu `/`. Ak CMS interne používa stránku s cestou `/domov/`, text sa vloží do nej podľa existujúceho smerovania; nevytvára sa druhá indexovateľná kópia úvodu. Ostatné existujúce URL zostávajú zachované. SK stránky Pre vývojárov a Pre agentúry už používateľ vytvoril; stav EN stránok treba overiť na anglickej doméne pred zverejnením odkazov na ne.
 
 Neuvádzame odhad objemu vyhľadávania ani prísľub konkrétnej pozície vo výsledkoch. Každá stránka má odlišný účel: úvod vysvetľuje produkt, benefity pracovný výsledok, funkcie schopnosti a aplikácie použitie. Technické a agentúrne stránky obsluhujú osobitné rozhodovanie.
 
 ## Zaradenie do existujúceho menu
 
-Menu je mimo `article.ly-article`. Vloženie šiestich fragmentov ho nezmení a samo nevytvorí nové stránky. Používateľ rozhodol ponechať **Pre agentúry** a **Pre vývojárov** zatiaľ mimo horného menu, pretože sa do existujúcej navigácie rozumne nezmestia. Stránky zostávajú dostupné cez pomenované odkazy na úvode a z relevantných sekcií.
+Menu je mimo `article.ly-article`. Vloženie fragmentov ho nezmení a samo nevytvorí nové stránky. Používateľ na SK webe neskôr použil názov **Čo WebJET dokáže**, vytvoril rodičovskú stránku `/co-webjet-dokaze/` a zaradil pod ňu **Benefity, Funkcie, Aplikácie, Pre vývojárov a Pre agentúry**. Tým nahradil pôvodné rozhodnutie ponechať obe nové stránky mimo horného menu. Odkazy z úvodu a súvisiacich sekcií zostávajú ďalšími cestami k obsahu.
 
-Pre budúcu úpravu je pripravený [návrh preskupenia navigácie](navigation-proposal.md): **Čo WebJET dokáže, Služby, Licencie, Dokumentácia** a CTA **Dohodnúť si ukážku**. Prvá položka združí Benefity, Funkcie, Aplikácie, Aktuálnu verziu aj stránky pre agentúry a vývojárov do jedného dvojstĺpcového podmenu. Používateľ odmietol pôvodný názov „Produkt“ ako nejasný; „Čo WebJET dokáže“ je nový návrh, zatiaľ nepotvrdený. Zoskupenie nahrádza predchádzajúce odporúčanie pridávať do súčasného riadka samostatnú položku „Pre tímy“. Zatiaľ sa neimplementuje.
+Používateľ odmietol pôvodný názov **Produkt** ako nejasný. Dvojstĺpcové podmenu, premenovanie Benefity na „Prečo WebJET CMS“ a presun Aktuálnej verzie do tohto podmenu zostávajú iba v [archíve pôvodného návrhu](navigation-proposal.md); ich nasadenie nie je potvrdené. Presmerovanie `/co-webjet-dokaze/` na Benefity bolo odporúčané namiesto ďalšej súhrnnej stránky, ale nebolo potvrdené ako nasadené. Z rozhodnutí pre SK nevyvodzujeme stav EN navigácie.
 
 ## Interné alternatívy hlavného nadpisu a CTA
 
@@ -64,7 +64,7 @@ Opierať sa o [produktové dôkazy](product-evidence.md), [vývojárske podklady
 
 Diagnóza podľa `copywriting`: **B, lokalizácia existujúceho textu**. Zachováva schválené argumenty, poradie sekcií, podmienky dostupnosti aj označenie pripravovaných funkcií. Text používa britskú angličtinu a CTA **Request a demo** na `/contact/`; agentúrne CTA je **Discuss working together**. Nejde o okamžitú rezerváciu termínu.
 
-EN obsah je určený pre `https://www.webjetcms.com`. Existujúce cesty overené vo verejnej navigácii sa zachovávajú; názov stránky Features má URL `/functions/`. Nové stránky `/for-developers/` a `/for-agencies/` treba vytvoriť na EN doméne. Rovnako ako SK variant môžu zatiaľ zostať mimo horného menu.
+EN obsah je určený pre `https://www.webjetcms.com`. Existujúce cesty overené vo verejnej navigácii sa zachovávajú; názov stránky Features má URL `/functions/`. Stránky `/for-developers/` a `/for-agencies/` treba vytvoriť na EN doméne, ak ešte neexistujú. Ich zaradenie do EN menu treba overiť samostatne; potvrdené preskupenie slovenského menu neurčuje stav anglickej navigácie.
 
 | Súbor | Verejná URL na webjetcms.com | Titulok stránky | Meta description |
 | --- | --- | --- | --- |

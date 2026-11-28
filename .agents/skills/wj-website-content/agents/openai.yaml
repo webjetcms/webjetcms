@@ -1,0 +1,4 @@
+interface:
+  display_name: "WJ Website Content"
+  short_description: "Maintain official WebJET CMS website content"
+  default_prompt: "Použi $wj-website-content a doplň obsah oficiálneho webu WebJET CMS podľa zadania a aktuálnej dokumentácie."
