@@ -204,7 +204,8 @@ if (process.env.WEBJET_P06_BROWSER === 'true') {
             const box = comparison.getBoundingClientRect();
             const base = document.querySelector('[data-branch-version="BASE"]').getBoundingClientRect();
             const live = document.querySelector('[data-branch-version="LIVE"]').getBoundingClientRect();
-            return {fits: box.left >= 0 && box.right <= innerWidth, stacked: live.top >= base.bottom, closeLabel: comparison.querySelector('header button').textContent, expectedCloseLabel: WJ.translate('button.close')};
+            const close = comparison.querySelector('header button.close');
+            return {fits: box.left >= 0 && box.right <= innerWidth, stacked: live.top >= base.bottom, closeLabel: close.getAttribute('aria-label'), expectedCloseLabel: WJ.translate('datatables.modal.close.js')};
         });
         I.assertTrue(mobile.fits); I.assertTrue(mobile.stacked); I.assertEqual(mobile.closeLabel, mobile.expectedCloseLabel);
         I.saveScreenshot('branch-p06-mobile.png');

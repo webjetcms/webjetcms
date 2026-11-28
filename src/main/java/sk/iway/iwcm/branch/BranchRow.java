@@ -11,7 +11,7 @@ import lombok.Setter;
 public abstract class BranchRow
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_branch_rows")
     @Column(name = "row_id")
     private Long rowId;
     @Column(name = "branch_id")

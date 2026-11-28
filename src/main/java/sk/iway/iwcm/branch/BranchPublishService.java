@@ -388,7 +388,11 @@ public final class BranchPublishService {
             try {
                 BranchPublishRows.lockLive(connection, item.type, item.row);
                 requireHash(connection, item, hash);
-                execute(connection, "UPDATE documents SET data_asc=? WHERE doc_id=?", text, item.id());
+                try (var update = connection.prepareStatement("UPDATE documents SET data_asc=" + BranchStore.parameter("data_asc") + " WHERE doc_id=?")) {
+                    BranchStore.bind(update, 1, "data_asc", text);
+                    update.setInt(2, item.id());
+                    update.executeUpdate();
+                }
                 BranchPublishRows.updateDocumentHistorySearchText(connection, item.id(), hash, text);
                 BranchPublishRows.checkpoint(connection, item.type, item.row, "APPLYING", "SQL_SEARCH", hash, null);
                 connection.commit();
@@ -445,7 +449,7 @@ public final class BranchPublishService {
         Logger.error(BranchPublishService.class,error);
         try(Connection connection=DBPool.getConnection()) {
             boolean applied=false;
-            for(BranchType type:BranchType.values())try(PreparedStatement check=connection.prepareStatement("SELECT 1 FROM "+type.workTable()+" WHERE branch_id=? AND ((applied_hash IS NOT NULL AND COALESCE(apply_phase,'')<>'NOOP') OR apply_phase LIKE 'FILE_%')")) {
+            for(BranchType type:BranchType.values())try(PreparedStatement check=connection.prepareStatement("SELECT 1 FROM "+type.workTable()+" WHERE branch_id=? AND ((applied_hash IS NOT NULL AND (apply_phase IS NULL OR apply_phase<>'NOOP')) OR apply_phase LIKE 'FILE_%')")) {
                 check.setLong(1,id);try(ResultSet result=check.executeQuery()){applied|=result.next();}
             }
             String reason=error instanceof org.springframework.web.server.ResponseStatusException response?Objects.toString(response.getReason(),sk.iway.iwcm.i18n.Prop.getInstance().getText("branches.schedule.permission")):Objects.toString(error.getMessage(),error.getClass().getSimpleName());

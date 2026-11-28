@@ -6,7 +6,7 @@ Na zapnutie pracovných verzií slúži `branchesEnabled=true`. Súkromné súbo
 
 > Pri vlastnom `branchStorageRoot` vyberte adresár, ktorý žiadna doména nesprístupňuje cez web. Ak používate `cloudStaticFilesDir`, overte skutočné umiestnenie verejných priečinkov `/files`, `/images` a `/shared` vrátane cieľov symbolických odkazov. Ak úložisko umiestnite pod niektorý z nich, návštevník môže stiahnuť pracovné súbory ešte pred publikovaním balíka.
 
-Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Podporované sú **MariaDB 10.11 LTS, 11.4 LTS a 12.2 s InnoDB**, **PostgreSQL od verzie 16** a **Microsoft SQL Server 2022 (16.x)**. Tieto profily počítajú s jednou inštanciou WebJETu, jednou zapisovateľnou databázou a lokálnym súborovým úložiskom. Pre rady LTS používajte aktuálnu opravnú verziu. Pred produkčným zapnutím funkciu overte na konkrétnom nasadení.
+Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Podporované sú **MariaDB 10.11 LTS, 11.4 LTS a 12.2 s InnoDB**, **PostgreSQL od verzie 16**, **Microsoft SQL Server 2022 (16.x)** a **Oracle Database 19c**. Tieto profily počítajú s jednou inštanciou WebJETu, jednou zapisovateľnou databázou a lokálnym súborovým úložiskom. Pre rady LTS používajte aktuálnu opravnú verziu. Pred produkčným zapnutím funkciu overte na konkrétnom nasadení.
 
 ## Inventár a hranice
 
@@ -18,12 +18,12 @@ Funkcia je experimentálny POC s predvoleným `branchesEnabled=false`. Podporova
 | `NewsApp`, `NewsActionBean`, `news-velocity.jsp` | SQL pred count/paging, existujúce perex kategórie, štandardné filtre/radenia, Velocity, čas náhľadu a výsledok po merge. |
 | Editor, médiá, upload | Stránky/priečinky, mediálne väzby a kategórie; moderný upload, CKEditor, jednotlivé súborové operácie elFinder. |
 
-Iné DB vrátane MySQL a Oracle, MyISAM, viacuzlové nasadenie, CDN/externé storage, IwcmFsDB storage, plný PageBuilder layout a ľubovoľné zákaznícke hooky nie sú týmto deklarované ako podporované. `BranchReadiness` overuje verziu servera, tabuľky a stĺpce, oprávnenia, izoláciu spojení a súkromné úložisko. Na MariaDB kontroluje aj InnoDB. Podrobný stav pôvodného pilotu je v [P08 výsledkoch](../../../research/publish-packages/P08-vysledky.md).
+Iné DB vrátane MySQL, MyISAM, viacuzlové nasadenie, CDN/externé storage, IwcmFsDB storage, plný PageBuilder layout a ľubovoľné zákaznícke hooky nie sú týmto deklarované ako podporované. `BranchReadiness` overuje verziu servera, tabuľky a stĺpce, oprávnenia, izoláciu spojení a súkromné úložisko. Na MariaDB kontroluje aj InnoDB. Podrobný stav pôvodného pilotu je v [P08 výsledkoch](../../../research/publish-packages/P08-vysledky.md).
 
 ## Zapnutie na schválenom nasadení
 
 1. Zálohujte konzistentne DB, verejné súbory a súkromné branch úložisko. Overte obnovu na oddelenom prostredí. Zaznamenajte generátory a ID podľa časti Obnova.
-2. Nasaďte kód s vypnutým `branchesEnabled`. Migrácie vytvoria päť tabuliek balíkov a zaregistrujú plánovač. Na SQL Serveri overte [úroveň kompatibility, JDBC a práva](#microsoft-sql-server-2022). Na PostgreSQL overte [schému a sekvencie](#postgresql). Na MariaDB overte úložný engine existujúcich tabuliek a podľa potreby vykonajte [konverziu na InnoDB](#konverzia-existujúcich-tabuliek-na-innodb). Perex API potrebuje aj oprávnenia na `perex_group_doc`.
+2. Nasaďte kód s vypnutým `branchesEnabled`. Migrácie vytvoria päť tabuliek balíkov a zaregistrujú plánovač. Na Oracle overte [JDBC profil a práva k sekvenciám](#oracle-database-19c). Na SQL Serveri overte [úroveň kompatibility, JDBC a práva](#microsoft-sql-server-2022). Na PostgreSQL overte [schému a sekvencie](#postgresql). Na MariaDB overte úložný engine existujúcich tabuliek a podľa potreby vykonajte [konverziu na InnoDB](#konverzia-existujúcich-tabuliek-na-innodb). Perex API potrebuje aj oprávnenia na `perex_group_doc`.
 3. Overte zápis aplikačného účtu do `/WEB-INF`, kde sa automaticky vytvorí predvolené úložisko `/WEB-INF/branches`. Voliteľný `branchStorageRoot` môže smerovať na existujúci súkromný absolútny adresár mimo webrootu. Kontrola pri aktivácii porovnáva cestu s koreňom webovej aplikácie a pri predvolenom úložisku overuje, že aj po rozlíšení symbolických odkazov zostáva v `/WEB-INF`. Právo zápisu sa overuje vytvorením dočasného súboru. Zachovajte existujúci generátor `pkey_generator` pre `media`.
 4. Overte jednu zapisovateľnú DB, aspoň `READ_COMMITTED` pre JDBC aj JPA a rovnaké konfiguračné hodnoty a kód na všetkých uzloch obsluhujúcich obsah. Aktuálny POC deklaruje iba jednu inštanciu; ďalšia topológia potrebuje vlastné overenie súborov/cache/session.
 5. Overte `enableStaticFilesExternalDir=true` a existujúce mapovanie súborov jednotlivých domén. Nastavte `branchesEnabled=true` globálne a obnovte všetky dotknuté uzly. Konfigurácia pracovných verzií je globálna, nie prepínač jednej domény. Priraďte **Pracovné verzie** (`menuBranches`) a existujúce práva stránok, priečinkov a súborov. Prvé vytvorenie balíka vykoná kontrolu aktivácie a pri probléme vráti konkrétny dôvod.
@@ -32,6 +32,20 @@ Iné DB vrátane MySQL a Oracle, MyISAM, viacuzlové nasadenie, CDN/externé sto
 Pri `fulltextExecuteApps=true` WebJET pri dokončovaní publikovania vykreslí aplikácie v anonymnej požiadavke a ich výstup zahrnie do SQL vyhľadávania. Medzi zápisom stránky a dokončením indexovania môže vyhľadávanie ešte používať jej pôvodný text. Pri chybe renderovania skontrolujte dôvod v priebehu publikovania a po odstránení chyby použite **Pokračovať**.
 
 Kontrola kompatibility odmietne vlastný `fulltextDataAscMethod`. Súbory používajú existujúce externé priečinky domén. Ukladanie do pracovnej verzie nevykonáva živé JSP ani fulltext hooky. Vlastné aplikácie overte pred aktiváciou.
+
+### Oracle Database 19c
+
+Pre publikačné balíky na Oracle je požiadavkou **Oracle Database 19c**. Všeobecné inštalačné minimum WebJET CMS je Oracle 11g. Presnú verziu inštancie vrátane Release Update zistíte dotazom `SELECT banner_full FROM v$version`.
+
+V zdroji `iwcm` nastavte ovládač `oracle.jdbc.OracleDriver`, adresu služby PDB v tvare `jdbc:oracle:thin:@//server:1521/sluzba` a `<transactionIsolation>TRANSACTION_READ_COMMITTED</transactionIsolation>`. JDBC aj EclipseLink musia pristupovať k rovnakej zapisovateľnej primárnej databáze, kontajneru a schéme pod tým istým účtom. WebJET `DBPool` nastavuje pre Oracle vlastnosť ovládača `SetBigStringTryClob=true`.
+
+Publikačné balíky sme overili na **Oracle Database 19c Enterprise Edition 19.19.0.0.0 (RU 19.19)** pre Linux ARM64 s ovládačom **ojdbc8 19.8.0.0.0**. Databáza používala znakovú sadu **AL32UTF8** a národnú znakovú sadu **AL16UTF16**.
+
+Migráciu spúšťajte ako vlastník schémy s právami vytvárať tabuľky, indexy, sekvencie a triggery a s kvótou v tabuľkovom priestore. Vzniknú tabuľky `branches`, `branch_documents`, `branch_groups`, `branch_media` a `branch_files`. Migrácia plánovača zaregistruje úlohu `BranchScheduler` v tabuľke `crontab`.
+
+Aplikačný účet potrebuje čítať a zapisovať obsah, položky balíkov, väzby médií a perex skupín aj históriu. Záznamy auditu vkladá do `webjet_adminlog`. Pri samostatnom účte nastavte aktuálnu schému vlastníka a udeľte mu aj `SELECT` na sekvencie `S_documents`, `S_groups`, `S_branches` a `S_branch_rows`. Nová stránka a priečinok dostanú už pri príprave ďalšie ID z rovnakej sekvencie ako v bežnom editore. Pri publikovaní musí LIVE trigger zachovať zadané ID. Pre médiá musí byť inicializovaný záznam `media` v `pkey_generator`.
+
+Na RU 19.19 sme overili vytvorenie tabuliek a registráciu plánovača pri čistej inštalácii. Pri balíku s 20 stránkami sa poradie v menu a Novinkách zhodovalo s výsledkom pre anonymného návštevníka po publikovaní. Atribútový filter v náhľade zobrazil vybrané pracovné stránky a dodržal veľkosť strany. Po reštarte databázy si dve nové stránky, priečinok a médium zachovali rezervované ID. Po chybe indexovania správca pokračoval v publikovaní cez administráciu. Po pokračovaní zostalo v histórii rovnakých 20 záznamov a v publikačnom audite rovnakých 25.
 
 ### Microsoft SQL Server 2022
 
@@ -145,9 +159,11 @@ Vypnutie nemaže WORK dáta, rezervované ID ani súkromné súbory a nevracia u
 
 Počas obnovy zastavte aplikačné zápisy a cron na všetkých uzloch. Obnovujte DB, verejný filesystem, file-history a súkromný `branchStorageRoot` z jedného konzistentného bodu, vrátane `branches` a všetkých štyroch WORK tabuliek, snapshotov, rozhodnutí a checkpointov. Čiastočná obnova iba tabuľky `documents` alebo iba WORK súborov nezachová zmluvu publikovania.
 
-Na MariaDB rezervácia spotrebuje `AUTO_INCREMENT` technickým vložením a zmazaním riadka v jednej transakcii. Na PostgreSQL balík vyberie ďalšie číslo priamo z existujúcej sekvencie `documents.doc_id` alebo `groups.group_id`. Na SQL Serveri sa po pridelení `IDENTITY` technický zápis vráti na predchádzajúci bod transakcie. Číslo zostane rezervované aj po reštarte databázy. Pri publikovaní ho WebJET vloží cez `IDENTITY_INSERT`. Všetky tri profily používajú pre médiá `PkeyGenerator`. Rezervované ID tak môže existovať iba v pracovnej verzii.
+Na MariaDB rezervácia spotrebuje `AUTO_INCREMENT` technickým vložením a zmazaním riadka v jednej transakcii. Na PostgreSQL balík vyberie ďalšie číslo priamo z existujúcej sekvencie `documents.doc_id` alebo `groups.group_id`. Na SQL Serveri sa po pridelení `IDENTITY` technický zápis vráti na predchádzajúci bod transakcie. Číslo zostane rezervované aj po reštarte databázy. Pri publikovaní ho WebJET vloží cez `IDENTITY_INSERT`. Na Oracle rezervuje balík číslo cez `S_documents.NEXTVAL` alebo `S_groups.NEXTVAL`. Všetky profily používajú pre médiá `PkeyGenerator`. Rezervované ID tak môže existovať iba v pracovnej verzii.
 
 Pri zálohe zaznamenajte na MariaDB nasledujúce hodnoty `AUTO_INCREMENT` a na PostgreSQL stav oboch sekvencií vrátane `last_value` a `is_called`. Na SQL Serveri zaznamenajte aktuálne hodnoty `IDENT_CURRENT('documents')` a `IDENT_CURRENT('groups')`. Na každej z databáz zaznamenajte aj hodnotu generátora `media` a najvyššie ID v LIVE aj WORK tabuľkách. Po obnove musí ďalšie pridelené ID prekročiť všetky známe rezervácie vrátane rezervácií zo zachovávaných záloh. Pri obnove neznižujte zaznamenanú hodnotu počítadla ani stav sekvencií. Zachovajte tiež už pridelené rozsahy mediálneho generátora. Samotné `MAX(id)` v LIVE tabuľke neobsahuje čísla rezervované pre nové pracovné stránky, priečinky alebo médiá.
+
+Na Oracle zálohujte sekvencie spolu s tabuľkami, ich triggermi a súkromnými súbormi. Pri zastavených zápisoch si pre sekvencie zaznamenajte aj `LAST_NUMBER` z `USER_SEQUENCES`. Pri zapnutej cache je to hranica prideleného rozsahu. Pri logickej obnove nastavte sekvencie tak, aby ďalšie ID prekročilo zaznamenanú hranicu aj najvyššie ID zo zachovaných LIVE a WORK dát. Pre interné ID položiek porovnajte `S_branch_rows` so všetkými štyrmi tabuľkami položiek. Pred povolením zápisov skontrolujte aj obnovený riadok `pkey_generator` pre médiá.
 
 ID zachovávaných balíkov sa nikdy neprečíslujú. Pri obnove staršej zálohy, ktorá rezerváciu ešte neobsahovala, použite zachytené horné hranice aj vtedy, keď sa obsah balíka neobnovuje. Ak ich nemáte, rezervácie nemožno spoľahlivo odvodiť len z LIVE dát; balíky z novšieho bodu nepublikujte do takej DB bez manuálneho zosúladenia.
 

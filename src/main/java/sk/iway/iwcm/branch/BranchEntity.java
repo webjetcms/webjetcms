@@ -29,7 +29,7 @@ public class BranchEntity
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_branches")
     @Column(name = "id")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;

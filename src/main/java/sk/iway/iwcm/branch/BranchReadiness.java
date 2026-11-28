@@ -16,6 +16,7 @@ import java.util.Set;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.ConfDB;
 
 /** Prerequisites for publishing packages on a single-writer database. */
 public final class BranchReadiness {
@@ -42,31 +43,38 @@ public final class BranchReadiness {
         boolean postgres = "PostgreSQL".equals(database.getDatabaseProductName());
         boolean maria = "MariaDB".equals(database.getDatabaseProductName()) && SUPPORTED_MARIADB_SERIES.contains(versionSeries);
         boolean mssql = "Microsoft SQL Server".equals(database.getDatabaseProductName()) && database.getDatabaseMajorVersion() == 16;
-        if (!mssql && !maria && !(postgres && database.getDatabaseMajorVersion() >= 16))
-            throw new SQLException("Publishing packages require MariaDB 10.11, 11.4 or 12.2, PostgreSQL 16 or later, or Microsoft SQL Server 2022 (16.x)");
+        boolean oracle = "Oracle".equals(database.getDatabaseProductName()) && database.getDatabaseMajorVersion() == 19;
+        if (!oracle && !mssql && !maria && !(postgres && database.getDatabaseMajorVersion() >= 16))
+            throw new SQLException("Publishing packages require MariaDB 10.11, 11.4 or 12.2, PostgreSQL 16 or later, Microsoft SQL Server 2022 (16.x), or Oracle Database 19c");
         if (connection.isReadOnly() || connection.getTransactionIsolation() < Connection.TRANSACTION_READ_COMMITTED)
             throw new SQLException("Branches require a writable connection at READ_COMMITTED or stronger");
         List<String> tables = new ArrayList<>(List.of("documents", "groups", "media", "media_group_to_media",
             "documents_history", "groups_scheduler", "branches", "branch_documents", "branch_groups", "branch_media", "branch_files"));
-        if (postgres || mssql) tables.addAll(List.of("pkey_generator", "perex_group_doc", "_adminlog_", "file_history"));
-        String tableCheck = mssql ? "SELECT 1 FROM sys.tables WHERE schema_id=SCHEMA_ID() AND name=?" : postgres
-            ? "SELECT 1 FROM pg_class WHERE oid=to_regclass(?) AND relnamespace=current_schema()::regnamespace AND relkind='r' AND relpersistence='p'"
-            : "SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND ENGINE='InnoDB'";
+        if (postgres || mssql || oracle) tables.addAll(List.of("pkey_generator", "perex_group_doc", ConfDB.ADMINLOG_TABLE_NAME, "file_history"));
+        if (oracle) tables.addAll(List.of(ConfDB.CONF_TABLE_NAME, ConfDB.DB_TABLE_NAME, "crontab"));
+        String tableCheck = switch (database.getDatabaseProductName()) {
+            case "Oracle" -> "SELECT 1 FROM all_tables WHERE owner=SYS_CONTEXT('USERENV','CURRENT_SCHEMA') AND table_name=UPPER(?) AND temporary='N'";
+            case "Microsoft SQL Server" -> "SELECT 1 FROM sys.tables WHERE schema_id=SCHEMA_ID() AND name=?";
+            case "PostgreSQL" -> "SELECT 1 FROM pg_class WHERE oid=to_regclass(?) AND relnamespace=current_schema()::regnamespace AND relkind='r' AND relpersistence='p'";
+            default -> "SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND ENGINE='InnoDB'";
+        };
         try (PreparedStatement statement = connection.prepareStatement(tableCheck)) {
             for (String table : tables) {
                 statement.setString(1, table);
                 try (ResultSet result = statement.executeQuery()) {
-                    if (!result.next()) throw new SQLException(postgres || mssql ? "Missing permanent table in current schema: " + table
+                    if (!result.next()) throw new SQLException(postgres || mssql || oracle ? "Missing permanent table in current schema: " + table
                         : "Publishing branches require InnoDB: " + table);
                 }
             }
         }
         if (postgres) verifyPostgresWriter(connection);
         if (mssql) sqlServerWriter(connection);
+        if (oracle) oracleWriter(connection);
         String currentSchema = mssql ? "SCHEMA_NAME()" : postgres ? "current_schema()" : "DATABASE()";
         for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP, BranchType.MEDIA)) {
             Set<String> actual = new LinkedHashSet<>();
             try (PreparedStatement statement = connection.prepareStatement(
+                    oracle ? "SELECT LOWER(column_name) FROM all_tab_columns WHERE owner=SYS_CONTEXT('USERENV','CURRENT_SCHEMA') AND table_name=UPPER(?)" :
                     "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=" + currentSchema + " AND TABLE_NAME=?")) {
                 statement.setString(1, type.liveTable());
                 try (ResultSet result = statement.executeQuery()) { while (result.next()) actual.add(result.getString(1)); }
@@ -109,6 +117,12 @@ public final class BranchReadiness {
     static void verifyJpaConnection(Connection jdbc, Connection jpa) throws SQLException {
         if (jpa.isReadOnly() || jpa.getTransactionIsolation() < Connection.TRANSACTION_READ_COMMITTED)
             throw new SQLException("Direct JPA datasource must be writable at READ_COMMITTED or stronger");
+        if ("Oracle".equals(jdbc.getMetaData().getDatabaseProductName())) {
+            if (!oracleWriter(jdbc).equals(oracleWriter(jpa))) throw new SQLException("JDBC and JPA must use the same Oracle database, container, schema and user");
+            jpa.setAutoCommit(false);
+            try { verifyOraclePrivileges(jpa); }
+            finally { jpa.rollback(); }
+        }
         if ("Microsoft SQL Server".equals(jdbc.getMetaData().getDatabaseProductName())) {
             if (!sqlServerWriter(jdbc).equals(sqlServerWriter(jpa)))
                 throw new SQLException("JDBC and JPA must use the same SQL Server, database, schema and user");
@@ -117,6 +131,50 @@ public final class BranchReadiness {
             if (!jdbc.getSchema().equals(jpa.getSchema()) || !jdbc.getCatalog().equals(jpa.getCatalog()))
                 throw new SQLException("JDBC and JPA must use the same PostgreSQL database and schema");
             verifyPostgresWriter(jpa);
+        }
+    }
+
+    private static List<String> oracleWriter(Connection connection) throws SQLException {
+        try (var statement = connection.createStatement(); var rows = statement.executeQuery("""
+                SELECT SYS_CONTEXT('USERENV','DB_UNIQUE_NAME'), SYS_CONTEXT('USERENV','CON_NAME'),
+                       SYS_CONTEXT('USERENV','CURRENT_SCHEMA'), SYS_CONTEXT('USERENV','SESSION_USER') FROM dual
+                WHERE SYS_CONTEXT('USERENV','DATABASE_ROLE')='PRIMARY'
+                """)) {
+            if (!rows.next()) throw new SQLException("Publishing packages require a writable Oracle primary");
+            return List.of(rows.getString(1),rows.getString(2),rows.getString(3),rows.getString(4));
+        }
+    }
+
+    private static void verifyOraclePrivileges(Connection connection) throws SQLException {
+        // Execute the same operations as publication. No dictionary or DBA grants are required.
+        try (var sql = connection.createStatement()) {
+            for (String table : List.of("documents","groups","media","branches","branch_documents","branch_groups","branch_media",
+                    "branch_files","media_group_to_media","perex_group_doc","pkey_generator","documents_history",
+                    "groups_scheduler","file_history")) {
+                sql.executeUpdate("INSERT INTO " + table + " SELECT * FROM " + table + " WHERE 1=0");
+                if (List.of("groups_scheduler","file_history").contains(table)) continue;
+                String column;
+                try (var rows = sql.executeQuery("SELECT * FROM " + table + " WHERE 1=0")) { column = rows.getMetaData().getColumnName(1); }
+                sql.executeUpdate("UPDATE " + table + " SET " + column + "=" + column + " WHERE 1=0");
+                if (!"documents_history".equals(table) && !"pkey_generator".equals(table)) sql.executeUpdate("DELETE FROM " + table + " WHERE 1=0");
+            }
+            sql.executeUpdate("INSERT INTO " + ConfDB.ADMINLOG_TABLE_NAME + " (log_type) SELECT 0 FROM dual WHERE 1=0");
+            for (String sequence : List.of("S_branches","S_branch_rows")) {
+                try (var rows = sql.executeQuery("SELECT " + sequence + ".NEXTVAL FROM dual")) { rows.next(); }
+            }
+        }
+        for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP)) {
+            int id = BranchStore.reserveNative(connection,type);
+            String insert = type == BranchType.DOCUMENT
+                ? "INSERT INTO documents(doc_id,title,navbar,data,data_asc,date_created) VALUES (?,'probe','probe',EMPTY_CLOB(),EMPTY_CLOB(),SYSDATE)"
+                : "INSERT INTO groups(group_id,group_name) VALUES (?,'probe')";
+            try (var statement = connection.prepareStatement(insert, new String[]{type.idColumn().toUpperCase(java.util.Locale.ROOT)})) {
+                statement.setInt(1,id);
+                statement.executeUpdate();
+                try (var keys = statement.getGeneratedKeys()) {
+                    if (!keys.next() || keys.getInt(1) != id) throw new SQLException("LIVE trigger replaced reserved ID on " + type.liveTable());
+                }
+            }
         }
     }
 
@@ -222,6 +280,10 @@ public final class BranchReadiness {
     /** Checks actual DML grants without publishing content; the caller must roll back. */
     public static void verifyWritePrivileges(Connection connection) throws SQLException {
         if (connection.getAutoCommit()) throw new SQLException("Privilege probe requires an explicit rollback transaction");
+        if ("Oracle".equals(connection.getMetaData().getDatabaseProductName())) {
+            verifyOraclePrivileges(connection);
+            return;
+        }
         if ("Microsoft SQL Server".equals(connection.getMetaData().getDatabaseProductName())) {
             verifySqlServerPrivileges(connection);
             return;

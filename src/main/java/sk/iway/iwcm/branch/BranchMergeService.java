@@ -34,6 +34,10 @@ public final class BranchMergeService {
     private static final List<String> PAGE_REFERENCES = List.of("header_doc_id","footer_doc_id","menu_doc_id","right_menu_doc_id","logon_page_doc_id","temp_field_a_docid","temp_field_b_docid","temp_field_c_docid","temp_field_d_docid");
     private static final List<String> GROUP_PAGE_REFERENCES = List.of("default_doc_id","logon_page_doc_id","new_page_docid_template");
 
+    private static Integer scheduledBy(Map<String,Object> branch) {
+        return branch.get("scheduled_by") instanceof Number id ? id.intValue() : null;
+    }
+
     public Report prepare(long id,String domain,Identity user,long revision) {
         try(Connection c=DBPool.getConnection()) { return report(plan(c,id,domain,user,revision)); }
         catch(SQLException ex) { throw failure(ex); }
@@ -50,7 +54,9 @@ public final class BranchMergeService {
         requireBranchUser(user);
         if (!GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         try (var c = DBPool.getConnection()) {
-            c.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+            // Oracle provides a transaction-wide read snapshot at SERIALIZABLE.
+            c.setTransactionIsolation(Constants.DB_TYPE == Constants.DB_ORACLE
+                ? Connection.TRANSACTION_SERIALIZABLE : Connection.TRANSACTION_REPEATABLE_READ);
             c.setAutoCommit(false);
             try {
                 var branch = branch(c,id,domain,-1,false,"state,revision");
@@ -114,7 +120,7 @@ public final class BranchMergeService {
                 if(!live.hash().equals(liveHash)||!change.work().hash().equals(workHash)) throw conflict("Podklad sa zmenil. Obnovte porovnanie.");
                 BranchSnapshot target=source==BranchDecision.Source.LIVE?live:change.work();
                 try(PreparedStatement s=c.prepareStatement("UPDATE "+type.workTable()+" SET resolved_choice=?,resolved_live_hash=?,resolved_work_hash=?,resolved_snapshot=?,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
-                    s.setString(1,source.name());s.setString(2,liveHash);s.setString(3,workHash);s.setString(4,target.json());s.setObject(5,row.get("row_id"));s.setLong(6,id);s.executeUpdate();
+                    s.setString(1,source.name());s.setString(2,liveHash);s.setString(3,workHash);BranchStore.bind(s,4,"resolved_snapshot",target.json());s.setObject(5,row.get("row_id"));s.setLong(6,id);s.executeUpdate();
                 }
                 bump(c,id,user.getUserId());c.commit();
             } catch(SQLException|RuntimeException ex) {c.rollback();throw ex;}
@@ -152,7 +158,7 @@ public final class BranchMergeService {
                 else if(resume)allowed=Set.of("MERGE_FAILED","MERGING");
                 if(!allowed.contains(state)) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
                 if(scheduled && (!(branch.get("publish_at") instanceof java.util.Date at) || at.getTime()>System.currentTimeMillis()
-                        || !Objects.equals(branch.get("scheduled_by"),user.getUserId()))) throw conflict("Termín alebo publikujúci sa zmenil.");
+                        || !Objects.equals(scheduledBy(branch),user.getUserId()))) throw conflict("Termín alebo publikujúci sa zmenil.");
                 if("MERGING".equals(state) && (branch.get("publish_requested_by")!=null||BranchPublishService.isRunning(id))) throw conflict("Publikovanie už prebieha alebo čaká na úlohu na pozadí.");
                 Plan plan=plan(c,id,domain,user,revision);
                 if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) {
@@ -169,11 +175,11 @@ public final class BranchMergeService {
                     for(Entry e:plan.entries) {
                         if(resume) continue;
                         try(PreparedStatement s=c.prepareStatement("UPDATE "+e.type.workTable()+" SET resolved_snapshot=?,resolved_live_hash=?,resolved_work_hash=?,apply_state='PENDING',apply_phase=?,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
-                            s.setString(1,e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
+                            BranchStore.bind(s,1,"resolved_snapshot",e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
                         }
                     }
                     try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL,publish_requested_by=?,acknowledged_page_plans=? WHERE id=? AND revision=? AND state=?")) {
-                        s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);s.setString(3,acknowledgedPagePlans(plan));s.setLong(4,id);s.setLong(5,revision);s.setString(6,state);
+                        s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);BranchStore.bind(s,3,"acknowledged_page_plans",acknowledgedPagePlans(plan));s.setLong(4,id);s.setLong(5,revision);s.setString(6,state);
                         if(s.executeUpdate()!=1) throw conflict("Balík už prevzal iný beh.");
                     }
                 }
@@ -210,7 +216,7 @@ public final class BranchMergeService {
     private void schedule(Connection c,long id,Identity user,long revision,long publishAt,Plan plan)throws SQLException {
         BranchService.validatePublishAt(new Timestamp(publishAt));
         try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL,acknowledged_page_plans=? WHERE id=? AND revision=?")) {
-            s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());s.setString(4,acknowledgedPagePlans(plan));s.setLong(5,id);s.setLong(6,revision);
+            s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());BranchStore.bind(s,4,"acknowledged_page_plans",acknowledgedPagePlans(plan));s.setLong(5,id);s.setLong(6,revision);
             if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
         }
     }
@@ -343,7 +349,7 @@ public final class BranchMergeService {
 
     private Report report(Plan p) {
         List<Item> items=p.entries.stream().map(e->new Item(e.type.name(),e.change.objectKey(),label(e),e.change.operation().name(),Version.of(e.change.base()),Version.of(e.live),Version.of(e.change.work()),e.live.hash(),e.change.work().hash(),Objects.toString(e.row.get("resolved_choice"),null),e.conflict,e.write,Objects.toString(e.row.get("apply_state"),"PENDING"),Objects.toString(e.row.get("apply_phase"),null),e.error!=null?e.error:Objects.toString(e.row.get("apply_error"),null),"DRAFT".equals(p.branch.get("state")),"DRAFT".equals(p.branch.get("state")) || "MERGE_FAILED".equals(p.branch.get("state")) && e.row.get("applied_hash")==null && Set.of("PENDING","ERROR").contains(e.row.get("apply_state")))).toList();
-        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),BranchDomains.name(((Number)p.branch.get("domain_id")).intValue()),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,List.copyOf(p.pagePlans.values()),items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,(Integer)p.branch.get("scheduled_by"),java.time.ZoneId.systemDefault().getId());
+        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),BranchDomains.name(((Number)p.branch.get("domain_id")).intValue()),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,List.copyOf(p.pagePlans.values()),items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,scheduledBy(p.branch),java.time.ZoneId.systemDefault().getId());
     }
 
     private static BranchSnapshot derivedFields(Map<String,Object> row,Set<String> projected) {
@@ -648,7 +654,7 @@ public final class BranchMergeService {
     static void checkFilePlans(Connection c,String domain,Collection<String> paths)throws SQLException {
         if(paths.isEmpty())return;
         Set<Path> targets=new HashSet<>();for(String path:paths)targets.add(Path.of(Tools.getRealPath(path)).toAbsolutePath().normalize());
-        try(Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT DISTINCT doc_id,group_id FROM documents_history WHERE publicable="+DB.getBooleanSql(true)+" OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')")) {
+        try(Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT DISTINCT doc_id,group_id FROM documents_history WHERE publicable="+DB.getBooleanSql(true)+" OR " + BranchSql.notEmpty("awaiting_approve"))) {
             while(r.next()) {
                 int id=r.getInt(1);String plannedDomain=GroupsDB.getInstance().getDomain(r.getInt(2));
                 if(!domain.equalsIgnoreCase(plannedDomain))continue;
@@ -667,7 +673,7 @@ public final class BranchMergeService {
 
     private static void checkIndividualPlans(Connection c,Entry e)throws SQLException {
         if(e.type==BranchType.FILE)return;
-        String sql=e.type==BranchType.GROUP?"SELECT 1 FROM groups_scheduler WHERE group_id=? AND ((when_to_publish IS NOT NULL AND date_published IS NULL) OR (awaiting_approve IS NOT NULL AND awaiting_approve<>''))":"SELECT 1 FROM documents_history WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR (awaiting_approve IS NOT NULL AND awaiting_approve<>''))";
+        String sql=e.type==BranchType.GROUP?"SELECT 1 FROM groups_scheduler WHERE group_id=? AND ((when_to_publish IS NOT NULL AND date_published IS NULL) OR " + BranchSql.notEmpty("awaiting_approve") + ")":"SELECT 1 FROM documents_history WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR " + BranchSql.notEmpty("awaiting_approve") + ")";
         int id=e.type==BranchType.MEDIA?number(e.row,"media_fk_id"):Integer.parseInt(e.change.objectKey());
         try(PreparedStatement s=c.prepareStatement(sql)){s.setInt(1,id);try(ResultSet r=s.executeQuery()){if(r.next())throw new IllegalStateException("Individuálny plán alebo čakajúce schválenie: "+e.change.identity());}}
     }
@@ -677,7 +683,7 @@ public final class BranchMergeService {
         String title=Objects.toString(entry.live.fields().get("title"),label(entry));
         Prop prop=Prop.getInstance();
         String sql="SELECT history_id,save_date,publish_start,awaiting_approve FROM documents_history "
-            +"WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR (awaiting_approve IS NOT NULL AND awaiting_approve<>'')) ORDER BY history_id";
+            +"WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR " + BranchSql.notEmpty("awaiting_approve") + ") ORDER BY history_id";
         try(PreparedStatement statement=c.prepareStatement(sql)) {
             statement.setInt(1,Integer.parseInt(id));
             try(ResultSet history=statement.executeQuery()) {

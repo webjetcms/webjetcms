@@ -59,7 +59,10 @@ public final class BranchDocumentQuery {
                 String[] parts=status.split(":",2);
                 String column=parts.length==2?COLUMNS.get(parts[0]):null;
                 if(column==null)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Unsupported status filter");
-                if("notEmpty".equals(parts[1]))where.append(" AND COALESCE(d.").append(column).append(",'')<>''");
+                if ("notEmpty".equals(parts[1])) {
+                    String predicate = BranchSql.oracleDocumentClob(column) ? "LENGTH(d." + column + ")>0" : BranchSql.notEmpty("d." + column);
+                    where.append(" AND ").append(predicate);
+                }
                 else if("virtual_path".equals(column)) {where.append(" AND d.virtual_path ").append(parts[1].startsWith("!")?"NOT LIKE ?":"LIKE ?");arguments.add(parts[1].startsWith("!")?parts[1].substring(1):parts[1]);}
                 else params.put("search"+parts[0],parts[1]);
             }
@@ -72,7 +75,9 @@ public final class BranchDocumentQuery {
                 List<Integer> ids=BranchFields.normalizedIds(value);
                 if(!ids.isEmpty()) {
                     where.append(" AND (");boolean first=true;
-                    for(int id:ids) {if(!first)where.append(" OR ");first=false;where.append("CONCAT(',',COALESCE(d.").append("perexGroups".equals(property)?"perex_group":"password_protected").append(",''),',') LIKE ?");arguments.add("%,"+id+",%");}
+                    String field = "perexGroups".equals(property) ? "d.perex_group" : "d.password_protected";
+                    String tokens = Constants.DB_TYPE == Constants.DB_ORACLE ? "(',' || " + field + " || ',')" : "CONCAT(',',COALESCE(" + field + ",''),',')";
+                    for(int id:ids) {if(!first)where.append(" OR ");first=false;where.append(tokens).append(" LIKE ?");arguments.add("%,"+id+",%");}
                     where.append(')');
                 }
                 continue;
@@ -95,8 +100,18 @@ public final class BranchDocumentQuery {
             else if(Set.of("available","searchable","cacheable","show_in_menu","require_ssl","show_in_navbar","show_in_sitemap","logged_show_in_menu","logged_show_in_navbar","logged_show_in_sitemap","url_inherit_group","generate_url_from_title","disable_after_end","publish_after_start").contains(column)) {where.append(" AND ").append(expression).append("=?");arguments.add(Boolean.parseBoolean(value));}
             else if(column.endsWith("_id")||Set.of("sort_priority","views_total","forum_count").contains(column)) {where.append(" AND ").append(expression).append("=?");arguments.add(Long.parseLong(value));}
             else {
-                where.append(" AND ").append(expression).append(value.startsWith("^")&&value.endsWith("$")?"=?":" LIKE ?");
-                arguments.add(value.startsWith("^")&&value.endsWith("$")?DatatableRestControllerV2.getCleanValue(value):(value.startsWith("^")?value.substring(1)+"%":value.endsWith("$")?"%"+value.substring(0,value.length()-1):"%"+value+"%"));
+                boolean exact = value.startsWith("^") && value.endsWith("$");
+                String pattern = exact ? DatatableRestControllerV2.getCleanValue(value)
+                    : value.startsWith("^") ? value.substring(1)+"%" : value.endsWith("$") ? "%"+value.substring(0,value.length()-1) : "%"+value+"%";
+                boolean clob = BranchSql.oracleDocumentClob(column);
+                if (exact && pattern.isEmpty() && Constants.DB_TYPE == Constants.DB_ORACLE) {
+                    where.append(" AND ").append(clob ? "NVL(LENGTH(" + expression + "),0)=0" : expression + " IS NULL");
+                    continue;
+                }
+                if (exact && clob)
+                    where.append(" AND DBMS_LOB.COMPARE(").append(expression).append(",?)=0");
+                else where.append(" AND ").append(expression).append(exact ? "=?" : " LIKE ?");
+                arguments.add(clob ? new LobPattern(pattern) : pattern);
             }
         }
         StringBuilder order=new StringBuilder();
@@ -113,9 +128,9 @@ public final class BranchDocumentQuery {
                 bind(statement,source,arguments);try(ResultSet result=statement.executeQuery()){result.next();count=result.getLong(1);}
             }
             List<DocDetails> docs=new ArrayList<>();
-            try(PreparedStatement statement=connection.prepareStatement("SELECT d.doc_id FROM "+from+where+" ORDER BY "+order+(Constants.DB_TYPE == Constants.DB_MSSQL ? " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" : " LIMIT ? OFFSET ?"))) {
+            boolean offsetFirst = Constants.DB_TYPE == Constants.DB_MSSQL || Constants.DB_TYPE == Constants.DB_ORACLE;
+            try(PreparedStatement statement=connection.prepareStatement("SELECT d.doc_id FROM "+from+where+" ORDER BY "+order+(offsetFirst ? " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" : " LIMIT ? OFFSET ?"))) {
                 int index=bind(statement,source,arguments);
-                boolean offsetFirst = Constants.DB_TYPE == Constants.DB_MSSQL;
                 statement.setInt(offsetFirst ? index+1 : index,options.getPageable().getPageSize());
                 statement.setLong(offsetFirst ? index : index+1,options.getPageable().getOffset());
                 try(ResultSet result=statement.executeQuery()){while(result.next())docs.add(view.document(result.getInt(1),true));}
@@ -123,6 +138,17 @@ public final class BranchDocumentQuery {
             return new PageImpl<>(docs,options.getPageable(),count);
         } catch(SQLException ex) {throw new IllegalStateException("Cannot query branch pages",ex);}
     }
-    private static String expression(String column) {return "@author".equals(column)?"CONCAT(COALESCE(u.title,''),' ',COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))":"d."+column;}
-    private static int bind(PreparedStatement statement,BranchSql.Fragment source,List<Object> arguments)throws SQLException {int index=source.bind(statement,1);for(Object value:arguments)statement.setObject(index++,value);return index;}
+    private static String expression(String column) {
+        if ("@author".equals(column) && Constants.DB_TYPE == Constants.DB_ORACLE) return "(u.title || ' ' || u.first_name || ' ' || u.last_name)";
+        return "@author".equals(column)?"CONCAT(COALESCE(u.title,''),' ',COALESCE(u.first_name,''),' ',COALESCE(u.last_name,''))":"d."+column;}
+    private record LobPattern(String text) { }
+
+    private static int bind(PreparedStatement statement, BranchSql.Fragment source, List<Object> arguments) throws SQLException {
+        int index = source.bind(statement, 1);
+        for (Object value : arguments) {
+            if (value instanceof LobPattern pattern) statement.setClob(index++, new java.io.StringReader(pattern.text()));
+            else statement.setObject(index++, value);
+        }
+        return index;
+    }
 }

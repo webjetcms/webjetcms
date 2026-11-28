@@ -53,6 +53,150 @@ class BranchMergeTest extends BranchJpaTest {
     @Autowired BranchFileRepository files;
     @Autowired jakarta.persistence.EntityManagerFactory entityManagerFactory;
 
+    /** The writer probe must roll back real inserts and reject a different JPA schema or a read-only transaction. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleVerifiesBothWritersInTheWebjetSchema() throws Exception {
+        BranchReadiness.verifyActivation();
+        try (var jdbc = DBPool.getConnection(); var jpa = DBPool.getInstance().getDataSource("iwcm").getConnection();
+                var direct = jpa.createStatement(); var pooled = jdbc.createStatement()) {
+            String schema = jpa.getSchema();
+            try {
+                direct.execute("ALTER SESSION SET CURRENT_SCHEMA=SYSTEM");
+                assertThrows(SQLException.class, () -> BranchReadiness.verifyJpaConnection(jdbc, jpa));
+            } finally { direct.execute("ALTER SESSION SET CURRENT_SCHEMA=" + schema); }
+            jdbc.setAutoCommit(false);
+            try {
+                pooled.execute("SET TRANSACTION READ ONLY");
+                assertThrows(SQLException.class, () -> BranchReadiness.verifyWritePrivileges(jdbc));
+            } finally { jdbc.rollback(); }
+        }
+    }
+
+    /** Compare and return a JSON_TABLE CLOB beyond the VARCHAR2 limit before sorting and paging the result. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleFiltersFullUnicodeHtmlBeforePaging() throws Exception {
+        String html = "<p>" + "Žltý kôň 🐴 漢字 ".repeat(7000) + "</p>";
+        for (int page : f.pages.subList(0, 2)) {
+            try (var c = DBPool.getConnection(); var s = c.prepareStatement("UPDATE branch_documents SET data=? WHERE doc_id=? AND branch_id=?")) {
+                s.setClob(1, new java.io.StringReader(html));
+                s.setInt(2, page);
+                s.setLong(3, f.branch);
+                assertEquals(1, s.executeUpdate());
+            }
+        }
+        var request = new MockHttpServletRequest(Constants.getServletContext());
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+        try (var scope = BranchContexts.open(request, admin()); var c = DBPool.getConnection()) {
+            var source = BranchSql.documentSource("d", List.of("doc_id", "data"));
+            try (var s = c.prepareStatement("SELECT d.data FROM " + source.sql() + " WHERE d.doc_id=?")) {
+                s.setInt(source.bind(s, 1), f.pages.get(0));
+                try (var rows = s.executeQuery()) { assertTrue(rows.next()); assertEquals(html, rows.getString(1)); }
+            }
+            var options = new sk.iway.iwcm.editor.rest.GetAllItemsDocOptions(request);
+            options.setGroupId(f.section);
+            options.setPageable(org.springframework.data.domain.PageRequest.of(1, 1, org.springframework.data.domain.Sort.by("id")));
+            for (String filter : List.of("^" + html + "$", "🐴 漢字")) {
+                request.setParameter("searchData", filter);
+                var result = BranchDocumentQuery.list(options);
+                assertEquals(2, result.getTotalElements());
+                assertEquals(f.pages.get(1).intValue(), result.getContent().get(0).getDocId());
+            }
+            request.setParameter("searchData", "^" + html + "!$");
+            assertEquals(0, BranchDocumentQuery.list(options).getTotalElements());
+        }
+    }
+
+    /** A foreign root stays out of the Oracle hierarchy and a cycle introduced by a WORK move is reported. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleScopesFolderTreeAndRejectsCycles() throws Exception {
+        int foreign;
+        try (var c = DBPool.getConnection(); var s = c.prepareStatement(
+                "INSERT INTO groups(group_name,domain_name,parent_group_id) VALUES ('test foreign root','tree.example',0)",
+                new String[]{"GROUP_ID"})) {
+            s.executeUpdate();
+            try (var ids = s.getGeneratedKeys()) { assertTrue(ids.next()); foreign = ids.getInt(1); }
+        }
+        try {
+            try (var scope = BranchContexts.open(null, admin())) {
+                assertNull(BranchView.current().group(foreign));
+                assertNotNull(BranchView.current().group(f.section));
+            }
+            sql("UPDATE branch_groups SET parent_group_id=? WHERE group_id=? AND branch_id=?", f.section, f.destination, f.branch);
+            try (var scope = BranchContexts.open(null, admin())) {
+                assertTrue(assertThrows(IllegalStateException.class, BranchView::current).getMessage().contains("Cycle"));
+            }
+        } finally { sql("DELETE FROM groups WHERE group_id=?", foreign); }
+    }
+
+    /** Each mapped WORK entity must receive the same key that Oracle persisted through its insert trigger. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleReturnsGeneratedJpaWorkIds() {
+        var document = new BranchDocumentEntity();
+        document.setDocId(Integer.MAX_VALUE);
+        var group = new BranchGroupEntity();
+        group.setGroupId(Integer.MAX_VALUE);
+        var media = new BranchMediaEntity();
+        media.setMediaId(Integer.MAX_VALUE);
+        var file = new BranchFileEntity();
+        file.setEntryKind("DIRECTORY");
+        file.setLogicalPath("/files/jpa-id-test");
+        file.setPathKey(BranchSnapshot.absent().hash());
+        try (var manager = entityManagerFactory.createEntityManager()) {
+            manager.getTransaction().begin();
+            try {
+                for (BranchRow row : List.of(document, group, media, file)) {
+                    row.setBranchId(f.branch);
+                    row.setOperation("UPSERT");
+                    row.setBaseExists(false);
+                    row.setBaseHash(BranchSnapshot.absent().hash());
+                    row.setUpdatedBy(user.getUserId());
+                    row.setUpdatedAt(Timestamp.from(Instant.now()));
+                    row.setApplyState("PENDING");
+                    manager.persist(row);
+                    manager.flush();
+                    manager.clear();
+                    assertNotNull(row.getRowId());
+                    assertEquals(f.branch, manager.find(row.getClass(), row.getRowId()).getBranchId());
+                }
+            } finally { manager.getTransaction().rollback(); }
+        }
+    }
+
+    /** The publisher holds the LIVE page and the latest eligible history until its transaction ends. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleLocksLatestHistoryAlongsideLivePage() throws Exception {
+        int page = f.pages.get(0);
+        var row = live(BranchType.DOCUMENT, page);
+        try (Connection publisher = DBPool.getConnection(); Connection editor = DBPool.getConnection();
+                Statement edit = editor.createStatement()) {
+            publisher.setAutoCommit(false);
+            editor.setAutoCommit(false);
+            BranchPublishRows.documentHistory(publisher, row, false);
+            BranchPublishRows.documentHistory(publisher, row, false);
+            publisher.commit();
+            sql("UPDATE documents_history SET actual=? WHERE doc_id=?", true, page);
+            long newest = count("SELECT MAX(history_id) FROM documents_history WHERE doc_id=" + page);
+            String pageLock = "SELECT doc_id FROM documents WHERE doc_id=" + page + " FOR UPDATE NOWAIT";
+            String historyLock = "SELECT history_id FROM documents_history WHERE history_id=" + newest + " FOR UPDATE NOWAIT";
+            try {
+                BranchPublishRows.lockLive(publisher, BranchType.DOCUMENT, row);
+                BranchPublishRows.updateDocumentHistorySearchText(publisher, page, BranchDocumentMapper.snapshot(row).hash(), "Oracle history lock");
+                for (String lock : List.of(pageLock, historyLock))
+                    assertEquals(54, assertThrows(SQLException.class, () -> edit.executeQuery(lock)).getErrorCode());
+                try (ResultSet older = edit.executeQuery("SELECT history_id FROM documents_history WHERE doc_id=" + page +
+                        " AND history_id<" + newest + " FOR UPDATE NOWAIT")) {
+                    assertTrue(older.next());
+                }
+                publisher.rollback();
+                try (ResultSet latest = edit.executeQuery(historyLock)) { assertTrue(latest.next()); }
+                try (ResultSet pageRow = edit.executeQuery(pageLock)) { assertTrue(pageRow.next()); }
+            } finally {
+                editor.rollback();
+                publisher.rollback();
+            }
+        }
+    }
+
     /** Binary comparison reads the scoped JPA file identity and serves each actual version. */
     @Test void binaryComparisonUsesJpaFileIdentityForBaseLiveAndWork() throws Exception {
         var request=new MockHttpServletRequest(Constants.getServletContext());
@@ -291,7 +435,7 @@ class BranchMergeTest extends BranchJpaTest {
         page.put("data", html);
         page.put("show_in_navbar", true);
         page.put("logged_show_in_sitemap", null);
-        page.put("event_date", new java.util.Date(1700000000000L));
+        page.put("event_date", new java.util.Date(Constants.DB_TYPE == Constants.DB_ORACLE ? 1700000000987L : 1700000000000L));
         store.put(admin(), BranchType.DOCUMENT, id, page, pageHash, false);
         try (var manager = entityManagerFactory.createEntityManager()) {
             var entity = manager.find(BranchDocumentEntity.class, ((Number)page.get("row_id")).longValue());
@@ -329,6 +473,8 @@ class BranchMergeTest extends BranchJpaTest {
                     String insert = type == BranchType.DOCUMENT
                         ? "INSERT INTO documents(title,data,data_asc,navbar,date_created,author_id,temp_id,searchable,available,cacheable,sort_priority) VALUES ('p06','','','',CURRENT_TIMESTAMP,1,1,?,?,?,0)"
                         : "INSERT INTO groups(group_name,internal,parent_group_id,sort_priority) VALUES ('p06',?,0,0)";
+                    if (Constants.DB_TYPE == Constants.DB_ORACLE && type == BranchType.DOCUMENT)
+                        insert = insert.replace("'p06','','',''", "'p06',EMPTY_CLOB(),EMPTY_CLOB(),'p06'");
                     try (PreparedStatement statement = live.prepareStatement(insert, new String[]{type.idColumn()})) {
                         statement.setQueryTimeout(5);
                         statement.setBoolean(1,false);
@@ -345,7 +491,11 @@ class BranchMergeTest extends BranchJpaTest {
                     assertTrue(BranchStore.readLive(live, type, reserved).isEmpty());
                     if (type == BranchType.DOCUMENT) BranchRowWriter.insertDocumentWithId(work, BranchContext.live(DOMAIN, 1),
                         doc(reserved, f.root, "p06", "/p06-identity.html"));
-                    else BranchRowWriter.insertGroupWithId(work, BranchContext.live(DOMAIN, 1), BranchGroupMapper.initialValues(reserved, DOMAIN));
+                    else {
+                        var group = new LinkedHashMap<>(BranchGroupMapper.initialValues(reserved, DOMAIN));
+                        group.put("group_name", "autotest reserved folder");
+                        BranchRowWriter.insertGroupWithId(work, BranchContext.live(DOMAIN, 1), group);
+                    }
                     assertTrue(BranchStore.readLive(work, type, reserved).isPresent());
                 }
             } finally {
@@ -541,10 +691,18 @@ class BranchMergeTest extends BranchJpaTest {
     }
 
     @Test void failureMidwayResumesWithoutRepeatingWritesAndRejectsNewerProduction()throws Exception {
+        int first = f.pages.get(0);
+        try (var connection = DBPool.getConnection()) {
+            var work = BranchStore.readWork(connection, f.branch, BranchType.DOCUMENT, first).orElseThrow();
+            String hash = BranchDocumentMapper.snapshot(work).hash();
+            work.put("data", "");
+            store.put(admin(), BranchType.DOCUMENT, first, work, hash, false);
+        }
         AtomicInteger completed=new AtomicInteger();
         merge(ready(),new BranchPublishService(key->{if(key.startsWith("DOCUMENT:")&&completed.incrementAndGet()==10)throw new IllegalStateException("autotest P06 injected halfway");}));
         assertEquals("MERGE_FAILED",detail().state());assertTrue(detail().items().stream().anyMatch(i->i.applyState().equals("DONE")));
-        int first=f.pages.get(0);String firstHash=snapshot(BranchType.DOCUMENT,first).hash();long history=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first);
+        assertEquals(1,count("SELECT COUNT(*) FROM documents WHERE doc_id="+first+" AND data IS NOT NULL AND data_asc IS NOT NULL"));
+        String firstHash=snapshot(BranchType.DOCUMENT,first).hash();long history=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first);
         sql("UPDATE documents SET title='autotest P06 newer production' WHERE doc_id="+first);
         var stale=detail();assertFalse(stale.ready());assertThrows(ResponseStatusException.class,()->service.claim(f.branch,DOMAIN,user,stale.revision(),stale.preparationHash(),true));
         assertEquals("autotest P06 newer production",live(BranchType.DOCUMENT,first).get("title"));
@@ -641,9 +799,9 @@ class BranchMergeTest extends BranchJpaTest {
         sql("UPDATE media_groups SET available_groups='2147483647' WHERE media_group_id="+f.category);assertFalse(detail().ready());sql("UPDATE media_groups SET available_groups='' WHERE media_group_id="+f.category);
         Path staged=Path.of(Tools.getRealPath(PlannedAssetPaths.ROOT+added+f.file));Files.createDirectories(staged.getParent());Files.writeString(staged,"autotest outside pending plan");
         try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);BranchPublishRows.documentHistory(c,live(BranchType.DOCUMENT,added),false);c.commit();}
-        sql("UPDATE documents_history SET publicable=true WHERE doc_id="+added);
+        sql("UPDATE documents_history SET publicable=? WHERE doc_id=?", true, added);
         var blocked=detail();assertFalse(blocked.ready());assertTrue(blocked.errors().stream().anyMatch(s->s.contains("individuálny plán")),blocked.errors().toString());
-        sql("UPDATE documents_history SET publicable=false,awaiting_approve=',1,' WHERE doc_id="+added);assertFalse(detail().ready());
+        sql("UPDATE documents_history SET publicable=?,awaiting_approve=',1,' WHERE doc_id=?", false, added);assertFalse(detail().ready());
         Files.deleteIfExists(staged);sql("DELETE FROM documents_history WHERE doc_id="+added);sql("DELETE FROM documents WHERE doc_id="+added);
         assertTrue(detail().ready(),detail().errors().toString());
     }
@@ -657,7 +815,7 @@ class BranchMergeTest extends BranchJpaTest {
         assertFalse(awaitingApproval.ready());
         assertTrue(awaitingApproval.errors().stream().anyMatch(error -> error.contains("autotest P06 LIVE 0") && error.contains(Integer.toString(page))));
         assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,awaitingApproval.revision(),awaitingApproval.preparationHash(),false,true));
-        sql("UPDATE documents_history SET awaiting_approve=NULL WHERE doc_id="+page);
+        sql("UPDATE documents_history SET awaiting_approve=? WHERE doc_id="+page, "");
 
         var report=ready();
         assertEquals(1,report.pagePlanWarnings().size());
@@ -669,7 +827,7 @@ class BranchMergeTest extends BranchJpaTest {
 
         assertEquals("MERGED",detail().state(),detail().lastError());
         assertEquals("autotest P06 WORK 0",live(BranchType.DOCUMENT,page).get("title"));
-        assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+page+" AND publicable=true AND title='autotest P06 LIVE 0'"));
+        assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+page+" AND publicable="+DB.getBooleanSql(true)+" AND title='autotest P06 LIVE 0'"));
     }
 
     /** A page plan created after the package was scheduled needs a new confirmation. */
@@ -685,7 +843,7 @@ class BranchMergeTest extends BranchJpaTest {
         assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,changed.revision(),changed.preparationHash()));
         assertEquals("SCHEDULED",detail().state());
 
-        sql("UPDATE documents_history SET publicable=false WHERE doc_id="+f.pages.get(1));
+        sql("UPDATE documents_history SET publicable=? WHERE doc_id=?", false, f.pages.get(1));
         var reviewed=ready();
         service.claimScheduled(f.branch,DOMAIN,user,reviewed.revision(),reviewed.preparationHash());
         new BranchPublishService().run(f.branch,user.getUserId());
@@ -698,7 +856,7 @@ class BranchMergeTest extends BranchJpaTest {
             BranchPublishRows.documentHistory(connection,live(BranchType.DOCUMENT,docId),false);
             connection.commit();
         }
-        sql("UPDATE documents_history SET actual=false,publicable=true,publish_start=? WHERE doc_id="+docId, Timestamp.from(Instant.now().plusSeconds(86400)));
+        sql("UPDATE documents_history SET actual=?,publicable=?,publish_start=? WHERE doc_id="+docId, false, true, Timestamp.from(Instant.now().plusSeconds(86400)));
     }
 
     private int stagePageDeletion() throws Exception {

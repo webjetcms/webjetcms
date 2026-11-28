@@ -24,7 +24,7 @@ final class BranchPublishRows {
         Map<String,Object> row=new LinkedHashMap<>();
         ResultSetMetaData columns = result.getMetaData();
         for (int i = 1; i <= columns.getColumnCount(); i++) {
-            String label = columns.getColumnLabel(i);
+            String label = columns.getColumnLabel(i).toLowerCase(Locale.ROOT);
             row.put(label, BranchStore.readColumn(result, i, label));
         }
         return row;
@@ -109,16 +109,16 @@ final class BranchPublishRows {
 
     static void update(Connection connection,BranchType type,Map<String,Object> values) throws SQLException {
         List<String> names=new ArrayList<>(values.keySet());names.remove(type.idColumn());
-        String assignments=String.join(",",names.stream().map(name->name+"=?").toList());
+        String assignments=String.join(",",names.stream().map(name->name+"="+BranchStore.parameter(name)).toList());
         try(PreparedStatement statement=connection.prepareStatement("UPDATE "+type.liveTable()+" SET "+assignments+" WHERE "+type.idColumn()+"=?")) {
-            int i=1;for(String name:names)statement.setObject(i++,values.get(name));statement.setObject(i,values.get(type.idColumn()));
+            int i=1;for(String name:names)BranchStore.bind(statement,i++,name,values.get(name));statement.setObject(i,values.get(type.idColumn()));
             if(statement.executeUpdate()!=1)throw new SQLException("Publication identity disappeared: "+type+":"+values.get(type.idColumn()));
         }
     }
 
     static void checkpoint(Connection connection,BranchType type,Map<String,Object> work,String state,String phase,String hash,String error) throws SQLException {
         try(PreparedStatement statement=connection.prepareStatement("UPDATE "+type.workTable()+" SET apply_state=?,apply_phase=?,applied_hash=?,apply_error=? WHERE row_id=? AND branch_id=? AND EXISTS (SELECT 1 FROM branches b WHERE b.id="+type.workTable()+".branch_id AND b.state='MERGING')")) {
-            statement.setString(1,state);statement.setString(2,phase);statement.setString(3,hash);statement.setString(4,error);
+            statement.setString(1,state);statement.setString(2,phase);statement.setString(3,hash);BranchStore.bind(statement,4,"apply_error",error);
             statement.setLong(5,((Number)work.get("row_id")).longValue());statement.setLong(6,((Number)work.get("branch_id")).longValue());
             if(statement.executeUpdate()!=1)throw new SQLException("Publication checkpoint disappeared");
         }
@@ -130,18 +130,26 @@ final class BranchPublishRows {
 
         // A newer or unrelated history entry can exist even when the live content still matches.
         int historyId;
-        try (PreparedStatement statement = connection.prepareStatement(
-                BranchSql.lockedSelect(Constants.DB_TYPE == Constants.DB_MSSQL ? "TOP (1) *" : "*", "documents_history",
-                    "doc_id=? AND actual=" + DB.getBooleanSql(true) + " AND publicable=" + DB.getBooleanSql(false)
-                    + " AND disapproved_by=-1 ORDER BY history_id DESC" + (Constants.DB_TYPE == Constants.DB_MSSQL ? "" : " LIMIT 1")))) {
+        String eligible = "doc_id=? AND actual=" + DB.getBooleanSql(true) + " AND publicable=" + DB.getBooleanSql(false)
+            + " AND disapproved_by=-1";
+        String select;
+        if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+            // The caller already holds the LIVE page lock. Lock the physical history row in the outer block.
+            select = BranchSql.lockedSelect("*", "documents_history", "history_id=(SELECT MAX(history_id) FROM documents_history WHERE " + eligible + ")");
+        } else {
+            boolean mssql = Constants.DB_TYPE == Constants.DB_MSSQL;
+            select = BranchSql.lockedSelect(mssql ? "TOP (1) *" : "*", "documents_history",
+                eligible + " ORDER BY history_id DESC" + (mssql ? "" : " LIMIT 1"));
+        }
+        try (PreparedStatement statement = connection.prepareStatement(select)) {
             statement.setInt(1, docId);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next() || !hash.equals(BranchDocumentMapper.snapshot(row(result)).hash())) return;
                 historyId = result.getInt("history_id");
             }
         }
-        try (PreparedStatement statement = connection.prepareStatement("UPDATE documents_history SET data_asc=? WHERE history_id=?")) {
-            statement.setString(1, text);
+        try (PreparedStatement statement = connection.prepareStatement("UPDATE documents_history SET data_asc=" + BranchStore.parameter("data_asc") + " WHERE history_id=?")) {
+            BranchStore.bind(statement, 1, "data_asc", text);
             statement.setInt(2, historyId);
             statement.executeUpdate();
         }
@@ -169,7 +177,7 @@ final class BranchPublishRows {
         Map<String,Object> matching=new LinkedHashMap<>();
         try(PreparedStatement statement=connection.prepareStatement("SELECT * FROM "+table+" WHERE 1=0");ResultSet result=statement.executeQuery()) {
             for(int i=1;i<=result.getMetaData().getColumnCount();i++) {
-                String column=result.getMetaData().getColumnName(i);
+                String column=result.getMetaData().getColumnName(i).toLowerCase(Locale.ROOT);
                 if(!excluded.contains(column)&&values.containsKey(column))matching.put(column,values.get(column));
             }
         }

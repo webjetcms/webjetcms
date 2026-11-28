@@ -3,6 +3,7 @@ package sk.iway.iwcm.branch;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import sk.iway.iwcm.Constants;
 
 /** Explicit content classification; unknown persistent columns must be reviewed. */
 public record BranchFields(Set<String> supported, Set<String> derived,
@@ -57,6 +58,10 @@ public record BranchFields(Set<String> supported, Set<String> derived,
             // GROUP navigation fields are enums (0..3), while DOCUMENT fields with the same names are booleans.
             boolean groupMenuEnum = fields == GROUP && GROUP_MENU_COLUMNS.contains(column);
             if (BOOLEAN_COLUMNS.contains(column) && !groupMenuEnum && value instanceof Number number) value = number.intValue() != 0;
+            if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+                if ("".equals(value)) value = null;
+                if (value instanceof java.util.Date date) value = new java.sql.Timestamp(Math.floorDiv(date.getTime(), 1000) * 1000);
+            }
             result.put(column, value);
         }
         return result;

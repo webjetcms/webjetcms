@@ -16,7 +16,13 @@ public final class BranchSql {
     public record Fragment(String sql, List<Object> arguments) {
         public Fragment { arguments = Collections.unmodifiableList(new ArrayList<>(arguments)); }
         public int bind(PreparedStatement statement,int firstIndex) throws SQLException {
-            int index=firstIndex; for (Object value:arguments) statement.setObject(index++,value); return index;
+            int index = firstIndex;
+            for (Object value : arguments) {
+                if (Constants.DB_TYPE == Constants.DB_ORACLE && value instanceof String json)
+                    statement.setClob(index++, new java.io.StringReader(json));
+                else statement.setObject(index++,value);
+            }
+            return index;
         }
     }
     public static Fragment documentSource(String alias) {
@@ -40,7 +46,7 @@ public final class BranchSql {
         // Keep the request's already resolved WORK snapshot even if another editor saves meanwhile.
         // Each JSON parameter represents a complete set, including explicit nulls.
         if (!view.documentRows().isEmpty()) {
-            sql.append(" UNION ALL SELECT ").append(String.join(",", columns))
+            sql.append(" UNION ALL SELECT ").append(columns.stream().map(BranchSql::workColumn).collect(Collectors.joining(",")))
                 .append(" FROM ").append(jsonTable(columns));
             arguments.add(jsonRows(view.documentRows(), columns));
         }
@@ -56,16 +62,28 @@ public final class BranchSql {
                 rows.add(row);
             });
             sql.append(" UNION ALL SELECT ").append(columns.stream()
-                .map(column -> overrides.contains(column) ? "j." + column : liveColumn(column)).collect(Collectors.joining(",")))
+                .map(column -> overrides.contains(column) ? workColumn(column) : liveColumn(column)).collect(Collectors.joining(",")))
                 .append(" FROM documents l JOIN ").append(jsonTable(overrides)).append(" ON l.doc_id=j.doc_id");
             arguments.add(jsonRows(rows, overrides));
         }
         return new Fragment(sql.append(") ").append(alias).toString(), arguments);
     }
 
+    static boolean oracleDocumentClob(String name) {
+        return Constants.DB_TYPE == Constants.DB_ORACLE && LEGACY_TEXT.contains(name);
+    }
+
+    private static String workColumn(String name) {
+        // Convert JSON_TABLE value LOBs to ordinary CLOBs for UNION ALL with persistent LIVE locators.
+        if (oracleDocumentClob(name)) return "SUBSTR(j." + name + ",1)";
+        return "j." + name;
+    }
+
     private static String liveColumn(String name) {
         if (Constants.DB_TYPE == Constants.DB_MSSQL && LEGACY_TEXT.contains(name))
             return "CAST(l." + name + " AS nvarchar(max))";
+        if (Constants.DB_TYPE == Constants.DB_ORACLE && columnType(name) == PreviewType.TEXT)
+            return "TO_CHAR(l." + name + ")";
         return "l." + name;
     }
 
@@ -75,6 +93,7 @@ public final class BranchSql {
             Map<String,Object> row = new LinkedHashMap<>();
             for (String column : columns) {
                 Object value = source.get(column);
+                if (Constants.DB_TYPE == Constants.DB_ORACLE && value instanceof Boolean flag) value = flag ? 1 : 0;
                 row.put(column, value instanceof Timestamp date ? date.toString().replace(' ', 'T') : value);
             }
             projected.add(row);
@@ -83,26 +102,52 @@ public final class BranchSql {
         catch (com.fasterxml.jackson.core.JsonProcessingException ex) { throw new IllegalStateException("Cannot serialize preview rows", ex); }
     }
 
+    private enum PreviewType {
+        TEXT("longtext", "nvarchar(max)", "VARCHAR2(4000)"), LOB("longtext", "nvarchar(max)", "CLOB"),
+        INTEGER("int", "int", "NUMBER"), FLAG("boolean", "bit", "NUMBER"), DATE("datetime(6)", "datetime", "TIMESTAMP");
+
+        final String maria, sqlServer, oracle;
+
+        PreviewType(String maria, String sqlServer, String oracle) {
+            this.maria = maria;
+            this.sqlServer = sqlServer;
+            this.oracle = oracle;
+        }
+    }
+
+    private static PreviewType columnType(String column) {
+        if (LEGACY_TEXT.contains(column)) return PreviewType.LOB;
+        return switch (column) {
+            case "date_created", "event_date", "publish_start", "publish_end", "file_change" -> PreviewType.DATE;
+            case "available", "searchable", "cacheable", "show_in_menu", "show_in_navbar", "show_in_sitemap",
+                "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "require_ssl", "url_inherit_group",
+                "generate_url_from_title", "disable_after_end", "publish_after_start", "planned_media_initialized" -> PreviewType.FLAG;
+            case "follow_links", "sort_priority", "views_total", "views_month", "forum_count", "sync_status",
+                "root_group_l1", "root_group_l2", "root_group_l3" -> PreviewType.INTEGER;
+            default -> column.endsWith("_id") || column.endsWith("_docid") ? PreviewType.INTEGER : PreviewType.TEXT;
+        };
+    }
+
     private static String jsonTable(Collection<String> columns) {
         if (Constants.DB_TYPE == Constants.DB_PGSQL)
             return "json_populate_recordset(NULL::branch_documents, CAST(? AS json)) j";
-        boolean mssql = Constants.DB_TYPE == Constants.DB_MSSQL;
         List<String> fields = new ArrayList<>();
         for (String column : columns) {
-            String type = switch (column) {
-                case "date_created", "event_date", "publish_start", "publish_end", "file_change" -> mssql ? "datetime" : "datetime(6)";
-                case "available", "searchable", "cacheable", "show_in_menu", "show_in_navbar", "show_in_sitemap",
-                    "logged_show_in_menu", "logged_show_in_navbar", "logged_show_in_sitemap", "require_ssl", "url_inherit_group",
-                    "generate_url_from_title", "disable_after_end", "publish_after_start", "planned_media_initialized" -> mssql ? "bit" : "boolean";
-                case "follow_links", "sort_priority", "views_total", "views_month", "forum_count", "sync_status",
-                    "root_group_l1", "root_group_l2", "root_group_l3" -> "int";
-                default -> column.endsWith("_id") || column.endsWith("_docid") ? "int" : mssql ? "nvarchar(max)" : "longtext";
+            PreviewType type = columnType(column);
+            String definition = switch (Constants.DB_TYPE) {
+                case Constants.DB_ORACLE -> type.oracle + " PATH '$." + column + "' ERROR ON ERROR";
+                case Constants.DB_MSSQL -> type.sqlServer;
+                default -> type.maria + " PATH '$." + column + "'";
             };
-            fields.add(column + " " + type + (mssql ? "" : " PATH '$." + column + "'"));
+            fields.add(column + " " + definition);
         }
         String schema = String.join(",", fields);
-        return mssql ? "OPENJSON(CAST(? AS nvarchar(max))) WITH (" + schema + ") j"
-            : "JSON_TABLE(?, '$[*]' COLUMNS (" + schema + ")) j";
+        if (Constants.DB_TYPE == Constants.DB_MSSQL) return "OPENJSON(CAST(? AS nvarchar(max))) WITH (" + schema + ") j";
+        return "JSON_TABLE(?, '$[*]' COLUMNS (" + schema + ")) j";
+    }
+
+    static String notEmpty(String column) {
+        return Constants.DB_TYPE == Constants.DB_ORACLE ? column + " IS NOT NULL" : "(" + column + " IS NOT NULL AND " + column + "<>'')";
     }
 
     /** Locks an existing row, or its key range when publication will insert a reserved ID. */

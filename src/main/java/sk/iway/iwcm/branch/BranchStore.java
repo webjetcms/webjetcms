@@ -119,9 +119,9 @@ public final class BranchStore {
         if(old.isEmpty()) insert(connection,"branch_files",row);
         else {
             for(String decision:List.of("resolved_snapshot","resolved_choice","resolved_live_hash","resolved_work_hash","apply_phase","applied_hash","apply_error")) row.put(decision,null);
-            String assignments=String.join(",",row.keySet().stream().map(name->name+"=?").toList());
+            String assignments=String.join(",",row.keySet().stream().map(name->name+"="+parameter(name)).toList());
             try(PreparedStatement statement=connection.prepareStatement("UPDATE branch_files SET "+assignments+" WHERE row_id=?")) {
-                int index=1;for(Object value:row.values())statement.setObject(index++,value);
+                int index = bind(statement, row);
                 statement.setLong(index,((Number)old.get().get("row_id")).longValue());statement.executeUpdate();
             }
         }
@@ -195,6 +195,12 @@ public final class BranchStore {
                 try (ResultSet result = statement.executeQuery()) { return reservedId(result); }
             }
         }
+        if ("Oracle".equals(connection.getMetaData().getDatabaseProductName())) {
+            try (Statement statement = connection.createStatement();
+                 ResultSet result = statement.executeQuery("SELECT S_" + type.liveTable() + ".NEXTVAL FROM dual")) {
+                return reservedId(result);
+            }
+        }
         java.sql.Savepoint reservation = null;
         String sql = type == BranchType.DOCUMENT
             ? "INSERT INTO documents(title,data,data_asc,navbar) VALUES ('','','','')"
@@ -254,9 +260,9 @@ public final class BranchStore {
         if (old.isEmpty()) insert(connection,type.workTable(),columns);
         else {
             for (String decision : List.of("resolved_snapshot","resolved_choice","resolved_live_hash","resolved_work_hash","apply_phase","applied_hash","apply_error")) columns.put(decision,null);
-            String assignments = String.join(",",columns.keySet().stream().map(name -> name+"=?").toList());
+            String assignments = String.join(",",columns.keySet().stream().map(name -> name+"="+parameter(name)).toList());
             try (PreparedStatement statement = connection.prepareStatement("UPDATE "+type.workTable()+" SET "+assignments+" WHERE row_id=?")) {
-                int index=1;for (Object value:columns.values())statement.setObject(index++,value);
+                int index = bind(statement, columns);
                 statement.setLong(index,((Number)old.get().get("row_id")).longValue());statement.executeUpdate();
             }
         }
@@ -264,11 +270,37 @@ public final class BranchStore {
 
     static void insert(Connection connection,String table,Map<String, ?> columns) throws SQLException {
         String names=String.join(",",columns.keySet());
-        String placeholders=String.join(",",java.util.Collections.nCopies(columns.size(),"?"));
+        String placeholders=String.join(",",columns.keySet().stream().map(BranchStore::parameter).toList());
         try (PreparedStatement statement=connection.prepareStatement("INSERT INTO "+table+" ("+names+") VALUES ("+placeholders+")")) {
-            int i=1; for (Object value:columns.values()) statement.setObject(i++,value); statement.executeUpdate();
+            bind(statement, columns);
+            statement.executeUpdate();
         }
     }
+
+    // LIVE and history require a LOB locator even for a page with no searchable text.
+    static String parameter(String column) {
+        return Constants.DB_TYPE == Constants.DB_ORACLE && ("data".equals(column) || "data_asc".equals(column))
+            ? "NVL(?,EMPTY_CLOB())" : "?";
+    }
+
+    static int bind(PreparedStatement statement, Map<String, ?> columns) throws SQLException {
+        int index = 1;
+        for (var entry : columns.entrySet()) {
+            bind(statement, index++, entry.getKey(), entry.getValue());
+        }
+        return index;
+    }
+
+    static void bind(PreparedStatement statement, int index, String column, Object value) throws SQLException {
+        if (Constants.DB_TYPE == Constants.DB_ORACLE && ORACLE_CLOBS.contains(column)) {
+            if (value == null || "".equals(value)) statement.setNull(index, java.sql.Types.CLOB);
+            else statement.setClob(index, new java.io.StringReader((String)value));
+        } else statement.setObject(index, value);
+    }
+
+    private static final java.util.Set<String> ORACLE_CLOBS = java.util.Set.of("data", "data_asc", "html_head", "html_data",
+        "base_snapshot", "resolved_snapshot", "group_ids_snapshot", "apply_error", "description", "last_error",
+        "media_info_sk", "media_info_cz", "media_info_de", "media_info_en", "acknowledged_page_plans");
 
     static Optional<Map<String, Object>> readLive(Connection connection,BranchType type,int id) throws SQLException {
         Optional<Map<String, Object>> row=read(connection,type.liveTable(),type.idColumn(),id,null);
@@ -292,24 +324,22 @@ public final class BranchStore {
             statement.setObject(1,value); if (branchId!=null) statement.setLong(2,branchId);
             try (ResultSet result=statement.executeQuery()) {
                 if (!result.next()) return Optional.empty();
-                Map<String, Object> row=new LinkedHashMap<>();
-                for (int i=1;i<=result.getMetaData().getColumnCount();i++) row.put(result.getMetaData().getColumnName(i),readColumn(result,i));
-                return Optional.of(row);
+                return Optional.of(BranchPublishRows.row(result));
             }
         }
     }
 
     /** MariaDB TINYINT(1) enum values such as -1 must not become Boolean true. */
-    static Object readColumn(ResultSet result,int index)throws SQLException {
-        return readColumn(result,index,result.getMetaData().getColumnName(index));
-    }
-
     static Object readColumn(ResultSet result,int index,String name)throws SQLException {
         if (Constants.DB_TYPE == Constants.DB_MYSQL && java.util.Set.of("menu_type","logged_menu_type","follow_links","show_in_navbar","show_in_sitemap","logged_show_in_navbar","logged_show_in_sitemap").contains(name)) {
             int value=result.getInt(index);return result.wasNull()?null:value;
         }
-        if (Constants.DB_TYPE == Constants.DB_MSSQL) {
+        if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL) {
             int type = result.getMetaData().getColumnType(index);
+            if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+                if ("base_exists".equals(name)) return result.getBoolean(index);
+                if (type == java.sql.Types.DATE || type == java.sql.Types.TIMESTAMP) return result.getTimestamp(index);
+            }
             if (type == java.sql.Types.CLOB || type == java.sql.Types.NCLOB || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.LONGNVARCHAR)
                 return result.getString(index);
         }

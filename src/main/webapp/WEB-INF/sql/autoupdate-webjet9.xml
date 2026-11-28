@@ -5209,6 +5209,286 @@ IF OBJECT_ID('branch_files','U') IS NULL CREATE TABLE branch_files (
     CONSTRAINT fk_branch_files FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
 );
                 </string></void>
+                <void property="oracle"><string>
+CREATE SEQUENCE S_branches;
+CREATE SEQUENCE S_branch_rows;
+
+CREATE TABLE branches (
+    id NUMBER(19) PRIMARY KEY,
+    domain_id NUMBER(10) NOT NULL,
+    name NVARCHAR2(255) NOT NULL,
+    description CLOB NULL,
+    color NVARCHAR2(16) DEFAULT 'cyan' NOT NULL,
+    state NVARCHAR2(32) DEFAULT 'DRAFT' NOT NULL,
+    revision NUMBER(19) DEFAULT 0 NOT NULL,
+    publish_at TIMESTAMP NULL,
+    scheduled_by NUMBER(10) NULL,
+    publish_requested_by NUMBER(10) NULL,
+    acknowledged_page_plans CLOB NULL,
+    created_by NUMBER(10) NOT NULL,
+    updated_by NUMBER(10) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    merge_started_at TIMESTAMP NULL,
+    merge_finished_at TIMESTAMP NULL,
+    last_error CLOB NULL
+);
+CREATE INDEX idx_branches_domain_state ON branches (domain_id,state);
+CREATE INDEX idx_branches_schedule ON branches (state,publish_at);
+
+CREATE TABLE branch_documents (
+    row_id NUMBER(19) PRIMARY KEY,
+    branch_id NUMBER(19) NOT NULL,
+    operation NVARCHAR2(8) DEFAULT 'UPSERT' NOT NULL,
+    base_exists NUMBER(1) NOT NULL,
+    base_snapshot CLOB NULL,
+    multigroup_hash CHAR(64) NULL,
+    base_hash CHAR(64) NOT NULL,
+    updated_by NUMBER(10) NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    resolved_snapshot CLOB NULL,
+    resolved_choice NVARCHAR2(8) NULL,
+    resolved_live_hash CHAR(64) NULL,
+    resolved_work_hash CHAR(64) NULL,
+    apply_state NVARCHAR2(16) DEFAULT 'PENDING' NOT NULL,
+    apply_phase NVARCHAR2(24) NULL,
+    applied_hash CHAR(64) NULL,
+    apply_error CLOB NULL,
+    doc_id NUMBER(10) NOT NULL,
+    title NVARCHAR2(255) NULL,
+    data CLOB NULL,
+    data_asc CLOB NULL,
+    external_link NVARCHAR2(255) NULL,
+    navbar CLOB NULL,
+    date_created DATE NULL,
+    publish_start DATE NULL,
+    publish_end DATE NULL,
+    author_id NUMBER(10) NULL,
+    group_id NUMBER(10) NULL,
+    temp_id NUMBER(10) NULL,
+    views_total NUMBER(10) NULL,
+    views_month NUMBER(10) NULL,
+    searchable NUMBER(1) NULL,
+    available NUMBER(1) NULL,
+    cacheable NUMBER(1) NULL,
+    file_name NVARCHAR2(255) NULL,
+    file_change DATE NULL,
+    sort_priority NUMBER(10) NULL,
+    header_doc_id NUMBER(10) NULL,
+    menu_doc_id NUMBER(10) NULL,
+    footer_doc_id NUMBER(10) NULL,
+    password_protected NVARCHAR2(255) NULL,
+    html_head CLOB NULL,
+    html_data CLOB NULL,
+    perex_place NVARCHAR2(255) NULL,
+    perex_image NVARCHAR2(255) NULL,
+    perex_group NVARCHAR2(255) NULL,
+    show_in_menu NUMBER(1) NULL,
+    event_date DATE NULL,
+    virtual_path NVARCHAR2(255) NULL,
+    sync_id NUMBER(10) NULL,
+    sync_status NUMBER(10) NULL,
+    logon_page_doc_id NUMBER(10) NULL,
+    right_menu_doc_id NUMBER(10) NULL,
+    field_a NVARCHAR2(255) NULL,
+    field_b NVARCHAR2(255) NULL,
+    field_c NVARCHAR2(255) NULL,
+    field_d NVARCHAR2(255) NULL,
+    field_e NVARCHAR2(255) NULL,
+    field_f NVARCHAR2(255) NULL,
+    field_g NVARCHAR2(255) NULL,
+    field_h NVARCHAR2(255) NULL,
+    field_i NVARCHAR2(255) NULL,
+    field_j NVARCHAR2(255) NULL,
+    field_k NVARCHAR2(255) NULL,
+    field_l NVARCHAR2(255) NULL,
+    disable_after_end NUMBER(1) NULL,
+    forum_count NUMBER(10) NULL,
+    field_m NVARCHAR2(255) NULL,
+    field_n NVARCHAR2(255) NULL,
+    field_o NVARCHAR2(255) NULL,
+    field_p NVARCHAR2(255) NULL,
+    field_q NVARCHAR2(255) NULL,
+    field_r NVARCHAR2(255) NULL,
+    field_s NVARCHAR2(255) NULL,
+    field_t NVARCHAR2(255) NULL,
+    require_ssl NUMBER(1) NULL,
+    root_group_l1 NUMBER(10) NULL,
+    root_group_l2 NUMBER(10) NULL,
+    root_group_l3 NUMBER(10) NULL,
+    temp_field_a_docid NUMBER(10) NULL,
+    temp_field_b_docid NUMBER(10) NULL,
+    temp_field_c_docid NUMBER(10) NULL,
+    temp_field_d_docid NUMBER(10) NULL,
+    show_in_navbar NUMBER(1) NULL,
+    show_in_sitemap NUMBER(1) NULL,
+    logged_show_in_menu NUMBER(1) NULL,
+    logged_show_in_navbar NUMBER(1) NULL,
+    logged_show_in_sitemap NUMBER(1) NULL,
+    url_inherit_group NUMBER(1) NULL,
+    generate_url_from_title NUMBER(1) NULL,
+    editor_virtual_path NVARCHAR2(255) NULL,
+    publish_after_start NUMBER(1) NULL,
+    planned_media_initialized NUMBER(1) NULL,
+    follow_links NUMBER(5) NULL,
+    CONSTRAINT uk_branch_documents UNIQUE (branch_id,doc_id),
+    CONSTRAINT fk_branch_documents FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_branch_documents_group ON branch_documents (branch_id,group_id);
+CREATE INDEX idx_branch_documents_path ON branch_documents (branch_id,virtual_path);
+
+CREATE TABLE branch_groups (
+    row_id NUMBER(19) PRIMARY KEY,
+    branch_id NUMBER(19) NOT NULL,
+    operation NVARCHAR2(8) DEFAULT 'UPSERT' NOT NULL,
+    base_exists NUMBER(1) NOT NULL,
+    base_snapshot CLOB NULL,
+    base_hash CHAR(64) NOT NULL,
+    updated_by NUMBER(10) NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    resolved_snapshot CLOB NULL,
+    resolved_choice NVARCHAR2(8) NULL,
+    resolved_live_hash CHAR(64) NULL,
+    resolved_work_hash CHAR(64) NULL,
+    apply_state NVARCHAR2(16) DEFAULT 'PENDING' NOT NULL,
+    apply_phase NVARCHAR2(24) NULL,
+    applied_hash CHAR(64) NULL,
+    apply_error CLOB NULL,
+    group_id NUMBER(10) NOT NULL,
+    group_name NVARCHAR2(255) NULL,
+    internal NUMBER(1) NULL,
+    parent_group_id NUMBER(10) NULL,
+    navbar NVARCHAR2(255) NULL,
+    default_doc_id NUMBER(10) NULL,
+    temp_id NUMBER(10) NULL,
+    sort_priority NUMBER(10) NULL,
+    password_protected NVARCHAR2(255) NULL,
+    menu_type NUMBER(5) NULL,
+    url_dir_name NVARCHAR2(255) NULL,
+    sync_id NUMBER(10) NULL,
+    sync_status NUMBER(10) NULL,
+    html_head CLOB NULL,
+    logon_page_doc_id NUMBER(10) NULL,
+    domain_name NVARCHAR2(255) NULL,
+    new_page_docid_template NUMBER(10) NULL,
+    install_name NVARCHAR2(255) NULL,
+    field_a NVARCHAR2(255) NULL,
+    field_b NVARCHAR2(255) NULL,
+    field_c NVARCHAR2(255) NULL,
+    field_d NVARCHAR2(255) NULL,
+    logged_menu_type NUMBER(5) NULL,
+    link_group_id NUMBER(10) NULL,
+    lng NVARCHAR2(8) NULL,
+    hidden_in_admin NUMBER(1) NULL,
+    force_group_template NUMBER(1) NULL,
+    show_in_navbar NUMBER(10) NULL,
+    show_in_sitemap NUMBER(10) NULL,
+    logged_show_in_navbar NUMBER(10) NULL,
+    logged_show_in_sitemap NUMBER(10) NULL,
+    CONSTRAINT uk_branch_groups UNIQUE (branch_id,group_id),
+    CONSTRAINT fk_branch_groups FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_branch_groups_parent ON branch_groups (branch_id,parent_group_id);
+
+CREATE TABLE branch_media (
+    row_id NUMBER(19) PRIMARY KEY,
+    branch_id NUMBER(19) NOT NULL,
+    operation NVARCHAR2(8) DEFAULT 'UPSERT' NOT NULL,
+    base_exists NUMBER(1) NOT NULL,
+    base_snapshot CLOB NULL,
+    base_hash CHAR(64) NOT NULL,
+    updated_by NUMBER(10) NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    resolved_snapshot CLOB NULL,
+    resolved_choice NVARCHAR2(8) NULL,
+    resolved_live_hash CHAR(64) NULL,
+    resolved_work_hash CHAR(64) NULL,
+    apply_state NVARCHAR2(16) DEFAULT 'PENDING' NOT NULL,
+    apply_phase NVARCHAR2(24) NULL,
+    applied_hash CHAR(64) NULL,
+    apply_error CLOB NULL,
+    media_id NUMBER(10) NOT NULL,
+    media_fk_id NUMBER(10) NULL,
+    media_fk_table_name NVARCHAR2(255) NULL,
+    media_title_sk NVARCHAR2(255) NULL,
+    media_title_cz NVARCHAR2(255) NULL,
+    media_title_de NVARCHAR2(255) NULL,
+    media_title_en NVARCHAR2(255) NULL,
+    media_link NVARCHAR2(255) NULL,
+    media_thumb_link NVARCHAR2(255) NULL,
+    media_group NVARCHAR2(255) NULL,
+    media_info_sk CLOB NULL,
+    media_info_cz CLOB NULL,
+    media_info_de CLOB NULL,
+    media_info_en CLOB NULL,
+    media_sort_order NUMBER(10) NULL,
+    last_update DATE NULL,
+    domain_id NUMBER(10) NULL,
+    field_a NVARCHAR2(255) NULL,
+    field_b NVARCHAR2(255) NULL,
+    field_c NVARCHAR2(255) NULL,
+    field_d NVARCHAR2(255) NULL,
+    field_e NVARCHAR2(255) NULL,
+    field_f NVARCHAR2(255) NULL,
+    group_ids_snapshot CLOB NULL,
+    CONSTRAINT uk_branch_media UNIQUE (branch_id,media_id),
+    CONSTRAINT fk_branch_media FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_branch_media_owner ON branch_media (branch_id,media_fk_id);
+
+CREATE TABLE branch_files (
+    row_id NUMBER(19) PRIMARY KEY,
+    branch_id NUMBER(19) NOT NULL,
+    operation NVARCHAR2(8) DEFAULT 'UPSERT' NOT NULL,
+    base_exists NUMBER(1) NOT NULL,
+    base_snapshot CLOB NULL,
+    base_hash CHAR(64) NOT NULL,
+    updated_by NUMBER(10) NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    resolved_snapshot CLOB NULL,
+    resolved_choice NVARCHAR2(8) NULL,
+    resolved_live_hash CHAR(64) NULL,
+    resolved_work_hash CHAR(64) NULL,
+    apply_state NVARCHAR2(16) DEFAULT 'PENDING' NOT NULL,
+    apply_phase NVARCHAR2(24) NULL,
+    applied_hash CHAR(64) NULL,
+    apply_error CLOB NULL,
+    entry_kind NVARCHAR2(16) NOT NULL,
+    logical_path VARCHAR2(2048 CHAR) NOT NULL,
+    path_key CHAR(64) NOT NULL,
+    base_content_hash CHAR(64) NULL,
+    work_content_hash CHAR(64) NULL,
+    size_bytes NUMBER(19) NULL,
+    mime_type NVARCHAR2(255) NULL,
+    CONSTRAINT uk_branch_files_path UNIQUE (branch_id,path_key),
+    CONSTRAINT fk_branch_files FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER T_branches BEFORE INSERT ON branches
+    FOR EACH ROW WHEN (new.id IS NULL)
+    BEGIN
+        :new.id := S_branches.NEXTVAL|
+    END|;
+CREATE OR REPLACE TRIGGER T_branch_documents BEFORE INSERT ON branch_documents
+    FOR EACH ROW WHEN (new.row_id IS NULL)
+    BEGIN
+        :new.row_id := S_branch_rows.NEXTVAL|
+    END|;
+CREATE OR REPLACE TRIGGER T_branch_groups BEFORE INSERT ON branch_groups
+    FOR EACH ROW WHEN (new.row_id IS NULL)
+    BEGIN
+        :new.row_id := S_branch_rows.NEXTVAL|
+    END|;
+CREATE OR REPLACE TRIGGER T_branch_media BEFORE INSERT ON branch_media
+    FOR EACH ROW WHEN (new.row_id IS NULL)
+    BEGIN
+        :new.row_id := S_branch_rows.NEXTVAL|
+    END|;
+CREATE OR REPLACE TRIGGER T_branch_files BEFORE INSERT ON branch_files
+    FOR EACH ROW WHEN (new.row_id IS NULL)
+    BEGIN
+        :new.row_id := S_branch_rows.NEXTVAL|
+    END|;
+                </string></void>
             </object>
         </void>
 
@@ -5229,6 +5509,7 @@ IF OBJECT_ID('branch_files','U') IS NULL CREATE TABLE branch_files (
                 <void property="mysql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, businessDays, cluster_node, audit_task, run_at_startup, enable_task) SELECT 'Publishing branches', '0', '*/5', '*', '*', '*', '*', '*', 'sk.iway.iwcm.branch.BranchScheduler', false, 'all-admin', false, false, true WHERE NOT EXISTS (SELECT 1 FROM crontab WHERE task='sk.iway.iwcm.branch.BranchScheduler')</string></void>
                 <void property="pgsql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, businessDays, cluster_node, audit_task, run_at_startup, enable_task) SELECT 'Publishing branches', '0', '*/5', '*', '*', '*', '*', '*', 'sk.iway.iwcm.branch.BranchScheduler', 'false', 'all-admin', 'false', false, true WHERE NOT EXISTS (SELECT 1 FROM crontab WHERE task='sk.iway.iwcm.branch.BranchScheduler')</string></void>
                 <void property="mssql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, businessDays, cluster_node, audit_task, run_at_startup, enable_task) SELECT 'Publishing branches', '0', '*/5', '*', '*', '*', '*', '*', 'sk.iway.iwcm.branch.BranchScheduler', 0, 'all-admin', 0, 0, 1 WHERE NOT EXISTS (SELECT 1 FROM crontab WHERE task='sk.iway.iwcm.branch.BranchScheduler')</string></void>
+                <void property="oracle"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, businessDays, cluster_node, audit_task, run_at_startup, enable_task) SELECT 'Publishing branches', '0', '*/5', '*', '*', '*', '*', '*', 'sk.iway.iwcm.branch.BranchScheduler', 0, 'all-admin', 0, 0, 1 FROM dual WHERE NOT EXISTS (SELECT 1 FROM crontab WHERE task='sk.iway.iwcm.branch.BranchScheduler')</string></void>
             </object>
         </void>
 

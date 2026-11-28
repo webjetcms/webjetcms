@@ -11,8 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
@@ -522,7 +520,7 @@ public class NewsQuery
 				{
 					docMap.put(d.getDocId(), (AtrDocBean)d);
 				}
-				String atrSql = "SELECT daf.*, da.doc_id, da.value_string, da.value_int, da.value_bool FROM doc_atr da LEFT JOIN doc_atr_def daf ON da.atr_id=daf.atr_id WHERE da.doc_id IN ("+StringUtils.join(docMap.keySet().iterator(),",")+") ";
+				String atrSql = "SELECT daf.*, da.doc_id, da.value_string, da.value_int, da.value_bool FROM doc_atr da LEFT JOIN doc_atr_def daf ON da.atr_id=daf.atr_id WHERE "+DB.getInCondition("da.doc_id",docMap.keySet());
 				ps = db_conn.prepareStatement(atrSql);
 				rs = ps.executeQuery();
 				AtrBean atr = null;

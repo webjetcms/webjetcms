@@ -110,12 +110,27 @@ public final class BranchView {
             SELECT g.* FROM groups g WHERE g.group_id IN (SELECT group_id FROM visible UNION SELECT group_id FROM ancestors)
             OPTION (MAXRECURSION 0)
             """;
+        if (Constants.DB_TYPE == Constants.DB_ORACLE) folderSql = """
+            WITH visible AS (
+                SELECT group_id FROM groups
+                START WITH (parent_group_id=0 AND (domain_name IS NULL OR domain_name IN ('default',?)))
+                    OR group_id IN (SELECT group_id FROM branch_groups WHERE branch_id=?)
+                CONNECT BY NOCYCLE PRIOR group_id=parent_group_id AND (domain_name IS NULL OR domain_name IN ('default',?))
+            ), ancestors AS (
+                SELECT group_id FROM groups
+                START WITH group_id IN (SELECT group_id FROM visible UNION
+                    SELECT d.group_id FROM documents d JOIN branch_documents w ON w.doc_id=d.doc_id WHERE w.branch_id=?
+                    UNION SELECT parent_group_id FROM branch_groups WHERE branch_id=?)
+                CONNECT BY NOCYCLE PRIOR parent_group_id=group_id
+            )
+            SELECT g.* FROM groups g WHERE g.group_id IN (SELECT group_id FROM ancestors)
+            """;
         try (var statement = connection.prepareStatement(folderSql)) {
             statement.setString(1,context.domainName());
             statement.setLong(2,context.branchId());
             statement.setString(3,context.domainName());
             statement.setLong(4,context.branchId());
-            if (Constants.DB_TYPE == Constants.DB_MSSQL) statement.setLong(5,context.branchId());
+            if (Constants.DB_TYPE == Constants.DB_MSSQL || Constants.DB_TYPE == Constants.DB_ORACLE) statement.setLong(5,context.branchId());
             try (var rows = statement.executeQuery()) {
                 while (rows.next()) liveGroups.put(rows.getInt("group_id"),BranchPublishRows.row(rows));
             }
@@ -273,9 +288,9 @@ public final class BranchView {
         if (id <= 0) return null;
         BranchSql.Fragment source = noData ? BranchSql.documentSource("d",METADATA_COLUMNS) : BranchSql.documentSource("d");
         boolean editor=context.mode()==BranchContext.Mode.ADMIN;
-        String rawColumns=editor ? BranchFields.DOCUMENT.supported().stream().map(column -> ",raw."+column+" AS branch_raw_"+column).collect(java.util.stream.Collectors.joining()) : "";
+        String rawColumns=editor ? BranchFields.DOCUMENT.supported().stream().map(column -> ",live_doc."+column+" AS src_"+column).collect(java.util.stream.Collectors.joining()) : "";
         try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(
-            "SELECT "+documentColumns("d",noData)+rawColumns+",u.title AS u_title,u.first_name,u.last_name,u.email,u.photo FROM "+source.sql()+" LEFT JOIN users u ON u.user_id=d.author_id"+(editor?" LEFT JOIN documents raw ON raw.doc_id=d.doc_id":"")+" WHERE d.doc_id=?")) {
+            "SELECT "+documentColumns("d",noData)+rawColumns+",u.title AS u_title,u.first_name,u.last_name,u.email,u.photo FROM "+source.sql()+" LEFT JOIN users u ON u.user_id=d.author_id"+(editor?" LEFT JOIN documents live_doc ON live_doc.doc_id=d.doc_id":"")+" WHERE d.doc_id=?")) {
             int index = source.bind(statement,1); statement.setInt(index,id);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) return null;
@@ -292,7 +307,7 @@ public final class BranchView {
         if(row==null) {
             row=new LinkedHashMap<>();
             // Direct LIVE columns keep their physical JDBC types; UNION parameters can coerce them.
-            for(String column:BranchFields.DOCUMENT.supported()) row.put(column,BranchStore.readColumn(result,result.findColumn("branch_raw_"+column),column));
+            for(String column:BranchFields.DOCUMENT.supported()) row.put(column,BranchStore.readColumn(result,result.findColumn("src_"+column),column));
         }
         DocEditorFields fields=new DocEditorFields();
         fields.setBranchHash(BranchDocumentMapper.snapshot(row).hash());
@@ -368,9 +383,7 @@ public final class BranchView {
             try (ResultSet result = statement.executeQuery()) {
                 List<Map<String,Object>> rows = new ArrayList<>();
                 while (result.next()) {
-                    Map<String,Object> row = new LinkedHashMap<>();
-                    for (int i=1;i<=result.getMetaData().getColumnCount();i++) row.put(result.getMetaData().getColumnName(i),BranchStore.readColumn(result,i));
-                    rows.add(row);
+                    rows.add(BranchPublishRows.row(result));
                 }
                 return rows;
             }
