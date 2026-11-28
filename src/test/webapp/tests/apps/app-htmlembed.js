@@ -93,4 +93,4 @@ Scenario("Vloženie HTML kódu - test zobrazovania", async ({ I }) => {
         I.waitForText("Starlink", 30);
         I.dontSeeElement(playerError);
     });
-});
+}).config('Playwright', { waitForNavigation: 'domcontentloaded' });

@@ -69,6 +69,7 @@ Scenario('Over importovanie web stránok zo zip súboru (XML)', async ({ I, DT, 
     let primaryPageCheckbox = locate("#syncForm").find("input.doc-checkbox[data-id='doc_73280']");
     I.waitForElement(primaryPageCheckbox, 10);
     I.uncheckOption(primaryPageCheckbox);
+    I.seeInField("#doc_options_info", "1 / 2");
     I.clickCss("#btnOk");
 
     I.say("Check returned message's");
@@ -82,7 +83,7 @@ Scenario('Over importovanie web stránok zo zip súboru (XML)', async ({ I, DT, 
 
     I.say("Check values of info menu after import");
     I.seeInField("#group_options_info", "0 / 1");
-    //Here was chnged value from 2/2 to 1/2, because we imported one page, so only one left to import
+    // Only the page omitted from this import should still be selected for synchronization.
     I.seeInField("#doc_options_info", "1 / 2");
     I.seeInField("#file_options_info", "0 / 1");
     I.seeInField("#banner_options_info", "0 / 0");

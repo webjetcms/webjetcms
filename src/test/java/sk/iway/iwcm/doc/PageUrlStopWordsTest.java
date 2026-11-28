@@ -205,6 +205,18 @@ class PageUrlStopWordsTest extends BaseWebjetTest {
         assertEquals(FOLDER_PATH, DocDB.getURL(page, group, FOLDER_PATH));
     }
 
+    /** Import comparison must generate the same URL as the URL index without changing the folder's home page. */
+    @Test
+    void resolvesStoredUrlsInAFolderWithoutAHomePage() {
+        Constants.setBoolean("urlRemoveSpojky", true);
+        group.setDefaultDocIdNoNavbar(-1);
+        page.setDocId(73);
+        assertEquals(FOLDER_PATH + "autotest-news-events.html", DocDB.getURLForStoredDoc(page, group, FOLDER_PATH));
+        assertEquals(-1, group.getDefaultDocId());
+        group.setDefaultDocIdNoNavbar(page.getDocId());
+        assertEquals(FOLDER_PATH, DocDB.getURLForStoredDoc(page, group, FOLDER_PATH));
+    }
+
     /** Initial URL-cache loading must not initialize templates before JPA is ready. */
     @Test
     void generatesStartupFallbackWithoutLoadingTemplates() {

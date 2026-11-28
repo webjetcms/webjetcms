@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.ForwardResolution;
 import net.sourceforge.stripes.action.Resolution;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -124,6 +126,7 @@ public class SyncDirAction extends WebJETActionBean
 	private List<String> errorMessages = new ArrayList<>();
 
 	private String compareBy = null;
+	private final Map<Integer, List<DocDetails>> syncDocsByGroup = new HashMap<>();
 	private Map<Integer, Integer> remoteToLocalMediaGroups = null;
 
 	/**
@@ -205,6 +208,7 @@ public class SyncDirAction extends WebJETActionBean
 		if(selectedDocsMap.size() < 1) return historyIds;
 
 		List<DocDetails> remoteDocToSync = getRemoteDocs();
+		syncDocsByGroup.clear();
 		int pagesToPrepareCount = 0;
 		int preparedPagesCount = 1;
 
@@ -584,7 +588,7 @@ public class SyncDirAction extends WebJETActionBean
 		if (localGroup!=null)
 		{
 			//najdi lokalnu verziu
-			DocDetails localDoc = getLocalDoc(remoteDoc);
+			DocDetails localDoc = "none".equals(compareBy) ? null : findLocalDoc(remoteDoc, getDocsForSync(localGroup));
 
 			//uprav mapovanie sablon!!!
 			int localTempId = getCreateTemplate(remoteDoc.getTempId());
@@ -647,16 +651,21 @@ public class SyncDirAction extends WebJETActionBean
 				ef.setNote(note.getNote());
 			}
 
-			int docid = EditorDB.saveEditorForm(ef, context.getRequest());
-
+			int historyId = EditorDB.saveEditorForm(ef, context.getRequest());
 			EditorDB.cleanSessionData(context.getRequest());
-
-			//skontroluj, ci remoteDoc nie je nejake default doc a nastav na local group
 			fixDefaultDocId(remoteDoc, ef.getDocId());
-
 			syncMedia(remoteDoc, ef);
 
-			return docid;
+			List<DocDetails> localDocs = syncDocsByGroup.get(localGroup.getGroupId());
+			if (historyId > 0 && localDocs != null) {
+				// Later pages in the archive may match this save. Refresh only its persisted fields.
+				int savedDocId = ef.getDocId();
+				localDocs.removeIf(doc -> doc.getDocId() == savedDocId);
+				localDocs.addAll(readLocalDocs(localGroup, savedDocId));
+				localDocs.sort(Comparator.comparingInt(DocDetails::getSortPriority).thenComparingInt(DocDetails::getDocId));
+			}
+
+			return historyId;
 		}
 		return -1;
 	}
@@ -748,6 +757,8 @@ public class SyncDirAction extends WebJETActionBean
 				{
 					localGroup.setDefaultDocId(localDocId);
 					GroupsDB.getInstance().setGroup(localGroup);
+					// Changing the home page can change generated URLs for other pages in this folder.
+					syncDocsByGroup.remove(localGroup.getGroupId());
 				}
 			}
 		}
@@ -1127,16 +1138,7 @@ public class SyncDirAction extends WebJETActionBean
 	 */
 	public GroupDetails getLocalGroup(GroupDetails remoteGroup)
 	{
-		String localPath = getLocalPath(remoteGroup);
-		try
-		{
-			return GroupsDB.getInstance().getGroupByPath(localPath);
-		}
-		catch (ConcurrentModificationException ex)
-		{
-			GroupsDB groupsDB = GroupsDB.getInstance(true);
-			return groupsDB.getGroupByPath(localPath);
-		}
+		return getLocalGroup(getLocalPath(remoteGroup));
 	}
 
 	/**
@@ -1146,7 +1148,12 @@ public class SyncDirAction extends WebJETActionBean
 	 */
 	public GroupDetails getLocalGroup(String localPath)
 	{
-		return GroupsDB.getInstance().getGroupByPathAndDomain(localPath, localSrcGroup.getDomainName());
+		String domain = localSrcGroup == null ? null : localSrcGroup.getDomainName();
+		try {
+			return GroupsDB.getInstance().getGroupByPathAndDomain(localPath, domain);
+		} catch (ConcurrentModificationException ex) {
+			return GroupsDB.getInstance(true).getGroupByPathAndDomain(localPath, domain);
+		}
 	}
 
 	/**
@@ -1170,23 +1177,63 @@ public class SyncDirAction extends WebJETActionBean
 	public DocDetails getLocalDoc(DocDetails remoteDoc)
 	{
 		GroupDetails localGroup = getLocalGroup(remoteDoc.getGroupId());
-		if (localGroup!=null)
-		{
-			//najdi local doc
-			DocDB docDB = DocDB.getInstance();
-			List<DocDetails> localDocs = docDB.getBasicDocDetailsByGroup(localGroup.getGroupId(), DocDB.ORDER_PRIORITY);
-			for (DocDetails doc : localDocs)
-			{
-				if (comapreDocs(doc, remoteDoc))
-				{
-					return(doc);
+		return findLocalDoc(remoteDoc, getLocalDocs(localGroup));
+	}
+
+	/** Reads the persisted comparison fields even when a cluster refresh overlaps the import. */
+	public List<DocDetails> getLocalDocs(GroupDetails group) {
+		if (group == null) return Collections.emptyList();
+		return readLocalDocs(group, null);
+	}
+
+	private List<DocDetails> getDocsForSync(GroupDetails group) {
+		return syncDocsByGroup.computeIfAbsent(group.getGroupId(), id -> getLocalDocs(group));
+	}
+
+	private List<DocDetails> readLocalDocs(GroupDetails group, Integer docId) {
+		String sql = "SELECT doc_id, title, navbar, temp_id, virtual_path, date_created, field_a, field_b, field_c, sort_priority " +
+			"FROM documents WHERE group_id = ?" + (docId == null ? "" : " AND doc_id = ?") + " ORDER BY sort_priority, doc_id";
+		List<DocDetails> docs = new ArrayList<>();
+		try (Connection connection = DBPool.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, group.getGroupId());
+			if (docId != null) statement.setInt(2, docId);
+			try (ResultSet rows = statement.executeQuery()) {
+				String groupDiskPath = null;
+				while (rows.next()) {
+					DocDetails doc = new DocDetails();
+					doc.setDocId(rows.getInt("doc_id"));
+					doc.setSortPriority(rows.getInt("sort_priority"));
+					doc.setGroupId(group.getGroupId());
+					doc.setTitle(DB.getDbString(rows, "title"));
+					doc.setVirtualPath(DocDB.normalizeVirtualPath(DB.getDbString(rows, "virtual_path")));
+					if (doc.getVirtualPath().isEmpty()) {
+						doc.setNavbar(DB.getDbString(rows, "navbar"));
+						doc.setTempId(rows.getInt("temp_id"));
+						if (groupDiskPath == null) groupDiskPath = DocDB.getGroupDiskPath(GroupsDB.getInstance().getGroupsAll(), group.getGroupId());
+						doc.setVirtualPath(DocDB.getURLForStoredDoc(doc, group, groupDiskPath));
+					}
+					doc.setDateCreated(DB.getDbTimestamp(rows, "date_created"));
+					doc.setFieldA(DB.getDbString(rows, "field_a"));
+					doc.setFieldB(DB.getDbString(rows, "field_b"));
+					doc.setFieldC(DB.getDbString(rows, "field_c"));
+					docs.add(doc);
 				}
 			}
+		} catch (SQLException ex) {
+			throw new IllegalStateException("Unable to compare pages in group " + group.getGroupId(), ex);
+		}
+		return docs;
+	}
+
+	/** Finds the first matching page in the target folder's priority order. */
+	public DocDetails findLocalDoc(DocDetails remoteDoc, List<DocDetails> localDocs) {
+		for (DocDetails doc : localDocs) {
+			if (compareDocs(doc, remoteDoc)) return doc;
 		}
 		return null;
 	}
 
-	private boolean comapreDocs(DocDetails doc, DocDetails remoteDoc) {
+	private boolean compareDocs(DocDetails doc, DocDetails remoteDoc) {
 		if("url".equals(this.compareBy)) {
 			return (Tools.isNotEmpty(remoteDoc.getVirtualPath()) && Tools.isNotEmpty(doc.getVirtualPath()) && doc.getVirtualPath().equals(remoteDoc.getVirtualPath()));
 		} else if("none".equals(this.compareBy)) {

@@ -2321,7 +2321,7 @@ public class DocDB extends DB
 		Logger.debug(DocDB.class, "after getAllGroups");
 		Logger.debugMemInfo();
 
-		String fileName;
+		String virtualPath;
 		int counter=0;
 		timer.diff("loading doc table");
 		TIntObjectHashMap<List<DocDetails>> basicAllDocsInGroupTableLocal = null;
@@ -2377,26 +2377,19 @@ public class DocDB extends DB
 				for (DocDetails doc : docs)
 				{
 
-					fileName = doc.getVirtualPath();
-					if (Tools.isEmpty(fileName))
+					virtualPath = doc.getVirtualPath();
+					if (Tools.isEmpty(virtualPath))
 					{
 						if (groupDiskPathDomain == null) groupDiskPathDomain = GroupsDB.getURLPathDomainGroup(allGroups, group.getGroupId());
 						String groupDiskPath = DocTools.removeCharsDir(DB.internationalToEnglish(groupDiskPathDomain[0])).toLowerCase() + "/"; //NOSONAR
 						//aby to nevytvorilo root stranky pre taketo typy URL
-						int lastDefaulDocId = group.getDefaultDocId();
-						if (group.getDefaultDocId()!=doc.getDocId())
-						{
-							//fakt uz netusim preco je tu toto, hlavne ta 4...
-							group.setDefaultDocIdNoNavbar(4);
-						}
-						fileName = getURL(doc, group, groupDiskPath);
-						group.setDefaultDocIdNoNavbar(lastDefaulDocId);
+						virtualPath = getURLForStoredDoc(doc, group, groupDiskPath);
 						//Logger.debug(DocDB.class, "Empty VP: docId="+doc.getDocId()+" vp="+doc.getVirtualPath()+" grp="+group.getGroupId()+" gdp="+groupDiskPath+" new url="+fileName);
 
-						doc.setVirtualPath(fileName);
+						doc.setVirtualPath(virtualPath);
 					}
 					//Logger.println(this,doc.getDocId() + ": " + fileName);
-					urlsByUrl.put(fileName, doc.getDocId());
+					urlsByUrl.put(virtualPath, doc.getDocId());
 
 					//POZOR: TUTO MAME ULOZENU DOMENU
 					doc.setFieldT(domain);
@@ -2887,6 +2880,18 @@ public class DocDB extends DB
 	 */
 	public static String getURL(DocDetails doc, GroupDetails group, String groupDiskPath)
 	{
+		return getURL(doc, group, groupDiskPath, null);
+	}
+
+	/** Resolves a persisted page's URL using the same legacy default-page rule as the URL index. */
+	public static String getURLForStoredDoc(DocDetails doc, GroupDetails group, String groupDiskPath)
+	{
+		int defaultDocId = group.getDefaultDocId() == doc.getDocId() ? group.getDefaultDocId() : 4;
+		return getURL(doc, group, groupDiskPath, defaultDocId);
+	}
+
+	private static String getURL(DocDetails doc, GroupDetails group, String groupDiskPath, Integer defaultDocIdOverride)
+	{
 		if (Tools.isEmpty(doc.getVirtualPath()) || doc.getVirtualPath().indexOf('/')==-1)
 		{
 			String htmlFileName = doc.getVirtualPath();
@@ -2905,7 +2910,8 @@ public class DocDB extends DB
 			{
 				return "/page-"+doc.getDocId()+".html";
 			}
-			if (Tools.isEmpty(doc.getVirtualPath()) && ((group.getDefaultDocId()<=0 && !"-".equals(group.getUrlDirName())) || group.getDefaultDocId()==doc.getDocId()))
+			int defaultDocId = defaultDocIdOverride == null ? group.getDefaultDocId() : defaultDocIdOverride;
+			if (Tools.isEmpty(doc.getVirtualPath()) && ((defaultDocId<=0 && !"-".equals(group.getUrlDirName())) || defaultDocId==doc.getDocId()))
 			{
 				//ak adresar nema default stranku, alebo je to prave nasa, nemusi to koncit na .html
 				if (fileName.toString().endsWith("/")==false) fileName.append('/');

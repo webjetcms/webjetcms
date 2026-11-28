@@ -39,7 +39,6 @@ showForm = false;
 
 <%@page import="sk.iway.iwcm.doc.GroupDetails"%>
 <%@page import="sk.iway.iwcm.doc.DocDetails"%>
-<%@page import="sk.iway.iwcm.doc.DocDB"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="java.util.Iterator"%>
 <%@page import="java.util.Hashtable"%>
@@ -143,7 +142,7 @@ function setRequestParam(prefix) {
 	<%
 	GroupDetails localGroup = null;
 
-	DocDB docDB = DocDB.getInstance();
+	List<DocDetails> localDocs = null;
 	DocDetails localDoc = null;
 
 	Map<Integer, Integer> existingLocalDocIds = null;
@@ -326,6 +325,7 @@ function setRequestParam(prefix) {
 					pageContext.setAttribute("localPath", localPath);
 					//otestuj, ci local path existuje
 					localGroup = actionBean.getLocalGroup(localPath);
+					localDocs = actionBean.getLocalDocs(localGroup);
 					if (localGroup!=null)
 					{
 						out.print(" <span style='color:green;'>"+prop2.getText("components.sync.lokalne_existuje")+"</span>");
@@ -353,7 +353,7 @@ function setRequestParam(prefix) {
 							request.removeAttribute("localDoc");
 							if (localGroup != null)
 							{
-								localDoc = actionBean.getLocalDoc(remoteDoc);
+								localDoc = actionBean.findLocalDoc(remoteDoc, localDocs);
 								if (localDoc != null)
 								{
 									request.setAttribute("localDoc", localDoc);
@@ -394,7 +394,6 @@ function setRequestParam(prefix) {
 				//vypiseme lokalne existujuce stranky, ktore sa nenachadzaju na remote serveri
 				if (localGroup!=null)
 				{
-					List<DocDetails> localDocs = docDB.getBasicDocDetailsByGroup(localGroup.getGroupId(), DocDB.ORDER_PRIORITY);
 					Iterator<DocDetails> iter = localDocs.iterator();
 					while (iter.hasNext())
 					{
