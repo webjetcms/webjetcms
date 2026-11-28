@@ -32,6 +32,7 @@ import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
@@ -110,10 +111,10 @@ public class WriteTag extends BodyTagSupport
 	@Override
 	public final int doEndTag() throws JspException
 	{
+		HttpServletRequest request = null;
 		try
 		{
-			HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
-
+			request = (HttpServletRequest) pageContext.getRequest();
 			Object value = null;
 			if (Tools.isNotEmpty(name))
 			{
@@ -263,11 +264,13 @@ public class WriteTag extends BodyTagSupport
 		}
 		catch (JspException je)
 		{
+			EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render page text", je);
 			Logger.error(WriteTag.class, "{"+Constants.getInstallName()+"} error: " + je.getMessage());
 			Logger.error(WriteTag.class, je);
 		}
 		catch (Exception e)
 		{
+			EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render page text", e);
 			Logger.error(WriteTag.class, "{"+Constants.getInstallName()+"} error: " + e.getMessage());
 			Logger.error(WriteTag.class, e);
 		}
@@ -820,22 +823,26 @@ public class WriteTag extends BodyTagSupport
 							else
 							{
 								//subor neexistuje
+								EditorToolsForCore.recordFulltextRenderFailure(request, "Missing application: " + includeFileName, null);
 								content.append(getErrorMessage(prop, "writetag.error_not_exists", includeFileName));
 							}
 						}
 					}
 					catch (SourcePageNotFoundException ex1) {
+						EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render application: " + includeFileName, ex1);
 						//toto nas nezaujima, pravdepodobne to je len search bot
 						Logger.error(WriteTag.class, "WRITE TAG INCLUDE ERROR: " + ex1.getMessage());
 						content.append(getErrorMessage(prop, "writetag.error", includeFileName));
 					}
 					catch (IllegalStateException ex1) {
+						EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render application: " + includeFileName, ex1);
 						//toto nas nezaujima, pravdepodobne invalidated session
 						Logger.error(WriteTag.class, "WRITE TAG INCLUDE ERROR: " + ex1.getMessage());
 						content.append(getErrorMessage(prop, "writetag.error", includeFileName));
 					}
 					catch (Exception ex1)
 					{
+						EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render application: " + includeFileName, ex1);
 						Logger.error(WriteTag.class,"WRITE TAG INCLUDE ERROR: " + ex1.getMessage());
 
 						StringWriter sw = new StringWriter();
@@ -884,6 +891,7 @@ public class WriteTag extends BodyTagSupport
 			}
 			catch (Exception ex)
 			{
+				EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render page applications", ex);
 				Logger.error(WriteTag.class, ex);
 				//nieco sa nam potototo...
 				content.append(buff.toString());

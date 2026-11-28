@@ -572,8 +572,8 @@ public class WebpagesService {
 	/** Returns a regenerated URL, or null when this version must keep its existing URL. */
 	private static String regenerateVirtualPath(DocBasic doc, boolean onlyChangeUrlInheritGroup)
 	{
-		if (doc.getVirtualPath().contains("*")) return null;
-		if (onlyChangeUrlInheritGroup && !Boolean.TRUE.equals(doc.getUrlInheritGroup()) && !Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) return null;
+		String input = getRegeneratedVirtualPathInput(doc, onlyChangeUrlInheritGroup);
+		if (input == null) return null;
 
 		EditorForm form = new EditorForm();
 		form.setDocId(doc.getDocId());
@@ -581,9 +581,22 @@ public class WebpagesService {
 		form.setTempId(doc.getTempId());
 		form.setTitle(doc.getTitle());
 		form.setNavbar(doc.getNavbar());
-		form.setVirtualPath(Boolean.TRUE.equals(doc.getUrlInheritGroup()) && Tools.isNotEmpty(doc.getEditorVirtualPath()) ? doc.getEditorVirtualPath() : "");
+		form.setVirtualPath(input);
 		EditorDB.setVirtualPath(form);
 		return form.getVirtualPath();
+	}
+
+	/**
+	 * Returns the relative input for regenerating a page URL, or null to preserve its current URL.
+	 * @param doc page or page version whose URL is being regenerated
+	 * @param onlyChangeUrlInheritGroup whether to preserve manually assigned URLs
+	 * @return the inherited suffix, an empty string to generate from the navigation title, or null
+	 */
+	public static String getRegeneratedVirtualPathInput(DocBasic doc, boolean onlyChangeUrlInheritGroup) {
+		if (doc.getVirtualPath().contains("*")) return null;
+		boolean inheritsFolder = Boolean.TRUE.equals(doc.getUrlInheritGroup());
+		if (onlyChangeUrlInheritGroup && !inheritsFolder && !Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) return null;
+		return inheritsFolder && Tools.isNotEmpty(doc.getEditorVirtualPath()) ? doc.getEditorVirtualPath() : "";
 	}
 
 	/**
@@ -782,6 +795,7 @@ public class WebpagesService {
 			boolean loadSubQueries = ProcessItemAction.GETONE.equals(action);
 			def.fromDocDetails(entity, loadSubQueries, addFields);
 			entity.setEditorFields(def);
+            if (entity instanceof DocDetails details) sk.iway.iwcm.branch.BranchEditor.attachHash(details);
         }
         return entity;
     }
@@ -860,6 +874,8 @@ public class WebpagesService {
 	 * @return
 	 */
     public static DatatablePageImpl<DocDetails> getAllItems(GetAllItemsDocOptions options) {
+        // JPA sees only LIVE rows; combine LIVE/WORK before applying permissions, filters, count and paging.
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return preparePage(sk.iway.iwcm.branch.BranchDocumentQuery.list(options),options);
         Page<DocDetails> page = null;
 
 		if(options.getGroupId() == Constants.getInt("systemPagesRecentPages")) {
@@ -1211,6 +1227,8 @@ public class WebpagesService {
     }
 
 	public static DocDetails getOneItem(long id, int groupId, int historyId, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, List<NotifyBean> notifyList, HttpServletRequest request) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return editorFacade.getDocForEditor((int)id,historyId,groupId);
+
 		if (groupId == Constants.getInt("systemPagesDocsToApprove")) {
             //pre tento pripad mame otocene docid a historyid, ale principialne dostavame v id hodnotu historyid, takze to potrebujeme takto nacitat
             historyId = (int)id;

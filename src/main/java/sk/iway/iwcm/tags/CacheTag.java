@@ -40,7 +40,8 @@ public class CacheTag extends BodyTagSupport
 	public int doStartTag() throws JspTagException
 	{
 		pageContext.getRequest().setAttribute(IS_CACHE_TAG, "true");
-		if (!disableCache && !Constants.getBoolean("CacheTagDisable"))
+		// Existing cache keys have no branch identity; never reuse LIVE or another branch's cached body.
+		if (!disableCache && !Constants.getBoolean("CacheTagDisable") && !sk.iway.iwcm.branch.BranchContexts.current().isBranch())
 		{
 			if (storeInSession)
 			{
@@ -98,7 +99,8 @@ public class CacheTag extends BodyTagSupport
 		{
 			sk.iway.iwcm.Logger.error(e);
 		}
-		if (!disableCache)
+		// Also skip cache writes so preview HTML cannot be stored under a shared LIVE/session key.
+		if (!disableCache && !sk.iway.iwcm.branch.BranchContexts.current().isBranch())
 		{
 			if (storeInSession)
 			{

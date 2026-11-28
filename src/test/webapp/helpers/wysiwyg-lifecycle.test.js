@@ -57,6 +57,7 @@ function fixture(t, editExisting = false) {
         window, document: window.document, $, console: { ...console, error: (...args) => errors.push(args) },
         Event: window.Event,
         setTimeout: window.setTimeout.bind(window),
+        fetch: (...args) => window.fetch(...args),
         WJ: window.WJ
     });
     const filename = path.resolve(__dirname, '../../../main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-wysiwyg.js');
@@ -109,6 +110,7 @@ function fixture(t, editExisting = false) {
             const Editor = vm.runInContext(fs.readFileSync(source, 'utf8')
                 .replace('import WJ from "./webjet";', '')
                 .replace('import { CkEditorToolbarOverflow } from "./ckeditor-toolbar-overflow";', '')
+                .replace('import { configureBranchImageUrl } from "./ckeditor-branch-image";', '')
                 .replace('export class DatatablesCkEditor', 'class DatatablesCkEditor') + '\nDatatablesCkEditor;', context);
             let hiddenHtml = '<p>Stale hidden content</p>';
             conf.wjeditor = Object.assign(Object.create(Editor.prototype), {
@@ -597,6 +599,93 @@ test('Closing an editor clears a pending preview before another page is opened',
     f.editor.submit();
     assert.equal(f.requests.length, 1);
     assert.equal(f.requests[0].data[0].data, '<p>Another page</p>');
+    assert.equal(p.requests.length, 0);
+});
+
+for (const changed of [false, true]) {
+    test(`A ${changed ? 'changed' : 'unchanged'} working-version preview navigates its popup without saving the page`, async t => {
+        const f = fixture(t, true);
+        await f.open('<p>Original content</p>');
+        const p = f.usePreview();
+        f.editor.currentJson.docId = 1;
+        f.window.branchScreen = { enabled: true, branchId: 42, domainId: 1 };
+        const popup = { location: 'about:blank', close() { this.closed = true; } };
+        f.window.open = () => popup;
+        if (changed) f.conf.wjeditor.value = '<p>Unsaved content</p>';
+        f.window.previewPage();
+        await new Promise(setImmediate);
+        assert.equal(p.requests.length, 1);
+        assert.equal(JSON.parse(p.requests[0].data).data, changed ? '<p>Unsaved content</p>' : '<p>Original content</p>');
+        p.requests[0].success({ ok: true });
+        assert.match(popup.location, /^\/admin\/webpages\/preview\/\?docid=.*&branchId=42&branchDomain=1$/);
+        assert.equal(f.requests.length, 0, 'Preview must not save the page');
+        assert.equal(f.editor.s.editOpts.submit, 'changed', 'Preview must restore ordinary save behavior');
+    });
+}
+
+test('A rejected working-version preview closes the empty popup and reports the error', async t => {
+    const f = fixture(t, true);
+    await f.open('<p>Original content</p>');
+    const p = f.usePreview();
+    f.window.branchScreen = { enabled: true, branchId: 42, domainId: 1 };
+    const popup = { close() { this.closed = true; } };
+    f.window.open = () => popup;
+    f.window.previewPage();
+    p.requests[0].error({}, 'Autotest rejected preview', 'Conflict');
+    assert.equal(popup.closed, true);
+    assert.equal(f.notifications.length, 1);
+    assert.equal(f.requests.length, 0);
+});
+
+test('An unchanged production preview submits all fields without saving the page', async t => {
+    const f = fixture(t, true);
+    await f.open('<p>Original content</p>');
+    const p = f.usePreview();
+    f.editor.currentJson.docId = 1;
+    f.window.previewPage();
+    assert.equal(p.requests.length, 1);
+    assert.equal(JSON.parse(p.requests[0].data).data, '<p>Original content</p>');
+    assert.equal(f.requests.length, 0);
+    assert.equal(f.editor.s.editOpts.submit, 'changed');
+});
+
+test('Read-only branch content opens the selected result without submitting the form', async t => {
+    const f = fixture(t, true);
+    await f.open('<p>Original content</p>');
+    const p = f.usePreview();
+    f.editor.currentJson.docId = 1;
+    f.editor.currentJson.editorFields.branchReadOnlyReason = 'System content';
+    f.window.branchScreen = { enabled: true, branchId: 42, domainId: 1 };
+    const popup = { location: 'about:blank' };
+    f.window.open = () => popup;
+    let requestedUrl;
+    f.window.fetch = async url => {
+        requestedUrl = url;
+        return { ok: true, json: async () => ({ url: '/admin/webpages/branch-preview/42/autotest.html' }) };
+    };
+    f.window.previewPage();
+    await new Promise(setImmediate);
+    assert.equal(requestedUrl, '/admin/rest/branches/42/preview-link?docId=1');
+    assert.equal(popup.location, '/admin/webpages/branch-preview/42/autotest.html');
+    assert.equal(p.requests.length, 0);
+    assert.equal(f.requests.length, 0);
+});
+
+test('Invalid working-version content closes the popup and restores the next save', async t => {
+    const f = fixture(t, true);
+    await f.open('<p>Original content</p>');
+    const p = f.usePreview();
+    f.window.branchScreen = { enabled: true, branchId: 42, domainId: 1 };
+    const popup = { name: '', close() { this.closed = true; } };
+    f.window.open = () => popup;
+    f.conf.wjeditor.getData = () => undefined;
+    f.window.previewPage();
+    assert.equal(popup.closed, true);
+    assert.equal(p.requests.length, 0);
+    assert.equal(f.editor.s.editOpts.submit, 'changed');
+    f.conf.wjeditor.getData = () => '<p>Recovered</p>';
+    f.editor.submit();
+    assert.equal(f.requests.length, 1);
     assert.equal(p.requests.length, 0);
 });
 

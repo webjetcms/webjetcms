@@ -1,0 +1,873 @@
+package sk.iway.iwcm.branch;
+
+import java.nio.file.*;
+import java.sql.*;
+import java.util.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.doc.*;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.users.UsersDB;
+
+/** Whole-object comparison, complete preflight and atomic claim of a publishing package. */
+public final class BranchMergeService {
+    public record Version(String state, Map<String,Object> fields, String hash) {
+        static Version of(BranchSnapshot value) { return new Version(value.state().name(),value.fields(),value.hash()); }
+    }
+    public record Item(String type,String objectKey,String label,String operation,Version base,Version live,Version work,
+            String liveHash,String workHash,String choice,boolean conflict,boolean writeRequired,
+            String applyState,String applyPhase,String error,boolean editable,boolean resolvable) {
+        public boolean isWorkOnly() {
+            return !conflict && BranchChange.Operation.UPSERT.name().equals(operation)
+                && BranchSnapshot.State.ABSENT.name().equals(base.state())
+                && BranchSnapshot.State.ABSENT.name().equals(live.state())
+                && BranchSnapshot.State.ACTIVE.name().equals(work.state());
+        }
+    }
+    public record Report(long id,String name,String domainName,String state,long revision,String preparationHash,
+            boolean ready,List<String> errors,List<String> pagePlanWarnings,List<Item> items,String lastError,Map<String,Map<String,String>> fieldLabels,Long publishAt,Integer scheduledBy,String timeZone) { }
+    private record Entry(BranchType type,Map<String,Object> row,BranchChange change,BranchSnapshot live,
+            BranchSnapshot target,boolean conflict,boolean write,String error) { }
+    private record Plan(Map<String,Object> branch,List<Entry> entries,List<String> errors,Map<String,String> pagePlans,String hash) { }
+    private enum ContentAccess { VIEW, DISCARD, PUBLISH }
+    private static final List<String> PAGE_REFERENCES = List.of("header_doc_id","footer_doc_id","menu_doc_id","right_menu_doc_id","logon_page_doc_id","temp_field_a_docid","temp_field_b_docid","temp_field_c_docid","temp_field_d_docid");
+    private static final List<String> GROUP_PAGE_REFERENCES = List.of("default_doc_id","logon_page_doc_id","new_page_docid_template");
+
+    private static Integer scheduledBy(Map<String,Object> branch) {
+        return branch.get("scheduled_by") instanceof Number id ? id.intValue() : null;
+    }
+
+    public Report prepare(long id,String domain,Identity user,long revision) {
+        try(Connection c=DBPool.getConnection()) { return report(plan(c,id,domain,user,revision)); }
+        catch(SQLException ex) { throw failure(ex); }
+    }
+
+    public Report detail(long id,String domain,Identity user) { return prepare(id,domain,user,-1); }
+
+    public record Checkpoint(String type,String objectKey,String applyState,String applyPhase,String error,String status) { }
+    public record Status(String state,long revision,List<Checkpoint> items) { }
+
+    /** Returns committed progress without rebuilding comparisons or validating a new publication plan. */
+    public Status status(long id,String domain,Identity user) {
+        BranchReadiness.requireEnabled();
+        requireBranchUser(user);
+        if (!GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        try (var c = DBPool.getConnection()) {
+            // Oracle provides a transaction-wide read snapshot at SERIALIZABLE.
+            c.setTransactionIsolation(Constants.DB_TYPE == Constants.DB_ORACLE
+                ? Connection.TRANSACTION_SERIALIZABLE : Connection.TRANSACTION_REPEATABLE_READ);
+            c.setAutoCommit(false);
+            try {
+                var branch = branch(c,id,domain,-1,false,"state,revision");
+                var permissions = new BranchPermissionRows(c,id);
+                List<Checkpoint> items = new ArrayList<>();
+                for (BranchType type : List.of(BranchType.GROUP,BranchType.DOCUMENT,BranchType.MEDIA,BranchType.FILE)) {
+                    String columns = BranchPermissionRows.columns(type)+",operation,applied_hash,apply_state,apply_phase,apply_error";
+                    List<Map<String,Object>> rows = new ArrayList<>();
+                    try (var s = c.prepareStatement("SELECT "+columns+" FROM "+type.workTable()+" WHERE branch_id=? ORDER BY row_id")) {
+                        s.setLong(1,id);
+                        try (var r = s.executeQuery()) {
+                            while (r.next()) rows.add(BranchPublishRows.row(r));
+                        }
+                    }
+                    permissions.loadSources(type,rows);
+                    for (var row : rows) {
+                        if (type == BranchType.FILE) checkFileAccess(row,user,false);
+                        else checkContentAccess(c,type,row,user,domain,ContentAccess.VIEW,permissions);
+                        String state = (String)row.get("apply_state"), phase = (String)row.get("apply_phase"), error = (String)row.get("apply_error");
+                        items.add(new Checkpoint(type.name(),row.get(type.idColumn()).toString(),state,phase,error,BranchChangeRow.checkpointStatus(state,phase,error)));
+                    }
+                }
+                return new Status((String)branch.get("state"),((Number)branch.get("revision")).longValue(),items);
+            } finally { c.rollback(); }
+        } catch (SQLException ex) { throw failure(ex); }
+    }
+
+    record PageVersions(Version live,Version work) { }
+
+    /** Reads the requested page's actual versions with the same item permissions as the report. */
+    PageVersions pageVersions(long id,String domain,Identity user,int docId) {
+        if(docId<1) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        try(Connection c=DBPool.getConnection()) {
+            BranchReadiness.verify(c);
+            branch(c,id,domain,-1,false);
+            if(user==null || !GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,Prop.getInstance().getText("branches.schedule.permission"));
+            Map<String,Object> row=BranchStore.readWork(c,id,BranchType.DOCUMENT,docId)
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+            authorize(c,BranchType.DOCUMENT,row,user,domain,false,new BranchPermissionRows(c,id));
+            BranchChange change=BranchStore.change(BranchType.DOCUMENT,row);
+            return new PageVersions(Version.of(BranchPublishRows.liveSnapshot(c,BranchType.DOCUMENT,row)),Version.of(change.work()));
+        } catch(SQLException ex) {throw failure(ex);}
+    }
+
+    public Report resolve(long id,String domain,Identity user,long revision,BranchType type,String key,
+            BranchDecision.Source source,String liveHash,String workHash) {
+        try(Connection c=DBPool.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                Map<String,Object> branch=branch(c,id,domain,revision,true);
+                String state=Objects.toString(branch.get("state"));
+                if(!Set.of("DRAFT","MERGE_FAILED").contains(state)) throw conflict("Balík už nemožno meniť.");
+                Map<String,Object> row=BranchStore.readWork(c,id,type,key).orElseThrow(()->conflict("Položka už neexistuje."));
+                if(!"DRAFT".equals(state) && (!Set.of("PENDING","ERROR").contains(row.get("apply_state")) || row.get("applied_hash")!=null))
+                    throw conflict("Položka už má produkčný zápis; vyžaduje kontrolu správcu.");
+                authorize(c,type,row,user,domain,false,new BranchPermissionRows(c,id));
+                BranchChange change=BranchStore.change(type,row);
+                BranchSnapshot live=BranchPublishRows.liveSnapshot(c,type,row);
+                if(type!=BranchType.FILE && change.base().state()==BranchSnapshot.State.ABSENT && live.state()!=BranchSnapshot.State.ABSENT && row.get("applied_hash")==null)throw conflict("Rezervované ID už obsadil cudzí produkčný riadok.");
+                if(!live.hash().equals(liveHash)||!change.work().hash().equals(workHash)) throw conflict("Podklad sa zmenil. Obnovte porovnanie.");
+                BranchSnapshot target=source==BranchDecision.Source.LIVE?live:change.work();
+                try(PreparedStatement s=c.prepareStatement("UPDATE "+type.workTable()+" SET resolved_choice=?,resolved_live_hash=?,resolved_work_hash=?,resolved_snapshot=?,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                    s.setString(1,source.name());s.setString(2,liveHash);s.setString(3,workHash);BranchStore.bind(s,4,"resolved_snapshot",target.json());s.setObject(5,row.get("row_id"));s.setLong(6,id);s.executeUpdate();
+                }
+                bump(c,id,user.getUserId());c.commit();
+            } catch(SQLException|RuntimeException ex) {c.rollback();throw ex;}
+        } catch(SQLException ex) {throw failure(ex);}
+        BranchView.invalidate();
+        return detail(id,domain,user);
+    }
+
+    /** Persists the complete reviewed plan together with the conditional state transition. */
+    public Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume) {
+        return claim(id,domain,user,revision,hash,resume,false,false,false);
+    }
+
+    /** Schedules the stored date or commits the reviewed plan for immediate background publication. */
+    public Report enqueue(long id,String domain,Identity user,long revision,String hash,boolean resume) {
+        return enqueue(id,domain,user,revision,hash,resume,false);
+    }
+
+    public Report enqueue(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean keepPagePlans) {
+        return claim(id,domain,user,revision,hash,resume,false,true,keepPagePlans);
+    }
+
+    Report claimScheduled(long id,String domain,Identity user,long revision,String hash) {
+        return claim(id,domain,user,revision,hash,false,true,false,false);
+    }
+
+    private Report claim(long id,String domain,Identity user,long revision,String hash,boolean resume,boolean scheduled,boolean queued,boolean keepPagePlans) {
+        try(Connection c=DBPool.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                Map<String,Object> branch=branch(c,id,domain,revision,true);
+                String state=Objects.toString(branch.get("state"));
+                Set<String> allowed=Set.of("DRAFT");
+                if(scheduled)allowed=Set.of("SCHEDULED");
+                else if(resume)allowed=Set.of("MERGE_FAILED","MERGING");
+                if(!allowed.contains(state)) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
+                if(scheduled && (!(branch.get("publish_at") instanceof java.util.Date at) || at.getTime()>System.currentTimeMillis()
+                        || !Objects.equals(scheduledBy(branch),user.getUserId()))) throw conflict("Termín alebo publikujúci sa zmenil.");
+                if("MERGING".equals(state) && (branch.get("publish_requested_by")!=null||BranchPublishService.isRunning(id))) throw conflict("Publikovanie už prebieha alebo čaká na úlohu na pozadí.");
+                Plan plan=plan(c,id,domain,user,revision);
+                if(!plan.errors.isEmpty()||plan.entries.stream().anyMatch(Entry::conflict)) {
+                    List<String> reasons=new ArrayList<>(plan.errors);
+                    plan.entries.stream().filter(Entry::conflict).forEach(e->reasons.add(e.type+":"+e.row.get(e.type.idColumn())+(e.error==null?"":": "+e.error)));
+                    throw conflict(String.join("; ",reasons)+" Obnovte porovnanie a vyriešte konflikty.");
+                }
+                if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
+                if(scheduled) requireAcknowledgedPagePlans(plan);
+                else requirePagePlanConfirmation(plan,keepPagePlans);
+                if(queued && !resume && branch.get("publish_at") instanceof java.util.Date at) {
+                    schedule(c,id,user,revision,at.getTime(),plan);
+                } else {
+                    for(Entry e:plan.entries) {
+                        if(resume) continue;
+                        try(PreparedStatement s=c.prepareStatement("UPDATE "+e.type.workTable()+" SET resolved_snapshot=?,resolved_live_hash=?,resolved_work_hash=?,apply_state='PENDING',apply_phase=?,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                            BranchStore.bind(s,1,"resolved_snapshot",e.target.json());s.setString(2,e.live.hash());s.setString(3,e.change.work().hash());s.setString(4,Boolean.TRUE.equals(e.row.get("_derived_write"))?"DERIVED":null);s.setObject(5,e.row.get("row_id"));s.setLong(6,id);s.executeUpdate();
+                        }
+                    }
+                    try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='MERGING',revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=COALESCE(merge_started_at,CURRENT_TIMESTAMP),last_error=NULL,publish_requested_by=?,acknowledged_page_plans=? WHERE id=? AND revision=? AND state=?")) {
+                        s.setInt(1,user.getUserId());s.setObject(2,queued?user.getUserId():null);BranchStore.bind(s,3,"acknowledged_page_plans",acknowledgedPagePlans(plan));s.setLong(4,id);s.setLong(5,revision);s.setString(6,state);
+                        if(s.executeUpdate()!=1) throw conflict("Balík už prevzal iný beh.");
+                    }
+                }
+                c.commit();
+            } catch(SQLException|RuntimeException ex) {c.rollback();throw ex;}
+        } catch(SQLException ex) {throw failure(ex);}
+        BranchView.invalidate();return detail(id,domain,user);
+    }
+
+    /** Scheduling and moving a term use one locked package update; individual plans are untouched. */
+    public Report schedule(long id,String domain,Identity user,long revision,String hash,long publishAt) {
+        return schedule(id,domain,user,revision,hash,publishAt,false);
+    }
+
+    public Report schedule(long id,String domain,Identity user,long revision,String hash,long publishAt,boolean keepPagePlans) {
+        if(publishAt<=System.currentTimeMillis()) throw conflict(Prop.getInstance().getText("branches.schedule.future"));
+        try(Connection c=DBPool.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                Map<String,Object> branch=branch(c,id,domain,revision,true);
+                if(!Set.of("DRAFT","SCHEDULED").contains(branch.get("state"))) throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
+                Plan plan=plan(c,id,domain,user,revision);
+                if(!plan.errors.isEmpty()) throw conflict(String.join("; ",plan.errors));
+                if(plan.entries.stream().anyMatch(Entry::conflict)) throw conflict(Prop.getInstance().getText("branches.schedule.conflict"));
+                if(!Objects.equals(hash,plan.hash)) throw conflict("Podklad porovnania sa zmenil. Znova overte balík.");
+                requirePagePlanConfirmation(plan,keepPagePlans);
+                schedule(c,id,user,revision,publishAt,plan);
+                c.commit();
+            }catch(SQLException|RuntimeException ex){c.rollback();throw ex;}
+        }catch(SQLException ex){throw failure(ex);}
+        BranchView.invalidate();return detail(id,domain,user);
+    }
+
+    private void schedule(Connection c,long id,Identity user,long revision,long publishAt,Plan plan)throws SQLException {
+        BranchService.validatePublishAt(new Timestamp(publishAt));
+        try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='SCHEDULED',publish_at=?,scheduled_by=?,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,last_error=NULL,acknowledged_page_plans=? WHERE id=? AND revision=?")) {
+            s.setTimestamp(1,new Timestamp(publishAt));s.setInt(2,user.getUserId());s.setInt(3,user.getUserId());BranchStore.bind(s,4,"acknowledged_page_plans",acknowledgedPagePlans(plan));s.setLong(5,id);s.setLong(6,revision);
+            if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
+        }
+    }
+
+    public Report unschedule(long id,String domain,Identity user,long revision) {return returnToDraft(id,domain,user,revision,"SCHEDULED");}
+    public Report reopen(long id,String domain,Identity user,long revision) {return returnToDraft(id,domain,user,revision,"NEEDS_ATTENTION");}
+
+    private Report returnToDraft(long id,String domain,Identity user,long revision,String state) {
+        try(Connection c=DBPool.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                Map<String,Object> branch=branch(c,id,domain,revision,true);
+                if(!state.equals(branch.get("state")))throw conflict("Stav balíka sa zmenil. Obnovte priebeh.");
+                var permissions = new BranchPermissionRows(c,id);
+                for(BranchType type:BranchType.values())for(Map<String,Object> row:BranchPublishRows.rows(c,id,type)) {
+                    authorize(c,type,row,user,domain,false,permissions);
+                    if(row.get("applied_hash")!=null && !"NOOP".equals(row.get("apply_phase")))throw conflict("Balík už obsahuje produkčný zápis.");
+                    try(PreparedStatement s=c.prepareStatement("UPDATE "+type.workTable()+" SET apply_state='PENDING',apply_phase=NULL,applied_hash=NULL,apply_error=NULL WHERE row_id=? AND branch_id=?")) {
+                        s.setObject(1,row.get("row_id"));s.setLong(2,id);s.executeUpdate();
+                    }
+                }
+                try(PreparedStatement s=c.prepareStatement("UPDATE branches SET state='DRAFT',publish_at=NULL,scheduled_by=NULL,revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP,merge_started_at=NULL,last_error=NULL,acknowledged_page_plans=NULL WHERE id=? AND revision=? AND state=?")) {
+                    s.setInt(1,user.getUserId());s.setLong(2,id);s.setLong(3,revision);s.setString(4,state);
+                    if(s.executeUpdate()!=1)throw conflict("Balík sa zmenil. Obnovte porovnanie.");
+                }
+                c.commit();
+            }catch(SQLException|RuntimeException ex){c.rollback();throw ex;}
+        }catch(SQLException ex){throw failure(ex);}
+        BranchView.invalidate();return detail(id,domain,user);
+    }
+
+    static void validatePublisher(long id,String domain,Identity user) {
+        try(Connection c=DBPool.getConnection()) {
+            Plan plan=new BranchMergeService().plan(c,id,domain,user,-1);
+            if(!plan.errors.isEmpty() || plan.entries.stream().anyMatch(Entry::conflict))
+                throw conflict(String.join("; ",plan.errors)+" Zmenený podklad publikovania.");
+            requireAcknowledgedPagePlans(plan);
+        } catch(SQLException ex) {throw failure(ex);}
+    }
+
+    private static String acknowledgedPagePlans(Plan plan) {
+        return plan.pagePlans.isEmpty() ? null : String.join("\n",plan.pagePlans.keySet());
+    }
+
+    private static void requirePagePlanConfirmation(Plan plan,boolean confirmed) {
+        if(!confirmed && !plan.pagePlans.isEmpty())
+            throw conflict(Prop.getInstance().getText("branches.merge.confirmPagePlans"));
+    }
+
+    private static void requireAcknowledgedPagePlans(Plan plan) {
+        Set<String> acknowledged=new HashSet<>(Arrays.asList(Objects.toString(plan.branch.get("acknowledged_page_plans"),"").split("\n")));
+        for(var pagePlan:plan.pagePlans.entrySet()) {
+            if(!acknowledged.contains(pagePlan.getKey()))
+                throw conflict(Prop.getInstance().getText("branches.merge.changedPagePlan")+" "+pagePlan.getValue());
+        }
+    }
+
+    private Plan plan(Connection c,long id,String domain,Identity user,long revision)throws SQLException {
+        BranchReadiness.verify(c);
+        Map<String,Object> branch=branch(c,id,domain,revision,false);
+        if(user==null || !GroupsDB.getInstance().getUserRootDomainNames(user).contains(domain))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,Prop.getInstance().getText("branches.schedule.permission"));
+        boolean frozen=!Set.of("DRAFT","SCHEDULED","NEEDS_ATTENTION").contains(branch.get("state"));
+        List<Entry> entries=new ArrayList<>();List<String> errors=new ArrayList<>();
+        StringBuilder fingerprint=new StringBuilder(id+":"+branch.get("revision")+":"+branch.get("state"));
+        var permissions = new BranchPermissionRows(c,id);
+        for(BranchType type:BranchType.values()) for(Map<String,Object> row:BranchPublishRows.rows(c,id,type)) {
+            try {authorize(c,type,row,user,domain,false,permissions);}
+            catch(ResponseStatusException ex) {throw new ResponseStatusException(ex.getStatusCode(),type+":"+row.get(type.idColumn())+": "+Objects.toString(ex.getReason(),Prop.getInstance().getText("branches.schedule.permission")));}
+            BranchChange change=BranchStore.change(type,row);BranchSnapshot live=BranchPublishRows.liveSnapshot(c,type,row,permissions);
+            BranchSnapshot target;boolean conflict=false,write=false;String error=null;
+            if(frozen && row.get("resolved_snapshot")!=null) {
+                target=BranchSnapshot.fromJson((String)row.get("resolved_snapshot"));
+                String expected=Objects.toString(row.get("applied_hash"),Objects.toString(row.get("resolved_live_hash"),""));
+                if(!Set.of("MERGED","CANCELLED").contains(branch.get("state")) && !live.hash().equals(expected)
+                        && !(type==BranchType.FILE && row.get("applied_hash")==null && Objects.toString(row.get("apply_phase"),"").startsWith("FILE_") && live.hash().equals(target.hash()))) {
+                    conflict=true;error="Produkcia sa zmenila po začatí publikovania; položku nemožno prepísať.";
+                }
+                write=!"DONE".equals(row.get("apply_state"))&&!live.hash().equals(target.hash());
+            } else {
+                try {BranchDecision.Result decision=change.decide(live);conflict=decision.conflict();write=decision.writeRequired();target=decision.source()==BranchDecision.Source.LIVE?live:change.work();}
+                catch(BranchDecision.StaleChoiceException ex) {target=change.work();conflict=true;error="Voľba je zastaraná. Znova porovnajte a vyberte výsledok.";}
+            }
+            if(change.base().state()==BranchSnapshot.State.ABSENT && live.state()!=BranchSnapshot.State.ABSENT && row.get("applied_hash")==null && type!=BranchType.FILE) {
+                conflict=true;error="Rezervované ID alebo nová cesta už existuje v produkcii.";
+            }
+            Entry e=new Entry(type,row,change,live,target,conflict,write,error);entries.add(e);
+            fingerprint.append('|').append(change.identity()).append(':').append(live.hash()).append(':').append(change.work().hash()).append(':').append(target.hash()).append(':').append(row.get("apply_state")).append(':').append(row.get("apply_phase"));
+            if(error!=null) errors.add(change.identity()+": "+error);
+        }
+        BranchView view = null;
+        if(!frozen && entries.stream().anyMatch(e -> e.type == BranchType.DOCUMENT || e.type == BranchType.GROUP)
+                && entries.stream().noneMatch(e->e.error!=null)) {
+            try(BranchContexts.Scope ignored=BranchContexts.open(null,new BranchContext(id,domain,user.getUserId(),BranchContext.Mode.PREVIEW))) {
+                view=BranchView.reload(c);
+                for(int i=0;i<entries.size();i++) {
+                    Entry e=entries.get(i);
+                    if(e.type==BranchType.DOCUMENT && e.target.state()==BranchSnapshot.State.ACTIVE
+                            && (e.write || view.derivedDocumentRows().containsKey(Integer.parseInt(e.change.objectKey())))) {
+                        DocDetails effective=view.metadataDocument(Integer.parseInt(e.change.objectKey()));
+                        if(effective!=null) {
+                            Map<String,Object> fields=new LinkedHashMap<>(e.target.fields());fields.put("virtual_path",effective.getVirtualPath());
+                            BranchSnapshot target=new BranchSnapshot(e.target.state(),fields);
+                            Map<String,Object> projected=view.derivedDocumentRows().get(Integer.parseInt(e.change.objectKey()));
+                            if(projected==null)projected=view.documentRows().stream().filter(r->number(r,"doc_id")==Integer.parseInt(e.change.objectKey())).findFirst().orElse(null);
+                            Map<String,Object> current=BranchStore.readLive(c,BranchType.DOCUMENT,Integer.parseInt(e.change.objectKey())).orElse(null);
+                            boolean derivedWrite=current!=null && projected!=null && !derivedFields(current,projected.keySet()).hash().equals(derivedFields(projected,projected.keySet()).hash());
+                            if(derivedWrite)e.row.put("_derived_write",true);
+                            boolean write=e.write || !target.hash().equals(e.live.hash()) || derivedWrite;
+                            entries.set(i,new Entry(e.type,e.row,e.change,e.live,target,e.conflict,write,e.error));
+                            fingerprint.append(":derived:").append(e.change.identity()).append(':').append(target.hash()).append(':').append(derivedWrite);
+                        }
+                    }
+                }
+            } finally {BranchView.invalidate();}
+        }
+        for(Entry e:entries) try {
+            authorize(c,e.type,e.row,user,domain,true,permissions);
+            if (e.write) checkWritePermission(e, user);
+        }
+        catch(ResponseStatusException ex) {errors.add(e.change.identity()+": "+ex.getReason());}
+        Map<String,String> pagePlans=new LinkedHashMap<>();
+        try {validate(c,entries,domain,user,frozen,pagePlans,view);}
+        catch(IllegalArgumentException|IllegalStateException ex) {errors.add(ex.getMessage());}
+        if(entries.isEmpty()) errors.add("Balík neobsahuje žiadne zmeny.");
+        pagePlans.keySet().forEach(key->fingerprint.append("|page-plan:").append(key));
+        String hash=new BranchSnapshot(BranchSnapshot.State.ACTIVE,Map.of("inputs",fingerprint.toString())).hash();
+        return new Plan(branch,entries,List.copyOf(errors),pagePlans,hash);
+    }
+
+    private Report report(Plan p) {
+        List<Item> items=p.entries.stream().map(e->new Item(e.type.name(),e.change.objectKey(),label(e),e.change.operation().name(),Version.of(e.change.base()),Version.of(e.live),Version.of(e.change.work()),e.live.hash(),e.change.work().hash(),Objects.toString(e.row.get("resolved_choice"),null),e.conflict,e.write,Objects.toString(e.row.get("apply_state"),"PENDING"),Objects.toString(e.row.get("apply_phase"),null),e.error!=null?e.error:Objects.toString(e.row.get("apply_error"),null),"DRAFT".equals(p.branch.get("state")),"DRAFT".equals(p.branch.get("state")) || "MERGE_FAILED".equals(p.branch.get("state")) && e.row.get("applied_hash")==null && Set.of("PENDING","ERROR").contains(e.row.get("apply_state")))).toList();
+        return new Report(((Number)p.branch.get("id")).longValue(),Objects.toString(p.branch.get("name")),BranchDomains.name(((Number)p.branch.get("domain_id")).intValue()),Objects.toString(p.branch.get("state")),((Number)p.branch.get("revision")).longValue(),p.hash,p.errors.isEmpty()&&items.stream().noneMatch(Item::conflict),p.errors,List.copyOf(p.pagePlans.values()),items,Objects.toString(p.branch.get("last_error"),null),BranchMergeLabels.translate(Prop.getInstance()),p.branch.get("publish_at") instanceof java.util.Date at?at.getTime():null,scheduledBy(p.branch),java.time.ZoneId.systemDefault().getId());
+    }
+
+    private static BranchSnapshot derivedFields(Map<String,Object> row,Set<String> projected) {
+        Map<String,Object> fields=new LinkedHashMap<>();
+        for(String field:BranchFields.DOCUMENT.derived())if(projected.contains(field))fields.put(field,row.get(field));
+        return new BranchSnapshot(BranchSnapshot.State.ACTIVE,fields);
+    }
+
+    private static String label(Entry e) {
+        for(String key:List.of("title","group_name","media_title_sk","logical_path")) if(e.row.get(key)!=null) return e.row.get(key).toString();
+        return e.change.identity();
+    }
+
+    private void validate(Connection c,List<Entry> entries,String domain,Identity user,boolean frozen,Map<String,String> pagePlans,BranchView view)throws SQLException {
+        if (entries.isEmpty()) return;
+        List<String> paths = new ArrayList<>();
+        for (Entry e : entries) if (e.type == BranchType.FILE) {
+            validateFile(e,user);
+            paths.add(e.change.objectKey());
+        }
+        checkFilePlans(c,domain,paths);
+        if (Tools.isNotEmpty(Constants.getString("fulltextDataAscMethod")))
+            throw new IllegalStateException("Publikovanie balíka nepodporuje vlastný fulltext hook.");
+        if (paths.size() == entries.size()) return;
+
+        Map<Integer,Map<String,Object>> liveGroups = validationGroups(c, entries, frozen, domain);
+        Map<Integer,Map<String,Object>> groups = new LinkedHashMap<>(liveGroups);
+        Map<Integer,Map<String,Object>> liveDocs = validationDocuments(c, entries, liveGroups);
+        Map<Integer,Map<String,Object>> docs = new LinkedHashMap<>(liveDocs);
+        Map<Integer,Map<String,Object>> media = new LinkedHashMap<>();
+        Set<Integer> changedGroups=new HashSet<>(),changedDocs=new HashSet<>();
+        for(Entry e:entries) {
+            if(e.type==BranchType.FILE) continue;
+            int id=Integer.parseInt(e.change.objectKey());
+            Map<Integer,Map<String,Object>> rows=switch(e.type){case GROUP->groups;case DOCUMENT->docs;case MEDIA->media;default->throw new IllegalStateException();};
+            if(e.type==BranchType.GROUP) changedGroups.add(id);if(e.type==BranchType.DOCUMENT) changedDocs.add(id);
+            if(e.target.state()!=BranchSnapshot.State.ACTIVE) rows.remove(id);
+            else {Map<String,Object> target=new LinkedHashMap<>(e.row);target.putAll(e.target.fields());target.put(e.type.idColumn(),id);rows.put(id,target);}
+            if(e.type==BranchType.GROUP && e.change.base().state()!=BranchSnapshot.State.ABSENT && structural(e)) {
+                Set<Integer> subtree=descendants(liveGroups,id);
+                for(int child:subtree) if(entries.stream().noneMatch(x->x.type==BranchType.GROUP&&x.change.objectKey().equals(Integer.toString(child)))) throw new IllegalStateException("Nový potomok priečinka vyžaduje nové pracovné posúdenie: "+child);
+                for(var d:liveDocs.values()) if(subtree.contains(number(d,"group_id"))&&!changed(entries,BranchType.DOCUMENT,number(d,"doc_id"))) throw new IllegalStateException("Nová stránka pod priečinkom vyžaduje nové posúdenie: "+d.get("doc_id"));
+            }
+        }
+        for(Entry e:entries) {
+            if(e.type==BranchType.GROUP&&e.target.state()==BranchSnapshot.State.TRASH || e.type==BranchType.DOCUMENT&&e.target.state()==BranchSnapshot.State.TRASH) {
+                if(existingTrash(liveGroups,domain)==0) throw new IllegalStateException("Chýba existujúci kôš domény; pripravte ho bežnou administráciou.");
+            }
+            if(!"DONE".equals(e.row.get("apply_state"))) {
+                if(e.type==BranchType.DOCUMENT) checkPagePlans(c,e,pagePlans);
+                else checkIndividualPlans(c,e);
+            }
+        }
+        for(int id:changedGroups) if(groups.containsKey(id)) {
+            Map<String,Object> g=groups.get(id);Set<Integer> seen=new HashSet<>();int ancestor=id;
+            while(ancestor>0) {if(!seen.add(ancestor)) throw new IllegalStateException("Cyklus priečinkov: "+id);Map<String,Object> parent=groups.get(ancestor);if(parent==null)throw new IllegalStateException("Chýbajúci rodič priečinka "+ancestor);ancestor=number(parent,"parent_group_id");}
+            int def=number(g,"default_doc_id");if(def>0&&(!docs.containsKey(def)||number(docs.get(def),"group_id")!=id))throw new IllegalStateException("Neplatná hlavná stránka priečinka "+id);
+            for(String field:List.of("logon_page_doc_id","new_page_docid_template")) requireReference(docs,number(g,field),"priečinok "+id);
+            int link=number(g,"link_group_id");if(link>0&&!groups.containsKey(link))throw new IllegalStateException("Chýbajúci prepojený priečinok "+link);
+            template(c,number(g,"temp_id"));
+        }
+        for(int id:changedDocs) if(docs.containsKey(id)) {
+            Map<String,Object> d=docs.get(id);if(!groups.containsKey(number(d,"group_id")))throw new IllegalStateException("Chýbajúci priečinok stránky "+id);template(c,number(d,"temp_id"));
+            for(String field:PAGE_REFERENCES)requireReference(docs,number(d,field),"stránka "+id);
+            for(int category:BranchFields.normalizedIds(d.get("perex_group"))) {
+                boolean allowed=perexAvailable(c,category,number(d,"group_id"),groups);
+                if(!allowed)throw new IllegalStateException("Nedostupná perex skupina "+category+" pre stránku "+id);
+            }
+        }
+        // Removing a target must not leave references from unchanged pages/folders/media.
+        for(var d:docs.values()) for(String field:PAGE_REFERENCES) {
+            int ref=number(d,field);if(ref>0&&liveDocs.containsKey(ref)&&!docs.containsKey(ref))throw new IllegalStateException("Stránka "+d.get("doc_id")+" odkazuje na mazanú stránku "+ref);
+        }
+        for(var g:groups.values()) {
+            for(String field:GROUP_PAGE_REFERENCES) {
+                int ref=number(g,field);if(ref>0&&liveDocs.containsKey(ref)&&!docs.containsKey(ref))throw new IllegalStateException("Priečinok "+g.get("group_id")+" odkazuje na mazanú stránku "+ref);
+            }
+            int link=number(g,"link_group_id");if(link>0&&liveGroups.containsKey(link)&&!groups.containsKey(link))throw new IllegalStateException("Priečinok odkazuje na mazaný priečinok "+link);
+        }
+        for(var m:media.values()) if("documents".equals(m.get("media_fk_table_name"))&&!docs.containsKey(number(m,"media_fk_id"))&&changed(entries,BranchType.MEDIA,number(m,"media_id")))throw new IllegalStateException("Médium nemá výslednú vlastnícku stránku.");
+        for(Entry e:entries) if(e.type==BranchType.MEDIA&&e.target.state()==BranchSnapshot.State.ACTIVE)for(int category:BranchFields.normalizedIds(e.target.fields().get("group_ids_snapshot"))) {
+            try(PreparedStatement s=c.prepareStatement("SELECT available_groups FROM media_groups WHERE media_group_id=?")) {
+                s.setInt(1,category);
+                try(ResultSet r=s.executeQuery()) {
+                    if(!r.next())throw new IllegalStateException("Zaniknutá mediálna kategória "+category);
+                    int owner=number(e.target.fields(),"media_fk_id");
+                    Map<String,Object> ownerPage=docs.get(owner);
+                    if(ownerPage==null || !folderAllowed(r.getString(1),number(ownerPage,"group_id"),groups))throw new IllegalStateException("Mediálna kategória nie je dostupná vo výslednom priečinku: "+category);
+                }
+            }
+        }
+        if (frozen && !changedDocs.isEmpty()) checkFrozenUrls(c,groups,docs,changedDocs,domain);
+        if (view != null) {
+            if (!changedDocs.isEmpty()) {
+                Map<String,Integer> urls = new HashMap<>();
+                for (DocDetails doc : view.metadataDocuments()) {
+                    String url = DocDB.normalizeVirtualPath(doc.getVirtualPath()).toLowerCase(Locale.ROOT);
+                    if (url.isBlank()) continue;
+                    Integer previous = urls.putIfAbsent(url,doc.getDocId());
+                    if (previous != null && (changedDocs.contains(previous) || changedDocs.contains(doc.getDocId())))
+                        throw new IllegalStateException("Kolízia URL "+url+" (#"+previous+", #"+doc.getDocId()+")");
+                }
+            }
+            if (!changedGroups.isEmpty()) {
+                Map<String,Integer> folderPaths = new HashMap<>();
+                List<GroupDetails> folders = view.groups();
+                for (GroupDetails folder : folders) {
+                    String path = DocDB.getGroupDiskPath(folders,folder.getGroupId()).toLowerCase(Locale.ROOT);
+                    Integer previous = folderPaths.putIfAbsent(path,folder.getGroupId());
+                    if (previous != null && (changedGroups.contains(previous) || changedGroups.contains(folder.getGroupId())))
+                        throw new IllegalStateException("Kolízia priečinkov: "+path);
+                }
+            }
+            for(int id:view.derivedDocumentRows().keySet())if(!changedDocs.contains(id))throw new IllegalStateException("Odvodená zmena stránky nie je v prehľade: "+id);
+        }
+    }
+
+    private static final String GROUP_TOPOLOGY = "SELECT group_id,parent_group_id,group_name,navbar,url_dir_name,domain_name,default_doc_id,logon_page_doc_id,new_page_docid_template,link_group_id FROM groups WHERE ";
+
+    /** Include referenced folders, structural descendants and ancestors needed for inherited domain and access. */
+    private static Map<Integer,Map<String,Object>> validationGroups(Connection c,List<Entry> entries,boolean frozen,String domain) throws SQLException {
+        Set<Integer> ids = new HashSet<>(), owners = new HashSet<>(), removedPages = new HashSet<>(), removedGroups = new HashSet<>(), subtrees = new HashSet<>();
+        for (Entry e : entries) {
+            Map<String,Object> target = e.target.fields();
+            if (e.type == BranchType.GROUP) {
+                int id = number(e.row,"group_id");
+                ids.add(id);
+                ids.add(number(target,"parent_group_id"));
+                ids.add(number(target,"link_group_id"));
+                if (e.target.state() != BranchSnapshot.State.ACTIVE) removedGroups.add(id);
+                if (e.change.base().state() != BranchSnapshot.State.ABSENT && structural(e)) subtrees.add(id);
+            } else if (e.type == BranchType.DOCUMENT) {
+                ids.add(number(target,"group_id"));
+                if (e.target.state() != BranchSnapshot.State.ACTIVE) removedPages.add(number(e.row,"doc_id"));
+            } else if (e.type == BranchType.MEDIA) owners.add(number(target,"media_fk_id"));
+        }
+        List<String> filters = new ArrayList<>();
+        filters.add(DB.getInCondition("group_id",ids));
+        if (!owners.isEmpty()) filters.add("group_id IN (SELECT group_id FROM documents WHERE "+DB.getInCondition("doc_id",owners)+")");
+        for (String field : GROUP_PAGE_REFERENCES) if (!removedPages.isEmpty()) filters.add(DB.getInCondition(field,removedPages));
+        if (!removedGroups.isEmpty()) filters.add(DB.getInCondition("link_group_id",removedGroups));
+        List<String> parameters = new ArrayList<>();
+        if (!removedPages.isEmpty() || !removedGroups.isEmpty()) {
+            String trash = Prop.getInstance(Constants.getString("defaultLanguage")).getText("config.trash_dir");
+            filters.add("group_name=?");
+            parameters.add(trash.substring(trash.lastIndexOf('/')+1));
+        }
+        boolean domainUrls = frozen && entries.stream().anyMatch(e -> e.type == BranchType.DOCUMENT && e.target.state() == BranchSnapshot.State.ACTIVE);
+        if (domainUrls) {
+            filters.add("domain_name=?");
+            parameters.add(domain);
+        }
+        var groups = selectRows(c,GROUP_TOPOLOGY+String.join(" OR ",filters),"group_id",parameters);
+        if (domainUrls) for (var g : groups.values()) if (domain.equals(g.get("domain_name"))) subtrees.add(number(g,"group_id"));
+        // A domain can also be supplied by a folder projected by the package.
+        if (domainUrls) for (Entry e : entries) if (e.type == BranchType.GROUP) subtrees.add(number(e.row,"group_id"));
+        Set<Integer> visited = new HashSet<>();
+        while (!subtrees.isEmpty()) {
+            visited.addAll(subtrees);
+            var children = selectRows(c,GROUP_TOPOLOGY+DB.getInCondition("parent_group_id",subtrees),"group_id",List.of());
+            groups.putAll(children);
+            subtrees = new HashSet<>(children.keySet());
+            subtrees.removeAll(visited);
+        }
+        Collection<Map<String,Object>> level = groups.values();
+        while (!level.isEmpty()) {
+            Set<Integer> parents = new HashSet<>();
+            for (var group : level) {
+                int parent = number(group,"parent_group_id");
+                if (parent > 0 && !groups.containsKey(parent)) parents.add(parent);
+            }
+            if (parents.isEmpty()) break;
+            var rows = selectRows(c,GROUP_TOPOLOGY+DB.getInCondition("group_id",parents),"group_id",List.of());
+            groups.putAll(rows);
+            level = rows.values();
+        }
+        return groups;
+    }
+
+    private static Map<Integer,Map<String,Object>> validationDocuments(Connection c,List<Entry> entries,Map<Integer,Map<String,Object>> groups) throws SQLException {
+        Set<Integer> ids = new HashSet<>(), removed = new HashSet<>(), folders = new HashSet<>();
+        for (Entry e : entries) {
+            var target = e.target.fields();
+            if (e.type == BranchType.DOCUMENT) {
+                int id = number(e.row,"doc_id");
+                ids.add(id);
+                if (e.target.state() != BranchSnapshot.State.ACTIVE) removed.add(id);
+                for (String ref : PAGE_REFERENCES) ids.add(number(target,ref));
+            } else if (e.type == BranchType.GROUP) {
+                for (String ref : GROUP_PAGE_REFERENCES) ids.add(number(target,ref));
+                if (e.change.base().state() != BranchSnapshot.State.ABSENT && structural(e))
+                    folders.addAll(descendants(groups,number(e.row,"group_id")));
+            } else if (e.type == BranchType.MEDIA) ids.add(number(target,"media_fk_id"));
+        }
+        ids.remove(0);
+        String columns = "doc_id,group_id";
+        List<String> filters = new ArrayList<>(List.of(DB.getInCondition("doc_id",ids),DB.getInCondition("group_id",folders)));
+        if (!removed.isEmpty()) {
+            columns += ","+String.join(",",PAGE_REFERENCES);
+            for (String ref : PAGE_REFERENCES) filters.add(DB.getInCondition(ref,removed));
+        }
+        return selectRows(c,"SELECT "+columns+" FROM documents WHERE "+String.join(" OR ",filters),"doc_id",List.of());
+    }
+
+    private static void checkFrozenUrls(Connection c,Map<Integer,Map<String,Object>> groups,Map<Integer,Map<String,Object>> docs,Set<Integer> changed,String domain) throws SQLException {
+        Map<Integer,GroupDetails> folders = new HashMap<>();
+        for (var row : groups.values()) {
+            var g = new GroupDetails();
+            g.setGroupId(number(row,"group_id"));
+            g.setParentGroupId(number(row,"parent_group_id"));
+            g.setGroupName(Objects.toString(row.get("group_name"),""));
+            g.setNavbar(Objects.toString(row.get("navbar"),""));
+            g.setUrlDirName(Objects.toString(row.get("url_dir_name"),""));
+            g.setDomainName(Objects.toString(row.get("domain_name"),""));
+            folders.put(g.getGroupId(),g);
+        }
+        Set<Integer> scope = new HashSet<>();
+        for (int id : folders.keySet()) if (domain.equals(GroupsDB.getURLPathDomainGroup(folders,id)[1])) scope.add(id);
+        Map<String,Integer> urls = new HashMap<>();
+        for (int id : changed) {
+            var d = docs.get(id);
+            if (d != null && scope.contains(number(d,"group_id"))) {
+                String url = DocDB.normalizeVirtualPath(Objects.toString(d.get("virtual_path"),"")).toLowerCase(Locale.ROOT);
+                if (!url.isBlank() && urls.putIfAbsent(url,id) != null) throw new IllegalStateException("Kolízia URL "+url);
+            }
+        }
+        if (urls.isEmpty()) return;
+        try (var s=c.prepareStatement("SELECT doc_id,virtual_path FROM documents WHERE "+DB.getInCondition("group_id",scope)); var r=s.executeQuery()) {
+            while (r.next()) {
+                if (changed.contains(r.getInt(1))) continue;
+                String url=DocDB.normalizeVirtualPath(r.getString(2)).toLowerCase(Locale.ROOT);
+                if (urls.containsKey(url)) throw new IllegalStateException("Kolízia URL "+url);
+            }
+        }
+    }
+
+    private static Map<Integer,Map<String,Object>> selectRows(Connection c,String sql,String key,List<String> parameters) throws SQLException {
+        Map<Integer,Map<String,Object>> rows = new LinkedHashMap<>();
+        try (var s = c.prepareStatement(sql)) {
+            for (int i=0; i<parameters.size(); i++) s.setString(i+1,parameters.get(i));
+            try (var r = s.executeQuery()) {
+                while (r.next()) {
+                    var row = BranchPublishRows.row(r);
+                    rows.put(number(row,key),row);
+                }
+            }
+        }
+        return rows;
+    }
+
+    private static boolean changed(List<Entry> entries,BranchType type,int id) {return entries.stream().anyMatch(e->e.type==type&&e.change.objectKey().equals(Integer.toString(id)));}
+    private static boolean structural(Entry e) {
+        if (e.target.state() != BranchSnapshot.State.ACTIVE) return true;
+        var base = e.change.base().fields();
+        var target = e.target.fields();
+        return !Objects.equals(base.get("parent_group_id"), target.get("parent_group_id"))
+            || !BranchGroupMapper.urlDirectory(base).equals(BranchGroupMapper.urlDirectory(target));
+    }
+    static Set<Integer> descendants(Map<Integer,Map<String,Object>> groups,int root) {Set<Integer> result=new HashSet<>();result.add(root);boolean added;do{added=false;for(var g:groups.values())if(result.contains(number(g,"parent_group_id")))added|=result.add(number(g,"group_id"));}while(added);return result;}
+    static int existingTrash(Map<Integer,Map<String,Object>> groups,String domain) {
+        String trash=sk.iway.iwcm.i18n.Prop.getInstance(Constants.getString("defaultLanguage")).getText("config.trash_dir");
+        String name=trash.substring(trash.lastIndexOf('/')+1);
+        for(var g:groups.values())if(name.equals(g.get("group_name")) && BranchPublishRows.inTrash(number(g,"group_id"),groups) && (Tools.isEmpty(GroupsDB.getInstance().getDomain(number(g,"group_id"))) || domain.equals(GroupsDB.getInstance().getDomain(number(g,"group_id")))))return number(g,"group_id");return 0;
+    }
+    private static boolean perexAvailable(Connection c,int category,int group,Map<Integer,Map<String,Object>> groups)throws SQLException {
+        try(PreparedStatement s=c.prepareStatement("SELECT available_groups FROM perex_groups WHERE perex_group_id=? AND domain_id=?")) {
+            s.setInt(1,category);s.setInt(2,sk.iway.iwcm.common.CloudToolsForCore.getDomainId());
+            try(ResultSet r=s.executeQuery()) {
+                return r.next() && folderAllowed(r.getString(1),group,groups);
+            }
+        }
+    }
+    private static boolean folderAllowed(String available,int group,Map<Integer,Map<String,Object>> groups) {
+        Set<Integer> allowed=new HashSet<>(BranchFields.normalizedIds(available));if(allowed.isEmpty())return true;
+        Set<Integer> seen=new HashSet<>();
+        while(group>0&&seen.add(group)) {
+            if(allowed.contains(group))return true;
+            Map<String,Object> parent=groups.get(group);if(parent==null)break;group=number(parent,"parent_group_id");
+        }
+        return false;
+    }
+    private static void template(Connection c,int id)throws SQLException {if(id<=0)return;try(PreparedStatement s=c.prepareStatement("SELECT temp_id FROM templates WHERE temp_id=?")){s.setInt(1,id);try(ResultSet r=s.executeQuery()){if(!r.next())throw new IllegalStateException("Nedostupná šablóna "+id);}}}
+    private static void requireReference(Map<Integer,?> docs,int id,String owner) {if(id>0&&!docs.containsKey(id))throw new IllegalStateException("Chýbajúca referencia "+id+" ("+owner+")");}
+    static int number(Map<String,?> row,String field) {Object v=row.get(field);return v instanceof Number n?n.intValue():0;}
+
+    private static void validateFile(Entry e,Identity user) {
+        String path=BranchFilePaths.normalize(e.change.objectKey());String folder=path.substring(0,path.lastIndexOf('/'));
+        if(!user.isFolderWritable(folder))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Bez práva k súboru "+path);
+        if(sk.iway.iwcm.io.IwcmFsDB.useDBStorage(path)||sk.iway.iwcm.gallery.GalleryDB.isGalleryFolder(folder))throw new IllegalStateException("Nepodporované úložisko súboru "+path);
+        if(!e.write)return;
+        Path target=Path.of(Tools.getRealPath(path));Path ancestor=target.getParent();while(ancestor!=null&&!Files.exists(ancestor))ancestor=ancestor.getParent();
+        if(ancestor==null||!Files.isDirectory(ancestor)||!Files.isWritable(ancestor))throw new IllegalStateException("Cieľ nie je zapisovateľný: "+path);
+        if(e.target.state()==BranchSnapshot.State.ACTIVE && "FILE".equals(e.target.fields().get("entry_kind"))) {
+            Path source=BranchFiles.workPath(e.change.branchId(),e.change.rowId());
+            try {if(!Files.isRegularFile(source)||!BranchFiles.hash(source).equals(e.target.fields().get("content_hash")))throw new IllegalStateException("Chýba alebo sa zmenil pracovný súbor: "+path);}
+            catch(java.io.IOException ex){throw new IllegalStateException("Nemožno čítať pracovný súbor "+path,ex);}
+        }
+        if(Files.exists(target) && (Files.isDirectory(target)!="DIRECTORY".equals(e.row.get("entry_kind"))))throw new IllegalStateException("Kolízia typu súbor/adresár: "+path);
+    }
+
+    /** Checks all pending page plans, including owners outside this package, using physical destinations. */
+    static void checkFilePlans(Connection c,String domain,Collection<String> paths)throws SQLException {
+        if(paths.isEmpty())return;
+        Set<Path> targets=new HashSet<>();for(String path:paths)targets.add(Path.of(Tools.getRealPath(path)).toAbsolutePath().normalize());
+        try(Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT DISTINCT doc_id,group_id FROM documents_history WHERE publicable="+DB.getBooleanSql(true)+" OR " + BranchSql.notEmpty("awaiting_approve"))) {
+            while(r.next()) {
+                int id=r.getInt(1);String plannedDomain=GroupsDB.getInstance().getDomain(r.getInt(2));
+                if(!domain.equalsIgnoreCase(plannedDomain))continue;
+                for(String folder:List.of("images","files")) {
+                    String prefix=PlannedAssetPaths.ROOT+id+"/"+folder+"/";Path root=Path.of(Tools.getRealPath(prefix));if(!Files.exists(root))continue;
+                    try(var stream=Files.walk(root)) {
+                        for(Path file:stream.filter(Files::isRegularFile).toList()) {
+                            String source=prefix+root.relativize(file).toString().replace('\\','/');String logical=PlannedAssetPaths.getPublicPath(source,id);
+                            if(targets.contains(Path.of(Tools.getRealPath(logical)).toAbsolutePath().normalize()))throw new IllegalStateException("Súbor "+logical+" používa individuálny plán stránky #"+id+" (aj mimo balíka). Zmeňte pôvodný plán.");
+                        }
+                    }catch(java.io.IOException ex){throw new IllegalStateException("Nemožno overiť súbory individuálneho plánu #"+id,ex);}
+                }
+            }
+        }
+    }
+
+    private static void checkIndividualPlans(Connection c,Entry e)throws SQLException {
+        if(e.type==BranchType.FILE)return;
+        String sql=e.type==BranchType.GROUP?"SELECT 1 FROM groups_scheduler WHERE group_id=? AND ((when_to_publish IS NOT NULL AND date_published IS NULL) OR " + BranchSql.notEmpty("awaiting_approve") + ")":"SELECT 1 FROM documents_history WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR " + BranchSql.notEmpty("awaiting_approve") + ")";
+        int id=e.type==BranchType.MEDIA?number(e.row,"media_fk_id"):Integer.parseInt(e.change.objectKey());
+        try(PreparedStatement s=c.prepareStatement(sql)){s.setInt(1,id);try(ResultSet r=s.executeQuery()){if(r.next())throw new IllegalStateException("Individuálny plán alebo čakajúce schválenie: "+e.change.identity());}}
+    }
+
+    private static void checkPagePlans(Connection c,Entry entry,Map<String,String> warnings)throws SQLException {
+        String id=entry.change.objectKey();
+        String title=Objects.toString(entry.live.fields().get("title"),label(entry));
+        Prop prop=Prop.getInstance();
+        String sql="SELECT history_id,save_date,publish_start,awaiting_approve FROM documents_history "
+            +"WHERE doc_id=? AND (publicable="+DB.getBooleanSql(true)+" OR " + BranchSql.notEmpty("awaiting_approve") + ") ORDER BY history_id";
+        try(PreparedStatement statement=c.prepareStatement(sql)) {
+            statement.setInt(1,Integer.parseInt(id));
+            try(ResultSet history=statement.executeQuery()) {
+                while(history.next()) {
+                    if(Tools.isNotEmpty(history.getString("awaiting_approve")))
+                        throw new IllegalStateException(prop.getText("branches.merge.pageAwaitingApproval",title,id));
+                    if(entry.live.state()!=BranchSnapshot.State.ACTIVE || entry.target.state()!=BranchSnapshot.State.ACTIVE)
+                        throw new IllegalStateException(prop.getText("branches.merge.removedPagePlan",title,id));
+                    Timestamp date=history.getTimestamp("publish_start");
+                    String term=date==null ? "" : " "+prop.getText("branches.merge.pagePlanDate",Tools.formatDateTime(date));
+                    String key=history.getLong("history_id")+":"+history.getString("save_date")+":"+history.getString("publish_start");
+                    warnings.put(key,prop.getText("branches.merge.pagePlan",title,id,term));
+                }
+            }
+        }
+        try(PreparedStatement statement=c.prepareStatement("SELECT 1 FROM documents WHERE doc_id=? AND (publish_after_start="+DB.getBooleanSql(true)+" OR disable_after_end="+DB.getBooleanSql(true)+")")) {
+            statement.setInt(1,Integer.parseInt(id));
+            try(ResultSet result=statement.executeQuery()) {
+                if(result.next()) throw new IllegalStateException(prop.getText("branches.merge.pageTiming",title,id));
+            }
+        }
+    }
+
+    private static void checkWritePermission(Entry entry, Identity user) {
+        boolean deleting = entry.target.state() == BranchSnapshot.State.TRASH;
+        boolean creating = entry.live.state() == BranchSnapshot.State.ABSENT || entry.change.base().state() == BranchSnapshot.State.ABSENT;
+        if (entry.type == BranchType.DOCUMENT) {
+            if (deleting) requirePermission(user, "deletePage");
+            else if (creating) requirePermission(user, "addPage");
+        } else if (entry.type == BranchType.GROUP) {
+            requirePermission(user, creating ? "addSubdir" : "editDir");
+            if (deleting) requirePermission(user, "deleteDir");
+        }
+    }
+
+    private static void requirePermission(Identity user, String permission) {
+        if (user.isDisabledItem(permission)) {
+            Prop prop = Prop.getInstance();
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    prop.getText("settings.tabs-settings.perms") + ": " + prop.getText("components.user.perms." + permission));
+        }
+    }
+
+    /** Checks every stored change before deleting the package or its private files. */
+    static void requireDiscardPermissions(BranchEntity branch, Identity user) {
+        requireBranchUser(user);
+        String domain = branch.getDomainName();
+        try (Connection c = DBPool.getConnection()) {
+            var permissions = new BranchPermissionRows(c,branch.getId());
+            for (BranchType type : BranchType.values()) {
+                var rows = BranchPublishRows.rows(c, branch.getId(), type);
+                for (var row : rows) {
+                    if (type == BranchType.FILE) {
+                        checkFileAccess(row, user, "DIRECTORY".equals(row.get("entry_kind")));
+                        continue;
+                    }
+                    checkContentAccess(c, type, row, user, domain, ContentAccess.DISCARD, permissions);
+                    if (type == BranchType.DOCUMENT) requirePermission(user, "pageSave");
+                    if (type == BranchType.GROUP) {
+                        boolean exists = permissions.get(type,number(row, "group_id"),false) != null;
+                        requirePermission(user, exists ? "editDir" : "deleteDir");
+                        int parent = number(row, "parent_group_id");
+                        if (parent > 0) checkFolder(c, permissions, true, parent, user, domain, false, false);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            throw failure(ex);
+        }
+    }
+
+    private static void requireBranchUser(Identity user) {
+        if (user == null || !user.isAdmin() || !user.isAuthorized() || !user.isEnabledItem(BranchAccess.PERMISSION))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    private static void checkFileAccess(Map<String,Object> row, Identity user, boolean directory) {
+        String path = BranchFilePaths.normalize((String) row.get("logical_path"));
+        String folder = directory ? path : path.substring(0, path.lastIndexOf('/'));
+        if (!user.isFolderWritable(folder)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    private static void checkPageUserGroups(Map<String,Object> page, Identity user) throws SQLException {
+        DocDetails doc = new DocDetails();
+        doc.setDocId(number(page,"doc_id"));
+        doc.setGroupId(number(page,"group_id"));
+        doc.setPasswordProtected(Objects.toString(page.get("password_protected"),""));
+        if (!DocDB.canAccess(doc,user,true)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    /** Enforces item visibility and existing direct-publication rules, including source and destination. */
+    private static void authorize(Connection c,BranchType type,Map<String,Object> row,Identity user,String domain,boolean publish,BranchPermissionRows permissions)throws SQLException {
+        requireBranchUser(user);
+        if (type == BranchType.FILE) {
+            checkFileAccess(row, user, false);
+            return;
+        }
+        checkContentAccess(c, type, row, user, domain, publish ? ContentAccess.PUBLISH : ContentAccess.VIEW, permissions);
+        if(publish && user.isDisabledItem("pageSave"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chýba právo uložiť/publikovať stránku.");
+        if (publish && type == BranchType.DOCUMENT) {
+            int id = number(row, "doc_id");
+            BranchMultigroup links = BranchMultigroup.read(c, id);
+            links.checkUnchanged(row);
+            var live = permissions.get(type, id, false);
+            if (!links.copies().isEmpty() && ("DELETE".equals(row.get("operation"))
+                    || live == null || number(live, "group_id") != number(row, "group_id")))
+                throw conflict(Prop.getInstance().getText("branches.multigroup.linksReadOnly", " " + BranchMultigroup.label((String) row.get("title"), id)));
+        }
+    }
+
+    private static void checkContentAccess(Connection c, BranchType type, Map<String,Object> row, Identity user,
+            String domain, ContentAccess access, BranchPermissionRows permissions) throws SQLException {
+        boolean publish = access == ContentAccess.PUBLISH;
+        if(!UsersDB.checkUserPerms(user,Constants.getString("webpagesFunctionsPerms")))throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        int owner=type==BranchType.MEDIA?number(row,"media_fk_id"):0;
+        Map<String,Object> ownerDoc=owner>0?permissions.effective(BranchType.DOCUMENT,owner):null;
+        if(type==BranchType.MEDIA && ownerDoc==null)throw conflict("Chýbajúci vlastník média.");
+        int folder=type==BranchType.GROUP?number(row,"group_id"):type==BranchType.DOCUMENT?number(row,"group_id"):number(ownerDoc,"group_id");
+        int docId=type==BranchType.DOCUMENT?number(row,"doc_id"):owner;
+        boolean pageScope=docId>0 && BranchFields.normalizedIds(user.getEditablePages()).contains(docId);
+        Map<String,Object> sourceDoc=docId>0?permissions.get(BranchType.DOCUMENT,docId,false):null;
+        boolean sameFolder=sourceDoc!=null && number(sourceDoc,"group_id")==folder;
+        checkFolder(c,permissions,true,folder,user,domain,publish,pageScope && sameFolder);
+        if (Constants.getBoolean("adminCheckUserGroups") && docId > 0) {
+            checkPageUserGroups(type == BranchType.DOCUMENT ? row : ownerDoc, user);
+            if (sourceDoc != null) checkPageUserGroups(sourceDoc, user);
+        }
+        Map<String,Object> live=type==BranchType.DOCUMENT?sourceDoc:permissions.get(type,number(row,type.idColumn()),false);
+        if (live != null) {
+            try {
+                int source=type==BranchType.MEDIA?folder:number(live,"group_id");
+                if(type==BranchType.MEDIA) {
+                    int originalOwner=number(live,"media_fk_id");
+                    if(originalOwner!=owner)throw conflict("Zmena vlastníka média nie je podporovaná.");
+                    var originalDoc=permissions.get(BranchType.DOCUMENT,originalOwner,false);
+                    if(originalDoc==null)throw conflict("Chýbajúci pôvodný vlastník média.");
+                    source=number(originalDoc,"group_id");pageScope=BranchFields.normalizedIds(user.getEditablePages()).contains(originalOwner);
+                }
+                checkFolder(c,permissions,false,source,user,domain,publish,pageScope);
+            } catch (ResponseStatusException ex) {
+                // Moving an item to Trash may remove access to its new location. Only our exact deletion is exempt.
+                if (!"DELETE".equals(row.get("operation")) || row.get("applied_hash")==null
+                        || !row.get("applied_hash").equals(BranchPublishRows.liveSnapshot(c,type,row,permissions).hash())) throw ex;
+            }
+        }
+        if(type==BranchType.MEDIA && user.isDisabledItem("editor_edit_media_all")&&user.isDisabledItem("editor_edit_media"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chýba právo upravovať médiá.");
+    }
+
+    private static void checkFolder(Connection c,BranchPermissionRows permissions,boolean work,int id,Identity user,String domain,boolean publish,boolean pageScope)throws SQLException {
+        Set<Integer> ancestors=new LinkedHashSet<>();int current=id;boolean allowed=pageScope || Tools.isEmpty(user.getEditableGroups(true));boolean self=false,secondSelf=false,first=false,second=false;
+        Set<Integer> editable=new HashSet<>(BranchFields.normalizedIds(user.getEditableGroups(true)));
+        while(current>0&&ancestors.add(current)) {
+            Map<String,Object> g=work?permissions.effective(BranchType.GROUP,current):permissions.get(BranchType.GROUP,current,false);if(g==null)throw conflict("Chýbajúci priečinok #"+current);
+            if(Boolean.TRUE.equals(g.get("internal"))||number(g,"internal")==1||"system".equalsIgnoreCase(Objects.toString(g.get("group_name"))))throw conflict("Zdieľaný System obsah je iba na čítanie.");
+            String gd=Objects.toString(g.get("domain_name"),"");if(!gd.isBlank()&&!"default".equals(gd)&&!domain.equals(gd))throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            allowed|=editable.contains(current);
+            if(publish)try(PreparedStatement s=c.prepareStatement("SELECT user_id,approve_mode FROM groups_approve WHERE group_id=?")){s.setInt(1,current);try(ResultSet r=s.executeQuery()){while(r.next()){
+                var approver=UsersDB.getUser(r.getInt(1));if(approver==null||!approver.isAdmin()||!approver.isAuthorized())continue;
+                int mode=r.getInt(2);if(r.getInt(1)==user.getUserId()){self|=mode==UsersDB.APPROVE_APPROVE;secondSelf|=mode==UsersDB.APPROVE_LEVEL2||mode==UsersDB.APPROVE_NONE;}
+                else {first|=mode==UsersDB.APPROVE_APPROVE;second|=mode==UsersDB.APPROVE_LEVEL2;}
+            }}}
+            current=number(g,"parent_group_id");
+        }
+        if(!allowed)throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chýba právo na priečinok #"+id);
+        if(publish&&!secondSelf&&((first&&!self)||second))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Balík vyžaduje priame schválenie priečinka #"+id);
+    }
+
+    private static Map<String,Object> branch(Connection c,long id,String domain,long revision,boolean lock)throws SQLException {
+        return branch(c,id,domain,revision,lock,"*");
+    }
+
+    private static Map<String,Object> branch(Connection c,long id,String domain,long revision,boolean lock,String columns)throws SQLException {
+        try (PreparedStatement s = c.prepareStatement(lock ? BranchSql.lockedSelect(columns,"branches","id=? AND domain_id=?") : "SELECT "+columns+" FROM branches WHERE id=? AND domain_id=?")) {
+            s.setLong(1, id);
+            s.setInt(2, BranchDomains.id(domain));
+            try (ResultSet r = s.executeQuery()) {
+                if (!r.next()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                BranchService.requireNotDeleting(r.getString("state"));
+                if (revision >= 0 && r.getLong("revision") != revision) throw conflict("Balík sa zmenil. Obnovte porovnanie.");
+                return BranchPublishRows.row(r);
+            }
+        }
+    }
+    private static void bump(Connection c,long id,int user)throws SQLException {try(PreparedStatement s=c.prepareStatement("UPDATE branches SET revision=revision+1,updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=?")){s.setInt(1,user);s.setLong(2,id);s.executeUpdate();}}
+    private static ResponseStatusException conflict(String message){return new ResponseStatusException(HttpStatus.CONFLICT,message);}
+    private static IllegalStateException failure(SQLException ex){return new IllegalStateException("Nemožno pripraviť publikačný balík: "+ex.getMessage(),ex);}
+}

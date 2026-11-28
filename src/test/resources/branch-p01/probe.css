@@ -1,0 +1,2 @@
+/* P01 explicit adapter for a root-relative CSS image. */
+body { font-family: sans-serif; background-image: url('/images/p01.png'); }

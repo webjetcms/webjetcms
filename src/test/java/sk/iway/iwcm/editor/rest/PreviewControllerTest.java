@@ -19,6 +19,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.branch.BranchContext;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchPreviewUrls;
+import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocEditorFields;
@@ -61,6 +65,8 @@ class PreviewControllerTest {
 
         documents.when(DocDB::getInstance).thenReturn(mock(DocDB.class));
         groups.when(GroupsDB::getInstance).thenReturn(mock(GroupsDB.class));
+        groups.when(() -> GroupsDB.getDomainId("a.example")).thenReturn(1);
+        groups.when(() -> GroupsDB.getDomainId("b.example")).thenReturn(2);
         userGroups.when(UserGroupsDB::getInstance).thenReturn(mock(UserGroupsDB.class));
         properties.when(Prop::getInstance).thenReturn(mock(Prop.class));
         templates.when(TemplatesDB::getInstance).thenReturn(mock(TemplatesDB.class));
@@ -148,6 +154,34 @@ class PreviewControllerTest {
     @Test
     void handlesMissingPreview() {
         assertEquals("forward:/404.jsp", controller.preview(request, response));
+    }
+
+    /** A serialized unsaved preview retains its working-version ownership and logical asset base. */
+    @Test
+    void workingPreviewKeepsUnsavedContentAndRejectsAnotherSelection() throws Exception {
+        var context = new BranchContext(7, "a.example", 1, BranchContext.Mode.PREVIEW);
+        try (var scope = BranchContexts.open(request, context)) {
+            DocDetails restored = submitAndSerialize(previewDocument());
+            assertEquals("forward:/showdoc.do", controller.preview(request, response));
+            assertEquals("<p>Unsaved preview content</p>", restored.getData());
+            assertEquals("/preview-test.html", request.getAttribute(BranchPreviewUrls.LOGICAL_PATH));
+        }
+        try (var scope = BranchContexts.open(request, new BranchContext(8, "a.example", 1, BranchContext.Mode.PREVIEW))) {
+            assertEquals(409, assertThrows(ResponseStatusException.class, () -> controller.preview(request, response)).getStatusCode().value());
+        }
+        try (var scope = BranchContexts.open(request, new BranchContext(7, "b.example", 1, BranchContext.Mode.PREVIEW))) {
+            assertEquals(409, assertThrows(ResponseStatusException.class, () -> controller.preview(request, response)).getStatusCode().value());
+        }
+        assertEquals(409, assertThrows(ResponseStatusException.class, () -> controller.preview(request, response)).getStatusCode().value());
+    }
+
+    /** A production preview cannot be reused as a working-version preview in the same session. */
+    @Test
+    void workingPreviewRejectsProductionSessionData() {
+        request.getSession().setAttribute("ShowdocAction.showDocData", previewDocument());
+        try (var scope = BranchContexts.open(request, new BranchContext(7, "a.example", 1, BranchContext.Mode.PREVIEW))) {
+            assertEquals(409, assertThrows(ResponseStatusException.class, () -> controller.preview(request, response)).getStatusCode().value());
+        }
     }
 
     private DocDetails previewDocument() {

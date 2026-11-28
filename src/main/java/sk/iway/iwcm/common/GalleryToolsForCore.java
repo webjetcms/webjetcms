@@ -1,8 +1,9 @@
 package sk.iway.iwcm.common;
 
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.branch.BranchFiles;
 
+/** Image variants must be checked against the selected file result; WORK bytes may not exist in LIVE. */
 public class GalleryToolsForCore {
     /**
      * Vrati malu verziu obrazku z galerie (ak existuje)
@@ -13,8 +14,7 @@ public class GalleryToolsForCore {
     public static String getImagePathSmall(String fullPath)
     {
         String image = getImagePathPrefix("s_", fullPath);
-        IwcmFile f = new IwcmFile(Tools.getRealPath(image));
-        if (f.exists())
+        if (BranchFiles.exists(image))
         {
             return (image);
         }
@@ -30,8 +30,7 @@ public class GalleryToolsForCore {
     public static String getImagePathNormal(String fullPath)
     {
         String image = getImagePathPrefix(null, fullPath);
-        IwcmFile f = new IwcmFile(Tools.getRealPath(image));
-        if (f.exists())
+        if (BranchFiles.exists(image))
         {
             return (image);
         }
@@ -41,8 +40,7 @@ public class GalleryToolsForCore {
     public static String getImagePathOriginal(String fullPath)
     {
         String image = getImagePathPrefix("o_", fullPath);
-        IwcmFile f = new IwcmFile(Tools.getRealPath(image));
-        if (f.exists())
+        if (BranchFiles.exists(image))
         {
             return (image);
         }

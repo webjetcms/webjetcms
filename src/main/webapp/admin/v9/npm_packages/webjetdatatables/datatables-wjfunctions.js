@@ -2,6 +2,8 @@
 
 import WJ from "../../src/js/webjet";
 
+export const versionHeaderSelector = "html:not(.in-iframe):not(.in-iframe-show-table) .ly-header--versions";
+
 /**
  * Pripravi hashtabulku vsetkych kombinacii select fieldov pre export
  * @param {*} DATA
@@ -87,6 +89,8 @@ export function getOptionsTableImport(DATA) {
  * @param {*} EDITOR
  */
 export function bindEditorLocking(EDITOR) {
+    // The legacy presence key is shared with production and has no branch identity.
+    if (window.branchScreen?.enabled && window.branchScreen.branchId > 0) return;
     EDITOR.lockingEntityId = -1;
     EDITOR.lockingCallInterval = null;
 
@@ -360,7 +364,7 @@ export function resizeTabContent(EDITOR) {
 /**
  * Calculate height of the table based on window height and all toolbars
  */
-function calculateAutoHeight(DATA) {
+export function calculateAutoHeight(DATA) {
     const scrollBody = $('#' + DATA.id + '_wrapper').find('.dt-scroll-body');
     const inIframe = $("html").hasClass("in-iframe-show-table");
     const inModalDialog = $('#' + DATA.id + '_wrapper').parents(".modal-body-content").length > 0;
@@ -387,7 +391,8 @@ function calculateAutoHeight(DATA) {
             });
         }
     } else if (inIframe==false) {
-        if ("fixed"==$(".ly-header").css("position")) lyHeader = $(".ly-header").outerHeight();
+        const header = $(".ly-header");
+        if (header.is(versionHeaderSelector) || header.css("position") === "fixed") lyHeader = header.outerHeight();
         var breadcrumbElemets = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb");
         //console.log("breadcrumbElemets=", breadcrumbElemets);
         if (breadcrumbElemets.length>0) {
@@ -439,8 +444,10 @@ function calculateAutoHeight(DATA) {
 /**
  * Inicializuje pocuvanie udalosti na zmenu velkosti okna pre prepocet velkosti .dte-tab-autoheight
  * @param {*} TABLE
+ * @param {object} DATA - WebJET table configuration.
+ * @param {HTMLElement|null} versionHeader - Header used to size this top-level table, when applicable.
  */
-export function bindOnResize(TABLE, DATA) {
+export function bindOnResize(TABLE, DATA, versionHeader) {
     $(window).on("resize", function() {
         clearTimeout(TABLE.resizedFinished);
         TABLE.resizedFinished = setTimeout(function(){
@@ -452,6 +459,19 @@ export function bindOnResize(TABLE, DATA) {
     });
 
     if(DATA.autoHeight === true) {
+        if (versionHeader) {
+            const container = TABLE.table().container();
+            // A change in the workspace bar or tab strip can resize the content without a window resize.
+            const observer = new ResizeObserver(() => {
+                if (!container.offsetWidth) return;
+                calculateAutoHeight(DATA);
+                TABLE.calculateAutoPageLength(true, true);
+            });
+            observer.observe(container.closest(".ly-content") || versionHeader);
+            const toolbar = container.querySelector(".dt-header-row");
+            if (toolbar) observer.observe(toolbar);
+            TABLE.one("destroy.dt", () => observer.disconnect());
+        }
         window.setInterval(()=> {
             calculateAutoHeight(DATA);
         }, 5000);
@@ -467,6 +487,36 @@ export function bindOnResize(TABLE, DATA) {
             calculateAutoHeight(DATA);
         } );
     }
+}
+
+/** Keeps the automatic option tied to the available space, even if a fixed choice has the same value. */
+export function pageLengthOptions(table) {
+    const settings = table.settings()[0];
+    const [lengths, labels] = settings.aLengthMenu;
+    settings.wjManualPageLength = table.state.loaded()?.length === table.page.len();
+    return lengths.map((length, index) => {
+        const automatic = index === 0;
+        return {
+            name: automatic ? "automaticPageLength" : undefined,
+            text: labels[index],
+            className: "button-page-length",
+            action() {
+                settings.wjManualPageLength = !automatic;
+                table.page.len(automatic ? lengths[0] : length).draw();
+            },
+            init(dt, node, config) {
+                const update = () => {
+                    const usesAuto = !settings.wjManualPageLength && dt.page.len() === lengths[0];
+                    this.active(automatic ? usesAuto : !usesAuto && dt.page.len() === length);
+                };
+                dt.on("length.dt" + config.namespace, update);
+                update();
+            },
+            destroy(dt, node, config) {
+                dt.off("length.dt" + config.namespace);
+            }
+        };
+    });
 }
 
 /**
@@ -596,7 +646,7 @@ export function stateSaveCallback(settings,data) {
     newData.order = data.order;
     newData.time = data.time;
 
-    if (data.length != settings.aLengthMenu[0][0]) {
+    if (settings.wjManualPageLength || data.length != settings.aLengthMenu[0][0]) {
         //ak sa nejedna o automaticku velkost uloz aj velkost stranky
         newData.length = data.length;
     }

@@ -50,6 +50,30 @@ public class AdminUploadServlet extends HttpServlet
 {
 	private static final long serialVersionUID = 1L;
 	private static final Map<String,PathHolder> temporary = new ConcurrentHashMap<>();
+    private record UploadContext(long branchId, int userId, String domain) { }
+    private static final Map<String,UploadContext> branchUploads = new ConcurrentHashMap<>();
+
+    /** Rejects temporary keys from another user or screen context, including a switch back to LIVE. */
+    static void requireUploadContext(String key, HttpServletRequest request) {
+        var context = sk.iway.iwcm.branch.BranchContexts.current();
+        UploadContext owner = branchUploads.get(key);
+        if (owner == null && !context.isBranch()) return;
+        Identity user = UsersDB.getCurrentUser(request);
+        if (owner == null || user == null || owner.userId()!=user.getUserId()
+                || owner.branchId()!=context.branchId() || !owner.domain().equals(context.domainName()))
+            throw new IllegalStateException("Upload context changed; upload the file again");
+    }
+
+    static String branchKeepBothName(String folder, String name) {
+        String extension = FileTools.getFileExtension(name);
+        String stem = extension.isEmpty() ? name : name.substring(0, name.length()-extension.length()-1);
+        for (int i=1; i<10000; i++) {
+            String candidate=stem+"-"+i+(extension.isEmpty()?"":"."+extension);
+            if (!sk.iway.iwcm.branch.BranchFiles.exists(folder+candidate)
+                    && !sk.iway.iwcm.branch.BranchFiles.directoryExists(folder+candidate)) return candidate;
+        }
+        throw new IllegalStateException("Cannot find an unused file name");
+    }
 
 	/**
 	 * Validates and stores one upload chunk, assembling and processing the file after the final chunk.
@@ -70,6 +94,9 @@ public class AdminUploadServlet extends HttpServlet
         boolean isBase64 = "base64".equals(request.getParameter("encoding"));
         String uploadType = Tools.getStringValue(request.getParameter("uploadType"), "");
         boolean saveIntoArchive = "fileArchive".equals(uploadType);
+        boolean branch = sk.iway.iwcm.branch.BranchContexts.current().isBranch();
+        if (branch) new sk.iway.iwcm.branch.BranchAccess().requireCsrf(request);
+        if (branch && saveIntoArchive) throw new IllegalArgumentException("File archive uploads are unavailable in a publishing branch");
         FileArchiveBulkUploadOptions bulkUploadOptions = null;
 
         JSONObject output = new JSONObject();
@@ -102,7 +129,7 @@ public class AdminUploadServlet extends HttpServlet
         if (request.getParameter("dztotalchunkcount")!=null) chunks = Tools.getIntValue(request.getParameter("dztotalchunkcount"), 0);
 
         HttpSession session = request.getSession();
-        String partialUploadSessionKey = "partialUploadFile-"+name;
+        String partialUploadSessionKey = "partialUploadFile-"+(branch?sk.iway.iwcm.branch.BranchContexts.current().branchId()+"-":"")+name;
         PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute(partialUploadSessionKey);
 
         //bulkUploadOptions stays non-null whenever errorKey remains null on the archive upload path below
@@ -208,7 +235,7 @@ public class AdminUploadServlet extends HttpServlet
                     IwcmFile outputFile = null;
                     String destinationVirtualPath = "";
 
-                    if (saveIntoArchive == false && writeDirectlyToDestination && Tools.isNotEmpty(destinationFolder) && FileBrowserTools.hasForbiddenSymbol(destinationFolder)==false)
+                    if (!branch && saveIntoArchive == false && writeDirectlyToDestination && Tools.isNotEmpty(destinationFolder) && FileBrowserTools.hasForbiddenSymbol(destinationFolder)==false)
                     {
                         IwcmFile dirFile = new IwcmFile(Tools.getRealPath(destinationFolder));
                         if (dirFile.exists()==false) dirFile.mkdirs();
@@ -275,10 +302,26 @@ public class AdminUploadServlet extends HttpServlet
                         outputFile = imageDestination;
                     }
 
+                    if (branch && writeDirectlyToDestination) {
+                        String validation=AdminUploadValidator.validateConflict(destinationFolder,name,uploadType,outputFile.length(),user,request);
+                        if(validation!=null) throw new IllegalArgumentException(Prop.getInstance(request).getText(validation));
+                        destinationVirtualPath = destinationFolder + name;
+                        destinationFileExists = sk.iway.iwcm.branch.BranchFiles.exists(destinationVirtualPath);
+                        if (destinationFileExists && "keepboth".equals(overwriteMode)) {
+                            name=branchKeepBothName(destinationFolder,name);
+                            destinationVirtualPath=destinationFolder+name;
+                            destinationFileExists=false;
+                        }
+                        if (!destinationFileExists || "overwrite".equals(overwriteMode)) {
+                            sk.iway.iwcm.branch.BranchFiles.put(destinationVirtualPath, java.nio.file.Path.of(outputFile.getAbsolutePath()), request, uploadType);
+                            destinationFileExists=false;
+                        } else destinationVirtualPath="";
+                    }
+
                     //output = "{\"name\":\""+name+"\",\"key\":\""+random+"\"}";
                     try
                     {
-                        if (Tools.isNotEmpty(destinationVirtualPath))
+                        if (!branch && Tools.isNotEmpty(destinationVirtualPath))
                         {
                             UploadService uploadService = new UploadService(destinationVirtualPath, request);
                             uploadService.process();
@@ -308,6 +351,10 @@ public class AdminUploadServlet extends HttpServlet
                     }
                     if (outputFile != null) {
                         temporary.put(random, new PathHolder(name, outputFile.getAbsolutePath(), Tools.getNow()));
+                        if (branch) {
+                            var context=sk.iway.iwcm.branch.BranchContexts.current();
+                            branchUploads.put(random,new UploadContext(context.branchId(),user.getUserId(),context.domainName()));
+                        }
 
                         if (saveIntoArchive && writeDirectlyToDestination) {
                             Prop prop = Prop.getInstance(request);
@@ -316,7 +363,7 @@ public class AdminUploadServlet extends HttpServlet
                         }
                     }
                 }
-                catch (IOException ioe)
+                catch (IOException | RuntimeException ioe)
                 {
                     Logger.error(AdminUploadServlet.class, ioe);
                     output.put("success", false);
@@ -368,6 +415,8 @@ public class AdminUploadServlet extends HttpServlet
      */
     public static String moveAndReplaceFile(String fileKey, String destinationFolder, String fileNameParam) throws IOException
     {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch() || branchUploads.containsKey(fileKey))
+            throw new IllegalStateException("Use the branch upload service");
         String fileName = fileNameParam;
         if (Tools.isNotEmpty(fileKey) && temporary.containsKey(fileKey))
         {
@@ -404,6 +453,7 @@ public class AdminUploadServlet extends HttpServlet
      * @return {@code true} when the temporary file existed and was deleted
      */
     public static boolean deleteTempFile(String fileKey) {
+        branchUploads.remove(fileKey);
         PathHolder pathHolder = temporary.remove(fileKey);
         if (pathHolder != null) {
             IwcmFile file = new IwcmFile(pathHolder.getTempPath());

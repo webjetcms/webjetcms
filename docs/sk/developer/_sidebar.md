@@ -84,6 +84,7 @@
     - Web stránky
       - [Frontend](/developer/apps/webpages/README.md)
       - [Backend API](/developer/apps/webpages/api.md)
+      - [Publikačné balíky v komponentoch](/developer/apps/webpages/publishing-packages.md)
       - [Page Builder](/developer/apps/webpages/pagebuilder.md)
     - [Zrkadlenie štruktúry](/developer/apps/docmirroring.md)
     - [Zoznam používateľov](/developer/apps/users/README.md)

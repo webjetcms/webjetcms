@@ -75,6 +75,10 @@ public class EditorFacade {
 	 * @return
 	 */
 	public DocDetails save(DocDetails entity) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            forceReload=true;
+            return new sk.iway.iwcm.branch.BranchEditor(request).saveDocument(entity,editorService);
+        }
 
 		if (entity.getSortPriority() == -1 && entity.getEditorFields() != null && entity.getEditorFields().getGroupDetails() != null) {
 			//if sort priority is 0/empty calculate new one
@@ -213,6 +217,7 @@ public class EditorFacade {
 	 * @return
 	 */
     public DocDetails getDocForEditor(int docId, int historyId, int groupId) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return new sk.iway.iwcm.branch.BranchEditor(request).loadDocument(docId,historyId,groupId,editorService);
 
         GroupsDB groupsDB = GroupsDB.getInstance();
 		if (groupId < 1 && docId > 0) {
@@ -280,6 +285,7 @@ public class EditorFacade {
      * @return the editor version, or {@code null} if it no longer exists
      */
     public DocDetails getExistingDocForEditor(int docId, int historyId) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return getDocForEditor(docId,historyId,0);
         return editorService.prepareDocForEditor(docId, historyId, ignoreMultigroupMapping);
     }
 
@@ -309,6 +315,7 @@ public class EditorFacade {
 	}
 
 	public boolean delete(DocDetails doc) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return new sk.iway.iwcm.branch.BranchEditor(request).deleteDocument(doc);
 		return editorService.deleteWebpage(doc, true);
 	}
 

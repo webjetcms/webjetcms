@@ -141,6 +141,10 @@ function adminUploadInit(options) {
 
         headers: {
             'X-CSRF-TOKEN': window.csrfToken,
+            ...(window.branchScreen?.enabled ? {
+                'X-WebJET-Branch': String(window.branchScreen.branchId),
+                'X-WebJET-Branch-Domain': String(window.branchScreen.domainId),
+            } : {}),
         },
 
         init: function () {

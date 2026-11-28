@@ -45,6 +45,7 @@ import sk.iway.iwcm.editor.approve.ApproveService;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.service.DeleteMirrorsService;
 import sk.iway.iwcm.editor.service.DeleteRequestContext;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -75,16 +76,18 @@ import sk.iway.iwcm.users.UsersDB;
 public class GroupsRestController extends DatatableRestControllerV2<GroupDetails, Long> {
 
     private final GroupSchedulerDtoRepository groupSchedulerDtoRepository;
-    private TranslationKeyRepository translationKeyRepository;
-    private EditorFacade editorFacade;
+    private final TranslationKeyRepository translationKeyRepository;
+    private final EditorFacade editorFacade;
+    private final EditorService editorService;
     private final ApproveService approveService;
     private final DeleteMirrorsService deleteMirrorsService;
 
-    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService) {
+    public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade, ApproveService approveService, DeleteMirrorsService deleteMirrorsService, EditorService editorService) {
         super(null);
         this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;
         this.translationKeyRepository = translationKeyRepository;
         this.editorFacade = editorFacade;
+        this.editorService = editorService;
         this.approveService = approveService;
         this.deleteMirrorsService = deleteMirrorsService;
     }
@@ -98,7 +101,18 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
      */
     @PostMapping("/deletion-preview")
     public DeleteMirrorsResult getDeletionPreview(@RequestParam("ids") List<Integer> ids) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return new DeleteMirrorsResult();
         return deleteMirrorsService.getGroupMirrors(ids, getUser());
+    }
+
+    @Override
+    public org.springframework.http.ResponseEntity<sk.iway.iwcm.system.datatable.DatatableResponse<GroupDetails>> handleEditor(
+            HttpServletRequest request, @org.springframework.web.bind.annotation.RequestBody sk.iway.iwcm.system.datatable.DatatableRequest<Long,GroupDetails> input) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()
+                && (!java.util.Set.of("create","edit","remove").contains(java.util.Objects.toString(input.getAction(),""))
+                    || input.getImportedColumns()!=null || input.getImportMode()!=null || input.getUpdateByColumn()!=null || input.isDeleteOldData()))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Imports and bulk operations are unavailable in a publishing branch");
+        return super.handleEditor(request,input);
     }
 
     @Override
@@ -197,6 +211,8 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
         GroupDetails group = null;
         int schedulerId = Tools.getIntValue(getRequest().getParameter("schedulerId"), -1);
 
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch() && schedulerId>0)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Folder history is read-only in a publishing branch");
         // Create new group
         if (id == -1) {
             // Get groupID from new group is made (it's parentGroupId)
@@ -222,6 +238,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 group = groupsDB.getGroup((int) id);
             }
         }
+        if (group==null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND);
         GroupEditorField gef = new GroupEditorField();
         group = gef.fromGroupDetails(group);
 
@@ -229,6 +246,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             throwError("admin.editor_dir.dontHavePermsForThisDir");
         }
 
+        sk.iway.iwcm.branch.BranchEditor.attachHash(group);
         return group;
     }
 
@@ -254,6 +272,10 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public GroupDetails editItem(GroupDetails entity, long id) { //NOSONAR
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            setForceReload(true);
+            return new sk.iway.iwcm.branch.BranchEditor(getRequest()).saveGroup(entity, editorService);
+        }
         entity.getEditorFields().toGroupDetails(entity);
         GroupsDB groupsDB = GroupsDB.getInstance();
         Identity user = getUser();
@@ -808,6 +830,10 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) {
+            setForceReload(true);
+            return new sk.iway.iwcm.branch.BranchEditor(getRequest()).deleteGroup(entity);
+        }
         if (getUser().isDisabledItem("deleteDir")) {
             throwError("admin.delete.deleteDirDisabled.error");
             return false;
@@ -981,6 +1007,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             rootParentGroupDetails.setGroupName("/");
             gef.setParentGroupDetails(rootParentGroupDetails);
         }
+        sk.iway.iwcm.branch.BranchEditor.attachHash(group);
         return group;
     }
 

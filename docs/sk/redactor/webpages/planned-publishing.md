@@ -70,3 +70,15 @@ Plánované médiá vrátane pôvodných chránených odkazov zostávajú zachov
 Rovnako sa dá zopakovať inicializácia: pokiaľ príznak ešte nie je nastavený, prípadné neúplné plánované kópie sa najprv odstránia a živé médiá sa skopírujú znova. Pri zmene plánu sa pôvodné naplánovanie zruší až po uložení novej verzie do histórie. Chyba publikovania sa zaznamená do logu spolu s ID histórie.
 
 Pred produkčným použitím vykonajte akceptačný test na pripravovanej WebJET stránke Apple vrátane produkčnej proxy/CDN a oprávnení obmedzeného redaktora.
+
+## Spoločný termín publikačného balíka (POC)
+
+Ak správca sprístupnil experimentálne pracovné verzie, v detaile balíka kliknite na **Skontrolovať zmeny** a vyriešte zobrazené problémy. Potom zvoľte **Naplánovať publikovanie** a zadajte termín v uvedenom časovom pásme. Naplánovaný balík je uzavretý pre úpravy. **Zmeniť termín** presunie celý balík jednou operáciou; **Zrušiť plánovanie** ho vráti do prípravy a zachová pracovné zmeny.
+
+Pred spustením WebJET opäť overí aktuálne práva používateľa, konflikty, súbory a individuálne plány. Používateľ môže byť odhlásený. Pri probléme pred prvým zápisom detail ukáže stav **Vyžaduje zásah** a konkrétny dôvod. Cez **Obnoviť prípravu** možno balík opraviť a naplánovať znova. Chyba po čiastočnom publikovaní používa existujúci prehľad priebehu a pokračovanie; dokončené položky už môžu byť verejné.
+
+Lišta náhľadu ukazuje čas, ku ktorému sa vyhodnocujú Novinky. Pri budúcom termíne používa čas balíka, po jeho posune a obnovení náhľadu nový termín a po zrušení plánu aktuálny čas. Individuálne plány stránok sa tým nemenia.
+
+Plánovanie balíkov vyžaduje zapnuté `branchesEnabled`, overené úložisko a cron úlohu `sk.iway.iwcm.branch.BranchScheduler`; v nastavení cron úlohy treba nastaviť **Beží na uzle** (`CronTask.clusterNode`) na **`all-admin`**. Pri stabilných názvoch možno vybrať konkrétny admin uzol. V Kubernetes s dynamickými názvami použite `all-admin`; presný názov sa nevyžaduje. Typ uzla musí byť správne nastavený cez existujúce `clusterMyNodeType`, verejné uzly (`public`) úlohu nevykonajú ani pri chybnom nastavení cronu.
+
+Pri viacerých admin uzloch náhodné oneskorenie 0–10 sekúnd rozloží začiatky behov; pred dvojitým vykonaním balíka chráni jeho atómové prevzatie v databáze. Aktuálny POC je overený iba na jednej MariaDB 12.2/InnoDB inštancii.

@@ -21,6 +21,7 @@
 
         let filteredColumns = [];
         response.columns.forEach(function(column) {
+            if (window.branchScreen?.branchId > 0 && column.data.startsWith("formSettings.")) return;
             if(column.className != null && column.className.includes("not-formsimple")) {
                 //Skip column, do NIOT add to filteredColumns
                 return;
@@ -136,26 +137,13 @@
         });
     }
 
-    function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
-        // Prepare include FIRST !!
-        let include = "!INCLUDE(" + componentPath;
-        include += ", formName=" + params.formName;
+    function appGetComponentCode(componentPath, params) {
+        const pageParams = convertObjectToInludeParams({ ...params, editorData: params.editorData || [] },
+            key => !key.startsWith("formSettings."));
+        const include = `!INCLUDE(${componentPath}, ${pageParams})!`;
 
-        //calling just to get editor data
-        let defaultInclude = convertObjectToInludeParams(params);
-        let defaulParams = defaultInclude.split(",");
-        defaulParams.forEach(function(param) {
-            param = param.trim();
-            if(param.startsWith("editorData=")) {
-                if(param.split("=")[1] !== "") {
-                    include += ", " + param;
-                } else {
-                    include += ", editorData=JTVCJTVE";
-                }
-            }
-        });
-        include += ")!";
-
+        // Shared delivery settings are managed in the main version.
+        if (window.branchScreen?.branchId > 0) return include;
 
         let filteredParams = {};
         for (const [key, value] of Object.entries(params)) {

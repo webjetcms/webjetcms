@@ -49,6 +49,8 @@ import sk.iway.iwcm.system.WJResponseWrapper;
 
 public class EditorToolsForCore {
     public static String RENDER_DATA_SEPARATOR = "\n\n-----------------------------------------------------------------\n\n";
+    public static final String REQUIRE_FULLTEXT_RENDER = EditorToolsForCore.class.getName() + ".requireFulltextRender";
+    private static final String FULLTEXT_RENDER_FAILURE = EditorToolsForCore.class.getName() + ".fulltextRenderFailure";
 
     private EditorToolsForCore() {
 
@@ -372,6 +374,7 @@ public class EditorToolsForCore {
     public static String renderIncludes(String data, boolean addInternationalToEnglishSection, HttpServletRequest request)
     {
         if (request != null) request.setAttribute("renderingIncludes", true);
+        boolean required = request != null && Boolean.TRUE.equals(request.getAttribute(REQUIRE_FULLTEXT_RENDER));
         String renderedData = null;
         String includeFileName = "/components/_common/fulltext_preview.jsp";
         StringBuilder htmlCode = null;
@@ -432,6 +435,9 @@ public class EditorToolsForCore {
                     dispatcher = request.getRequestDispatcher(includeFileName);
                 }
                 dispatcher.include(renderRequest, respWrapper);
+                if (required && response.getStatus() >= 400) {
+                    throw new IllegalStateException("Full-text preview returned HTTP " + response.getStatus());
+                }
 
                 if (Tools.isEmpty(respWrapper.getRedirectURL()))
                 {
@@ -453,7 +459,7 @@ public class EditorToolsForCore {
                 c.removeObject(CACKE_KEY);
             }
 
-            if (htmlCode != null && htmlCode.length()>0)
+            if (htmlCode != null && (htmlCode.length()>0 || required))
             {
                 htmlCode = WriteTagToolsForCore.fixXhtml(htmlCode, request);
                 //prevent spam nerobime, pretoze nam to potom vo form mail dava chybu JS do emailu htmlCode = WriteTagToolsForCore.preventSpam(htmlCode, request);
@@ -472,6 +478,7 @@ public class EditorToolsForCore {
         }
         catch (Exception ex)
         {
+            recordFulltextRenderFailure(request, "Full-text preview failed", ex);
             sk.iway.iwcm.Logger.error(ex);
             Logger.debug(EditorToolsForCore.class, "renderIncludes ERROR, htmlData:"+htmlCode);
         }
@@ -491,10 +498,29 @@ public class EditorToolsForCore {
         }
 
         //nastala exception, radsej to do FT indexu nedame
-        if (renderedData!=null && renderedData.contains("iwcm.tags.WriteTag.writeText")) renderedData = null;
+        if (renderedData!=null && renderedData.contains("iwcm.tags.WriteTag.writeText")) {
+            recordFulltextRenderFailure(request, "Full-text preview contains a rendering error", null);
+            renderedData = null;
+        }
         if (request != null) request.removeAttribute("renderingIncludes");
+        if (required && request.getAttribute(FULLTEXT_RENDER_FAILURE) instanceof IllegalStateException failure) throw failure;
 
         return renderedData;
+    }
+
+    /**
+     * Reports component errors to a full-text caller that requires successful rendering.
+     *
+     * @param request the current rendering request
+     * @param message the failed rendering step
+     * @param cause the rendering error, when available
+     */
+    public static void recordFulltextRenderFailure(HttpServletRequest request, String message, Throwable cause)
+    {
+        if (request != null && Boolean.TRUE.equals(request.getAttribute(REQUIRE_FULLTEXT_RENDER))
+                && request.getAttribute(FULLTEXT_RENDER_FAILURE) == null) {
+            request.setAttribute(FULLTEXT_RENDER_FAILURE, new IllegalStateException(message, cause));
+        }
     }
 
     /**

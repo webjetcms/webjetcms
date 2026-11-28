@@ -480,7 +480,17 @@ block content
             return multipleSeparator;
         }
 
-        function convertObjectToInludeParams(params) {
+        /**
+         * Serializes component editor values into the parameter list of an `!INCLUDE` directive.
+         * The Simple Form editor uses the filter to omit shared `formSettings.*` values while
+         * preserving page-specific parameters such as `wrapperTitle`.
+         *
+         * @param {Object<string, unknown>} params - Editor values keyed by field name.
+         * @param {function(string): boolean} [includeField] - Receives a candidate field name.
+         *   Return `false` to skip the field. By default only the built-in exclusions apply.
+         * @returns {string} Comma-separated `key=value` pairs.
+         */
+        function convertObjectToInludeParams(params, includeField = () => true) {
             let result = [];
             for (let column of componentColumns) {
 
@@ -488,7 +498,7 @@ block content
                 let value = params[key];
 
                 //skip id or static text
-                if ("id"===key || "dt-format-static-text"===column.renderFormat) continue;
+                if ("id"===key || "dt-format-static-text"===column.renderFormat || !includeField(key)) continue;
                 if ("dt-format-datatable" === column.renderFormat) {
                     //console.log("isLocalJson=", isLocalJson, "value=", value, "typeof=", typeof value);
                     if (isLocalJson(column)===true) {

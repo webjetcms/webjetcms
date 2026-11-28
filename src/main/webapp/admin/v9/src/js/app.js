@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import './branches';
 //console.log("Setting jQuery object to window in app.js");
 //setnute v DT index.js window.jQuery = $;
 //setnute v DT index.js window.$ = $;

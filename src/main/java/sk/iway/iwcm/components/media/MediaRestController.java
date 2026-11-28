@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.Objects;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -11,7 +14,9 @@ import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -21,6 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchMedia;
+import sk.iway.iwcm.branch.BranchMediaEditor;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -67,6 +75,8 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
      */
     @Override
     public Page<Media> getAllItems(Pageable pageable) {
+
+        if (BranchContexts.current().isBranch()) return branchList(getParamsMap(getRequest()),pageable);
 
         int domainId = CloudToolsForCore.getDomainId();
 
@@ -123,6 +133,12 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
     //when create/edit Media, call method toMedia from MediaEditorFiled
     @Override
     public void beforeSave(Media entity) {
+
+        if (BranchContexts.current().isBranch()) {
+            if (isPlanned() || isImporting() || isDuplicate() || Tools.isNotEmpty(getUpdateByColumn())) throw new IllegalArgumentException("Only individual media CRUD is available in a publishing branch");
+            new BranchMediaEditor(getRequest()).owner(branchOwner(entity),true);
+            return;
+        }
 
         int docId;
         String tableName;
@@ -201,6 +217,22 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
     @Override
     public Media getOneItem(long id) {
 
+        if (BranchContexts.current().isBranch()) {
+            BranchMediaEditor editor=new BranchMediaEditor(getRequest());
+            Media entity;
+            if(id>0) entity=editor.load(Math.toIntExact(id),Tools.getIntValue(getRequest().getParameter("docId"),-1));
+            else {
+                entity=new Media();entity.setGroups(new ArrayList<>());entity.setMediaFkTableName(DOCUMENTS_TABLE_NAME);
+                entity.setMediaLink("");entity.setMediaThumbLink("");entity.setMediaTitleSk("");
+                int owner=Tools.getIntValue(getRequest().getParameter("docId"),-1);
+                if(!isCallerFromAllMedia()) editor.owner(owner,false);
+                entity.setMediaFkId(owner>0?owner:null);
+                entity.setMediaSortOrder(owner>0?BranchMedia.list(owner,null).stream().mapToInt(Media::getMediaSortOrder).max().orElse(0)+10:10);
+                MediaEditorFields fields=new MediaEditorFields();fields.setBranchHash("new");entity.setEditorFields(fields);
+            }
+            return processFromEntity(entity,ProcessItemAction.GETONE,1);
+        }
+
         Media entity = super.getOneItem(id);
 
         //set empty Media entity (without setting, creating dialog will not show but don't throw any error)
@@ -246,6 +278,10 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
     public int getMediaFkId() {
         //get docId
         int docId = Tools.getIntValue(getRequest().getParameter("docId"), -1);
+        if (BranchContexts.current().isBranch()) {
+            new BranchMediaEditor(getRequest()).owner(docId,false);
+            return docId;
+        }
         if (docId > 0) {
             int mutigroupDocId = MultigroupMappingDB.getMasterDocId(docId);
             if (mutigroupDocId > 0) docId = mutigroupDocId;
@@ -265,6 +301,11 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
      */
     public String getTableName() {
         int docId = Tools.getIntValue(getRequest().getParameter("docId"), -1);
+
+        if(BranchContexts.current().isBranch()) {
+            if(docId<1&&!isCallerFromAllMedia()) throw new IllegalArgumentException("Save the page in this branch before adding media");
+            return DOCUMENTS_TABLE_NAME;
+        }
 
         if (isPlanned()) {
             if (docId < 1 || !PlannedAccess.enabled()) throw new IllegalArgumentException("Planned page context is required");
@@ -286,6 +327,10 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, Media> target, Identity user, Errors errors, Long id, Media entity) {
+        if(BranchContexts.current().isBranch() && (!List.of("create","edit","remove").contains(target.getAction())||Tools.isNotEmpty(target.getUpdateByColumn())||Tools.isNotEmpty(target.getImportMode())||target.getImportedColumns()!=null)) {
+            errors.reject("branch.media.unsupported","Only individual media CRUD is available in a publishing branch");
+            return;
+        }
         boolean valid = true;
         if (isCallerFromAllMedia()) {
             if(entity.getEditorFields() == null) valid = false;
@@ -337,6 +382,10 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
     @Override
     public boolean checkItemPerms(Media entity, Long id) {
+        if(BranchContexts.current().isBranch()) {
+            if(id!=null&&id>0) new BranchMediaEditor(getRequest()).load(Math.toIntExact(id),Tools.getIntValue(getRequest().getParameter("docId"),-1));
+            return true;
+        }
         if (id != null && id > 0) {
             Media stored = mediaRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
             if (stored == null) return false;
@@ -352,8 +401,15 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
     @Override
     public boolean beforeDelete(Media entity) {
+        if(BranchContexts.current().isBranch()) return true;
         if (isPlanned()) PlannedChangesService.getInstance().requirePlannedMedia(getMediaFkId());
         return true;
+    }
+
+    @Override
+    public void beforeDuplicate(Media entity) {
+        if(BranchContexts.current().isBranch()) throw new IllegalArgumentException("Media duplication is unavailable in a publishing branch");
+        super.beforeDuplicate(entity);
     }
 
     @Override
@@ -363,6 +419,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
         //Prepare instance of editor fields
         MediaEditorFields mef = new MediaEditorFields();
+        if(entity.getEditorFields()!=null) mef.setBranchHash(entity.getEditorFields().getBranchHash());
 
         //Set "volitelne polia"
         if(rowCount == 1)
@@ -374,6 +431,99 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         //Set prepared editor fields
         entity.setEditorFields(mef);
         return entity;
+    }
+
+    @Override
+    public Media insertItem(Media entity) {
+        if(!BranchContexts.current().isBranch()) return super.insertItem(entity);
+        return processFromEntity(new BranchMediaEditor(getRequest()).save(entity,branchOwner(entity),"new"),ProcessItemAction.CREATE,1);
+    }
+
+    @Override
+    public Media editItem(Media entity,long id) {
+        if(!BranchContexts.current().isBranch()) return super.editItem(entity,id);
+        String hash=entity.getEditorFields()==null?null:entity.getEditorFields().getBranchHash();
+        int owner=branchOwner(entity);
+        Media stored=new BranchMediaEditor(getRequest()).load(Math.toIntExact(id),owner);
+        copyEntityIntoOriginal(entity,stored);
+        return processFromEntity(new BranchMediaEditor(getRequest()).save(stored,owner,hash),ProcessItemAction.EDIT,1);
+    }
+
+    @Override
+    public boolean deleteItem(Media entity,long id) {
+        if(!BranchContexts.current().isBranch()) return super.deleteItem(entity,id);
+        return new BranchMediaEditor(getRequest()).delete(Math.toIntExact(id),Tools.getIntValue(getRequest().getParameter("docId"),-1),entity.getEditorFields()==null?null:entity.getEditorFields().getBranchHash());
+    }
+
+    private int branchOwner(Media entity) {
+        if(isCallerFromAllMedia()) {
+            if(getUser().isDisabledItem("editor_edit_media_all")) throw new IllegalArgumentException("Access is denied");
+            if(entity.getEditorFields()==null||entity.getEditorFields().getDocDetails()==null) throw new IllegalArgumentException("A media owner is required");
+            return entity.getEditorFields().getDocDetails().getDocId();
+        }
+        return Tools.getIntValue(getRequest().getParameter("docId"),-1);
+    }
+
+    @Override
+    public Page<Media> searchItem(Map<String,String> params,Pageable pageable,Media search) {
+        if(BranchContexts.current().isBranch()) return branchList(params,pageable);
+        return super.searchItem(params,pageable,search);
+    }
+
+    private Page<Media> branchList(Map<String,String> params,Pageable pageable) {
+        BranchMediaEditor editor=new BranchMediaEditor(getRequest());
+        int owner=Tools.getIntValue(getRequest().getParameter("docId"),-1);
+        int folder=-1;
+        if(getRequest().getParameter("docId")!=null) folder=editor.owner(owner,false).getGroupId();
+        else if(getUser().isDisabledItem("editor_edit_media_all")) throw new IllegalArgumentException("Access is denied");
+        List<Media> records=new ArrayList<>(BranchMedia.list(owner,null));
+        records.removeIf(media->!Integer.valueOf(CloudToolsForCore.getDomainId()).equals(media.getDomainId()));
+        for(var entry:params.entrySet()) {
+            String value=entry.getValue();
+            if(!entry.getKey().startsWith("search")||Tools.isEmpty(value))continue;
+            String property=getCleanKey(entry.getKey());
+            if("editorFields.groups".equals(property)) {
+                int category=Tools.getIntValue(getCleanValue(value),-1);
+                if(category>0) records.removeIf(media->media.getGroups().stream().noneMatch(group->group.getMediaGroupId()==category));
+            } else if("editorFields.docDetails".equals(property)) {
+                records.removeIf(media->{DocDetails doc=editor.owner(media.getMediaFkId(),false);return !matches(doc.getFullPath(),value);});
+            } else {
+                if(!List.of("id","mediaId","mediaTitleSk","mediaSortOrder","mediaLink","mediaThumbLink","fieldA","fieldB","fieldC","fieldD","fieldE","fieldF").contains(property)) throw new IllegalArgumentException("Unsupported media filter: "+property);
+                records.removeIf(media->!matches(new BeanWrapperImpl(media).getPropertyValue(property),value));
+            }
+        }
+        Comparator<Media> order=null;
+        if(pageable!=null) for(var item:pageable.getSort()) {
+            String property=item.getProperty();
+            if(!List.of("id","mediaId","mediaTitleSk","mediaSortOrder","mediaLink","mediaThumbLink","fieldA","fieldB","fieldC","fieldD","fieldE","fieldF").contains(property)) throw new IllegalArgumentException("Unsupported media sorting: "+property);
+            Comparator<Media> next=(first,second)->compare(new BeanWrapperImpl(first).getPropertyValue(property),new BeanWrapperImpl(second).getPropertyValue(property));
+            if(item.isDescending())next=next.reversed();
+            order=order==null?next:order.thenComparing(next);
+        }
+        if(order!=null) records.sort(order.thenComparing(Media::getMediaId));
+        int total=records.size();
+        if(pageable!=null&&pageable.isPaged()&&getRequest().getParameter("size")!=null) {
+            int start=(int)Math.min(total,pageable.getOffset());
+            records=new ArrayList<>(records.subList(start,Math.min(total,start+pageable.getPageSize())));
+        }
+        DatatablePageImpl<Media> result=new DatatablePageImpl<>(pageable==null||pageable.isUnpaged()?new PageImpl<>(records):new PageImpl<>(records,pageable,total));
+        result.addOptions("editorFields.groups",BranchMedia.categories(folder),"mediaGroupName","mediaGroupId",false);
+        processFromEntity(result,ProcessItemAction.GETALL);
+        return result;
+    }
+
+    private static int compare(Object first,Object second) {
+        if(first instanceof Number a&&second instanceof Number b) return Double.compare(a.doubleValue(),b.doubleValue());
+        return Objects.toString(first,"").compareToIgnoreCase(Objects.toString(second,""));
+    }
+
+    private static boolean matches(Object actual,String pattern) {
+        String value=Objects.toString(actual,"").toLowerCase(Locale.ROOT),query=getCleanValue(pattern).toLowerCase(Locale.ROOT);
+        if("null".equals(pattern))return actual==null;
+        if(pattern.startsWith("^")&&pattern.endsWith("$"))return value.equals(query);
+        if(pattern.startsWith("^"))return value.startsWith(query);
+        if(pattern.endsWith("$"))return value.endsWith(query);
+        return value.contains(query);
     }
 
 }

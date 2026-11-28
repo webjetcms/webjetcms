@@ -1,0 +1,1390 @@
+package sk.iway.iwcm.branch;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import java.nio.file.*;
+import java.sql.*;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*;
+import org.apache.catalina.startup.Tomcat;
+import org.apache.jasper.servlet.JasperInitializer;
+import org.apache.jasper.servlet.JspServlet;
+import org.apache.lucene.analysis.KeywordAnalyzer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.Version;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.web.server.ResponseStatusException;
+import sk.iway.iwcm.*;
+import sk.iway.iwcm.components.perex_groups.*;
+import sk.iway.iwcm.components.news.NewsQuery;
+import sk.iway.iwcm.components.news.criteria.DatabaseCriteria;
+import sk.iway.iwcm.doc.*;
+import sk.iway.iwcm.editor.util.EditorUtils;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.fulltext.FulltextSearch;
+import sk.iway.iwcm.system.fulltext.indexed.Documents;
+import sk.iway.iwcm.system.spring.components.SpringContext;
+import sk.iway.iwcm.users.UsersDB;
+
+/** Real database manual publication, stale-input checks and checkpoint recovery on isolated P06 data. */
+@EnabledIf("databaseEnabled")
+class BranchMergeTest extends BranchJpaTest {
+    static boolean databaseEnabled() {return "true".equals(System.getenv("WEBJET_P06_DB")) || "true".equals(System.getenv("WEBJET_P07_DB")) || "true".equals(System.getenv("WEBJET_P08_DB"));}
+    static final String DOMAIN="iwcm.interway.sk";
+    final BranchMergeService service=new BranchMergeService();
+    final BranchStore store=new BranchStore();
+    final Map<String,String> original=new LinkedHashMap<>();
+    Fixture f;
+    Identity user;
+    @Autowired BranchFileRepository files;
+    @Autowired jakarta.persistence.EntityManagerFactory entityManagerFactory;
+
+    /** The writer probe must roll back real inserts and reject a different JPA schema or a read-only transaction. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleVerifiesBothWritersInTheWebjetSchema() throws Exception {
+        BranchReadiness.verifyActivation();
+        try (var jdbc = DBPool.getConnection(); var jpa = DBPool.getInstance().getDataSource("iwcm").getConnection();
+                var direct = jpa.createStatement(); var pooled = jdbc.createStatement()) {
+            String schema = jpa.getSchema();
+            try {
+                direct.execute("ALTER SESSION SET CURRENT_SCHEMA=SYSTEM");
+                assertThrows(SQLException.class, () -> BranchReadiness.verifyJpaConnection(jdbc, jpa));
+            } finally { direct.execute("ALTER SESSION SET CURRENT_SCHEMA=" + schema); }
+            jdbc.setAutoCommit(false);
+            try {
+                pooled.execute("SET TRANSACTION READ ONLY");
+                assertThrows(SQLException.class, () -> BranchReadiness.verifyWritePrivileges(jdbc));
+            } finally { jdbc.rollback(); }
+        }
+    }
+
+    /** Compare and return a JSON_TABLE CLOB beyond the VARCHAR2 limit before sorting and paging the result. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleFiltersFullUnicodeHtmlBeforePaging() throws Exception {
+        String html = "<p>" + "Žltý kôň 🐴 漢字 ".repeat(7000) + "</p>";
+        for (int page : f.pages.subList(0, 2)) {
+            try (var c = DBPool.getConnection(); var s = c.prepareStatement("UPDATE branch_documents SET data=? WHERE doc_id=? AND branch_id=?")) {
+                s.setClob(1, new java.io.StringReader(html));
+                s.setInt(2, page);
+                s.setLong(3, f.branch);
+                assertEquals(1, s.executeUpdate());
+            }
+        }
+        var request = new MockHttpServletRequest(Constants.getServletContext());
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+        try (var scope = BranchContexts.open(request, admin()); var c = DBPool.getConnection()) {
+            var source = BranchSql.documentSource("d", List.of("doc_id", "data"));
+            try (var s = c.prepareStatement("SELECT d.data FROM " + source.sql() + " WHERE d.doc_id=?")) {
+                s.setInt(source.bind(s, 1), f.pages.get(0));
+                try (var rows = s.executeQuery()) { assertTrue(rows.next()); assertEquals(html, rows.getString(1)); }
+            }
+            var options = new sk.iway.iwcm.editor.rest.GetAllItemsDocOptions(request);
+            options.setGroupId(f.section);
+            options.setPageable(org.springframework.data.domain.PageRequest.of(1, 1, org.springframework.data.domain.Sort.by("id")));
+            for (String filter : List.of("^" + html + "$", "🐴 漢字")) {
+                request.setParameter("searchData", filter);
+                var result = BranchDocumentQuery.list(options);
+                assertEquals(2, result.getTotalElements());
+                assertEquals(f.pages.get(1).intValue(), result.getContent().get(0).getDocId());
+            }
+            request.setParameter("searchData", "^" + html + "!$");
+            assertEquals(0, BranchDocumentQuery.list(options).getTotalElements());
+        }
+    }
+
+    /** A foreign root stays out of the Oracle hierarchy and a cycle introduced by a WORK move is reported. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleScopesFolderTreeAndRejectsCycles() throws Exception {
+        int foreign;
+        try (var c = DBPool.getConnection(); var s = c.prepareStatement(
+                "INSERT INTO groups(group_name,domain_name,parent_group_id) VALUES ('test foreign root','tree.example',0)",
+                new String[]{"GROUP_ID"})) {
+            s.executeUpdate();
+            try (var ids = s.getGeneratedKeys()) { assertTrue(ids.next()); foreign = ids.getInt(1); }
+        }
+        try {
+            try (var scope = BranchContexts.open(null, admin())) {
+                assertNull(BranchView.current().group(foreign));
+                assertNotNull(BranchView.current().group(f.section));
+            }
+            sql("UPDATE branch_groups SET parent_group_id=? WHERE group_id=? AND branch_id=?", f.section, f.destination, f.branch);
+            try (var scope = BranchContexts.open(null, admin())) {
+                assertTrue(assertThrows(IllegalStateException.class, BranchView::current).getMessage().contains("Cycle"));
+            }
+        } finally { sql("DELETE FROM groups WHERE group_id=?", foreign); }
+    }
+
+    /** Each mapped WORK entity must receive the same key that Oracle persisted through its insert trigger. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleReturnsGeneratedJpaWorkIds() {
+        var document = new BranchDocumentEntity();
+        document.setDocId(Integer.MAX_VALUE);
+        var group = new BranchGroupEntity();
+        group.setGroupId(Integer.MAX_VALUE);
+        var media = new BranchMediaEntity();
+        media.setMediaId(Integer.MAX_VALUE);
+        var file = new BranchFileEntity();
+        file.setEntryKind("DIRECTORY");
+        file.setLogicalPath("/files/jpa-id-test");
+        file.setPathKey(BranchSnapshot.absent().hash());
+        try (var manager = entityManagerFactory.createEntityManager()) {
+            manager.getTransaction().begin();
+            try {
+                for (BranchRow row : List.of(document, group, media, file)) {
+                    row.setBranchId(f.branch);
+                    row.setOperation("UPSERT");
+                    row.setBaseExists(false);
+                    row.setBaseHash(BranchSnapshot.absent().hash());
+                    row.setUpdatedBy(user.getUserId());
+                    row.setUpdatedAt(Timestamp.from(Instant.now()));
+                    row.setApplyState("PENDING");
+                    manager.persist(row);
+                    manager.flush();
+                    manager.clear();
+                    assertNotNull(row.getRowId());
+                    assertEquals(f.branch, manager.find(row.getClass(), row.getRowId()).getBranchId());
+                }
+            } finally { manager.getTransaction().rollback(); }
+        }
+    }
+
+    /** The publisher holds the LIVE page and the latest eligible history until its transaction ends. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_ORACLE19_DB",matches="true")
+    void oracleLocksLatestHistoryAlongsideLivePage() throws Exception {
+        int page = f.pages.get(0);
+        var row = live(BranchType.DOCUMENT, page);
+        try (Connection publisher = DBPool.getConnection(); Connection editor = DBPool.getConnection();
+                Statement edit = editor.createStatement()) {
+            publisher.setAutoCommit(false);
+            editor.setAutoCommit(false);
+            BranchPublishRows.documentHistory(publisher, row, false);
+            BranchPublishRows.documentHistory(publisher, row, false);
+            publisher.commit();
+            sql("UPDATE documents_history SET actual=? WHERE doc_id=?", true, page);
+            long newest = count("SELECT MAX(history_id) FROM documents_history WHERE doc_id=" + page);
+            String pageLock = "SELECT doc_id FROM documents WHERE doc_id=" + page + " FOR UPDATE NOWAIT";
+            String historyLock = "SELECT history_id FROM documents_history WHERE history_id=" + newest + " FOR UPDATE NOWAIT";
+            try {
+                BranchPublishRows.lockLive(publisher, BranchType.DOCUMENT, row);
+                BranchPublishRows.updateDocumentHistorySearchText(publisher, page, BranchDocumentMapper.snapshot(row).hash(), "Oracle history lock");
+                for (String lock : List.of(pageLock, historyLock))
+                    assertEquals(54, assertThrows(SQLException.class, () -> edit.executeQuery(lock)).getErrorCode());
+                try (ResultSet older = edit.executeQuery("SELECT history_id FROM documents_history WHERE doc_id=" + page +
+                        " AND history_id<" + newest + " FOR UPDATE NOWAIT")) {
+                    assertTrue(older.next());
+                }
+                publisher.rollback();
+                try (ResultSet latest = edit.executeQuery(historyLock)) { assertTrue(latest.next()); }
+                try (ResultSet pageRow = edit.executeQuery(pageLock)) { assertTrue(pageRow.next()); }
+            } finally {
+                editor.rollback();
+                publisher.rollback();
+            }
+        }
+    }
+
+    /** Binary comparison reads the scoped JPA file identity and serves each actual version. */
+    @Test void binaryComparisonUsesJpaFileIdentityForBaseLiveAndWork() throws Exception {
+        var request=new MockHttpServletRequest(Constants.getServletContext());
+        request.getSession().setAttribute(Constants.USER_KEY,user);
+        request.getSession().setAttribute("preview.editorDomainName",DOMAIN);
+        var controller=new BranchMergeRestController(files,mock(BranchPublicationWorker.class));
+        for(String version:List.of("BASE","LIVE","WORK")) {
+            var response=new MockHttpServletResponse();
+            controller.file(f.branch,f.file,version,request,response);
+            assertEquals("WORK".equals(version)?"autotest P06 WORK attachment":"autotest P06 BASE attachment",response.getContentAsString());
+            assertEquals("private, no-store",response.getHeader("Cache-Control"));
+        }
+    }
+    @BeforeEach void setup()throws Exception {
+        try(Connection c=DBPool.getConnection()) {BranchTestDomains.requireIsolatedDatabase(c);}
+        for(String key:List.of("enableStaticFilesExternalDir","branchesEnabled","branchStorageRoot","multiDomainEnabled","fulltextExecuteApps","fulltextDataAscMethod","perexGroupUseJoin","editorDisableHistory","iwfs_useVersioning","clusterMyNodeType"))original.put(key,Constants.getString(key));
+        Constants.setBoolean("branchesEnabled",true);Constants.setBoolean("enableStaticFilesExternalDir",true);Constants.setString("branchStorageRoot",System.getenv().getOrDefault("WEBJET_P06_STORAGE","/tmp/webjet-p03-private"));Constants.setBoolean("multiDomainEnabled",true);Constants.setBoolean("fulltextExecuteApps",false);Constants.setString("fulltextDataAscMethod","");Constants.setBoolean("perexGroupUseJoin",true);
+        Files.createDirectories(BranchReadiness.storageRoot());sk.iway.iwcm.system.Modules.getInstance(null,true);user=new Identity(UsersDB.getUser("tester-p05"));
+        assertTrue(user.isAdmin(),"fresh admin");assertTrue(user.isAuthorized(),"fresh authorized");assertTrue(user.isEnabledItem("menuBranches"),"menuBranches enabled");
+        RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(DOMAIN);SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+        Constants.setString("clusterMyNodeType","admin");
+        String prefix="";
+        if("true".equals(System.getenv("WEBJET_P07_DB")))prefix="p07-";
+        if("true".equals(System.getenv("WEBJET_P08_DB")))prefix="p08-";
+        f=create(prefix+"test-"+UUID.randomUUID().toString().substring(0,8),true);
+    }
+    @AfterEach void cleanup()throws Exception {
+        if(f!=null)try(Connection c=DBPool.getConnection();Statement s=c.createStatement()) {
+            try(ResultSet histories=s.executeQuery("SELECT history_path,file_history_id FROM file_history WHERE file_url LIKE '"+f.file+"%'")) {
+                while(histories.next())Files.deleteIfExists(Path.of(Tools.getRealPath(histories.getString(1)+histories.getInt(2))));
+            }
+            s.executeUpdate("DELETE FROM file_history WHERE file_url LIKE '"+f.file+"%'");
+            String docs=String.join(",",f.pages.stream().map(String::valueOf).toList())+","+f.home;
+            for(String table:List.of("branch_documents","branch_groups","branch_media","branch_files"))s.executeUpdate("DELETE FROM "+table+" WHERE branch_id="+f.branch);
+            s.executeUpdate("DELETE FROM branches WHERE id="+f.branch);s.executeUpdate("DELETE FROM news_templates WHERE name='p06-autotest-"+f.url.substring("/p06-autotest-".length())+"'");
+            s.executeUpdate("DELETE FROM media_group_to_media WHERE media_id IN ("+f.media+","+f.newMedia+")");s.executeUpdate("DELETE FROM media WHERE media_id IN ("+f.media+","+f.newMedia+")");s.executeUpdate("DELETE FROM media_groups WHERE media_group_id="+f.category);s.executeUpdate("DELETE FROM perex_groups WHERE perex_group_id="+f.perex);
+            s.executeUpdate("DELETE FROM perex_group_doc WHERE doc_id IN ("+docs+")");s.executeUpdate("DELETE FROM documents_history WHERE doc_id IN ("+docs+")");s.executeUpdate("DELETE FROM documents WHERE doc_id IN ("+docs+")");
+            s.executeUpdate("DELETE FROM groups_scheduler WHERE group_id IN ("+f.root+","+f.section+","+f.destination+")");s.executeUpdate("DELETE FROM groups WHERE group_id IN ("+f.root+","+f.section+","+f.destination+")");
+        }
+        original.forEach(Constants::setString);SetCharacterEncodingFilter.setCurrentRequestBean(null);GroupsDB.getInstance(true);DocDB.getInstance(true);sk.iway.iwcm.system.Modules.getInstance(null,true);
+    }
+
+    /** Polling reads committed checkpoints and current permissions without fetching comparison content. */
+    @Test void pollsCheckpointsWithoutReadingPageBodies() throws Exception {
+        var plan = ready();
+        service.claim(f.branch,DOMAIN,user,plan.revision(),plan.preparationHash(),false);
+        int page = f.pages.get(0);
+        user.setEditablePages(Integer.toString(f.home));
+        var cachedHome = DocDB.getInstance().getBasicDocDetails(f.home,false);
+        String navbar = cachedHome.getNavbar();
+        var pageQueries = captureQueries(() -> {
+            assertEquals(List.of(f.root),DocDB.getMyPages(user).stream().map(DocDetails::getGroupId).toList());
+            assertEquals(navbar,cachedHome.getNavbar());
+        });
+        assertTrue(pageQueries.isEmpty(),pageQueries.toString());
+        var queries = captureQueries(() -> {
+            var before = service.status(f.branch,DOMAIN,user);
+            assertEquals("MERGING",before.state());
+            assertEquals(plan.items().size(),before.items().size());
+            assertTrue(before.items().stream().allMatch(item -> "PENDING".equals(item.applyState())));
+            sql("UPDATE branch_documents SET apply_state=?,apply_phase=?,apply_error=? WHERE branch_id=? AND doc_id=?",
+                "ERROR", "DATA", "interrupted", f.branch, page);
+            var after = service.status(f.branch,DOMAIN,user);
+            var failed = after.items().stream().filter(item -> item.type().equals("DOCUMENT") && item.objectKey().equals(Integer.toString(page))).findFirst().orElseThrow();
+            assertEquals("contentWrittenError",failed.status());
+            assertEquals("interrupted",failed.error());
+        });
+        assertTrue(queries.stream().anyMatch(query -> query.contains("apply_state") && query.contains("branch_documents")));
+        assertEquals(4,queries.stream().filter(query -> query.startsWith("SELECT doc_id,group_id,password_protected FROM documents")).count(),
+            "Each poll needs one query for the 20 staged pages and one for the unchanged media owner");
+        assertFalse(queries.stream().anyMatch(query -> query.matches("(?is).*\\b(data|data_asc|base_snapshot|resolved_snapshot)\\b.*")
+            || query.matches("(?is).*SELECT\\s+\\*.*")),queries.toString());
+
+        user.setEditableGroups(Integer.toString(f.section));
+        assertTrue(GroupsDB.getInstance().getUserRootDomainNames(user).contains(DOMAIN));
+        assertEquals(403,assertThrows(ResponseStatusException.class,() -> service.status(f.branch,DOMAIN,user)).getStatusCode().value());
+    }
+
+    /** Empty and file-only comparisons must not read LIVE content tables, even to construct the preview. */
+    @Test void skipsContentQueriesForFileOnlyAndEmptyPackages() throws Exception {
+        for (var type : List.of(BranchType.DOCUMENT,BranchType.GROUP,BranchType.MEDIA))
+            sql("DELETE FROM "+type.workTable()+" WHERE branch_id="+f.branch);
+        for (boolean empty : List.of(false,true)) {
+            if (empty) sql("DELETE FROM branch_files WHERE branch_id="+f.branch);
+            var queries = captureQueries(() -> {
+                assertEquals(!empty,detail().ready());
+                assertEquals(empty,service.status(f.branch,DOMAIN,user).items().isEmpty());
+            });
+            assertFalse(queries.stream().anyMatch(query -> query.matches("(?is).*\\b(FROM|JOIN)\\s+`?(documents|groups|media)`?\\b.*")),queries.toString());
+        }
+    }
+
+    @FunctionalInterface
+    private interface SqlAction { void run() throws Exception; }
+
+    /** Records the JDBC statements actually executed by the service against the isolated database. */
+    private static List<String> captureQueries(SqlAction action) throws Exception {
+        List<String> queries = new ArrayList<>();
+        try (var pool = mockStatic(DBPool.class,CALLS_REAL_METHODS)) {
+            pool.when(DBPool::getConnection).thenAnswer(call -> {
+                Connection real = (Connection)call.callRealMethod();
+                Connection recording = mock(Connection.class,org.mockito.AdditionalAnswers.delegatesTo(real));
+                doAnswer(q -> {
+                    String sql = q.getArgument(0);
+                    queries.add(sql);
+                    return real.prepareStatement(sql);
+                }).when(recording).prepareStatement(anyString());
+                doAnswer(q -> {
+                    Statement statement = real.createStatement();
+                    Statement recorded = mock(Statement.class,org.mockito.AdditionalAnswers.delegatesTo(statement));
+                    doAnswer(invocation -> {
+                        String sql = invocation.getArgument(0);
+                        queries.add(sql);
+                        return statement.executeQuery(sql);
+                    }).when(recorded).executeQuery(anyString());
+                    return recorded;
+                }).when(recording).createStatement();
+                return recording;
+            });
+            action.run();
+        }
+        return queries;
+    }
+
+    /** The fixed cron consumes a durable request without creating per-package cron tasks. */
+    @Test void publicationCronProcessesRequestWithoutCreatingTasks()throws Exception {
+        long cronTasks=count("SELECT COUNT(*) FROM crontab");
+        var report=ready();service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        assertEquals(user.getUserId(),branchService().publication(f.branch).getPublishRequestedBy());
+        assertEquals(cronTasks,count("SELECT COUNT(*) FROM crontab"));
+        var queued=detail();
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,queued.revision(),queued.preparationHash(),true));
+        Map<String,String> live=productionInputs();
+        Constants.setBoolean("branchesEnabled",false);
+        try {BranchScheduler.main(new String[0]);assertEquals(live,productionInputs());}
+        finally {Constants.setBoolean("branchesEnabled",true);}
+        assertEquals(user.getUserId(),branchService().publication(f.branch).getPublishRequestedBy());
+        BranchScheduler.main(new String[0]);
+        assertEquals("MERGED",detail().state(),detail().lastError());
+        assertNull(branchService().find(f.branch,DOMAIN).orElseThrow().getPublishRequestedBy());
+        assertEquals(cronTasks,count("SELECT COUNT(*) FROM crontab"));
+        long histories=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0));
+        Map<String,String> published=productionInputs();
+        BranchScheduler.main(new String[0]);
+        assertEquals(published,productionInputs());
+        assertEquals(histories,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0)));
+    }
+
+    /** A stale candidate cannot consume the request for a newer package revision. */
+    @Test void publicationCronRejectsStaleRequestClaim()throws Exception {
+        var report=ready();var queued=service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        Map<String,String> live=productionInputs();
+        sql("UPDATE branches SET revision=revision+1 WHERE id="+f.branch);
+        new BranchPublishService().runRequested(f.branch,user.getUserId(),queued.revision());
+        assertEquals(live,productionInputs());assertEquals("MERGING",detail().state());
+        assertEquals(user.getUserId(),branchService().publication(f.branch).getPublishRequestedBy());
+        assertFalse(BranchPublishService.isRunning(f.branch));
+    }
+
+    /** A process interrupted after taking its request needs an explicit reviewed resume. */
+    @Test void publicationCronDoesNotResumeInterruptedPublication()throws Exception {
+        var report=ready();service.claim(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        Map<String,String> live=productionInputs();
+        BranchScheduler.main(new String[0]);
+        assertEquals("MERGING",detail().state());assertEquals(live,productionInputs());
+        var retry=ready();service.enqueue(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);
+        BranchScheduler.main(new String[0]);
+        assertEquals("MERGED",detail().state(),detail().lastError());
+    }
+
+    /** A failed publication is not retried by later periodic ticks. */
+    @Test void publicationCronDoesNotRetryFailedPublication()throws Exception {
+        var report=ready();service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false);
+        sql("UPDATE documents SET title='autotest changed after publication request' WHERE doc_id="+f.pages.get(0));
+        Map<String,String> live=productionInputs();
+        BranchScheduler.main(new String[0]);
+        var failed=detail();assertEquals("MERGE_FAILED",failed.state());assertEquals(live,productionInputs());
+        assertNull(branchService().find(f.branch,DOMAIN).orElseThrow().getPublishRequestedBy());
+        BranchScheduler.main(new String[0]);
+        assertEquals(failed.revision(),detail().revision());assertEquals(live,productionInputs());
+    }
+
+    @Test void twentyPagePackagePublishesStableIdsAuthorDatesMediaAndMovedFolder()throws Exception {
+        var report=ready();assertEquals(20,report.items().stream().filter(i->i.type().equals("DOCUMENT")).count());
+        assertEquals(Set.of("DOCUMENT","GROUP","MEDIA","FILE"),report.items().stream().map(BranchMergeService.Item::type).collect(java.util.stream.Collectors.toSet()));
+        String oldOwner=live(BranchType.DOCUMENT,f.home).toString();
+        merge(report,new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());
+        assertTrue(detail().items().stream().allMatch(item->"DONE".equals(item.applyState())),"Every supported type must finish through the shared publication progress");
+        assertEquals(oldOwner,live(BranchType.DOCUMENT,f.home).toString(),"Media-only update must not SAVE its older owner");
+        assertEquals(f.destination,((Number)live(BranchType.GROUP,f.section).get("parent_group_id")).intValue());
+        for(int id:f.pages) {var row=live(BranchType.DOCUMENT,id);assertEquals(1,((Number)row.get("author_id")).intValue());assertEquals(Instant.parse("2020-01-01T12:00:00Z").toEpochMilli(),((java.util.Date)row.get("date_created")).getTime());assertTrue(row.get("title").toString().contains("WORK"));}
+        assertEquals(20,count("SELECT COUNT(*) FROM perex_group_doc WHERE perex_group_id="+f.perex));
+        assertEquals("autotest P06 WORK media",live(BranchType.MEDIA,f.media).get("media_title_sk"));
+        assertEquals(f.pages.get(19).intValue(),((Number)live(BranchType.MEDIA,f.newMedia).get("media_fk_id")).intValue());assertEquals(List.of(f.category),BranchFields.normalizedIds(live(BranchType.MEDIA,f.newMedia).get("group_ids_snapshot")));
+        assertEquals("autotest P06 WORK attachment",Files.readString(Path.of(Tools.getRealPath(f.file))));
+        long histories=count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")");
+        new BranchPublishService().run(f.branch,user.getUserId());assertEquals(histories,count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")"));
+    }
+
+    /** Attribute filtering uses the effective source twice, including for the count and second page. */
+    @Test void attributeNewsPagesTwentyWorkDocuments() throws Exception {
+        int attribute;
+        try (Connection connection = DBPool.getConnection(); PreparedStatement insert = connection.prepareStatement(
+                "INSERT INTO doc_atr_def(atr_name,atr_type) VALUES (?,0)", new String[]{"atr_id"})) {
+            insert.setString(1, "autotest P06 " + f.branch);
+            insert.executeUpdate();
+            try (ResultSet keys = insert.getGeneratedKeys()) { assertTrue(keys.next()); attribute = keys.getInt(1); }
+        }
+        try (var scope = BranchContexts.open(null, new BranchContext(f.branch, DOMAIN, 1, BranchContext.Mode.PREVIEW))) {
+            assertEquals(20, BranchView.current().documentRows().size());
+            for (int id : f.pages.subList(0, 4))
+                sql("INSERT INTO doc_atr(doc_id,atr_id,value_string) VALUES (?,?,'red')", id, attribute);
+            var news = new NewsQuery().addCriteria(DatabaseCriteria.Atribute.equal(attribute, "red"))
+                .addOrder(NewsQuery.OrderEnum.ID, NewsQuery.SortEnum.ASC).setLoadData(true).setLimit(2).setOffset(2);
+            assertEquals(4, news.getNewsCount());
+            var page = news.getNewsList();
+            assertEquals(f.pages.subList(2, 4), page.stream().map(DocDetails::getDocId).toList());
+            assertEquals("autotest P06 WORK 2", page.get(0).getTitle());
+        } finally {
+            sql("DELETE FROM doc_atr WHERE atr_id=?", attribute);
+            sql("DELETE FROM doc_atr_def WHERE atr_id=?", attribute);
+        }
+    }
+
+    /** Text, nullable flags and folder navigation modes survive comparison, preview and publication. */
+    @Test void typedPreviewMatchesPublishedSnapshot() throws Exception {
+        int id = f.pages.get(0);
+        String html = "<p>" + "Žltý kôň 🐴 漢字 ".repeat(7000) + "</p>";
+        Map<String,Object> page;
+        Map<String,Object> group;
+        try (Connection connection = DBPool.getConnection()) {
+            page = BranchStore.readWork(connection, f.branch, BranchType.DOCUMENT, id).orElseThrow();
+            group = BranchStore.readWork(connection, f.branch, BranchType.GROUP, f.section).orElseThrow();
+        }
+        String pageHash = BranchDocumentMapper.snapshot(page).hash();
+        page.put("data", html);
+        page.put("show_in_navbar", true);
+        page.put("logged_show_in_sitemap", null);
+        page.put("event_date", new java.util.Date(Constants.DB_TYPE == Constants.DB_ORACLE ? 1700000000987L : 1700000000000L));
+        store.put(admin(), BranchType.DOCUMENT, id, page, pageHash, false);
+        try (var manager = entityManagerFactory.createEntityManager()) {
+            var entity = manager.find(BranchDocumentEntity.class, ((Number)page.get("row_id")).longValue());
+            assertEquals(html, entity.getData());
+            assertEquals(Boolean.TRUE, entity.getShowInNavbar());
+            assertNull(entity.getLoggedShowInSitemap());
+            assertEquals(page.get("base_hash"), BranchSnapshot.fromJson(entity.getBaseSnapshot()).hash());
+        }
+        String groupHash = BranchGroupMapper.snapshot(group).hash();
+        group.put("show_in_navbar", 2);
+        group.put("logged_show_in_sitemap", 3);
+        store.put(admin(), BranchType.GROUP, f.section, group, groupHash, false);
+        try (var scope = BranchContexts.open(null, new BranchContext(f.branch, DOMAIN, 1, BranchContext.Mode.PREVIEW))) {
+            DocDetails preview = BranchView.current().document(id, false);
+            assertEquals(html, preview.getData());
+            assertEquals(Boolean.TRUE, preview.getShowInNavbar());
+            assertNull(preview.getLoggedShowInSitemap());
+            assertEquals(2, BranchView.current().group(f.section).getShowInNavbar());
+            assertEquals(3, BranchView.current().group(f.section).getLoggedShowInSitemap());
+        }
+        merge(ready(), new BranchPublishService());
+        assertEquals("MERGED", detail().state(), detail().lastError());
+        assertEquals(BranchDocumentMapper.snapshot(page).hash(), snapshot(BranchType.DOCUMENT, id).hash());
+        assertEquals(BranchGroupMapper.snapshot(group).hash(), snapshot(BranchType.GROUP, f.section).hash());
+    }
+
+    /** A regular LIVE insert can run while a package holds a native ID on another connection. */
+    @Test void concurrentLiveInsertsPreserveReservedIds() throws Exception {
+        try (Connection work = DBPool.getConnection(); Connection live = DBPool.getConnection()) {
+            work.setAutoCommit(false);
+            live.setAutoCommit(false);
+            try {
+                for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP)) {
+                    int reserved = BranchStore.reserveNative(work, type);
+                    String insert = type == BranchType.DOCUMENT
+                        ? "INSERT INTO documents(title,data,data_asc,navbar,date_created,author_id,temp_id,searchable,available,cacheable,sort_priority) VALUES ('p06','','','',CURRENT_TIMESTAMP,1,1,?,?,?,0)"
+                        : "INSERT INTO groups(group_name,internal,parent_group_id,sort_priority) VALUES ('p06',?,0,0)";
+                    if (Constants.DB_TYPE == Constants.DB_ORACLE && type == BranchType.DOCUMENT)
+                        insert = insert.replace("'p06','','',''", "'p06',EMPTY_CLOB(),EMPTY_CLOB(),'p06'");
+                    try (PreparedStatement statement = live.prepareStatement(insert, new String[]{type.idColumn()})) {
+                        statement.setQueryTimeout(5);
+                        statement.setBoolean(1,false);
+                        if (type == BranchType.DOCUMENT) {
+                            statement.setBoolean(2,false);
+                            statement.setBoolean(3,false);
+                        }
+                        statement.executeUpdate();
+                        try (ResultSet keys = statement.getGeneratedKeys()) {
+                            assertTrue(keys.next());
+                            assertTrue(keys.getInt(1) > reserved);
+                        }
+                    }
+                    assertTrue(BranchStore.readLive(live, type, reserved).isEmpty());
+                    if (type == BranchType.DOCUMENT) BranchRowWriter.insertDocumentWithId(work, BranchContext.live(DOMAIN, 1),
+                        doc(reserved, f.root, "p06", "/p06-identity.html"));
+                    else {
+                        var group = new LinkedHashMap<>(BranchGroupMapper.initialValues(reserved, DOMAIN));
+                        group.put("group_name", "autotest reserved folder");
+                        BranchRowWriter.insertGroupWithId(work, BranchContext.live(DOMAIN, 1), group);
+                    }
+                    assertTrue(BranchStore.readLive(work, type, reserved).isPresent());
+                }
+            } finally {
+                live.rollback();
+                work.rollback();
+            }
+        }
+    }
+
+    private static long searchCount(int docId, String word) throws SQLException {
+        boolean postgres = Constants.DB_TYPE == Constants.DB_PGSQL;
+        String predicate = postgres ? "to_tsvector(data_asc) @@ to_tsquery(?)"
+            : "MATCH(title, data_asc) AGAINST (? IN BOOLEAN MODE)";
+        try (Connection connection = DBPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM documents WHERE doc_id=? AND " + predicate)) {
+            statement.setInt(1, docId);
+            statement.setString(2, postgres ? word : "+" + word);
+            try (ResultSet rows = statement.executeQuery()) {
+                rows.next();
+                return rows.getLong(1);
+            }
+        }
+    }
+
+    /** Changing page metadata in a package preserves the editor's SQL search text and perex setting. */
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void metadataOnlyPublicationUsesEditorSearchText(boolean includePerex) throws Exception {
+        original.put("fulltextIncludePerex", Constants.getString("fulltextIncludePerex"));
+        Constants.setBoolean("fulltextIncludePerex", includePerex);
+        int id = f.home;
+        var page = live(BranchType.DOCUMENT, id);
+        page.put("html_data", "elektromobilita");
+        DocDetails editorPage = new DocDetails();
+        editorPage.setDocId(id);
+        editorPage.setTitle((String) page.get("title"));
+        editorPage.setData((String) page.get("data"));
+        editorPage.setHtmlData((String) page.get("html_data"));
+        String editorSearchText = EditorUtils.getDataAsc(editorPage.getData(), editorPage, false, null);
+        page.put("data_asc", editorSearchText);
+        try (Connection connection = DBPool.getConnection()) {
+            BranchPublishRows.update(connection, BranchType.DOCUMENT, page);
+        }
+        assertEquals(includePerex ? 1 : 0, searchCount(id, "elektromobilita"));
+
+        String originalHash = BranchStore.snapshot(BranchType.DOCUMENT, page).hash();
+        page.put("show_in_menu", false);
+        store.put(admin(), BranchType.DOCUMENT, id, page, originalHash, false);
+        merge(ready(), new BranchPublishService());
+
+        assertEquals("MERGED", detail().state(), detail().lastError());
+        var published = live(BranchType.DOCUMENT, id);
+        assertEquals(false, published.get("show_in_menu"));
+        assertEquals("elektromobilita", published.get("html_data"));
+        assertEquals(editorSearchText, published.get("data_asc"));
+        assertEquals(editorSearchText, query("SELECT data_asc FROM documents_history WHERE actual=true AND doc_id=" + id));
+        assertEquals(includePerex ? 1 : 0, searchCount(id, "elektromobilita"));
+    }
+
+    /** SQL search indexes real JSP application output after retrying a failed render. */
+    @Test void publicationRetriesApplicationRenderingAfterContentCommit(@TempDir Path testRoot) throws Exception {
+        Constants.setBoolean("fulltextExecuteApps", true);
+        int id = f.pages.get(0);
+        String application = "/components/publishing-search-test.jsp";
+        Map<String, Object> page;
+        try (Connection connection = DBPool.getConnection()) {
+            page = BranchStore.readWork(connection, f.branch, BranchType.DOCUMENT, id).orElseThrow();
+        }
+        String workHash = BranchStore.snapshot(BranchType.DOCUMENT, page).hash();
+        page.put("data", "!INCLUDE(" + application + ")!");
+        store.put(admin(), BranchType.DOCUMENT, id, page, workHash, false);
+        Path publishedFile = Path.of(Tools.getRealPath(f.file));
+        Path webroot = Files.createDirectory(testRoot.resolve("webapp"));
+        for (String file : List.of("WEB-INF/iwcm.tld", "components/_common/fulltext_preview.jsp")) {
+            Path target = webroot.resolve(file);
+            Files.createDirectories(target.getParent());
+            Files.copy(Path.of("src/main/webapp").resolve(file), target);
+        }
+        Files.writeString(webroot.resolve(application.substring(1)), """
+                <% if (application.getAttribute("failSearchRender") != null) throw new IllegalStateException("Application unavailable");
+                   if (sk.iway.iwcm.users.UsersDB.getCurrentUser(session) != null) throw new IllegalStateException("Expected an anonymous request"); %>
+                <p>Javorovapobocka</p>
+                """);
+        var originalServletContext = Constants.getServletContext();
+        var originalSpring = SpringContext.getApplicationContext();
+        Tomcat server = new Tomcat();
+        server.setBaseDir(testRoot.resolve("tomcat").toString());
+        var context = server.addContext("", webroot.toString());
+        ((org.apache.tomcat.util.scan.StandardJarScanner) context.getJarScanner()).setScanManifest(false);
+        context.setParentClassLoader(getClass().getClassLoader());
+        context.addServletContainerInitializer(new JasperInitializer(), null);
+        Tomcat.addServlet(context, "jsp", new JspServlet()).setLoadOnStartup(1);
+        context.addServletMappingDecoded("*.jsp", "jsp");
+        var servletContext = context.getServletContext();
+        servletContext.setAttribute("org.apache.catalina.jsp_classpath", System.getProperty("java.class.path"));
+        try (var spring = new GenericApplicationContext();
+             var files = mockStatic(FileTools.class, CALLS_REAL_METHODS)) {
+            spring.refresh();
+            new SpringContext().setApplicationContext(spring);
+            server.start();
+            var publishingContext = spy(originalServletContext);
+            String preview = "/components/_common/fulltext_preview.jsp";
+            doReturn(servletContext.getRequestDispatcher(preview)).when(publishingContext).getRequestDispatcher(preview);
+            Constants.setServletContext(publishingContext);
+            files.when(() -> FileTools.exists(application)).thenReturn(true);
+            servletContext.setAttribute("failSearchRender", true);
+            assertEquals(0, searchCount(id, "javorovapobocka"));
+            merge(ready(), new BranchPublishService());
+            var failed = detail();
+            assertEquals("MERGE_FAILED", failed.state(), failed.lastError());
+            var failedPage = item(failed, BranchType.DOCUMENT, Integer.toString(id));
+            assertEquals("ERROR", failedPage.applyState(), failed.lastError());
+            assertEquals("DATA", failedPage.applyPhase());
+            assertEquals("Cannot render application: " + application, failedPage.error());
+            assertEquals("!INCLUDE(" + application + ")!", live(BranchType.DOCUMENT, id).get("data"));
+            assertEquals("autotest P06 WORK attachment", Files.readString(publishedFile));
+            assertEquals(0, searchCount(id, "javorovapobocka"));
+            String history = "SELECT COUNT(*) FROM documents_history WHERE doc_id=" + id;
+            assertEquals(1, count(history));
+
+            servletContext.removeAttribute("failSearchRender");
+            var retry = ready();
+            service.claim(f.branch, DOMAIN, user, retry.revision(), retry.preparationHash(), true);
+            new BranchPublishService().run(f.branch, user.getUserId());
+
+            assertEquals("MERGED", detail().state(), detail().lastError());
+            assertEquals(1, searchCount(id, "javorovapobocka"));
+            assertEquals(1, count(history));
+            assertEquals(live(BranchType.DOCUMENT, id).get("data_asc"),
+                    query("SELECT data_asc FROM documents_history WHERE actual=true AND doc_id=" + id));
+        } finally {
+            Constants.setServletContext(originalServletContext);
+            new SpringContext().setApplicationContext(originalSpring);
+            try { server.stop(); }
+            finally { server.destroy(); }
+        }
+    }
+
+    /** A media-only edit publishes the row and refreshes the shared readers once. */
+    @Test void mediaOnlyPublicationRefreshesReadersOnce() throws Exception {
+        for (BranchType type : List.of(BranchType.DOCUMENT, BranchType.GROUP, BranchType.FILE))
+            sql("DELETE FROM " + type.workTable() + " WHERE branch_id=" + f.branch);
+        sql("DELETE FROM branch_media WHERE branch_id=" + f.branch + " AND media_id=" + f.newMedia);
+        Cache readers = mock(Cache.class, org.mockito.AdditionalAnswers.delegatesTo(Cache.getInstance()));
+        try (var cache = mockStatic(Cache.class, CALLS_REAL_METHODS); var index = mockStatic(Documents.class)) {
+            cache.when(Cache::getInstance).thenReturn(readers);
+            merge(ready(), new BranchPublishService());
+            assertEquals("MERGED", detail().state(), detail().lastError());
+            verify(readers, times(1)).clearAll();
+            index.verifyNoInteractions();
+        }
+        assertEquals("autotest P06 WORK media", live(BranchType.MEDIA, f.media).get("media_title_sk"));
+    }
+
+    /** Index completed pages once, using the final LIVE URLs, and resume at the failed page. */
+    @Test void indexFailureResumesWithFinalUrlsWithoutRepeatingCompletedPages() throws Exception {
+        int first = f.pages.get(0), failedPage = f.pages.get(1);
+        String previousUrl = DocDB.getInstance().getDocLink(first);
+        original.put("luceneIncrementalDocumentIndexing", Constants.getString("luceneIncrementalDocumentIndexing"));
+        Constants.setBoolean("luceneIncrementalDocumentIndexing", true);
+        try (var directory = new RAMDirectory(); var analyzer = new KeywordAnalyzer();
+             var search = mockStatic(FulltextSearch.class);
+             var index = mockStatic(Documents.class, CALLS_REAL_METHODS);
+             var effects = mockStatic(BranchPublishEffects.class, CALLS_REAL_METHODS)) {
+            try (var writer = new IndexWriter(directory, new IndexWriterConfig(Version.LUCENE_31, analyzer))) { writer.commit(); }
+            search.when(() -> FulltextSearch.getIndexDirectory(anyString()))
+                .thenReturn(directory).thenThrow(new java.io.IOException("test index unavailable")).thenReturn(directory);
+            merge(ready(), new BranchPublishService());
+            var failed = detail();
+            assertEquals("MERGE_FAILED", failed.state());
+            assertEquals("DONE", item(failed, BranchType.DOCUMENT, Integer.toString(first)).applyState());
+            assertEquals("ERROR", item(failed, BranchType.DOCUMENT, Integer.toString(failedPage)).applyState());
+            long history = count("SELECT COUNT(*) FROM documents_history WHERE doc_id=" + failedPage);
+            var retry = ready();
+            service.claim(f.branch, DOMAIN, user, retry.revision(), retry.preparationHash(), true);
+            new BranchPublishService().run(f.branch, user.getUserId());
+            assertEquals("MERGED", detail().state(), detail().lastError());
+            assertEquals(history, count("SELECT COUNT(*) FROM documents_history WHERE doc_id=" + failedPage));
+            for (int id : f.pages) index.verify(() -> Documents.updateSingleDocumentChecked(id), times(id == failedPage ? 2 : 1));
+            effects.verify(() -> BranchPublishEffects.invalidateFile(f.file), times(1));
+            try (var reader = IndexReader.open(directory, true)) {
+                Map<String, String> urls = new HashMap<>();
+                for (int i = 0; i < reader.maxDoc(); i++) if (!reader.isDeleted(i)) {
+                    var doc = reader.document(i);
+                    urls.put(doc.get("doc_id"), doc.get("url"));
+                }
+                DocDB livePages = DocDB.getInstance();
+                assertNotEquals(previousUrl, livePages.getDocLink(first));
+                assertEquals(f.pages.size(), reader.numDocs());
+                for (int id : f.pages) assertEquals(livePages.getDocLink(id), urls.get(Integer.toString(id)));
+            }
+        }
+    }
+
+    @Test void failureMidwayResumesWithoutRepeatingWritesAndRejectsNewerProduction()throws Exception {
+        int first = f.pages.get(0);
+        try (var connection = DBPool.getConnection()) {
+            var work = BranchStore.readWork(connection, f.branch, BranchType.DOCUMENT, first).orElseThrow();
+            String hash = BranchDocumentMapper.snapshot(work).hash();
+            work.put("data", "");
+            store.put(admin(), BranchType.DOCUMENT, first, work, hash, false);
+        }
+        AtomicInteger completed=new AtomicInteger();
+        merge(ready(),new BranchPublishService(key->{if(key.startsWith("DOCUMENT:")&&completed.incrementAndGet()==10)throw new IllegalStateException("autotest P06 injected halfway");}));
+        assertEquals("MERGE_FAILED",detail().state());assertTrue(detail().items().stream().anyMatch(i->i.applyState().equals("DONE")));
+        assertEquals(1,count("SELECT COUNT(*) FROM documents WHERE doc_id="+first+" AND data IS NOT NULL AND data_asc IS NOT NULL"));
+        String firstHash=snapshot(BranchType.DOCUMENT,first).hash();long history=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first);
+        sql("UPDATE documents SET title='autotest P06 newer production' WHERE doc_id="+first);
+        var stale=detail();assertFalse(stale.ready());assertThrows(ResponseStatusException.class,()->service.claim(f.branch,DOMAIN,user,stale.revision(),stale.preparationHash(),true));
+        assertEquals("autotest P06 newer production",live(BranchType.DOCUMENT,first).get("title"));
+        sql("UPDATE documents SET title='autotest P06 WORK 0' WHERE doc_id="+first);assertEquals(firstHash,snapshot(BranchType.DOCUMENT,first).hash());
+        var retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);new BranchPublishService().run(f.branch,user.getUserId());
+        assertEquals("MERGED",detail().state(),detail().lastError());assertEquals(history,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first));
+    }
+
+    @Test void standardAuditSeesCommittedDataAndIsNotRepeatedOnResume()throws Exception {
+        List<String> audited=new ArrayList<>();
+        try(var audit=mockStatic(Adminlog.class)) {
+            audit.when(()->Adminlog.add(anyInt(),anyInt(),anyString(),anyInt(),anyInt(),any(Timestamp.class))).thenAnswer(call->{
+                assertEquals(user.getUserId(),((Number)call.getArgument(1)).intValue());
+                assertEquals(f.branch,((Number)call.getArgument(4)).longValue());
+                String description=call.getArgument(2);
+                String identity=description.substring(description.indexOf(": ")+2);
+                int separator=identity.indexOf(':');
+                BranchType type=BranchType.valueOf(identity.substring(0,separator));
+                String key=identity.substring(separator+1);
+                try(Connection connection=DBPool.getConnection()) {
+                    var committed=BranchStore.readWork(connection,f.branch,type,key).orElseThrow();
+                    assertEquals("APPLYING",committed.get("apply_state"));
+                    assertNotNull(committed.get("applied_hash"),"Audit must follow the committed data checkpoint");
+                    assertEquals(committed.get("applied_hash"),BranchPublishRows.liveSnapshot(connection,type,committed).hash());
+                }
+                audited.add(identity);
+                return null;
+            });
+            AtomicInteger completed=new AtomicInteger();
+            merge(ready(),new BranchPublishService(key->{if(key.startsWith("DOCUMENT:")&&completed.incrementAndGet()==10)throw new IllegalStateException("autotest audit after commit");}));
+            assertEquals("MERGE_FAILED",detail().state());
+            String first="DOCUMENT:"+f.pages.get(0);
+            assertEquals(1,Collections.frequency(audited,first));
+            var retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);
+            new BranchPublishService().run(f.branch,user.getUserId());
+            assertEquals("MERGED",detail().state(),detail().lastError());
+            assertEquals(25,audited.size());assertEquals(25,new HashSet<>(audited).size());
+        }
+    }
+
+    @Test void failedCheckpointRollsBackContentWithoutCallingAudit()throws Exception {
+        int first=f.pages.get(0);String before=snapshot(BranchType.DOCUMENT,first).hash();
+        sql("ALTER TABLE branch_documents ADD CONSTRAINT p06_autotest_checkpoint_failure CHECK (branch_id<>"+f.branch+" OR doc_id<>"+first+" OR apply_phase<>'DATA')");
+        try(var audit=mockStatic(Adminlog.class)) {
+            merge(ready(),new BranchPublishService());
+            assertEquals("MERGE_FAILED",detail().state());
+            assertEquals(before,snapshot(BranchType.DOCUMENT,first).hash());
+            assertEquals(0,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first));
+            audit.verify(()->Adminlog.add(eq(Adminlog.TYPE_PAGE_UPDATE),eq(user.getUserId()),
+                eq("Publishing package #"+f.branch+": DOCUMENT:"+first),eq(first),eq((int)f.branch),any(Timestamp.class)),never());
+        } finally {sql("ALTER TABLE branch_documents DROP CONSTRAINT p06_autotest_checkpoint_failure");}
+    }
+
+    @Test void fileReplacementBeforeCheckpointIsRecognizedOnResume()throws Exception {
+        Constants.setBoolean("iwfs_useVersioning",true);
+        String originalBytes=Files.readString(Path.of(Tools.getRealPath(f.file)));
+        merge(ready(),new BranchPublishService(key->{if(key.startsWith("FILE_REPLACED:"))throw new IllegalStateException("autotest P06 file checkpoint crash");}));
+        assertEquals("MERGE_FAILED",detail().state());assertEquals("autotest P06 WORK attachment",Files.readString(Path.of(Tools.getRealPath(f.file))));
+        assertEquals(1,count("SELECT COUNT(*) FROM file_history WHERE file_url='"+f.file+"'"));
+        assertEquals(user.getUserId(),((Number)query("SELECT user_id FROM file_history WHERE file_url='"+f.file+"'")).intValue());
+        assertEquals(BranchDomains.id(DOMAIN),((Number)query("SELECT domain_id FROM file_history WHERE file_url='"+f.file+"'")).intValue());
+        assertEquals(originalBytes,Files.readString(Path.of(Tools.getRealPath(query("SELECT CONCAT(history_path,file_history_id) FROM file_history WHERE file_url='"+f.file+"'").toString()))));
+        long modified=Files.getLastModifiedTime(Path.of(Tools.getRealPath(f.file))).toMillis();
+        var retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);new BranchPublishService().run(f.branch,user.getUserId());
+        assertEquals("MERGED",detail().state(),detail().lastError());assertEquals(modified,Files.getLastModifiedTime(Path.of(Tools.getRealPath(f.file))).toMillis());
+        assertEquals(1,count("SELECT COUNT(*) FROM file_history WHERE file_url='"+f.file+"'"));
+    }
+
+    @Test void choiceImmediatelyChangesPreviewAndStaleChoiceRequiresRecomparison()throws Exception {
+        int id=f.pages.get(0);sql("UPDATE documents SET title='autotest P06 concurrent LIVE' WHERE doc_id="+id);
+        var report=detail();var item=item(report,BranchType.DOCUMENT,Integer.toString(id));assertTrue(item.conflict());
+        assertFalse(report.ready());
+        assertTrue(report.errors().isEmpty(), report.errors().toString());
+        report=service.resolve(f.branch,DOMAIN,user,report.revision(),BranchType.DOCUMENT,Integer.toString(id),BranchDecision.Source.LIVE,item.liveHash(),item.workHash());
+        try(var scope=BranchContexts.open(null,new BranchContext(f.branch,DOMAIN,1,BranchContext.Mode.PREVIEW))){assertEquals("autotest P06 concurrent LIVE",BranchView.current().document(id,false).getTitle());}
+        sql("UPDATE documents SET title='autotest P06 newer LIVE' WHERE doc_id="+id);
+        assertFalse(detail().ready());
+        try(var scope=BranchContexts.open(null,new BranchContext(f.branch,DOMAIN,1,BranchContext.Mode.PREVIEW))){assertThrows(BranchDecision.StaleChoiceException.class,BranchView::current);}
+        var stale=detail();var now=item(stale,BranchType.DOCUMENT,Integer.toString(id));assertThrows(ResponseStatusException.class,()->service.resolve(f.branch,DOMAIN,user,stale.revision(),BranchType.DOCUMENT,Integer.toString(id),BranchDecision.Source.WORK,item.liveHash(),item.workHash()));
+        assertTrue(service.resolve(f.branch,DOMAIN,user,stale.revision(),BranchType.DOCUMENT,Integer.toString(id),BranchDecision.Source.WORK,now.liveHash(),now.workHash()).ready());
+    }
+
+    @Test void preflightBlocksNewDescendantsUrlCollisionsApprovalAndOutsideFilePlan()throws Exception {
+        int added;
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);added=BranchStore.reserveNative(c,BranchType.DOCUMENT);var row=doc(added,f.section,"autotest new descendant","/p06-new-descendant-"+added+".html");BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),row);c.commit();}
+        assertFalse(detail().ready());sql("DELETE FROM documents WHERE doc_id="+added);
+        sql("UPDATE documents SET virtual_path='"+f.url+"/moved/page-0.html' WHERE doc_id="+f.home);
+        assertFalse(detail().ready());sql("UPDATE documents SET virtual_path='"+f.url+"/' WHERE doc_id="+f.home);
+        sql("INSERT INTO groups_approve(group_id,user_id,approve_mode) VALUES ("+f.root+",(SELECT user_id FROM users WHERE login='admin'),0)");
+        assertFalse(detail().ready());sql("DELETE FROM groups_approve WHERE group_id="+f.root);
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),doc(added,f.root,"autotest outside planned page","/p06-outside-"+added+".html"));c.commit();}
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);BranchPublishRows.groupHistory(c,live(BranchType.GROUP,f.section),user.getUserId());c.commit();}
+        sql("UPDATE groups_scheduler SET awaiting_approve=',1,' WHERE group_id="+f.section);assertFalse(detail().ready());sql("DELETE FROM groups_scheduler WHERE group_id="+f.section);
+        sql("UPDATE media_groups SET available_groups='2147483647' WHERE media_group_id="+f.category);assertFalse(detail().ready());sql("UPDATE media_groups SET available_groups='' WHERE media_group_id="+f.category);
+        Path staged=Path.of(Tools.getRealPath(PlannedAssetPaths.ROOT+added+f.file));Files.createDirectories(staged.getParent());Files.writeString(staged,"autotest outside pending plan");
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);BranchPublishRows.documentHistory(c,live(BranchType.DOCUMENT,added),false);c.commit();}
+        sql("UPDATE documents_history SET publicable=? WHERE doc_id=?", true, added);
+        var blocked=detail();assertFalse(blocked.ready());assertTrue(blocked.errors().stream().anyMatch(s->s.contains("individuálny plán")),blocked.errors().toString());
+        sql("UPDATE documents_history SET publicable=?,awaiting_approve=',1,' WHERE doc_id=?", false, added);assertFalse(detail().ready());
+        Files.deleteIfExists(staged);sql("DELETE FROM documents_history WHERE doc_id="+added);sql("DELETE FROM documents WHERE doc_id="+added);
+        assertTrue(detail().ready(),detail().errors().toString());
+    }
+
+    /** A confirmed page plan remains pending after the queued package publishes. */
+    @Test void canPublishAndKeepAnIndividuallyScheduledPageVersion() throws Exception {
+        int page=f.pages.get(0);
+        addPagePlan(page);
+        sql("UPDATE documents_history SET awaiting_approve=',1,' WHERE doc_id="+page);
+        var awaitingApproval=detail();
+        assertFalse(awaitingApproval.ready());
+        assertTrue(awaitingApproval.errors().stream().anyMatch(error -> error.contains("autotest P06 LIVE 0") && error.contains(Integer.toString(page))));
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,awaitingApproval.revision(),awaitingApproval.preparationHash(),false,true));
+        sql("UPDATE documents_history SET awaiting_approve=? WHERE doc_id="+page, "");
+
+        var report=ready();
+        assertEquals(1,report.pagePlanWarnings().size());
+        assertTrue(report.pagePlanWarnings().get(0).contains("autotest P06 LIVE 0"));
+        assertTrue(report.pagePlanWarnings().get(0).contains(Integer.toString(page)));
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false));
+        var queued=service.enqueue(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),false,true);
+        new BranchPublishService().runRequested(f.branch,user.getUserId(),queued.revision());
+
+        assertEquals("MERGED",detail().state(),detail().lastError());
+        assertEquals("autotest P06 WORK 0",live(BranchType.DOCUMENT,page).get("title"));
+        assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+page+" AND publicable="+DB.getBooleanSql(true)+" AND title='autotest P06 LIVE 0'"));
+    }
+
+    /** A page plan created after the package was scheduled needs a new confirmation. */
+    @Test void scheduledPublicationRechecksThePagePlansTheUserConfirmed() throws Exception {
+        addPagePlan(f.pages.get(0));
+        var report=ready();
+        long dueAt=System.currentTimeMillis()+120_000;
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),dueAt));
+        service.schedule(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),dueAt,true);
+        sql("UPDATE branches SET publish_at=? WHERE id="+f.branch, Timestamp.from(Instant.now().minusSeconds(60)));
+        addPagePlan(f.pages.get(1));
+        var changed=ready();
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,changed.revision(),changed.preparationHash()));
+        assertEquals("SCHEDULED",detail().state());
+
+        sql("UPDATE documents_history SET publicable=? WHERE doc_id=?", false, f.pages.get(1));
+        var reviewed=ready();
+        service.claimScheduled(f.branch,DOMAIN,user,reviewed.revision(),reviewed.preparationHash());
+        new BranchPublishService().run(f.branch,user.getUserId());
+        assertEquals("MERGED",detail().state(),detail().lastError());
+    }
+
+    private void addPagePlan(int docId) throws Exception {
+        try(Connection connection=DBPool.getConnection()) {
+            connection.setAutoCommit(false);
+            BranchPublishRows.documentHistory(connection,live(BranchType.DOCUMENT,docId),false);
+            connection.commit();
+        }
+        sql("UPDATE documents_history SET actual=?,publicable=?,publish_start=? WHERE doc_id="+docId, false, true, Timestamp.from(Instant.now().plusSeconds(86400)));
+    }
+
+    private int stagePageDeletion() throws Exception {
+        for (BranchType type : BranchType.values()) sql("DELETE FROM " + type.workTable() + " WHERE branch_id=" + f.branch);
+        int page = f.pages.get(2);
+        var row = live(BranchType.DOCUMENT, page);
+        store.put(admin(), BranchType.DOCUMENT, page, row, BranchStore.snapshot(BranchType.DOCUMENT, row).hash(), true);
+        return page;
+    }
+
+    /** Deletion checks include incoming references from pages and folders outside the package. */
+    @Test void rejectsIncomingReferencesFromUnchangedContent() throws Exception {
+        int page = stagePageDeletion();
+        ready();
+        sql("UPDATE documents SET footer_doc_id="+page+" WHERE doc_id="+f.home);
+        assertTrue(detail().errors().stream().anyMatch(error -> error.contains("Stránka "+f.home+" odkazuje")));
+        sql("UPDATE documents SET footer_doc_id=-1 WHERE doc_id="+f.home);
+        sql("UPDATE groups SET logon_page_doc_id="+page+" WHERE group_id="+f.root);
+        assertTrue(detail().errors().stream().anyMatch(error -> error.contains("Priečinok "+f.root+" odkazuje")));
+        sql("UPDATE groups SET logon_page_doc_id=-1 WHERE group_id="+f.root);
+        ready();
+    }
+
+    /** A publisher without deletePage can keep the LIVE page, but cannot publish its staged deletion. */
+    @Test void manualPublicationChecksTheResolvedPageDeletion() throws Exception {
+        int page = stagePageDeletion();
+        var report = ready();
+        user.addDisabledItem("deletePage");
+        assertFalse(detail().ready());
+        assertThrows(ResponseStatusException.class, () ->
+                service.enqueue(f.branch, DOMAIN, user, report.revision(), report.preparationHash(), false));
+        var deletion = item(report, BranchType.DOCUMENT, Integer.toString(page));
+        var kept = service.resolve(f.branch, DOMAIN, user, report.revision(), BranchType.DOCUMENT, deletion.objectKey(),
+                BranchDecision.Source.LIVE, deletion.liveHash(), deletion.workHash());
+        assertTrue(kept.ready(), kept.errors().toString());
+        assertFalse(item(kept, BranchType.DOCUMENT, deletion.objectKey()).writeRequired());
+    }
+
+    /** The fixture adds a page and folder and moves an existing folder. */
+    @ParameterizedTest
+    @ValueSource(strings = {"addPage", "addSubdir", "editDir"})
+    void publicationRequiresTheSameCreationAndEditRightsAsTheEditor(String permission) {
+        ready();
+        user.addDisabledItem(permission);
+        var report = detail();
+        assertFalse(report.ready());
+        String label = Prop.getInstance().getText("components.user.perms." + permission);
+        assertTrue(report.errors().stream().anyMatch(reason -> reason.contains(label)), report.errors().toString());
+    }
+
+    @Test void subtreeTrashKeepsNestingAndMandatorySnapshotsWhenHistoryDisabled()throws Exception {
+        Constants.setBoolean("editorDisableHistory",true);
+        // Replace this fixture's WORK edits with the normal branch editor's explicit subtree DELETE set.
+        for(String table:List.of("branch_documents","branch_groups","branch_media","branch_files"))sql("DELETE FROM "+table+" WHERE branch_id="+f.branch);
+        int nested;
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);nested=BranchStore.reserveNative(c,BranchType.GROUP);var g=new LinkedHashMap<>(BranchGroupMapper.initialValues(nested,DOMAIN));g.put("group_name","autotest nested");g.put("parent_group_id",f.section);BranchRowWriter.insertGroupWithId(c,BranchContext.live(DOMAIN,1),g);c.commit();}
+        int page=f.pages.get(0);sql("UPDATE documents SET group_id="+nested+" WHERE doc_id="+page);
+        BranchContext context=admin();
+        for(int group:List.of(f.section,nested)) {var row=live(BranchType.GROUP,group);store.put(context,BranchType.GROUP,group,row,BranchStore.snapshot(BranchType.GROUP,row).hash(),true);}
+        for(int id:f.pages.subList(0,18)) {var row=live(BranchType.DOCUMENT,id);store.put(context,BranchType.DOCUMENT,id,row,BranchStore.snapshot(BranchType.DOCUMENT,row).hash(),true);}
+        merge(ready(),new BranchPublishService(key->{if(key.startsWith("DOCUMENT:"))throw new IllegalStateException("autotest stop before root");}));
+        assertEquals("MERGE_FAILED",detail().state());assertEquals(f.root,live(BranchType.GROUP,f.section).get("parent_group_id"));
+        var retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);
+        new BranchPublishService(key->{if(key.startsWith("BEFORE_TRASH_ROOT:"))try {sql("UPDATE documents SET title='autotest concurrent before root' WHERE doc_id="+page);}catch(SQLException ex){throw new IllegalStateException(ex);}}).run(f.branch,user.getUserId());
+        assertEquals("MERGE_FAILED",detail().state());assertEquals(f.root,live(BranchType.GROUP,f.section).get("parent_group_id"));assertEquals("autotest concurrent before root",live(BranchType.DOCUMENT,page).get("title"));
+        sql("UPDATE documents SET title='autotest P06 LIVE 0' WHERE doc_id="+page);
+        retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);new BranchPublishService().run(f.branch,user.getUserId());
+        assertEquals("MERGED",detail().state(),detail().lastError());assertEquals(nested,live(BranchType.DOCUMENT,page).get("group_id"));assertEquals(f.section,live(BranchType.GROUP,nested).get("parent_group_id"));
+        assertTrue(count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+page+" AND actual=true AND available=true")>0);
+        assertEquals(f.root,((Number)query("SELECT parent_group_id FROM groups_scheduler WHERE group_id="+f.section+" AND when_to_publish IS NULL ORDER BY save_date DESC LIMIT 1")).intValue());
+        if("true".equals(System.getenv("WEBJET_P06_TRASH_FIXTURE"))) {
+            Files.writeString(Path.of("/tmp/webjet-p06-trash.properties"),"branchId="+f.branch+"\nroot="+f.root+"\nsection="+f.section+"\nnested="+nested+"\npage="+page+"\nurl="+f.url+"/\n");f=null;
+        } else sql("DELETE FROM groups WHERE group_id="+nested);
+    }
+
+    @Test void unchangedWorkKeepsNewLiveContentWithoutHistoryOrContentWrite()throws Exception {
+        int id=f.pages.get(0);sql("DELETE FROM branch_groups WHERE branch_id="+f.branch);
+        sql("UPDATE branch_documents SET title='autotest P06 LIVE 0',navbar='autotest P06 LIVE 0',virtual_path='"+f.url+"/section/page-0.html',perex_group='' WHERE branch_id="+f.branch+" AND doc_id="+id);
+        sql("UPDATE documents SET title='autotest P06 new LIVE preserved' WHERE doc_id="+id);
+        var report=ready();assertFalse(item(report,BranchType.DOCUMENT,Integer.toString(id)).writeRequired());
+        merge(report,new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());
+        assertEquals("autotest P06 new LIVE preserved",live(BranchType.DOCUMENT,id).get("title"));assertEquals(0,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+id));
+        assertEquals("NOOP",item(detail(),BranchType.DOCUMENT,Integer.toString(id)).applyPhase());
+    }
+
+    @Test void liveChoiceKeepsProductionContentAndRecomputesMovedTreeMetadata()throws Exception {
+        int id=f.pages.get(0);sql("UPDATE documents SET title='autotest P06 chosen LIVE' WHERE doc_id="+id);
+        var report=detail();var item=item(report,BranchType.DOCUMENT,Integer.toString(id));
+        var selected=service.resolve(f.branch,DOMAIN,user,report.revision(),BranchType.DOCUMENT,Integer.toString(id),BranchDecision.Source.LIVE,item.liveHash(),item.workHash());
+        assertTrue(selected.ready(),selected.errors().toString());assertTrue(item(selected,BranchType.DOCUMENT,Integer.toString(id)).writeRequired());
+        merge(selected,new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());
+        var live=live(BranchType.DOCUMENT,id);assertEquals("autotest P06 chosen LIVE",live.get("title"));assertEquals(List.of(),BranchFields.normalizedIds(live.get("perex_group")));
+        assertEquals(f.destination,((Number)live.get("root_group_l2")).intValue());assertEquals(f.section,((Number)live.get("root_group_l3")).intValue());
+        assertEquals(19,count("SELECT COUNT(*) FROM perex_group_doc WHERE perex_group_id="+f.perex));
+    }
+
+    @Test void fileConflictsCoverChangedNewAndDeletedPathsAsWholeItems()throws Exception {
+        Constants.setBoolean("iwfs_useVersioning",true);
+        String fresh=f.file+".new.txt",deleted=f.file+".delete.txt";
+        Path freshLive=Path.of(Tools.getRealPath(fresh)),deletedLive=Path.of(Tools.getRealPath(deleted));
+        Path incoming=Files.createTempFile("p06-file-conflict-",".txt");Files.writeString(incoming,"autotest new WORK bytes");
+        var created=store.putFile(admin(),fresh,"FILE",BranchSnapshot.absent(),BranchFiles.hash(incoming),Files.size(incoming),"text/plain",false);
+        Path work=BranchFiles.workPath(f.branch,((Number)created.get("row_id")).longValue());Files.createDirectories(work.getParent());Files.copy(incoming,work);
+        Files.writeString(freshLive,"autotest concurrent new LIVE");Files.writeString(deletedLive,"autotest DELETE BASE");
+        var removed=store.putFile(admin(),deleted,"FILE",BranchFiles.liveSnapshot(deleted),null,null,null,true);
+        Path removedBytes=BranchFiles.workPath(f.branch,((Number)removed.get("row_id")).longValue());Files.createDirectories(removedBytes.getParent());Files.copy(deletedLive,removedBytes.resolveSibling("base"));
+        Files.writeString(deletedLive,"autotest concurrent DELETE LIVE");Files.writeString(Path.of(Tools.getRealPath(f.file)),"autotest concurrent changed LIVE");
+        try {
+            for(String path:List.of(f.file,fresh,deleted)) {
+                var report=detail();var item=item(report,BranchType.FILE,path);assertTrue(item.conflict());
+                service.resolve(f.branch,DOMAIN,user,report.revision(),BranchType.FILE,path,path.equals(f.file)?BranchDecision.Source.LIVE:BranchDecision.Source.WORK,item.liveHash(),item.workHash());
+            }
+            try(var scope=BranchContexts.open(null,new BranchContext(f.branch,DOMAIN,user.getUserId(),BranchContext.Mode.PREVIEW))) {
+                assertEquals("autotest concurrent changed LIVE",Files.readString(BranchFiles.read(f.file)));assertEquals("autotest new WORK bytes",Files.readString(BranchFiles.read(fresh)));assertNull(BranchFiles.read(deleted));
+            }
+            merge(ready(),new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());
+            assertEquals("autotest concurrent changed LIVE",Files.readString(Path.of(Tools.getRealPath(f.file))));assertEquals("autotest new WORK bytes",Files.readString(freshLive));assertFalse(Files.exists(deletedLive));
+            assertEquals(0,count("SELECT COUNT(*) FROM file_history WHERE file_url='"+f.file+"'"));
+            assertEquals(1,count("SELECT COUNT(*) FROM file_history WHERE file_url='"+fresh+"'"));
+            assertEquals(1,count("SELECT COUNT(*) FROM file_history WHERE file_url='"+deleted+"' AND deleted=false"));
+            assertEquals("autotest concurrent DELETE LIVE",Files.readString(Path.of(Tools.getRealPath(query("SELECT CONCAT(history_path,file_history_id) FROM file_history WHERE file_url='"+deleted+"'").toString()))));
+        } finally {Files.deleteIfExists(incoming);Files.deleteIfExists(freshLive);Files.deleteIfExists(deletedLive);}
+    }
+
+    @Test void differentDomainMayUseTheSameUrlDuringFrozenPublication()throws Exception {
+        int foreign;
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);foreign=BranchStore.reserveNative(c,BranchType.GROUP);var g=new LinkedHashMap<>(BranchGroupMapper.initialValues(foreign,"p06-foreign.example"));g.put("group_name","autotest foreign P06");g.put("url_dir_name","foreign-p06");BranchRowWriter.insertGroupWithId(c,BranchContext.live("p06-foreign.example",1),g);c.commit();}
+        int page;
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);page=BranchStore.reserveNative(c,BranchType.DOCUMENT);BranchRowWriter.insertDocumentWithId(c,BranchContext.live("p06-foreign.example",1),doc(page,foreign,"autotest foreign same URL",f.url+"/moved/page-0.html"));c.commit();}
+        try {merge(ready(),new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());}
+        finally {sql("DELETE FROM documents WHERE doc_id="+page);sql("DELETE FROM groups WHERE group_id="+foreign);}
+    }
+
+    @Test void reservedIdentityCannotBeResolvedOverForeignRowAfterPartialPublication()throws Exception {
+        merge(ready(),new BranchPublishService(key->{if(key.startsWith("FILE_REPLACED:"))throw new IllegalStateException("autotest stop before new page");}));
+        int id=f.pages.get(19);
+        try(Connection c=DBPool.getConnection()){c.setAutoCommit(false);var work=BranchStore.readWork(c,f.branch,BranchType.DOCUMENT,id).orElseThrow();BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),work);c.commit();}
+        var report=detail();assertFalse(report.ready());var item=item(report,BranchType.DOCUMENT,Integer.toString(id));assertTrue(item.conflict());
+        assertThrows(ResponseStatusException.class,()->service.resolve(f.branch,DOMAIN,user,report.revision(),BranchType.DOCUMENT,Integer.toString(id),BranchDecision.Source.WORK,item.liveHash(),item.workHash()));
+    }
+
+    @Test void finalEffectsFailureResumesWithoutAnyNewContentHistory()throws Exception {
+        merge(ready(),new BranchPublishService(key->{if(key.equals("FINAL_EFFECTS"))throw new IllegalStateException("autotest final effects crash");}));
+        var failed=detail();assertEquals("MERGE_FAILED",failed.state());assertTrue(failed.items().stream().allMatch(x->"DONE".equals(x.applyState())));
+        long history=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0));
+        // A page completed by an older publisher still needs the index pass against the final tree.
+        int legacyPage = f.pages.get(0);
+        sql("UPDATE branch_documents SET apply_phase='EFFECTS' WHERE branch_id=" + f.branch + " AND doc_id=" + legacyPage);
+        var retry = ready();
+        service.claim(f.branch, DOMAIN, user, retry.revision(), retry.preparationHash(), true);
+        try (var index = mockStatic(Documents.class)) {
+            new BranchPublishService().run(f.branch, user.getUserId());
+            index.verify(() -> Documents.updateSingleDocumentChecked(legacyPage));
+            index.verifyNoMoreInteractions();
+        }
+        assertEquals("MERGED",detail().state(),detail().lastError());assertEquals(history,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0)));
+    }
+
+    @Test void categoryPreflightAndExistingPerexApiPreserveOtherPages()throws Exception {
+        sql("DELETE FROM perex_groups WHERE perex_group_id="+f.perex);assertFalse(detail().ready());
+        sql("INSERT INTO perex_groups(perex_group_id,perex_group_name,available_groups,domain_id) VALUES ("+f.perex+",'autotest P06 restored category','',"+BranchDomains.id(DOMAIN)+")");
+        PerexGroupsService.savePerexGroupsDoc(f.home,new int[]{f.perex});
+        long unrelated=((Number)query("SELECT id FROM perex_group_doc WHERE doc_id="+f.home)).longValue();
+        merge(ready(),new BranchPublishService());assertEquals("MERGED",detail().state(),detail().lastError());
+        assertEquals(21,count("SELECT COUNT(*) FROM perex_group_doc WHERE perex_group_id="+f.perex));
+        assertEquals(unrelated,((Number)query("SELECT id FROM perex_group_doc WHERE doc_id="+f.home)).longValue());
+        int first=f.pages.get(0);
+        long membership=((Number)query("SELECT id FROM perex_group_doc WHERE doc_id="+first)).longValue();
+        PerexGroupsService.savePerexGroupsDoc(first,new int[]{f.perex});
+        assertEquals(membership,((Number)query("SELECT id FROM perex_group_doc WHERE doc_id="+first)).longValue());
+        assertEquals("autotest P06 restored category",query("SELECT perex_group_name FROM perex_groups WHERE perex_group_id="+f.perex));
+    }
+
+    /** The shared merge action schedules the stored date and rejects a review from before a date edit. */
+    @Test void publicationUsesTheStoredDateAndNeverPublishesItImmediately()throws Exception {
+        var before=ready();var live=productionInputs();
+        long at=System.currentTimeMillis()/1000*1000+120_000;
+        var branch=branchService().find(f.branch,DOMAIN).orElseThrow();
+        branch.setPublishAt(new Timestamp(at));branch.setRevision(branch.getRevision()+1);
+        sk.iway.iwcm.Tools.getSpringBean("branchRepository",BranchRepository.class).saveAndFlush(branch);
+        assertEquals("DRAFT",detail().state());assertEquals(live,productionInputs());
+        assertThrows(ResponseStatusException.class,()->service.enqueue(f.branch,DOMAIN,user,before.revision(),before.preparationHash(),false));
+        var reviewed=ready();
+        var scheduled=service.enqueue(f.branch,DOMAIN,user,reviewed.revision(),reviewed.preparationHash(),false);
+        assertEquals("SCHEDULED",scheduled.state());assertEquals(at,scheduled.publishAt());
+        assertEquals(user.getUserId(),scheduled.scheduledBy());assertEquals(live,productionInputs());
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,scheduled.revision(),scheduled.preparationHash()));
+        service.unschedule(f.branch,DOMAIN,user,scheduled.revision());
+        var immediate=ready();
+        assertEquals("MERGING",service.enqueue(f.branch,DOMAIN,user,immediate.revision(),immediate.preparationHash(),false).state());
+    }
+
+    /** T12: one term is versioned atomically and returning to draft preserves every WORK input. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07ScheduleMoveCancelAndRejectStaleInputs()throws Exception {
+        var initial=ready();Map<String,String> work=workInputs();Map<String,String> live=productionInputs();
+        long first=System.currentTimeMillis()/1000*1000+120_000;
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,initial.revision(),initial.preparationHash(),System.currentTimeMillis()-1));
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,initial.revision(),"stale",first));
+        var scheduled=service.schedule(f.branch,DOMAIN,user,initial.revision(),initial.preparationHash(),first);
+        assertEquals("SCHEDULED",scheduled.state());assertEquals(first,scheduled.publishAt().longValue());assertEquals(user.getUserId(),scheduled.scheduledBy().intValue());
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,initial.revision(),initial.preparationHash(),first+60_000));
+        int page=f.pages.get(0);var input=live(BranchType.DOCUMENT,page);
+        assertThrows(IllegalStateException.class,()->store.put(admin(),BranchType.DOCUMENT,page,input,BranchStore.snapshot(BranchType.DOCUMENT,input).hash(),false));
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,scheduled.revision(),scheduled.preparationHash()));
+        var moved=service.schedule(f.branch,DOMAIN,user,scheduled.revision(),scheduled.preparationHash(),first+120_000);
+        assertEquals(first+120_000,moved.publishAt().longValue());assertEquals(scheduled.revision()+1,moved.revision());
+        assertEquals(work,workInputs());assertEquals(live,productionInputs());
+        assertThrows(ResponseStatusException.class,()->service.unschedule(f.branch,DOMAIN,user,scheduled.revision()));
+        var draft=service.unschedule(f.branch,DOMAIN,user,moved.revision());
+        assertEquals("DRAFT",draft.state());assertNull(draft.publishAt());assertNull(draft.scheduledBy());assertEquals(work,workInputs());assertEquals(live,productionInputs());
+        var stale=ready();sql("UPDATE documents SET title='autotest P07 late LIVE' WHERE doc_id="+page);
+        assertThrows(ResponseStatusException.class,()->service.schedule(f.branch,DOMAIN,user,stale.revision(),stale.preparationHash(),first));
+    }
+
+    /** T12/T13: the same publisher applies scheduled targets with stable IDs, author and save dates. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07ScheduledClaimPublishesSameTargetsAndRejectsSecondClaim()throws Exception {
+        sql("UPDATE documents SET publish_start='2021-02-03 10:00:00' WHERE doc_id="+f.pages.get(0));
+        Object publicationDate=live(BranchType.DOCUMENT,f.pages.get(0)).get("publish_start");
+        Map<String,String> targets=workInputs();String home=live(BranchType.DOCUMENT,f.home).toString();
+        scheduleDue();var due=ready();
+        service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());
+        assertThrows(ResponseStatusException.class,()->service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash()));
+        assertThrows(ResponseStatusException.class,()->service.unschedule(f.branch,DOMAIN,user,due.revision()));
+        new BranchPublishService().run(f.branch,user.getUserId());
+        var merged=detail();assertEquals("MERGED",merged.state(),merged.lastError());assertEquals(targets,workInputs());assertEquals(home,live(BranchType.DOCUMENT,f.home).toString());
+        assertEquals(f.destination,((Number)live(BranchType.GROUP,f.section).get("parent_group_id")).intValue());
+        for(int i=0;i<f.pages.size();i++) {
+            var row=live(BranchType.DOCUMENT,f.pages.get(i));assertEquals("autotest P06 WORK "+i,row.get("title"));
+            assertEquals(1,((Number)row.get("author_id")).intValue());assertEquals(Instant.parse("2020-01-01T12:00:00Z").toEpochMilli(),((java.util.Date)row.get("date_created")).getTime());
+            assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(i)));
+        }
+        assertEquals(publicationDate,live(BranchType.DOCUMENT,f.pages.get(0)).get("publish_start"),"DATE must not restart when the package publishes");
+        assertEquals(20,count("SELECT COUNT(*) FROM perex_group_doc WHERE perex_group_id="+f.perex));
+        assertEquals("autotest P06 WORK media",live(BranchType.MEDIA,f.media).get("media_title_sk"));
+        assertEquals("autotest P06 WORK attachment",Files.readString(Path.of(Tools.getRealPath(f.file))));
+    }
+
+    /** T12: a future term is not claimed and public nodes never run publication. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronRespectsFutureTimeAndSkipsPublicNode()throws Exception {
+        var before=ready();service.schedule(f.branch,DOMAIN,user,before.revision(),before.preparationHash(),System.currentTimeMillis()+120_000);
+        Map<String,String> live=productionInputs();BranchScheduler.main(new String[0]);assertEquals("SCHEDULED",detail().state());assertEquals(live,productionInputs());
+        sql("UPDATE branches SET publish_at=? WHERE id="+f.branch, Timestamp.from(Instant.now().minusSeconds(1)));
+        Constants.setString("clusterMyNodeType","public");
+        BranchScheduler.main(new String[0]);assertEquals("SCHEDULED",detail().state());assertEquals(live,productionInputs());
+    }
+
+    /** Concurrent cron candidates use independent connections and only one can claim the package. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07ConcurrentSchedulersClaimPackageOnce()throws Exception {
+        scheduleDue();var due=ready();CountDownLatch start=new CountDownLatch(1);
+        ExecutorService contenders=Executors.newFixedThreadPool(2);
+        Callable<Boolean> claim=()->{
+            RequestBean bean=new RequestBean();bean.setUser(user);bean.setDomain(DOMAIN);
+            SetCharacterEncodingFilter.setCurrentRequestBean(bean);
+            try(BranchContexts.Scope ignored=BranchContexts.live(null,DOMAIN,user.getUserId())) {
+                assertTrue(start.await(10,TimeUnit.SECONDS));
+                try {new BranchMergeService().claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());return true;}
+                catch(ResponseStatusException ex){assertEquals(409,ex.getStatusCode().value());return false;}
+            }finally{SetCharacterEncodingFilter.unRegisterDataContext();}
+        };
+        try {
+            Future<Boolean> first=contenders.submit(claim),second=contenders.submit(claim);start.countDown();
+            int claims=(first.get(30,TimeUnit.SECONDS)?1:0)+(second.get(30,TimeUnit.SECONDS)?1:0);
+            assertEquals(1,claims);assertEquals("MERGING",detail().state());
+        }finally{contenders.shutdownNow();}
+        new BranchPublishService().run(f.branch,user.getUserId());assertEquals("MERGED",detail().state(),detail().lastError());
+        assertEquals(1,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0)));
+    }
+
+    /** T12: cron reloads a disabled administrator from DB without using the retained request identity. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronReloadsDisabledPublisher()throws Exception {
+        scheduleDue();Map<String,String> live=productionInputs();
+        sql("UPDATE users SET authorized=false WHERE user_id="+user.getUserId());
+        try {BranchScheduler.main(new String[0]);assertAttention(live);assertFalse(detail().lastError().isBlank());}
+        finally {sql("UPDATE users SET authorized=true WHERE user_id="+user.getUserId());}
+        var stopped=detail();var reopened=service.reopen(f.branch,DOMAIN,user,stopped.revision());
+        assertEquals("DRAFT",reopened.state());assertNull(reopened.publishAt());assertNull(reopened.lastError());
+    }
+
+    /** T12/T13: current publication rights are rechecked even though the scheduling identity had them. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronReloadsRevokedPublicationRight()throws Exception {
+        scheduleDue();Map<String,String> live=productionInputs();
+        assertEquals(0,count("SELECT COUNT(*) FROM user_disabled_items WHERE user_id="+user.getUserId()+" AND item_name='pageSave'"));
+        sql("INSERT INTO user_disabled_items(user_id,item_name) VALUES ("+user.getUserId()+",'pageSave')");
+        try {BranchScheduler.main(new String[0]);assertAttention(live);assertTrue(detail().lastError().contains("právo"),detail().lastError());}
+        finally {sql("DELETE FROM user_disabled_items WHERE user_id="+user.getUserId()+" AND item_name='pageSave'");}
+    }
+
+    /** The scheduled deletion stops before any LIVE write if only deletePage has been revoked. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true")
+    void scheduledDeletionRechecksDeletePage() throws Exception {
+        stagePageDeletion();
+        scheduleDue();
+        var before = productionInputs();
+        sql("INSERT INTO user_disabled_items(user_id,item_name) VALUES (" + user.getUserId() + ",'deletePage')");
+        try {
+            BranchScheduler.main(new String[0]);
+            assertAttention(before);
+            assertTrue(detail().lastError().contains(Prop.getInstance().getText("components.user.perms.deletePage")));
+        } finally {
+            sql("DELETE FROM user_disabled_items WHERE user_id=" + user.getUserId() + " AND item_name='deletePage'");
+        }
+    }
+
+    /** T12: file-only packages still require current access to their administration domain. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07FileOnlyPackageStopsWhenPublisherLosesDomainAccess()throws Exception {
+        for(BranchType type:List.of(BranchType.DOCUMENT,BranchType.GROUP,BranchType.MEDIA))sql("DELETE FROM "+type.workTable()+" WHERE branch_id="+f.branch);
+        scheduleDue();Map<String,String> live=productionInputs();
+        String groups=Objects.toString(query("SELECT editable_groups FROM users WHERE user_id="+user.getUserId()),"");
+        String pages=Objects.toString(query("SELECT editable_pages FROM users WHERE user_id="+user.getUserId()),"");
+        String foreign=Integer.toString(BranchTestDomains.ensure("p07-other.example"));
+        try(Connection c=DBPool.getConnection();PreparedStatement edit=c.prepareStatement("UPDATE users SET editable_groups=?,editable_pages=? WHERE user_id=?")) {
+            edit.setString(1,foreign);edit.setString(2,"");edit.setInt(3,user.getUserId());edit.executeUpdate();
+            try {BranchScheduler.main(new String[0]);assertAttention(live);assertFalse(detail().lastError().isBlank());}
+            finally {edit.setString(1,groups);edit.setString(2,pages);edit.executeUpdate();}
+        }
+    }
+
+    /** T12: a new LIVE conflict stops all items and leaves the current production values intact. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronStopsOnNewConflict()throws Exception {
+        scheduleDue();int page=f.pages.get(0);sql("UPDATE documents SET title='autotest P07 new conflict' WHERE doc_id="+page);
+        Map<String,String> live=productionInputs();BranchScheduler.main(new String[0]);assertAttention(live);
+        assertTrue(detail().lastError().contains(Integer.toString(page)),detail().lastError());
+        BranchScheduler.main(new String[0]);assertEquals(live,productionInputs());assertEquals("NEEDS_ATTENTION",detail().state());
+    }
+
+    /** T12: individual publication and unpublication plans remain owned by their original scheduler. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07CronStopsOnNewIndividualPlanWithoutRemovingIt()throws Exception {
+        scheduleDue();int page=f.pages.get(0);
+        sql("UPDATE documents SET publish_after_start=true,publish_start=? WHERE doc_id="+page, Timestamp.from(Instant.now().plusSeconds(86400)));
+        Map<String,String> live=productionInputs();BranchScheduler.main(new String[0]);assertAttention(live);
+        assertTrue(detail().lastError().contains(Integer.toString(page)),detail().lastError());
+        assertEquals(1,count("SELECT COUNT(*) FROM documents WHERE doc_id="+page+" AND publish_after_start=true"));
+    }
+
+    /** T12: the last validation between claim and first write retains the stopped schedule for repair. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07PublisherStopsBeforeFirstWriteAndCanReopen()throws Exception {
+        scheduleDue();var due=ready();service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());
+        sql("UPDATE documents SET title='autotest P07 changed after claim' WHERE doc_id="+f.pages.get(0));
+        Map<String,String> live=productionInputs();new BranchPublishService().run(f.branch,user.getUserId());assertAttention(live);
+        var attention=detail();assertEquals("DRAFT",service.reopen(f.branch,DOMAIN,user,attention.revision()).state());
+    }
+
+    /** T15: after any published item, scheduled failure follows P06 checkpoints and resume. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void p07PartialScheduledFailureUsesExistingResume()throws Exception {
+        scheduleDue();var due=ready();service.claimScheduled(f.branch,DOMAIN,user,due.revision(),due.preparationHash());
+        AtomicInteger completed=new AtomicInteger();new BranchPublishService(key->{if(key.startsWith("DOCUMENT:")&&completed.incrementAndGet()==3)throw new IllegalStateException("autotest P07 partial failure");}).run(f.branch,user.getUserId());
+        var failed=detail();assertEquals("MERGE_FAILED",failed.state());assertTrue(failed.items().stream().anyMatch(i->"DONE".equals(i.applyState())));
+        assertThrows(ResponseStatusException.class,()->service.reopen(f.branch,DOMAIN,user,failed.revision()));
+        int first=f.pages.get(0);long history=count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first);
+        var retry=ready();service.claim(f.branch,DOMAIN,user,retry.revision(),retry.preparationHash(),true);new BranchPublishService().run(f.branch,user.getUserId());
+        assertEquals("MERGED",detail().state(),detail().lastError());assertEquals(history,count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+first));
+    }
+
+    private void scheduleDue()throws Exception {
+        var report=ready();service.schedule(f.branch,DOMAIN,user,report.revision(),report.preparationHash(),System.currentTimeMillis()+120_000);
+        sql("UPDATE branches SET publish_at=? WHERE id="+f.branch, Timestamp.from(Instant.now().minusSeconds(1)));
+    }
+
+    /** The cron derives its filesystem context from domain_id, without an HTTP session. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_DB",matches="true") void cronPublishesOnlyItsExternalDomainFolder()throws Exception {
+        Path originalFile=Path.of(Tools.getRealPath(f.file));
+        Path external=Files.createTempDirectory("branch-cron-domains-");
+        String previous=Constants.getString("cloudStaticFilesDir");
+        try {
+            Constants.setString("cloudStaticFilesDir",external+java.io.File.separator);
+            Path own=Path.of(Tools.getRealPath(f.file));
+            Files.createDirectories(own.getParent());Files.copy(originalFile,own);
+            RequestBean bean=SetCharacterEncodingFilter.getCurrentRequestBean();
+            bean.setDomain("demo.webjetcms.sk");
+            Path foreign=Path.of(Tools.getRealPath(f.file));
+            Files.createDirectories(foreign.getParent());Files.writeString(foreign,"foreign LIVE bytes");
+            bean.setDomain(DOMAIN);
+            assertNotEquals(own,foreign);
+            scheduleDue();BranchScheduler.main(new String[0]);
+            long deadline=System.currentTimeMillis()+30_000;
+            while(BranchPublishService.isRunning(f.branch)&&System.currentTimeMillis()<deadline)Thread.sleep(50);
+            assertFalse(BranchPublishService.isRunning(f.branch),"Cron publication did not complete");
+            assertEquals("MERGED",detail().state(),detail().lastError());
+            assertEquals("autotest P06 WORK attachment",Files.readString(own));
+            assertEquals("foreign LIVE bytes",Files.readString(foreign));
+            assertEquals("autotest P06 BASE attachment",Files.readString(originalFile));
+        } finally {
+            Constants.setString("cloudStaticFilesDir",previous);
+            try(var paths=Files.walk(external)){for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}
+        }
+    }
+    private Map<String,String> workInputs()throws Exception {
+        Map<String,String> result=new LinkedHashMap<>();
+        try(Connection c=DBPool.getConnection()){for(BranchType type:BranchType.values())for(var row:BranchPublishRows.rows(c,f.branch,type)){var change=BranchStore.change(type,row);result.put(change.identity(),change.work().hash());}}
+        return result;
+    }
+    private Map<String,String> productionInputs()throws Exception {
+        Map<String,String> result=new LinkedHashMap<>();
+        try(Connection c=DBPool.getConnection()){for(BranchType type:BranchType.values())for(var row:BranchPublishRows.rows(c,f.branch,type)){var change=BranchStore.change(type,row);result.put(change.identity(),BranchPublishRows.liveSnapshot(c,type,row).hash());}}
+        return result;
+    }
+    private void assertAttention(Map<String,String> before)throws Exception {
+        assertEquals("NEEDS_ATTENTION",query("SELECT state FROM branches WHERE id="+f.branch));
+        assertEquals(before,productionInputs());assertNotNull(query("SELECT last_error FROM branches WHERE id="+f.branch));
+        for(BranchType type:BranchType.values())assertEquals(0,count("SELECT COUNT(*) FROM "+type.workTable()+" WHERE branch_id="+f.branch+" AND applied_hash IS NOT NULL"));
+        assertEquals(0,count("SELECT COUNT(*) FROM documents_history WHERE doc_id IN ("+String.join(",",f.pages.stream().map(String::valueOf).toList())+")"));
+    }
+
+    /** Retained P07-only fixtures for real scheduling, a manual comparison, stopping and News time. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P07_FIXTURE",matches="true") void prepareP07BrowserFixtures()throws Exception {
+        for(String name:List.of("scheduled","manual","attention","preview"))assertFalse(Files.exists(Path.of("/tmp/webjet-p07-"+name+".properties")),"Reuse retained P07 fixtures or explicitly archive their manifests");
+        String suffix=UUID.randomUUID().toString().substring(0,8);
+        Fixture scheduled=f;
+        Fixture manual=create("p07-manual-"+suffix,true),attention=create("p07-attention-"+suffix,true),preview=create("p07-preview-"+suffix,true);
+        for(var entry:Map.of("scheduled",scheduled,"manual",manual,"attention",attention,"preview",preview).entrySet()) {
+            Fixture fixture=entry.getValue();sql("UPDATE branches SET name='autotest P07 "+entry.getKey()+" "+suffix+"',description='P07 isolated scheduling review fixture' WHERE id="+fixture.branch);
+            writeP07Fixture(entry.getKey(),fixture,null);
+        }
+        long cutoff=System.currentTimeMillis()/1000*1000+604_800_000;
+        sql("UPDATE documents SET data=REPLACE(data,'publishType=all','publishType=new') WHERE doc_id="+preview.home);
+        for(String table:List.of("documents","branch_documents")) {
+            try(Connection c=DBPool.getConnection();PreparedStatement s=c.prepareStatement("UPDATE "+table+" SET publish_start=? WHERE doc_id=?"+(table.equals("branch_documents")?" AND branch_id=?":""))) {
+                s.setTimestamp(1,new Timestamp(cutoff));s.setInt(2,preview.pages.get(0));if(table.equals("branch_documents"))s.setLong(3,preview.branch);s.executeUpdate();
+            }
+            try(Connection c=DBPool.getConnection();PreparedStatement s=c.prepareStatement("UPDATE "+table+" SET publish_end=? WHERE doc_id=?"+(table.equals("branch_documents")?" AND branch_id=?":""))) {
+                s.setTimestamp(1,new Timestamp(cutoff));s.setInt(2,preview.pages.get(1));if(table.equals("branch_documents"))s.setLong(3,preview.branch);s.executeUpdate();
+            }
+        }
+        writeP07Fixture("preview",preview,cutoff);f=null;
+    }
+
+    private static void writeP07Fixture(String name,Fixture fixture,Long cutoff)throws Exception {
+        String data="branchId="+fixture.branch+"\ngroupId="+fixture.root+"\nsectionId="+fixture.section+"\nhomeId="+fixture.home+"\npageId="+fixture.pages.get(0)+"\nsecondPageId="+fixture.pages.get(1)+"\nurl="+fixture.url+"/\nfile="+fixture.file+"\npages="+String.join(",",fixture.pages.stream().map(String::valueOf).toList())+"\n"+(cutoff==null?"":"publishCutoff="+cutoff+"\n");
+        Files.writeString(Path.of("/tmp/webjet-p07-"+name+".properties"),data);
+        Files.createDirectories(Path.of("build/test-results/p07"));Files.writeString(Path.of("build/test-results/p07/"+name+".properties"),data);
+    }
+
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P06_DEMO",matches="true") void prepareRetainedDemo()throws Exception {
+        Path manifest=Path.of(System.getenv().getOrDefault("WEBJET_P06_FIXTURES", "/tmp"), "webjet-p06-manual.properties");assertFalse(Files.exists(manifest),"Reuse retained P06 demo; do not regenerate");
+        sql("UPDATE documents SET title='autotest P06 concurrent LIVE title' WHERE doc_id="+f.pages.get(0));
+        var report=detail();assertTrue(report.items().stream().anyMatch(BranchMergeService.Item::conflict));
+        String data="branchId="+f.branch+"\ngroupId="+f.root+"\nsectionId="+f.section+"\nhomeId="+f.home+"\npageId="+f.pages.get(0)+"\nmediaId="+f.media+"\nnewMediaId="+f.newMedia+"\nfile="+f.file+"\nurl="+f.url+"/\n";
+        Files.writeString(manifest,data);Files.createDirectories(Path.of("build/test-results/p06"));Files.writeString(Path.of("build/test-results/p06/demo.properties"),data);f=null;
+    }
+
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P06_BROWSER_FIXTURE",matches="true") void prepareBrowserPublication()throws Exception {
+        Path manifest=Path.of(System.getenv().getOrDefault("WEBJET_P06_FIXTURES", "/tmp"), "webjet-p06-publish.properties");assertFalse(Files.exists(manifest));
+        sql("UPDATE documents SET title='autotest P06 concurrent LIVE title' WHERE doc_id="+f.pages.get(0));
+        sql("UPDATE documents SET title='autotest P06 retained LIVE choice' WHERE doc_id="+f.pages.get(1));
+        Files.writeString(manifest,"branchId="+f.branch+"\ngroupId="+f.root+"\nsectionId="+f.section+"\nhomeId="+f.home+"\npageId="+f.pages.get(0)+"\nlivePageId="+f.pages.get(1)+"\nmediaId="+f.media+"\nnewMediaId="+f.newMedia+"\nfile="+f.file+"\nurl="+f.url+"/\n");f=null;
+    }
+
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P06_PARTIAL_FIXTURE",matches="true") void prepareRetainedPartialPublication()throws Exception {
+        Path manifest=Path.of(System.getenv().getOrDefault("WEBJET_P06_FIXTURES", "/tmp"), "webjet-p06-partial.properties");assertFalse(Files.exists(manifest));
+        try (var index = mockStatic(Documents.class, CALLS_REAL_METHODS)) {
+            index.when(() -> Documents.updateSingleDocumentChecked(f.pages.get(9)))
+                .thenThrow(new java.io.IOException("autotest P06 retained index failure for process restart"));
+            merge(ready(), new BranchPublishService());
+        }
+        var progress=detail();assertEquals("MERGE_FAILED",progress.state());
+        assertTrue(progress.items().stream().anyMatch(item -> "SQL_SEARCH".equals(item.applyPhase()) && item.error() != null), progress.lastError());
+        Files.writeString(manifest,"branchId="+f.branch+"\ngroupId="+f.root+"\nhomeId="+f.home+"\npageId="+f.pages.get(0)+"\nmediaId="+f.media+"\nnewMediaId="+f.newMedia+"\nfile="+f.file+"\nurl="+f.url+"/\nfirstHistoryCount="+count("SELECT COUNT(*) FROM documents_history WHERE doc_id="+f.pages.get(0))+"\n");f=null;
+    }
+
+    /** Retains separate pilot data and three scoped editorial identities for the P08 browser walkthrough. */
+    @Test @EnabledIfEnvironmentVariable(named="WEBJET_P08_FIXTURE",matches="true") void prepareP08Pilot()throws Exception {
+        Path manifest=Path.of("/tmp/webjet-p08-pilot.properties"),credentials=Path.of("/tmp/webjet-p08-login.properties");
+        assertFalse(Files.exists(manifest),"Reuse the retained P08 pilot; do not replace earlier demos");
+        assertFalse(Files.exists(credentials));
+        // The existing iwcm host is aliased to demo.webjetcms.sk; give this public fixture its own loopback domain.
+        sql("UPDATE branches SET domain_id="+BranchDomains.id("127.0.0.1")+",name='autotest P08 pilot',description='20 pages, three editorial accounts; isolated P08 data' WHERE id="+f.branch);
+        sql("UPDATE groups SET domain_name='127.0.0.1' WHERE group_id IN ("+f.root+","+f.section+")");
+        sql("UPDATE branch_groups SET domain_name='127.0.0.1' WHERE branch_id="+f.branch);
+        StringBuilder loginData=new StringBuilder();
+        for(String editor:List.of("a","b","c")) {
+            String login="autotest-p08-"+editor,password=sk.iway.iwcm.users.PasswordSecurity.generatePassword(24),salt=sk.iway.iwcm.users.PasswordSecurity.generateSalt();
+            try(Connection c=DBPool.getConnection();PreparedStatement s=c.prepareStatement("INSERT INTO users(login,password,password_salt,is_admin,authorized,first_name,last_name,email,editable_groups,editable_pages,writable_folders,disabled_items) VALUES (?,?,?,1,1,?,'P08 pilot',?,?, '',?,'')")) {
+                s.setString(1,login);s.setString(2,sk.iway.iwcm.users.PasswordSecurity.calculateHash(password,salt));s.setString(3,salt);
+                s.setString(4,"autotest editor "+editor);s.setString(5,"p08-"+editor+"@example.invalid");s.setString(6,Integer.toString(f.root));s.setString(7,"/files/branch-p06-autotest/*");s.executeUpdate();
+            }
+            loginData.append(editor+".login="+login+"\n"+editor+".password="+password+"\n");
+        }
+        Files.writeString(credentials,loginData);Files.setPosixFilePermissions(credentials,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+        String data="branchId="+f.branch+"\ngroupId="+f.root+"\nsectionId="+f.section+"\nhomeId="+f.home+"\npageId="+f.pages.get(0)+"\nsecondPageId="+f.pages.get(1)+"\nmediaId="+f.media+"\nnewMediaId="+f.newMedia+"\nurl="+f.url+"/\nfile="+f.file+"\npages="+String.join(",",f.pages.stream().map(String::valueOf).toList())+"\n";
+        Files.writeString(manifest,data);Files.createDirectories(Path.of("build/test-results/p08"));Files.writeString(Path.of("build/test-results/p08/pilot.properties"),data);
+        f=null;
+    }
+
+    record Fixture(long branch,int root,int section,int destination,int home,List<Integer> pages,int media,int newMedia,int category,int perex,String file,String url) { }
+    Fixture create(String suffix,boolean work)throws Exception {
+        String url="/p06-autotest-"+suffix;int root,section,home;List<Integer> pages=new ArrayList<>();int category=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media_groups")),media=Math.toIntExact(PkeyGenerator.getNextValueAsLongStrict("media"));
+        int template,perex;
+        try(Connection c=DBPool.getConnection();Statement s=c.createStatement();ResultSet r=s.executeQuery("SELECT temp_id FROM templates WHERE forward='/templates/aceintegration/jet/blank.jsp'")){assertTrue(r.next());template=r.getInt(1);}
+        try(Connection c=DBPool.getConnection()) {
+            c.setAutoCommit(false);
+            try(PreparedStatement s=c.prepareStatement("INSERT INTO perex_groups(perex_group_name,available_groups,domain_id) VALUES (?,'',"+BranchDomains.id(DOMAIN)+")",new String[]{"perex_group_id"})){s.setString(1,"autotest P06 "+suffix);s.executeUpdate();try(ResultSet r=s.getGeneratedKeys()){r.next();perex=r.getInt(1);}}
+            root=BranchStore.reserveNative(c,BranchType.GROUP);section=BranchStore.reserveNative(c,BranchType.GROUP);
+            for(int id:List.of(root,section)){var g=new LinkedHashMap<>(BranchGroupMapper.initialValues(id,DOMAIN));g.put("group_name",id==root?"autotest P06 "+suffix:"autotest P06 section");g.put("navbar",g.get("group_name"));g.put("url_dir_name",id==root?url.substring(1):"section");g.put("parent_group_id",id==root?0:root);g.put("temp_id",template);BranchRowWriter.insertGroupWithId(c,BranchContext.live(DOMAIN,1),g);}
+            home=BranchStore.reserveNative(c,BranchType.DOCUMENT);var homepage=doc(home,root,"autotest P06 home",url+"/");homepage.put("temp_id",template);homepage.put("data","<h1>autotest P06</h1><div id='p06-menu'>!INCLUDE(/components/menu/menu_ul_li.jsp, rootGroupId="+root+", openAllItems=true, classes=full)!</div> !INCLUDE(/components/news/news-velocity.jsp, groupIds="+root+", alsoSubGroups=true, template=p06-autotest-"+suffix+", publishType=all, perexNotRequired=true, order=priority, ascending=true, pageSize=30, paging=false, includeActualDoc=true)!");BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),homepage);
+            for(int i=0;i<18;i++){int id=BranchStore.reserveNative(c,BranchType.DOCUMENT);var d=doc(id,section,"autotest P06 LIVE "+i,url+"/section/page-"+i+".html");d.put("sort_priority",i);d.put("temp_id",template);BranchRowWriter.insertDocumentWithId(c,BranchContext.live(DOMAIN,1),d);pages.add(id);}
+            try(PreparedStatement s=c.prepareStatement("UPDATE groups SET default_doc_id=? WHERE group_id=?")){s.setInt(1,home);s.setInt(2,root);s.executeUpdate();s.setInt(1,pages.get(0));s.setInt(2,section);s.executeUpdate();}
+            try(PreparedStatement s=c.prepareStatement("INSERT INTO media_groups(media_group_id,media_group_name,available_groups) VALUES (?,?,'')")){s.setInt(1,category);s.setString(2,"autotest P06 "+suffix);s.executeUpdate();}
+            var m=new LinkedHashMap<>(BranchMediaMapper.initialValues(media,home,BranchDomains.id(DOMAIN)));m.put("media_title_sk","autotest P06 LIVE media");m.put("media_link","/files/branch-p06-autotest/"+suffix+".txt");m.put("last_update",Timestamp.from(Instant.parse("2020-01-01T11:00:00Z")));BranchRowWriter.insertMediaWithId(c,BranchContext.live(DOMAIN,1),m,List.of(category));
+            try(PreparedStatement s=c.prepareStatement("INSERT INTO news_templates(name,template_html,paging_html,paging_position,engine,domain_id) VALUES (?,?,'',1,'velocity',"+BranchDomains.id(DOMAIN)+")")){
+                s.setString(1,"p06-autotest-"+suffix);s.setString(2,"<ol class='p06-news'>#foreach($item in $news)<li data-id='$item.docId' data-author='$item.authorId' data-date='$item.dateCreated'><a href='$actionBean.link($item)'>$item.title</a><span>$item.htmlData</span>#foreach($medium in $MediaDB.getMedia($item, ''))<a class='p06-media' data-media='$medium.mediaId' href='$medium.mediaLink'>$medium.mediaTitleSk</a>#end</li>#end</ol>");s.executeUpdate();
+            }c.commit();
+        }
+        GroupsDB.getInstance(true);DocDB.getInstance(true);
+        long branch=createBranch(BranchTestDomains.ensure(DOMAIN),"autotest P06 "+suffix,"20 pages, folder move, media and file; P06 only",1).getId();BranchContext context=new BranchContext(branch,DOMAIN,1,BranchContext.Mode.ADMIN);
+        var destination=new LinkedHashMap<>(BranchGroupMapper.initialValues(1,DOMAIN));destination.put("group_name","autotest P06 destination");destination.put("url_dir_name","destination");destination.put("parent_group_id",root);destination.put("temp_id",template);
+        int newGroup=((Number)store.create(context,BranchType.GROUP,destination).get("group_id")).intValue();
+        var moved=live(BranchType.GROUP,section);String groupHash=BranchStore.snapshot(BranchType.GROUP,moved).hash();moved.put("parent_group_id",newGroup);moved.put("url_dir_name","moved");store.put(context,BranchType.GROUP,section,moved,groupHash,false);
+        for(int i=0;i<18;i++){int id=pages.get(i);var d=live(BranchType.DOCUMENT,id);String hash=BranchStore.snapshot(BranchType.DOCUMENT,d).hash();d.put("perex_group",","+perex+",");d.put("title","autotest P06 WORK "+i);d.put("navbar","autotest P06 WORK "+i);d.put("virtual_path",url+"/moved/page-"+i+".html");store.put(context,BranchType.DOCUMENT,id,d,hash,false);}
+        for(int i=18;i<20;i++){var d=doc(1,section,"autotest P06 WORK "+i,url+"/moved/page-"+i+".html");d.put("temp_id",template);d.put("perex_group",","+perex+",");d.put("sort_priority",i);pages.add(((Number)store.create(context,BranchType.DOCUMENT,d).get("doc_id")).intValue());}
+        var m=live(BranchType.MEDIA,media);String mediaHash=BranchStore.snapshot(BranchType.MEDIA,m).hash();m.put("media_title_sk","autotest P06 WORK media");m.put("media_sort_order",0);store.put(context,BranchType.MEDIA,media,m,mediaHash,false);
+        var nm=new LinkedHashMap<>(BranchMediaMapper.initialValues(1,pages.get(19),BranchDomains.id(DOMAIN)));nm.put("media_title_sk","autotest P06 new media");nm.put("media_link","/files/branch-p06-autotest/"+suffix+".txt");nm.put("last_update",Timestamp.from(Instant.parse("2020-01-01T12:00:00Z")));nm.put("group_ids_snapshot",List.of(category));int newMedia=((Number)store.create(context,BranchType.MEDIA,nm).get("media_id")).intValue();
+        String logical="/files/branch-p06-autotest/"+suffix+".txt";Path target=Path.of(Tools.getRealPath(logical));Files.createDirectories(target.getParent());Files.writeString(target,"autotest P06 BASE attachment");BranchSnapshot base=BranchFiles.liveSnapshot(logical);Path bytes=Files.createTempFile("p06-upload-",".txt");Files.writeString(bytes,"autotest P06 WORK attachment");var file=store.putFile(context,logical,"FILE",base,BranchFiles.hash(bytes),Files.size(bytes),"text/plain",false);Path stage=BranchFiles.workPath(branch,((Number)file.get("row_id")).longValue());Files.createDirectories(stage.getParent());Files.copy(bytes,stage,StandardCopyOption.REPLACE_EXISTING);Files.copy(target,stage.resolveSibling("base"),StandardCopyOption.REPLACE_EXISTING);Files.delete(bytes);
+        return new Fixture(branch,root,section,newGroup,home,pages,media,newMedia,category,perex,logical,url);
+    }
+    Map<String,Object> doc(int id,int group,String title,String path){var d=new LinkedHashMap<>(BranchDocumentMapper.initialValues(id,1,Instant.parse("2020-01-01T12:00:00Z"),false));d.put("group_id",group);d.put("title",title);d.put("navbar",title);d.put("data","<h1>"+title+"</h1>");d.put("html_data","autotest perex "+title);d.put("virtual_path",path);d.put("available",true);d.put("show_in_menu",true);d.put("searchable",true);return d;}
+    BranchContext admin(){return new BranchContext(f.branch,DOMAIN,1,BranchContext.Mode.ADMIN);}
+    BranchMergeService.Report detail(){return service.detail(f.branch,DOMAIN,user);}
+    BranchMergeService.Report ready(){var r=detail();assertTrue(r.ready(),r.errors()+" "+r.items().stream().filter(BranchMergeService.Item::conflict).toList());return r;}
+    void merge(BranchMergeService.Report r,BranchPublishService publisher){service.claim(f.branch,DOMAIN,user,r.revision(),r.preparationHash(),false);publisher.run(f.branch,user.getUserId());}
+    Map<String,Object> live(BranchType type,int id)throws Exception{try(Connection c=DBPool.getConnection()){return new LinkedHashMap<>(BranchStore.readLive(c,type,id).orElseThrow());}}
+    BranchSnapshot snapshot(BranchType type,int id)throws Exception{try(Connection c=DBPool.getConnection()){return BranchPublishRows.liveSnapshot(c,type,Map.of(type.idColumn(),id));}}
+    static BranchMergeService.Item item(BranchMergeService.Report r,BranchType t,String key){return r.items().stream().filter(i->i.type().equals(t.name())&&i.objectKey().equals(key)).findFirst().orElseThrow();}
+    static void sql(String sql, Object... parameters) throws SQLException {
+        try (Connection connection=DBPool.getConnection(); PreparedStatement statement=connection.prepareStatement(sql)) {
+            for (int i=0; i<parameters.length; i++) statement.setObject(i+1, parameters[i]);
+            statement.executeUpdate();
+        }
+    }
+    static Object query(String sql)throws SQLException{try(Connection c=DBPool.getConnection();Statement s=c.createStatement();ResultSet r=s.executeQuery(sql)){r.next();return r.getObject(1);}}
+    static long count(String sql)throws SQLException{return ((Number)query(sql)).longValue();}
+}

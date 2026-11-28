@@ -6,8 +6,6 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.common.UserTools;
-import sk.iway.iwcm.database.ComplexQuery;
-import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.editor.service.DeleteRequestContext;
 import sk.iway.iwcm.editor.service.GroupsService;
@@ -55,6 +53,7 @@ public class GroupsDB extends DB
 	private Map<String,Integer> domainIds;
 
 	private final String serverName;
+	private boolean branchFacade;
 
 	public static final Comparator<GroupDetails> groupsDbSorter = new Comparator<GroupDetails>(){
 		@Override
@@ -107,6 +106,9 @@ public class GroupsDB extends DB
 	@Deprecated(forRemoval = true)
 	public static GroupsDB getInstance(jakarta.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
 	{
+		// Keep existing tree/menu callers on a detached request-local facade, away from shared LIVE objects.
+		sk.iway.iwcm.branch.BranchView branch = sk.iway.iwcm.branch.BranchView.current();
+		if (branch != null && branch.groupsDb() != null) return branch.groupsDb();
 		//try to get it from server space
 		if (force_refresh == false)
 		{
@@ -146,6 +148,30 @@ public class GroupsDB extends DB
 		}
 	}
 
+    /** Creates an isolated facade without refreshing or writing shared production caches. */
+    public static GroupsDB forBranch(List<GroupDetails> effectiveGroups) {
+        GroupsDB result = new GroupsDB(effectiveGroups);
+        var context = sk.iway.iwcm.branch.BranchContexts.current();
+        try (var ignored = sk.iway.iwcm.branch.BranchContexts.live(null, context.domainName(), context.userId())) {
+            Map<String, Integer> liveDomainIds = getInstance().domainIds;
+            synchronized (liveDomainIds) {
+                result.domainIds = new LinkedHashMap<>(liveDomainIds);
+            }
+        }
+        for (GroupDetails group : effectiveGroups) group.setFullPath(result.getPath(group.getGroupId()));
+        return result;
+    }
+
+    private GroupsDB(List<GroupDetails> effectiveGroups) {
+        branchFacade = true;
+        serverName = "iwcm";
+        groups = new ArrayList<>(effectiveGroups);
+        idToGroups = new HashMap<>(); domainIds = new HashMap<>();
+        for (GroupDetails group : groups) {
+            idToGroups.put(group.getGroupId(), group);
+        }
+    }
+
 	/**
 	 *  Constructor for the GroupsDB object
 	 *
@@ -184,7 +210,8 @@ public class GroupsDB extends DB
 		//ak existuje, tak si vopred predalokuj dost miesta pre kluce
 		Map<Integer, GroupDetails> idToGroupsHolderWhileLoading = Collections.synchronizedMap(new HashMap<Integer, GroupDetails>(idToGroups!=null?idToGroups.size():300));
 		Map<String,GroupDetails> domainIdsGroups = Collections.synchronizedMap(new HashMap<String, GroupDetails>(domainIds!=null?domainIds.size():100));
-		Map<String,Integer> domainIdsHolderWhileLoading = Collections.synchronizedMap(new HashMap<String, Integer>(domainIds!=null?domainIds.size():100));
+		// Keep root-folder order when multiple domain names have the same configured ID.
+		Map<String,Integer> domainIdsHolderWhileLoading = Collections.synchronizedMap(new LinkedHashMap<>(domainIds!=null?domainIds.size():100));
 
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -266,6 +293,12 @@ public class GroupsDB extends DB
 	 * @throws SQLException
 	 */
 	public static GroupDetails fillFieldsByResultSet(java.sql.ResultSet rs) throws SQLException
+    {
+        return fillFieldsByResultSet(rs,true);
+    }
+
+    /** Loads detached folder fields without resolving links while a branch graph is being built. */
+    public static GroupDetails fillFieldsByResultSet(java.sql.ResultSet rs,boolean generateNavbar) throws SQLException
 	{
 		GroupDetails group;
 		group = new GroupDetails();
@@ -274,7 +307,8 @@ public class GroupsDB extends DB
 		group.setInternal(rs.getBoolean("internal"));
 		group.setParentGroupId(rs.getInt("parent_group_id"));
 		group.setNavbar(getDbString(rs, "navbar"));
-		group.setDefaultDocId(rs.getInt("default_doc_id"));
+		if (generateNavbar) group.setDefaultDocId(rs.getInt("default_doc_id"));
+        else group.setDefaultDocIdNoNavbar(rs.getInt("default_doc_id"));
 		group.setTempId(rs.getInt("temp_id"));
 		group.setSortPriority(rs.getInt("sort_priority"));
 		group.setPasswordProtected(getDbString(rs, "password_protected"));
@@ -971,6 +1005,7 @@ public class GroupsDB extends DB
 
 	private boolean setGroup(GroupDetails group, boolean publishEvents, boolean addGroupSchedulerRecord, boolean applyInternalToSubgroups)
 	{
+		requireLiveWrite();
 		if (publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_START)).publishEvent();
 
 		if (InitServlet.isTypeCloud() && group.getGroupId()>0 && Tools.isNotEmpty(group.getDomainName()))
@@ -2442,7 +2477,8 @@ public class GroupsDB extends DB
 			group = findGroup(currentGroupId);
 			if (group != null)
 			{
-				if (includeWithEmptyNavbar || group.getNavbar().length() > 1)
+				// WORK navigation names can change before a navbar link has been generated for the detached group.
+				if (includeWithEmptyNavbar || (sk.iway.iwcm.branch.BranchContexts.current().isBranch() ? group.getNavbarName() : group.getNavbar()).length() > 1)
 				{
 					//path = path + "," + group.getGroupId();
 					ret.add(group);
@@ -2622,6 +2658,8 @@ public class GroupsDB extends DB
 		int domainSeparatorIndex = path.indexOf(":");
 		if (domainSeparatorIndex>0) {
 			String domain = path.substring(0, domainSeparatorIndex);
+			// A legacy domain:path argument must not replace the domain already authorized by BranchFilter.
+			if (sk.iway.iwcm.branch.BranchContexts.current().isBranch() && !domain.equals(sk.iway.iwcm.branch.BranchContexts.current().domainName())) throw new IllegalStateException("Cannot change the verified branch domain");
 			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 			if (rb != null) {
 				rb.setDomain(domain);
@@ -2804,6 +2842,7 @@ public class GroupsDB extends DB
 	 */
 	public static boolean deleteGroup(int groupId, boolean includeParent, boolean permanentlyDelete, boolean publishEvents, boolean withHistory, boolean refreshDocGroupsDB)
 	{
+		requireLiveWrite();
 		// Bulk deletion can reach a folder already deleted through its mirror or parent in this request.
 		// Treat it as completed: processing it again after moving it to Trash would permanently delete it.
 		if (DeleteRequestContext.isDeleted(GroupDetails.class, groupId)) return true;
@@ -3298,19 +3337,20 @@ public class GroupsDB extends DB
 	}
 
 	/**
-	 * Vrati korenove adresare
+	 * Returns detached production root folders from the existing folder cache.
 	 * @return
 	 */
 	public static List<GroupDetails> getRootGroups()
 	{
-		return new ComplexQuery().setSql("SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC").list(new Mapper<GroupDetails>()
-		{
-			public GroupDetails map(ResultSet rs) throws SQLException
-			{
-				return fillFieldsByResultSet(rs);
+		// Domain selectors and access checks need all production domains, including inside a branch.
+		try (var ignored = sk.iway.iwcm.branch.BranchContexts.live(null, "", 0)) {
+			List<GroupDetails> roots = new ArrayList<>();
+			for (GroupDetails group : getInstance().getGroupsAll()) {
+				if (group.getParentGroupId() <= 0) roots.add(new GroupDetails(group));
 			}
-
-		});
+			roots.sort(Comparator.comparingInt(GroupDetails::getSortPriority).thenComparing(nameSorter));
+			return roots;
+		}
 	}
 
 	public void resetGroupsTreeAllCache()
@@ -3496,6 +3536,20 @@ public class GroupsDB extends DB
 		Integer id = getInstance().domainIds.get(domain);
 		if(id == null) id = -1;
 		return id;
+	}
+
+	/** Resolves a stored domain ID, including configured IDs, before a request domain is available. */
+	public String getDomainNameById(int domainId)
+	{
+		Map<String, Integer> domains = domainIds;
+		synchronized (domains)
+		{
+			for (var entry : domains.entrySet())
+			{
+				if (entry.getValue() == domainId) return entry.getKey();
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -3920,6 +3974,8 @@ public class GroupsDB extends DB
 	@SuppressWarnings("unchecked")
 	public List<GroupDetails> getAllSystemFolders(boolean forceRefresh)
 	{
+		// The ordinary System-folder cache is global; use only this detached branch graph to avoid mixing trees.
+		if (branchFacade) return groups.stream().filter(g -> g.isInternal() && "System".equalsIgnoreCase(g.getGroupName())).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
 		if(Constants.getBoolean("templatesUseRecursiveSystemFolder") == false) return null;
 
 		String groupName = "System";
@@ -4316,6 +4372,8 @@ public class GroupsDB extends DB
 	 */
 	public static List<GroupDetails> getParentGroupsCached(int groupId)
 	{
+		// The shared parent cache is keyed only by group ID and would mix LIVE and different branch moves.
+		if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return getInstance().getParentGroups(groupId);
 		final String CACHE_KEY =  "GroupsDB.getListParentGroups("+groupId+")";
 		@SuppressWarnings("unchecked")
 		List<GroupDetails> listParentGroups = (List<GroupDetails>) Cache.getInstance().getObject(CACHE_KEY);
@@ -4332,6 +4390,8 @@ public class GroupsDB extends DB
 	 * @return
 	 */
 	public GroupDetails getTrashGroup() {
+		// Trash is excluded from the effective view; the legacy getter would create its LIVE folder on demand.
+		if (sk.iway.iwcm.branch.BranchContexts.current().isBranch()) return null;
 		//tu sa vytvara adresar podla default jazyka, nie podla prihlaseneho pouzivatela!
 		Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
 		String trashDirName = propSystem.getText("config.trash_dir");
@@ -4445,4 +4505,10 @@ public class GroupsDB extends DB
 
 		return result;
 	}
+    /** Blocks legacy writers before folder events, scheduler records or production data can change. */
+    private static void requireLiveWrite() {
+        if (sk.iway.iwcm.branch.BranchContexts.current().isBranch())
+            throw new IllegalStateException("Production folder writes are disabled in a publishing branch");
+    }
+
 }

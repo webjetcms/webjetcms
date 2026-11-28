@@ -69,6 +69,8 @@ public class WriteTagToolsForCore {
      */
     public static StringBuilder secureFormmail(StringBuilder text, HttpServletRequest request)
     {
+        // Keep forms as HTML for the preview wrapper to disable and rewrite; JS obfuscation would bypass it.
+        if (sk.iway.iwcm.branch.BranchContexts.current(request).mode() == sk.iway.iwcm.branch.BranchContext.Mode.PREVIEW) return text;
         if (Tools.isEmpty(text)) return text;
         if (text.indexOf("/formmail.do")==-1) return text;
 
@@ -91,6 +93,8 @@ public class WriteTagToolsForCore {
 
     public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request) //NOSONAR
     {
+        // Keep forms as HTML for the preview wrapper to disable and rewrite; JS obfuscation would bypass it.
+        if (sk.iway.iwcm.branch.BranchContexts.current(request).mode() == sk.iway.iwcm.branch.BranchContext.Mode.PREVIEW) return text;
         if (Constants.getBoolean("spamProtection") == false)
             return (text);
 

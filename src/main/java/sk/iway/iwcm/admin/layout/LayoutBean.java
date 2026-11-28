@@ -11,6 +11,10 @@ import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.admin.DocumentationTools;
+import sk.iway.iwcm.branch.BranchAccess;
+import sk.iway.iwcm.branch.BranchContexts;
+import sk.iway.iwcm.branch.BranchProductionSection;
+import sk.iway.iwcm.branch.BranchSelection;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -41,6 +45,25 @@ public class LayoutBean {
 
     private String customAdminCss = null;
     private String customAdminJavascript = null;
+
+    /** Captures the screen context before any asynchronous content requests are issued. */
+    public java.util.Map<String,Object> getBranchScreen() {
+        var context = BranchContexts.current();
+        var selection = BranchProductionSection.currentSelection();
+        boolean enabled=BranchAccess.isEnabled();
+        boolean allowed=enabled&&user!=null&&user.isAdmin()&&user.isEnabledItem("menuBranches");
+        long selectedId = selection == null ? context.branchId() : selection.branchId();
+        String domain = selection != null ? selection.domainName() : context.isBranch() ? context.domainName() : header.getCurrentDomain();
+        var branch = allowed && selectedId > 0 ? BranchSelection.screenBranch(selectedId, domain) : null;
+        return java.util.Map.of("enabled", enabled, "allowed", allowed, "branchId", context.branchId(),
+            "selectedBranchId", selectedId, "domainId", enabled ? sk.iway.iwcm.branch.BranchDomains.id(domain) : 0, "domainName", domain, "name", branch == null ? "" : branch.getName(),
+            "state", branch == null ? "" : branch.getState(), "color", branch == null ? "default" : branch.getColor());
+    }
+
+    public boolean confirmProductionLink(String href) {
+        return (BranchContexts.current().isBranch() || BranchProductionSection.currentSelection() != null)
+            && BranchProductionSection.needsConfirmation(href);
+    }
 
     public String getDocumentationBaseUrl() {
         return DocumentationTools.getBaseUrl();

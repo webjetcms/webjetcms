@@ -18,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.WebjetComponentInterface;
 import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
@@ -87,6 +88,7 @@ public class WebjetComponentResolver {
 
             return content.toString();
         } catch (IOException e) {
+            EditorToolsForCore.recordFulltextRenderFailure(request, "Cannot render application: " + ClassUtils.getUserClass(component).getName(), e);
             sk.iway.iwcm.Logger.error(e);
         }
 
@@ -99,10 +101,12 @@ public class WebjetComponentResolver {
         // vyhlada metodu s anotaciou @Render
         Method method = findHandlerMethod(request, component, pageParams);
         if (method == null) {
+            String componentClass = ClassUtils.getUserClass(component).getName();
+            EditorToolsForCore.recordFulltextRenderFailure(request, "Missing handler for application: " + componentClass, null);
             response.getWriter().println(WriteTag.getSpringErrorMessage(
                 Prop.getInstance(request),
                 "writetag.error_not_exists",
-                ClassUtils.getUserClass(component).getName()
+                componentClass
             ));
             return;
         }
