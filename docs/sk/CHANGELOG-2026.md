@@ -4,6 +4,7 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Vyhľadávanie - naplánované úlohy sa po štarte spúšťajú až po dokončení inicializácie WebJETu. Ak je zapnuté vykonávanie aplikácií pri indexovaní (`fulltextExecuteApps`) a Stripes nie je dostupný, existujúci Lucene index stránok sa pri pokuse o preindexovanie zachová.
 - `/thumb` - opravené generovanie náhľadov pri `ip=1/2`, keď sa v URL zadáva iba šírka alebo výška. Limit `imageMaxThumbsWidth` alebo `imageMaxThumbsHeight` sa pre druhý rozmer overí až po jeho výpočte z pomeru strán, pred generovaním obrázka. Formát kľúčov cache a záznamov povolených rozmerov sa nemení (#408).
 - Vyhľadávanie - zmazaná webová stránka sa odstraňuje podľa ID zo všetkých existujúcich lokálnych jazykových Lucene indexov aj bez údajov v databáze alebo cache. Pri zapnutom priebežnom indexovaní sa aj po reštarte uzla clustra spracujú zachované notifikácie zmien konkrétnych stránok. Pri chybe mazania sa cluster notifikácia nepotvrdí a spracovanie sa zopakuje (#403).
 - Vyhľadávanie - príprava náhľadu aplikácie do indexu v rámci synchronizácie clustra pripraví náhradný `request` objekt pre lepší spôsob zobrazenia aplikácií pre index vyhľadávania (#404).
@@ -35,6 +36,7 @@
 - Súbory - opravený názov konfiguračnej premennej `elfinderMetadataAutopopup`, ktorá po nahratí súboru automaticky zobrazí dialóg metadát. Premenná bola deklarovaná s preklepom ako `elfinerMetadataAutopopup`, ktorý sa nikde nečítal, preto jej zmena v administrácii nemala efekt. Predvolená hodnota `false` zostáva. Ak ste si nastavili premennú s preklepom, nastavte namiesto nej `elfinderMetadataAutopopup` (#410).
 - Opravené zacyklenie pri HTTP presmerovaniach počas sťahovania súborov, načítaní nastavení používateľa, inicializácii generátora primárnych kľúčov a obnove cache súborov uložených v databáze. Doplnené ukončovacie podmienky opakovaných pokusov. Ak generátor primárnych kľúčov zostane nedostupný aj po jednom pokuse o vytvorenie záznamu a obnove cache, metódy `PkeyGenerator.getNextValue(String)` a `getNextValueAsLong(String)` vyhodia `IllegalStateException`. Volajúci musí prerušiť operáciu vyžadujúcu identifikátor a odovzdať chybu svojmu spracovaniu výnimiek (#412).
 - Menu - opravené generovanie atribútu `class` na položke `<li>` pri použití nastavenia Menu Info (`menuInfoDirName`). Trieda `menu-info-li` sa pridáva k ostatným CSS triedam položky.
+- Manažér dokumentov - pri úprave metadát aj pri nahratí nového súboru sa zachová názov priečinka vrátane predložiek, napríklad `-pre-`.
 
 ## 2026.0.40
 

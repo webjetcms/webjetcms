@@ -4,14 +4,16 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
 
+import net.sourceforge.stripes.controller.StripesFilterIway;
+import net.sourceforge.stripes.controller.StripesRequestWrapper;
+import net.sourceforge.stripes.exception.StripesServletException;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -321,6 +323,47 @@ public class EditorToolsForCore {
         return renderIncludes(data, addInternationalToEnglishSection, request);
     }
 
+    /**
+     * Wraps the request into StripesRequestWrapper when it is missing (e.g. synthetic request used by fulltext indexing),
+     * because included Stripes components require it and the include does not pass through StripesFilter.
+     * @param request request used for the include
+     * @return original request when it is already wrapped, otherwise new StripesRequestWrapper
+     * @throws StripesServletException when the wrapper cannot be created
+     */
+    private static HttpServletRequest wrapForStripes(HttpServletRequest request) throws StripesServletException
+    {
+        ServletRequest current = request;
+        while (current != null)
+        {
+            if (current instanceof StripesRequestWrapper) return request;
+            if (current instanceof ServletRequestWrapper wrapper) current = wrapper.getRequest();
+            else break;
+        }
+
+        //Stripes is initialized lazily on first HTTP request, without configuration the wrapper cannot be created
+        if (!StripesFilterIway.ensureInitialized())
+        {
+            Logger.debug(EditorToolsForCore.class, "Stripes is not initialized, request is not wrapped into StripesRequestWrapper");
+            return request;
+        }
+
+        Locale locale = Locale.forLanguageTag(PageLng.getUserLngIso(request));
+        return new LocaleStripesRequestWrapper(request, locale);
+    }
+
+    /**
+     * StripesRequestWrapper with explicitly set locale, which is otherwise set only by StripesFilter.
+     */
+    private static class LocaleStripesRequestWrapper extends StripesRequestWrapper
+    {
+        LocaleStripesRequestWrapper(HttpServletRequest request, Locale locale) throws StripesServletException
+        {
+            super(request);
+            setLocale(locale);
+        }
+    }
+
+
     public static String renderIncludes(String data, boolean addInternationalToEnglishSection, HttpServletRequest request)
     {
         if (request != null) request.setAttribute("renderingIncludes", true);
@@ -363,11 +406,13 @@ public class EditorToolsForCore {
                     }
                 };
                 respWrapper = new WJResponseWrapper(response, request);
+                HttpServletRequest renderRequest =
+                        request instanceof MockHttpServletRequest ? wrapForStripes(request) : request;
 
                 if (originalAttributes == null || request instanceof MockHttpServletRequest)
                 {
                     // Synthetic requests need their own scope even when the caller has a Spring request context.
-                    temporaryAttributes = new ServletRequestAttributes(request, respWrapper);
+                    temporaryAttributes = new ServletRequestAttributes(renderRequest, respWrapper);
                     RequestContextHolder.setRequestAttributes(temporaryAttributes);
                 }
 
@@ -376,7 +421,7 @@ public class EditorToolsForCore {
                 RequestDispatcher dispatcher;
                 if (request instanceof MockHttpServletRequest) dispatcher = Constants.getServletContext().getRequestDispatcher(includeFileName);
                 else dispatcher = request.getRequestDispatcher(includeFileName);
-                dispatcher.include(request, respWrapper);
+                dispatcher.include(renderRequest, respWrapper);
                 if (Tools.isEmpty(respWrapper.redirectURL))
                 {
                     htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());
